@@ -7,7 +7,7 @@
 enum {
     F_NONE,
     /* PLAY */ F_TEMPO, F_MACRO, F_MOOD,
-    /* SOUND */ F_P0, F_P1, F_P2, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
+    /* SOUND */ F_P0, F_P1, F_P2, F_P3, F_P4, F_P5, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
     F_MODTGT, F_MODSLOT,
     /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING, F_DIV,
     F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
@@ -69,7 +69,10 @@ static void field_range(int f, int *lo, int *hi)
     case F_MOOD: *hi = TAPE.nmood - 1; break;
     case F_P0:
     case F_P1:
-    case F_P2: {
+    case F_P2:
+    case F_P3:
+    case F_P4:
+    case F_P5: {
         const dk_engine_t *e = cur_eng();
         int i = f - F_P0;
         if (i < e->nparams) {
@@ -155,7 +158,10 @@ static int field_get(int f)
     case F_MOOD: return dk_song.mood;
     case F_P0:
     case F_P1:
-    case F_P2: return k->p[f - F_P0];
+    case F_P2:
+    case F_P3:
+    case F_P4:
+    case F_P5: return k->p[f - F_P0];
     case F_ATT: return k->env[0];
     case F_DEC: return k->env[1];
     case F_REL: return k->env[2];
@@ -268,7 +274,10 @@ static void field_set(int f, int v)
         break;
     case F_P0:
     case F_P1:
-    case F_P2: k->p[f - F_P0] = (int8_t)v; break;
+    case F_P2:
+    case F_P3:
+    case F_P4:
+    case F_P5: k->p[f - F_P0] = (int8_t)v; break;
     case F_ATT: k->env[0] = (int8_t)v; break;
     case F_DEC: k->env[1] = (int8_t)v; break;
     case F_REL: k->env[2] = (int8_t)v; break;
@@ -411,7 +420,10 @@ static const char *field_label(int f)
     case F_MOOD: return "MOOD";
     case F_P0:
     case F_P1:
-    case F_P2: {
+    case F_P2:
+    case F_P3:
+    case F_P4:
+    case F_P5: {
         const dk_engine_t *e = cur_eng();
         return f - F_P0 < e->nparams ? e->params[f - F_P0].name : "-";
     }
@@ -543,7 +555,10 @@ static void field_text(int f, char *b)
     case F_MOOD: cpy(b, TAPE.moods[v % TAPE.nmood].name); break;
     case F_P0:
     case F_P1:
-    case F_P2: {
+    case F_P2:
+    case F_P3:
+    case F_P4:
+    case F_P5: {
         const dk_engine_t *e = cur_eng();
         int i = f - F_P0;
         if (i < e->nparams && e->params[i].names)

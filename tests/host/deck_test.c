@@ -129,6 +129,7 @@ static void quiet_all(void)
 }
 static void fresh(void)
 {
+    TAPE.init();
     dk_lock();
     dk_song_clear();
     dk_unlock();
@@ -337,7 +338,7 @@ static void drive_all(int mood, int style, double secs, const char *out)
     dk_cmd(C_PLAY, 1, 0, 0);
     run(secs);
     dk_cmd(C_PLAY, 0, 0, 0);
-    tail(6.0);
+    tail(12.0);
     wav(out);
 }
 

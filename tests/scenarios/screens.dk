@@ -1,0 +1,185 @@
+# the pictures for the report (not a test): every page clean, the tape, TOMBOLA, the garden by day and by night
+wait 300
+flower 300
+wait 1500
+shot g_plains_day.png
+tap PLAY
+wait 9000
+shot p01_play.png
+press HOME
+tapkey b2
+release HOME
+wait 50
+wait 1000
+tap FX
+wait 1000
+shot p02_sound_engine.png
+tap FX
+wait 1000
+shot p03_sound_env.png
+tap FX
+wait 1000
+shot p04_sound_fx.png
+tap FX
+wait 1000
+shot p05_sound_mod.png
+tap SEL
+wait 1000
+shot p06_seq_live_piano.png
+press HOME
+tapkey b0
+release HOME
+wait 50
+wait 1000
+shot p07_seq_step_drums.png
+tap LFO
+wait 1000
+shot p08_mix.png
+tap ENV
+wait 1000
+shot p09_road.png
+press ENV
+wait 700
+release ENV
+wait 1000
+shot p10_garage.png
+press HOME
+tapkey b2
+release HOME
+wait 50
+tap EDIT
+wait 200
+key w5 down 90
+wait 1000
+shot p11_keys.png
+key w5 up
+tap SAVE
+wait 1000
+shot p12_project.png
+tap PLAY
+wait 300
+# the tape (REC) with its count-in, then recording
+tap HOME
+wait 300
+tap REC
+wait 1200
+shot p13_tape_count.png
+wait 2500
+key w2 down 90
+wait 700
+key w2 up
+key w4 down 80
+wait 1400
+shot p14_tape_rec.png
+key w4 up
+tap REC
+wait 4000
+tap PLAY
+wait 300
+# TOMBOLA, ARP, DRIVE, FINGER views (the tape's tracks)
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+tap HOME
+wait 100
+press HOME
+tapkey b4
+release HOME
+wait 50
+wait 50
+tap SEL
+tap PLAY
+tapkey w2
+tapkey w5
+tapkey w7
+tapkey w9
+wait 3000
+shot p15_seq_tombola.png
+press HOME
+tapkey b3
+release HOME
+wait 50
+wait 50
+key w0 down 90
+key w4 down 90
+wait 1200
+shot p16_seq_arp.png
+key w0 up
+key w4 up
+press HOME
+tapkey b0
+release HOME
+wait 50
+wait 50
+tapkey w6
+tapkey w11
+wait 1200
+shot p17_seq_finger.png
+press SEL
+tapkey w4
+release SEL
+wait 50
+turn ALGO 1
+wait 1500
+shot p18_seq_drive.png
+press HOME
+tapkey b5
+release HOME
+wait 50
+wait 50
+press SEL
+tapkey w6
+release SEL
+wait 50
+key w2 down 90
+key w4 down 90
+wait 1000
+key w2 up
+key w4 up
+wait 500
+shot p19_seq_hold.png
+tap PLAY
+wait 300
+# the garden: the moods' biomes, by day and by night
+tap HOME
+mood 1
+flower 300
+dayphase 10
+wait 2500
+shot g_rain_day.png
+dayphase 70
+wait 1500
+shot g_rain_night.png
+mood 3
+flower 300
+dayphase 15
+wait 2500
+shot g_snow_day.png
+dayphase 75
+wait 1500
+shot g_snow_night.png
+mood 4
+flower 300
+dayphase 20
+wait 2500
+shot g_ocean_day.png
+mood 5
+flower 300
+wait 2500
+shot g_night.png
+mood 6
+flower 300
+wait 2500
+shot g_campfire.png
+mood 2
+flower 300
+wait 2500
+shot g_cave.png
+mood 7
+flower 300
+dayphase 45
+wait 2500
+shot g_study_dusk.png
+splash
+shot splash.png

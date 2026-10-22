@@ -6,7 +6,7 @@
 
 enum { A_NONE, A_PAGE_SOUND, A_PAGE_SEQ, A_PAGE_ROAD, A_PAGE_MIX, A_PAGE_KEYS, A_PAGE_PROJECT, A_PAGE_PLAY, A_PLAY,
        A_REC, A_NEXT_TRACK, A_NEXT_PART, A_FILL, A_TAP_TEMPO, A_PLAYMODE, A_CLEAR, A_METRO, A_MUTE, A_BAKE, A_UNDO,
-       A_REDO, A_GARAGE, A_OCT_DOWN, A_OCT_UP, A_MOD, A_N };
+       A_REDO, A_GARAGE, A_OCT_DOWN, A_OCT_UP, A_MOD, A_TRANS_DOWN, A_TRANS_UP, A_N };
 /* a hold: 0 none, a time (ms) for a timed one, HOLD_MOD a modifier (its tap on release unless it was used) */
 #define HOLD_MOD 0xFFFFu
 typedef struct {
@@ -26,9 +26,9 @@ static const ui_map_t UI_MAP[] = {
     {B_SEQ, A_FILL, A_NONE, A_BAKE, 0, "FILL while held | HOME+: BAKE (DRIVE to STEP)"},
     {B_EDIT, A_PAGE_KEYS, A_UNDO, A_REDO, 700, "KEYS; again: its next row | hold: UNDO | HOME+: REDO"},
     {B_SAVE, A_PAGE_PROJECT, A_NONE, A_NONE, HOLD_MOD, "PROJECT; again: next row | hold + white 13-16: save preset"},
-    {B_HOME, A_PAGE_PLAY, A_NONE, A_NONE, HOLD_MOD, "PLAY | HOME + white 1-16: preset | HOME + black 1-6: track"},
-    {B_OCTDN, A_OCT_DOWN, A_NONE, A_NONE, 0, "the track's octave down"},
-    {B_OCTUP, A_OCT_UP, A_NONE, A_NONE, 0, "the track's octave up"},
+    {B_HOME, A_PAGE_PLAY, A_NONE, A_NONE, HOLD_MOD, "PLAY | HOME + white 1-16: preset | HOME + black 1-6: track | HOME + black 7-11: COPY PASTE DOUBLE VARIATE HUMANIZE the clip"},
+    {B_OCTDN, A_OCT_DOWN, A_NONE, A_TRANS_DOWN, 0, "the track's octave down | HOME+: the clip a scale step down"},
+    {B_OCTUP, A_OCT_UP, A_NONE, A_TRANS_UP, 0, "the track's octave up | HOME+: the clip a scale step up"},
 };
 #define UI_NMAP (sizeof UI_MAP / sizeof UI_MAP[0])
 /* the free knobs (OVERWORLD's VHS, SIDECHAIN, FILL: here DUST, SIDECHAIN, SLEEP, and the swing) */

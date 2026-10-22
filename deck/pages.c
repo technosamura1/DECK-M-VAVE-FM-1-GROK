@@ -177,10 +177,8 @@ static int page_field(int i, int home)
             return F_FXB;
         if (home && row == 3)
             return i == 0 ? F_MODSLOT : i == 1 ? F_MODTGT : F_MODRATE;
-        if (home && row == 0) {              /* the engine's hidden ones (TYPE, ...) */
-            static const uint8_t H[3] = {F_SEQTYPE, F_DRIFT, F_ROLE};
-            return H[i];
-        }
+        if (home && row == 0)                /* the engine's others (its TYPE, ...): HOME held */
+            return F_P3 + i < F_P3 + cur_eng()->nparams - 3 ? F_P3 + i : i == 2 ? F_DRIFT : F_NONE;
         return SOUND_F[row & 3][i];
     case PG_SEQ: {
         int drum = (cur_eng()->flags & EF_DRUM) != 0;

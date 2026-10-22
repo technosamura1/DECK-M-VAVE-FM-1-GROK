@@ -92,7 +92,7 @@ static int world_render(float *st, float *l, float *r, int n, const float *p)
     world_v *w = (world_v *)st;
     int kind = (int)w->kind, j, i;
     /* each kind's own level (they are made at very different ones) */
-    static const float GAIN[NW] = {1.6f, 0.85f, 1.4f, 1.1f, 0.85f, 5.0f, 7.0f, 1.0f, 4.5f, 8.0f};
+    static const float GAIN[NW] = {1.6f, 2.0f, 1.4f, 1.1f, 0.85f, 5.0f, 7.0f, 1.0f, 4.5f, 8.0f};
     float amt = p[1] * 0.01f, lvl = (0.25f + 1.5f * amt) * w->vel * 0.8f * GAIN[kind < NW ? kind : 0],
           dens = 0.3f + 1.4f * amt, ok = dk_lpk(500.0f * fm_exp2f(p[2] * 0.042f)), fin = 1.0f / (1.4f * DK_SR),
           fout = 1.0f / (2.2f * DK_SR);

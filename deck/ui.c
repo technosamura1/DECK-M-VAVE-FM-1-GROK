@@ -336,6 +336,12 @@ static void action(int a, int b)
         ui.garage ^= 1u;
         say("GARAGE", ui.garage ? "PARTS" : "ROAD");
         break;
+    case A_TRANS_DOWN:
+    case A_TRANS_UP:
+        clip_transpose(cur_clip(), a == A_TRANS_UP ? 1 : -1);
+        mark_dirty();
+        say("TRANSPOSE", a == A_TRANS_UP ? "UP" : "DOWN");
+        break;
     case A_OCT_DOWN:
     case A_OCT_UP: {
         int o = cur()->oct + (a == A_OCT_UP ? 1 : -1);
@@ -368,6 +374,20 @@ static void key_down(int k, int vel)
             preset_select(w);
         else if (b < DK_NTRACK)
             track_select(b);
+        else {                           /* the clip's operations */
+            static const char *const OPN[5] = {"COPY", "PASTE", "DOUBLE", "VARIATE", "HUMANIZE"};
+            int c = cur_clip();
+            switch (b - DK_NTRACK) {
+            case 0: clip_copy(c); break;
+            case 1: clip_paste(c); break;
+            case 2: clip_double(c); break;
+            case 3: clip_variate(c, plat_ms() * 2654435761u); break;
+            default: clip_humanize(c, plat_ms() * 2246822519u); break;
+            }
+            if (b - DK_NTRACK)
+                mark_dirty();
+            say("CLIP", OPN[(b - DK_NTRACK) % 5]);
+        }
         return;
     }
     if (held(B_SAVE)) {
@@ -654,8 +674,8 @@ static void turn(int i, int e)
     ui.touch_until = now + 800u;
     /* recording LIVE: the knob's move into the clip */
     if (dk_recording && dk_rec_trk == dk_song.cur_track && ui.page == PG_SOUND) {
-        static const uint8_t TGT[] = {0, T_P0, T_P1, T_P2, T_ATT, T_DEC, T_REL};
-        int tgt = f >= F_P0 && f <= F_REL ? TGT[f - F_P0 + 1] : f == F_FXAMT ? T_FXAMT : 0;
+        int tgt = f >= F_P0 && f <= F_P5 ? T_P0 + (f - F_P0) : f == F_ATT ? T_ATT : f == F_DEC ? T_DEC :
+                  f == F_REL ? T_REL : f == F_FXAMT ? T_FXAMT : 0;
         if (tgt) {
             dk_ev_t ev;
             int clip = cur_clip(), len = clip_len(clip), v = field_get(f);

@@ -179,6 +179,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         fl.grow = fl.shown = (float)atoi(a) * 0.01f;
         return 1;
     }
+    if (!strcmp(cmd, "splash")) {
+        app_splash();
+        return 1;
+    }
     if (!strcmp(cmd, "seqtype")) {
         cur()->seq = (uint8_t)atoi(a);
         return 1;
