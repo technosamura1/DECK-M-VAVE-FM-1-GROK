@@ -900,12 +900,14 @@ static void draw_project(void)
     } else if (dk_stems) {
         cv_text(20, 162, &FONT_T, "STEMS: RECORD THE OUTPUT", TH_ENC[2]);
     } else {
-        p = cpy(s, "CPU ");
+        p = cpy(s, "CPU ");                  /* the sound's load, its dropouts, the voices (and their budget) */
         p = itoa_b((int)plat_cpu_pct(), p);
-        p = cpy(p, "%   VOICES ");
+        p = cpy(p, "%  XRUN ");
+        p = itoa_b((int)plat_xruns(), p);
+        p = cpy(p, "  V ");
         p = itoa_b(dk_voices_on, p);
-        p = cpy(p, "   ");
-        cpy(p, DK_VERSION);
+        p = cpy(p, "/");
+        itoa_b(dk_get_budget(), p);
         text_box(8, 162, 224, 1, &FONT_T, &FONT_T, s, dimc(TH_GRAY, 12));
     }
 }
@@ -913,14 +915,14 @@ static void draw_project(void)
 /* ------------------------------------------------------------- REC: the tape --- */
 static void reel(int cx, int cy, float amount, int phase)
 {
-    int i, r = 9 + (int)(amount * 14.0f);
-    disc(cx, cy, r, CS_TAPE);                /* the tape wound on it */
-    disc(cx, cy, 9, CS_LABEL);
-    circle(cx, cy, 9, CS_BODY_D);
-    disc(cx, cy, 4, CS_WINDOW);
+    int i, r = 8 + (int)(amount * 7.0f + 0.5f);   /* the tape wound on it: kept inside the window (r <= 15) */
+    disc(cx, cy, r, CS_TAPE);
+    disc(cx, cy, 7, CS_LABEL);
+    circle(cx, cy, 7, CS_BODY_D);
+    disc(cx, cy, 3, CS_WINDOW);
     for (i = 0; i < 6; i++) {                /* the hub's teeth: eight phases a turn */
         float a = 6.2831853f * ((float)i / 6.0f + (float)phase / 48.0f);
-        cv_rect(cx + (int)(6.0f * fm_cosf(a)) - 1, cy + (int)(6.0f * fm_sinf(a)) - 1, 2, 2, CS_WINDOW);
+        cv_rect(cx + (int)(5.0f * fm_cosf(a)) - 1, cy + (int)(5.0f * fm_sinf(a)) - 1, 2, 2, CS_WINDOW);
     }
 }
 static void draw_tape(void)

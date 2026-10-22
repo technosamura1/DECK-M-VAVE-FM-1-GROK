@@ -209,8 +209,9 @@ static void tape_master(float *l, float *r, int n, float dust, float sleep)
         ms_l2 += k * (ms_l1 - ms_l2);
         ms_r1 += k * (r[j] - ms_r1);
         ms_r2 += k * (ms_r1 - ms_r2);
-        l[j] = fm_tanhf(ms_l2 * drive) * mk + hiss * wnoise() + ms_cf * 0.05f;
-        r[j] = fm_tanhf(ms_r2 * drive) * mk + hiss * wnoise() + ms_cf * 0.045f;
+        hiss *= wnoise();                                  /* one hiss for both sides: half the dice */
+        l[j] = fm_tanhf(ms_l2 * drive) * mk + hiss + ms_cf * 0.05f;
+        r[j] = fm_tanhf(ms_r2 * drive) * mk - hiss * 0.8f + ms_cf * 0.045f;
     }
     ms_lvl = fm_maxf(pk, ms_lvl * 0.97f);
 }

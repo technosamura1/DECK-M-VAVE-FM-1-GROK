@@ -195,10 +195,14 @@ int dk_param_value(int t, int target)
     return (int)(f + (f >= 0.0f ? 0.5f : -0.5f));
 }
 
-static void params_update(void)
+static uint8_t params_half;
+static void params_update_some(int all)
 {
     int t, i;
+    params_half ^= 1u;
     for (t = 0; t < DK_NTRACK; t++) {
+        if (!all && (t & 1) != params_half)    /* half the tracks a render (each one every 11.6 ms) */
+            continue;
         const dk_engine_t *e = dk_engine(t);
         for (i = 0; i < DK_NP; i++)
             tp[t][i] = i < e->nparams ? (float)dk_param_value(t, T_P0 + i) : 0.0f;
@@ -216,6 +220,7 @@ static void params_update(void)
         t_swing[t] = (float)dk_param_value(t, T_SWING) * 0.01f;
     }
 }
+static void params_update(void) { params_update_some(1); }
 
 /* ------------------------------------------------------------------- voices --- */
 typedef struct {
@@ -324,15 +329,15 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
  * OVERWORLD's busiest moment cost: over it, the quietest tails go first (faded), then a quiet held voice; never a
  * loud note */
 /* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
-#define DK_BUDGET_MAX 150
+#define DK_BUDGET_MAX 130
 #define DK_BUDGET_MIN 50
-static volatile int dk_budget = 120;
+static volatile int dk_budget = 100;
 void dk_set_load(int pct)
 {
     int b = dk_budget;
-    if (pct > 72)
-        b -= pct > 85 ? 12 : 4;
-    else if (pct < 50)
+    if (pct > 62)
+        b -= pct > 80 ? 14 : 5;
+    else if (pct < 45)
         b += 2;
     dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
 }
@@ -837,7 +842,7 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     float drift = 0.0012f;
     int vo = 0, i;
     drain();
-    params_update();                           /* the knobs, once a render (and when the clip moves one) */
+    params_update_some(0);                     /* the knobs: half the tracks a render (all when the clip moves one) */
     /* the tape's slow wow and its flutter (DUST deepens them); a tape stop's fall */
     wow_ph += (float)n * (0.37f / DK_SR);
     if (wow_ph >= 1.0f)
