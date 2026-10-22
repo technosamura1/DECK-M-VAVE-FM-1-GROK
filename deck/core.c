@@ -600,7 +600,7 @@ static inline float metro_step(void)
 
 /* -------------------------------------------------------------- the tracks --- */
 static dk_fxst_t fxs[DK_NTRACK];
-static int16_t fxbuf[DK_NTRACK][DK_FXBUF];
+static int16_t fxbuf[DK_NTRACK][DK_FXBUF] DK_POOL;
 static float bus_st[DK_NTRACK][16];
 static float g_cur[DK_NTRACK][2];             /* the gain now (left, right): glides to the knob */
 static int32_t tail[DK_NTRACK];               /* samples the effect still rings after the last voice */

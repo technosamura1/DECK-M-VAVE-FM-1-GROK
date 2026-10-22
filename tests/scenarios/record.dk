@@ -1,0 +1,82 @@
+# a new empty song, the piano: REC with a count-in, a few chords, a second pass, undo, redo
+wait 300
+tap SAVE
+wait 100
+expect page 6
+tapkey w4
+wait 200
+expect nev 0
+press HOME
+tapkey b2
+release HOME
+wait 50
+wait 100
+expect track 2
+expect seq 1
+expect clicks 0
+tap REC
+wait 200
+expect counting >0
+expect recording 0
+expect page 7
+shot tape_count.png
+wait 3300
+expect recording 1
+expect playing 1
+expect clicks >3
+key w0 down 90
+wait 900
+key w0 up
+wait 400
+key w3 down 80
+wait 1200
+shot tape_rec.png
+key w3 up
+wait 400
+key w4 down 80
+wait 800
+key w4 up
+wait 9000
+expect pass >1
+key w5 down 100
+wait 600
+key w5 up
+wait 300
+tap REC
+wait 200
+expect recording 0
+expect events >8
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect events >8
+expect undo >0
+# the metronome: REC only, so playing alone it is quiet
+tap PLAY
+wait 300
+expect playing 0
+tap PLAY
+wait 2000
+tap PLAY
+wait 300
+# saved by itself in the silence; a reboot brings it back
+wait 6000
+expect dirty 0
+reboot
+wait 300
+expect nev >8
+expect track 2
+# the road: two blocks, SONG
+tap ENV
+wait 100
+tapkey w0
+tapkey w0
+wait 100
+expect nroad >0
+# HOME+REC: the metronome off
+press HOME
+tap REC
+release HOME
+wait 50
+expect metro 0

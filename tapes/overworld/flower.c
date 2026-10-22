@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 OVERWORLD contributors */
 /* The flower: one big bloom seen from the front, filling the garden, grown by what is played. Part of the unity build
- * (in ui.c, after the garden's pixels and particles).
+ * (in tape_ui.c, after the garden's pixels and particles; DECK: GARDEN_FLOWER, garden_drum_of, dk_master_level).
  *
  * Notes grow it: its leaves unfurl round a small green bud, the bud swells and takes its colour, then the petals open
  * ring by ring, the outer first. Each note lights a stamen by its pitch and a petal; a chord runs a wave round the
@@ -221,7 +221,7 @@ static void flower_make(int bio, int kind, int fresh)   /* a new bud of this kin
 static void flower_new(int bio, int fresh)       /* a new bud of the scene's kind (now and then its kin), or FLOWER's */
 {
     float r = (float)(hash32(fl.seed ^ plat_ms()) >> 8) * (1.0f / 16777216.0f);
-    int pick = proj.par[P_FLOWER];
+    int pick = GARDEN_FLOWER;
     if (pick > 0 && pick <= NSPECIES)
         flower_make(bio, pick - 1, fresh);
     else
@@ -257,7 +257,7 @@ static void flower_note(int note, int inst, int vel, int src, uint32_t now)
     float v = (float)vel * (1.0f / 127.0f), add;
     int k;
     if (inst == I_DRUM) {
-        int d = ow_drum_of(note);
+        int d = garden_drum_of(note);
         if (d == D_BD1 || d == D_BD2)
             fl.pulse = 1.0f;
         else if ((d == D_SD1 || d == D_SD2 || d == D_CLAP) && bloom_on())
@@ -368,7 +368,7 @@ static void flower_draw(float light, uint32_t now, rgb_t glowc)
 {
     const species_t *sp = &fl.sp;
     float g = fl.shown, bl = bloom_of(g), leafo = fm_clampf(g * 1.4f, 0.0f, 1.0f), lit = sp->glow ? 1.0f : 0.42f + 0.58f * light;
-    float breathe = 1.0f + 0.012f * fm_sinf((float)now * 0.0016f) + 0.05f * fm_minf(1.0f, ow_level * 2.5f) + 0.04f * fl.pulse;
+    float breathe = 1.0f + 0.012f * fm_sinf((float)now * 0.0016f) + 0.05f * fm_minf(1.0f, dk_master_level * 2.5f) + 0.04f * fl.pulse;
     float R = fl_R() * breathe, Rleaf = (float)FR * (0.55f + 0.45f * leafo), open[NLAYER], cx = (float)FCX, cy = (float)FCY;
     int x, y, l, k, x0 = FCX - FBOX / 2, y0 = FCY - FBOX / 2, nl = sp->layers + 1;
     if (g <= 0.02f)

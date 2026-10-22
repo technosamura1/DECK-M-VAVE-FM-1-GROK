@@ -1,0 +1,84 @@
+# the sequencers: ARP, TOMBOLA, FINGER, DRIVE (and BAKE), HOLD; FILL; a performance effect
+wait 300
+# a new empty song: the tape's tracks (FINGER STEP LIVE ARP TOMBOLA HOLD)
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+tap HOME
+wait 100
+press HOME
+tapkey b3
+release HOME
+wait 50
+expect track 3
+expect seq 3
+key w0 down 90
+key w2 down 90
+wait 1000
+expect voices >0
+key w0 up
+key w2 up
+wait 300
+# TOMBOLA on the bells
+press HOME
+tapkey b4
+release HOME
+wait 50
+expect seq 7
+tap SEL
+wait 100
+tap PLAY
+tapkey w2
+tapkey w5
+tapkey w7
+wait 4000
+expect tmb >2
+shot tombola.png
+tap PLAY
+wait 200
+# FINGER on the drums: a pattern held
+press HOME
+tapkey b0
+release HOME
+wait 50
+expect seq 5
+key w6 down 90
+wait 1500
+expect voices >0
+shot finger.png
+key w6 up
+# DRIVE on the drums, then BAKE it to STEP
+press SEL
+tapkey w4
+release SEL
+wait 50
+expect seq 4
+tap HOME
+wait 50
+tap SEL
+wait 100
+turn ALGO 1
+wait 100
+shot drive.png
+tap PLAY
+wait 2000
+press HOME
+tap SEQ
+release HOME
+wait 50
+wait 17000
+expect seq 0
+expect events >4
+tap PLAY
+wait 200
+# FILL held while playing
+tap PLAY
+wait 500
+press SEQ
+wait 200
+expect fill 1
+release SEQ
+wait 100
+expect fill 0
+tap PLAY

@@ -156,12 +156,12 @@ static void fx_spring(dk_fxst_t *s, float *l, float *r, int n, float amt, float 
             x = y;
         }
         fxbuf_put(s, x);
-        y = fxbuf_get(s, 1540.0f + 18.0f * dk_sinx(f[11]));
+        y = fxbuf_get(s, 900.0f + 12.0f * dk_sinx(f[11]));
         f[11] = dk_wrap1(f[11] + 0.7f / DK_SR);
         f[9] += k * (y - f[9]);
         f[10] = fm_flush(f[9]);
         l[j] += (f[9] - l[j] * 0.3f) * amt;
-        r[j] += (fxbuf_get(s, 1230.0f) - r[j] * 0.3f) * amt * 0.9f;
+        r[j] += (fxbuf_get(s, 730.0f) - r[j] * 0.3f) * amt * 0.9f;
     }
 }
 

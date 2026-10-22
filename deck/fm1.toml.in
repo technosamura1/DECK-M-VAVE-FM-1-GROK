@@ -1,0 +1,15 @@
+# DECK's build settings (fm1-base's tools/build.py), the tape @TAPE@: written by ../build.sh from fm1.toml.in
+name = "DECK"                  # the build's files: deck.fwsc
+id_prefix = "FM-1_65"          # package identity: dev FM-1_6500, releases FM-1_65XXYYZZ
+usb_manufacturer = "DECK"
+usb_product = "DECK FM-1"
+ble = false
+usb_audio_in = true
+usb_audio_out = false
+words = "words.tsv"
+include = ["../tapes/@TAPE@"]
+o2 = ["core.c", "dsp_unit.c"]  # the sound, at -O2: DECK's core and the tape's engines
+tagline = "a deck for tapes"
+repo = ""
+licence = "MPL-2.0"
+credits = "Built on fm1-base and felucca-bsp (Felucca by Leo Kuroshita, Hugelton Instruments); the plate, the voice leading and OVERWORLD's sound after AMB-1 by Charles Vestal."

@@ -1,0 +1,4 @@
+# the demo song exported (the stream as the device sends it): tools/deck_export.py makes the .mid
+wait 300
+demo
+export ../../../build/sc/export/demo.syx

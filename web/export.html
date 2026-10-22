@@ -1,0 +1,129 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!-- DECK's EXPORT in the browser (Chrome, WebMIDI): the FM-1's SysEx stream to a .mid, nothing to install.
+     The same format as tools/deck_export.py. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DECK Export</title>
+<style>
+:root { --bg:#000; --fg:#e8e8e8; --dim:#6a6a6a; --line:#2a2a2a; --a:#7ccc60; --b:#6ebaf4; --c:#f6d65c; }
+body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+main { max-width:560px; margin:0 auto; padding:32px 16px; }
+h1 { font-weight:300; letter-spacing:6px; margin:0 0 4px; }
+.dim { color:var(--dim); }
+button { background:none; color:var(--fg); border:1px solid var(--fg); padding:8px 16px; font:inherit; cursor:pointer; }
+button:disabled { color:var(--dim); border-color:var(--line); cursor:default; }
+select { background:#111; color:var(--fg); border:1px solid var(--line); font:inherit; padding:6px; }
+.bar { height:3px; background:var(--line); margin:16px 0; } .bar i { display:block; height:3px; width:0; background:var(--b); }
+li { margin:2px 0; } .k { color:var(--a); }
+</style>
+</head>
+<body>
+<main>
+<h1>DECK</h1>
+<div class="dim">EXPORT: the song from the FM-1 as a MIDI file</div>
+<p>1. Connect the FM-1 by USB. 2. Pick it below. 3. On the FM-1: <span class="k">SAVE</span> (the PROJECT page),
+then <span class="k">black key 1</span> (EXPORT).</p>
+<p><select id="port"><option>(no MIDI yet)</option></select> <button id="go">Listen</button></p>
+<div class="bar"><i id="prog"></i></div>
+<div id="state" class="dim">Waiting.</div>
+<ul id="info"></ul>
+<p><button id="save" disabled>Save the .mid</button></p>
+</main>
+<script>
+const HEAD = [0xF0, 0x7D, 0x44, 0x4B];
+let access = null, input = null, song = null;
+const $ = (id) => document.getElementById(id);
+
+function fresh() {
+  return { tempo: 120, ppq: 96, ntrk: 6, length: 0, name: "DECK", names: {}, events: [], markers: [], expected: null,
+           end: false, lastSeq: -1, lost: 0 };
+}
+function unpack(f) {
+  for (let i = 0; i < 4; i++) if (f[i] !== HEAD[i]) return null;
+  const kind = f[4], seq = f[5] | (f[6] << 7), body = f.slice(7, f.length - 2), sum = f[f.length - 2];
+  let s = 0; for (const b of body) s += b;
+  if ((s & 0x7F) !== sum) throw new Error("checksum, frame " + seq);
+  const out = [];
+  for (let i = 0; i < body.length; i += 8) {
+    const hi = body[i];
+    body.slice(i + 1, i + 8).forEach((c, j) => out.push(c | (((hi >> j) & 1) << 7)));
+  }
+  return { kind, seq, p: out };
+}
+const u32 = (p, i) => (p[i] | (p[i + 1] << 8) | (p[i + 2] << 16) | (p[i + 3] << 24)) >>> 0;
+const str = (p) => String.fromCharCode(...p);
+function take(f) {
+  const r = unpack(f); if (!r) return;
+  const { kind, seq, p } = r;
+  if (song.lastSeq >= 0 && seq !== ((song.lastSeq + 1) & 0x3FFF)) song.lost++;
+  song.lastSeq = seq;
+  if (kind === 1) { song.tempo = p[0]; song.ppq = p[1]; song.ntrk = p[2]; song.length = u32(p, 3); song.name = str(p.slice(7)); }
+  else if (kind === 2) song.names[p[0]] = str(p.slice(2));
+  else if (kind === 4) song.markers.push([u32(p, 0), str(p.slice(4))]);
+  else if (kind === 3) for (let i = 0; i + 7 < p.length; i += 8) song.events.push([u32(p, i), p[i + 4], p[i + 5], p[i + 6], p[i + 7]]);
+  else if (kind === 0x7F) { song.expected = u32(p, 0); song.end = true; done(); }
+  if (song.expected === null && song.events.length) {
+    $("state").textContent = "Receiving: " + song.events.length + " events";
+    $("prog").style.width = Math.min(100, song.events.length / 40) + "%";
+  }
+}
+function vlq(n) { const o = [n & 0x7F]; n >>>= 7; while (n) { o.unshift(0x80 | (n & 0x7F)); n >>>= 7; } return o; }
+function meta(k, t) { const b = [...t].map((c) => c.charCodeAt(0) & 0x7F); return [0xFF, k, ...vlq(b.length), ...b]; }
+function chunk(evs) {
+  const out = []; let last = 0;
+  for (const [t, b] of evs) { out.push(...vlq(t - last), ...b); last = t; }
+  out.push(0, 0xFF, 0x2F, 0);
+  return [0x4D, 0x54, 0x72, 0x6B, (out.length >>> 24) & 255, (out.length >>> 16) & 255, (out.length >>> 8) & 255, out.length & 255, ...out];
+}
+function midi() {
+  const us = Math.round(60000000 / Math.max(30, song.tempo));
+  const t0 = [[0, meta(3, song.name)], [0, [0xFF, 0x51, 3, (us >> 16) & 255, (us >> 8) & 255, us & 255]], [0, [0xFF, 0x58, 4, 4, 2, 24, 8]]];
+  song.markers.forEach(([t, m]) => t0.push([t, meta(6, m)]));
+  t0.sort((a, b) => a[0] - b[0]);
+  const tracks = [chunk(t0)];
+  for (let k = 0; k < song.ntrk; k++) {
+    const evs = song.events.filter((e) => e[1] === k)
+      .sort((a, b) => a[0] - b[0] || ((a[2] & 0xF0) === 0x80 ? -1 : 1)).map((e) => [e[0], [e[2], e[3], e[4]]]);
+    tracks.push(chunk([[0, meta(3, song.names[k] || "TRACK " + (k + 1))], ...evs]));
+  }
+  const hd = [0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 1, 0, tracks.length, (song.ppq >> 8) & 255, song.ppq & 255];
+  return new Uint8Array([...hd, ...tracks.flat()]);
+}
+function done() {
+  $("prog").style.width = "100%";
+  const ok = song.expected === song.events.length && !song.lost;
+  $("state").textContent = ok ? "Done." : "Received, but " + (song.lost ? song.lost + " frame(s) lost" : "events missing") + ".";
+  $("info").innerHTML = "";
+  [song.name + ", " + song.tempo + " BPM", song.events.length + " events", song.markers.map((m) => m[1]).join(" "),
+   Object.values(song.names).join(", ")].forEach((t) => { const li = document.createElement("li"); li.textContent = t; $("info").append(li); });
+  $("save").disabled = false;
+}
+$("save").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([midi()], { type: "audio/midi" }));
+  a.download = (song.name || "deck").toLowerCase().replace(/ /g, "_") + ".mid";
+  a.click();
+};
+$("go").onclick = async () => {
+  try {
+    if (!access) access = await navigator.requestMIDIAccess({ sysex: true });
+  } catch (e) { $("state").textContent = "No MIDI access: " + e.message; return; }
+  const sel = $("port"), ins = [...access.inputs.values()];
+  if (sel.options.length <= 1 || sel.options[0].text.startsWith("(")) {
+    sel.innerHTML = ""; ins.forEach((p, i) => sel.add(new Option(p.name, i)));
+    const fm = ins.findIndex((p) => /FM-1|DECK/i.test(p.name)); if (fm >= 0) sel.value = fm;
+  }
+  if (input) input.onmidimessage = null;
+  input = ins[sel.value | 0];
+  if (!input) { $("state").textContent = "No MIDI input."; return; }
+  song = fresh();
+  $("save").disabled = true;
+  $("state").textContent = "Listening on " + input.name + ": EXPORT on the FM-1.";
+  input.onmidimessage = (m) => { if (m.data[0] === 0xF0) try { take([...m.data]); } catch (e) { $("state").textContent = e.message; } };
+};
+</script>
+</body>
+</html>

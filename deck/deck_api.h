@@ -35,7 +35,7 @@
 #define DK_NVOICE 24                    /* the voices' pool, shared by the tracks */
 #define DK_VSTATE 76                    /* an engine's voice state, floats */
 #define DK_BLK 128
-#define DK_FXBUF 2048                   /* a track effect's delay line, 16-bit samples */
+#define DK_FXBUF 1024                   /* a track effect's delay line, 16-bit samples */
 
 /* ------------------------------------------------------------------ engines --- */
 enum { EF_POLY = 1, EF_MONO = 2, EF_DRUM = 4, EF_CONT = 8 };   /* EF_CONT: a sound that goes on (the world) */

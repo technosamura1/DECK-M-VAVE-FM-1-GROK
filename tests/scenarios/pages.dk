@@ -1,0 +1,69 @@
+# power on: the demo song (nothing saved yet), the PLAY page, quiet
+wait 400
+expect playing 0
+expect page 0
+shot play.png
+tap PLAY
+wait 6000
+shot play_running.png
+tap PLAY
+wait 300
+tap FX
+wait 120
+expect page 2
+shot sound_engine.png
+tap FX
+wait 120
+shot sound_env.png
+tap FX
+wait 120
+shot sound_fx.png
+tap FX
+wait 120
+shot sound_mod.png
+tap SEL
+wait 120
+expect page 1
+shot seq_live.png
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+wait 120
+expect track 1
+shot seq_step_bass.png
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+wait 100
+expect track 0
+shot seq_step_drums.png
+tap LFO
+wait 120
+expect page 3
+shot mix.png
+tap ENV
+wait 120
+expect page 4
+shot road.png
+press ENV
+wait 700
+release ENV
+wait 120
+shot garage.png
+tap EDIT
+wait 120
+expect page 5
+key w4 down 90
+wait 200
+shot keys.png
+key w4 up
+tap SAVE
+wait 120
+expect page 6
+shot project.png
+textaudit
+expect textfit 0

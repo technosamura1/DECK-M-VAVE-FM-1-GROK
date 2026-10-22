@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
-# OVERWORLD's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
-# url: https://example.invalid/overworld/words/
+# DECK's words for a screen reader (fm1-reader): the text on the screen <TAB> what to say.
+# url: https://example.invalid/deck/words/
+DECK	deck
 OVERWORLD	overworld
-DREAM	dream
-COMPOSE	compose
+TOMBOLA	tombola
