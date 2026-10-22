@@ -223,6 +223,8 @@ static volatile struct {
     uint8_t phase;               /* frame phase: 0 PA7, 1 PA8, 2 the probe */
     uint16_t master;             /* the MASTER pot, 0..1023 */
     uint16_t timeouts;           /* conversions not done after a tick (the clock too slow) */
+    uint16_t batt;               /* the battery divider (PB1), 0..1023: one pot slot in 50 reads it */
+    uint8_t batt_n, batt_now;
 } fm1_an;
 
 /* scan diagnostics (console `inp`, read and cleared by the main loop): the gap between ticks
@@ -488,9 +490,13 @@ static void fm1__an_take(void)
             FM1_INPUT_PROBE(fm1_an.col, fm1_an.rowbit, v, (fm1_in.raw[fm1_an.col] >> fm1_an.rowbit) & 1u);
         else if (fm1_an.rowbit)
             FM1_INPUT_ANALOG(fm1_an.col, fm1_an.rowbit, v, driven);
+        else if (fm1_an.batt_now)
+            fm1_an.batt = (uint16_t)v;
         else
             fm1_an.master = (uint16_t)v;
+        fm1_an.batt_now = 0;
     } else {
+        fm1_an.batt_now = 0;
         fm1_adc_abort();
         fm1_an.timeouts++;
     }
@@ -514,8 +520,13 @@ static void fm1__an_start(uint32_t n, uint32_t lit)
         fm1_an.pend = 1;
         return;
     }
-    if (fm1_an.phase && n == 0u) {                 /* the pot's slot */
-        ch = FM1_ADC_MASTER;
+    if (fm1_an.phase && n == 0u) {                 /* the pot's slot (now and then the battery's) */
+        if (++fm1_an.batt_n >= 50u) {
+            fm1_an.batt_n = 0;
+            fm1_an.batt_now = 1;
+            ch = FM1_ADC_BATT;
+        } else
+            ch = FM1_ADC_MASTER;
         rowbit = 0;
     } else {
         ch = fm1_an.phase ? FM1_ADC_ROW_PA8 : FM1_ADC_ROW_PA7;

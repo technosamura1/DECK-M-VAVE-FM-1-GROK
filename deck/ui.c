@@ -26,7 +26,8 @@ static struct {
     dk_block_t road_clip;
     uint8_t road_clip_ok;
     uint8_t screen_dirty;
-    uint32_t draw_t, garden_t;
+    uint32_t draw_t, garden_t, notes_until;
+    char notes[28];
 } ui;
 
 static void say(const char *a, const char *b)
@@ -364,6 +365,48 @@ static void action(int a, int b)
 
 /* ---------------------------------------------------------------- the keys --- */
 
+/* what a key just played, for the header: its notes with their octaves (C4 E4 G4), a chord's name first; a drum's
+ * name; a FINGER pattern's */
+static void notes_show(int k)
+{
+    char *p = ui.notes;
+    int i, n = kh[k].n;
+    const dk_engine_t *e = TAPE.eng[dk_song.trk[kh[k].trk >= 0 ? kh[k].trk : 0].eng % TAPE.neng];
+    ui.notes[0] = 0;
+    if (kh[k].trk < 0)
+        return;
+    if (kh[k].kind == 2 || kh[k].kind == 3) {
+        const dk_finger_t *set_ = (e->flags & EF_DRUM) ? TAPE.finger_drum : TAPE.finger_mel;
+        if (kh[k].kind == 2 && set_)
+            cpy(p, set_[kh[k].notes[0] & 15].name);
+        else
+            cpy(p, "VARIATION");
+    } else if (kh[k].kind == 1)
+        return;
+    else if (e->flags & EF_DRUM) {
+        int l;
+        cpy(p, "DRUM");
+        for (l = 0; l < e->nlanes; l++)
+            if (n && e->lane_note[l] == kh[k].notes[0])
+                cpy(p, e->lane_name[l]);
+    } else {
+        if (n >= 3 && have_chord) {
+            p = cpy(p, chord_name);
+            p = cpy(p, "  ");
+        }
+        for (i = 0; i < n && i < 4; i++) {
+            int nt = kh[k].notes[i];
+            p = cpy(p, DK_NOTE_NAME[nt % 12]);
+            p = itoa_b(nt / 12 - 1, p);
+            if (i + 1 < n && i < 3)
+                *p++ = ' ', *p = 0;
+        }
+        if (n > 4)
+            cpy(p, "+");
+    }
+    ui.notes_until = plat_ms() + 1500u;
+}
+
 static void key_down(int k, int vel)
 {
     int w = white_of(k), b = black_of(k);
@@ -569,6 +612,7 @@ static void key_down(int k, int vel)
         } else if (trk->seq == SQ_STEP) {   /* melodic: the key's note (or chord) at the cursor, then on */
             int clip = cur_clip(), nt[10], n, i, pos = ui_cursor * DK_T16;
             keys_down(k, vel);
+            notes_show(k);
             n = keys_notes_of(k, nt);
             if (!n)
                 return;
@@ -607,6 +651,7 @@ static void key_down(int k, int vel)
     default: break;
     }
     keys_down(k, vel);
+    notes_show(k);
     if (cur()->seq == SQ_TOMBOLA && dk_song.nball < 12)
         dk_song.ball[dk_song.nball++] = (uint8_t)(53 + k);
 }

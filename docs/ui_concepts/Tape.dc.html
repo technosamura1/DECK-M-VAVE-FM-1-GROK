@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rec tape</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00e5ff}a:hover{color:#ffffff}
+.osd{text-shadow:-1.5px 0 rgba(255,40,100,0.6),1.5px 0 rgba(0,229,255,0.6),2px 3px 0 #000000}
+@keyframes reelspin{to{transform:rotate(360deg)}}
+.spin{transform-box:fill-box;transform-origin:center;animation:reelspin 2.2s linear infinite}
+.spin2{transform-box:fill-box;transform-origin:center;animation:reelspin 1.5s linear infinite}
+@keyframes recblink{50%{opacity:0.15}}
+.blink{animation:recblink 1s steps(1,end) infinite}
+@keyframes playhead{from{left:70px}to{left:450px}}
+.ph{animation:playhead 8s linear infinite}
+</style>
+</helmet>
+<div style="width: 480px; height: 480px; position: relative; overflow: hidden; background: repeating-conic-gradient(#0b0626 0% 25%, #0e0832 0% 50%) 0 0 / 6px 6px; font-family: 'VT323', monospace; color: #ffffff">
+
+<div style="position: absolute; left: 0; top: 0; width: 480px; height: 40px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; gap: 12px; background: #05021a; border-bottom: 3px solid rgba(255,42,74,0.4)">
+<div class="osd" style="display: flex; align-items: center; gap: 8px; font-size: 28px">
+<span class="blink" style="width: 14px; height: 14px; border-radius: 7px; background: #ff2a4a; box-shadow: 0 0 8px #ff2a4a"></span>
+<span style="color: #ff6a7a">REC</span>
+</div>
+<div style="display: flex; align-items: center; gap: 6px; font-size: 26px">
+<span style="background: #ff2a8a; color: #0a0318; padding: 0 6px; line-height: 24px; box-shadow: 3px 3px 0 #000000">C</span>
+<span class="osd">CHORUS</span>
+</div>
+<div style="flex-grow: 1"></div>
+<span class="osd" style="font-size: 24px; color: #c9b8ff">PASS 3</span>
+<span class="osd" style="font-size: 24px">0:01:24</span>
+</div>
+
+<svg width="420" height="241" viewBox="0 0 150 86" aria-hidden="true" style="position: absolute; left: 30px; top: 46px">
+<defs>
+<pattern id="ridge" width="1.4" height="4" patternUnits="userSpaceOnUse"><rect width="1.4" height="4" fill="#c4bfd2"></rect><rect width="0.5" height="4" fill="#9a94ae"></rect></pattern>
+<pattern id="grain" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#1b1727"></rect><rect width="1" height="1" fill="#211c30"></rect></pattern>
+</defs>
+<rect x="1" y="1" width="148" height="84" rx="3" fill="#000000" opacity="0.5" transform="translate(2 2)"></rect>
+<rect x="1" y="1" width="148" height="84" rx="3" fill="url(#grain)"></rect>
+<rect x="1" y="1" width="148" height="84" rx="3" fill="none" stroke="#3e3856" stroke-width="0.8"></rect>
+<g fill="#5e5878">
+<circle cx="5.5" cy="5.5" r="2"></circle><circle cx="144.5" cy="5.5" r="2"></circle>
+<circle cx="5.5" cy="80.5" r="2"></circle><circle cx="144.5" cy="80.5" r="2"></circle>
+</g>
+<g stroke="#2a2540" stroke-width="0.6">
+<line x1="4.3" y1="5.5" x2="6.7" y2="5.5"></line><line x1="143.3" y1="5.5" x2="145.7" y2="5.5"></line>
+<line x1="4.3" y1="80.5" x2="6.7" y2="80.5"></line><line x1="143.3" y1="80.5" x2="145.7" y2="80.5"></line>
+</g>
+
+<rect x="9" y="5" width="132" height="51" rx="2" fill="#d6d1e2"></rect>
+<rect x="9" y="12" width="132" height="1" fill="#ffffff"></rect>
+<rect x="9" y="13.5" width="132" height="32" fill="url(#ridge)"></rect>
+<rect x="9" y="43.2" width="132" height="0.9" fill="#ff2a8a"></rect>
+<rect x="9" y="44.1" width="132" height="0.9" fill="#ff8a00"></rect>
+<rect x="9" y="45" width="132" height="0.9" fill="#ffd23f"></rect>
+
+<rect x="29" y="18" width="92" height="25" rx="1.5" fill="#15121e"></rect>
+<rect x="29" y="18" width="92" height="25" rx="1.5" fill="none" stroke="#3e3856" stroke-width="0.6"></rect>
+<rect x="33" y="20" width="21" height="21" fill="#0b0912"></rect>
+<rect x="96" y="20" width="21" height="21" fill="#0b0912"></rect>
+<g stroke="#2a2540" stroke-width="0.5">
+<line x1="33" y1="20" x2="36" y2="23"></line><line x1="54" y1="20" x2="51" y2="23"></line><line x1="33" y1="41" x2="36" y2="38"></line><line x1="54" y1="41" x2="51" y2="38"></line>
+<line x1="96" y1="20" x2="99" y2="23"></line><line x1="117" y1="20" x2="114" y2="23"></line><line x1="96" y1="41" x2="99" y2="38"></line><line x1="117" y1="41" x2="114" y2="38"></line>
+</g>
+<rect x="59" y="21.5" width="32" height="18" fill="#0b0912"></rect>
+<rect x="60" y="22.5" width="19" height="16" fill="#5a1418"></rect>
+<rect x="60" y="22.5" width="19" height="1" fill="#7a2228"></rect>
+<rect x="79" y="22.5" width="11" height="16" fill="#efeaf4"></rect>
+<rect x="79" y="22.5" width="1" height="16" fill="#b0a8c0"></rect>
+
+<g class="spin">
+<circle cx="43.5" cy="30.5" r="8" fill="#e9e6f2"></circle>
+<circle cx="43.5" cy="30.5" r="8" fill="none" stroke="#9894b0" stroke-width="0.7"></circle>
+<circle cx="43.5" cy="30.5" r="6.4" fill="none" stroke="#c8c4d8" stroke-width="0.4"></circle>
+<circle cx="43.5" cy="30.5" r="3.6" fill="#15121e"></circle>
+<rect x="42.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(0 43.5 30.5)"></rect>
+<rect x="42.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(60 43.5 30.5)"></rect>
+<rect x="42.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(120 43.5 30.5)"></rect>
+<rect x="42.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(180 43.5 30.5)"></rect>
+<rect x="42.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(240 43.5 30.5)"></rect>
+<rect x="42.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(300 43.5 30.5)"></rect>
+<g stroke="#8a86a2" stroke-width="0.5">
+<line x1="43.5" y1="23.3" x2="43.5" y2="24.8" transform="rotate(30 43.5 30.5)"></line>
+<line x1="43.5" y1="23.3" x2="43.5" y2="24.8" transform="rotate(150 43.5 30.5)"></line>
+<line x1="43.5" y1="23.3" x2="43.5" y2="24.8" transform="rotate(270 43.5 30.5)"></line>
+</g>
+</g>
+<g class="spin2">
+<circle cx="106.5" cy="30.5" r="8" fill="#e9e6f2"></circle>
+<circle cx="106.5" cy="30.5" r="8" fill="none" stroke="#9894b0" stroke-width="0.7"></circle>
+<circle cx="106.5" cy="30.5" r="6.4" fill="none" stroke="#c8c4d8" stroke-width="0.4"></circle>
+<circle cx="106.5" cy="30.5" r="3.6" fill="#15121e"></circle>
+<rect x="105.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(0 106.5 30.5)"></rect>
+<rect x="105.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(60 106.5 30.5)"></rect>
+<rect x="105.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(120 106.5 30.5)"></rect>
+<rect x="105.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(180 106.5 30.5)"></rect>
+<rect x="105.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(240 106.5 30.5)"></rect>
+<rect x="105.9" y="26.2" width="1.2" height="1.8" fill="#15121e" transform="rotate(300 106.5 30.5)"></rect>
+<g stroke="#8a86a2" stroke-width="0.5">
+<line x1="106.5" y1="23.3" x2="106.5" y2="24.8" transform="rotate(30 106.5 30.5)"></line>
+<line x1="106.5" y1="23.3" x2="106.5" y2="24.8" transform="rotate(150 106.5 30.5)"></line>
+<line x1="106.5" y1="23.3" x2="106.5" y2="24.8" transform="rotate(270 106.5 30.5)"></line>
+</g>
+</g>
+
+<rect x="9" y="46" width="132" height="8.5" fill="#0d0b14"></rect>
+
+<rect x="9" y="61" width="10" height="10" fill="none" stroke="#3e3856" stroke-width="0.8"></rect>
+<rect x="131" y="61" width="10" height="10" fill="none" stroke="#3e3856" stroke-width="0.8"></rect>
+<polygon points="134,63 134,69 139,66" fill="none" stroke="#6e6890" stroke-width="0.7"></polygon>
+<polygon points="30,85 36,61 114,61 120,85" fill="#14111e"></polygon>
+<polygon points="30,85 36,61 114,61 120,85" fill="none" stroke="#2c2742" stroke-width="0.7"></polygon>
+<circle cx="75" cy="66" r="2" fill="#0b0912" stroke="#3e3856" stroke-width="0.5"></circle>
+<circle cx="48" cy="76" r="3" fill="#05040a"></circle>
+<circle cx="102" cy="76" r="3" fill="#05040a"></circle>
+<rect x="60" y="73.5" width="5" height="5" rx="1" fill="#05040a"></rect>
+<rect x="85" y="73.5" width="5" height="5" rx="1" fill="#05040a"></rect>
+</svg>
+
+<div style="position: absolute; left: 56px; top: 175px; width: 370px; height: 24px; display: flex; align-items: center; gap: 10px">
+<span style="font-size: 26px; letter-spacing: 2px; color: #ffffff">OUTRUN</span>
+<span style="font-size: 15px; color: #b8b2cc">SYNTHWAVE POSITION EQ</span>
+<div style="flex-grow: 1"></div>
+<span style="font-size: 16px; color: #ffffff; border: 1px solid #ffffff; padding: 0 3px; line-height: 15px">NR</span>
+<span style="font-size: 26px; color: #ff2a8a">84</span>
+</div>
+<div style="position: absolute; left: 64px; top: 58px; width: 352px; display: flex; justify-content: space-between; font-size: 20px; color: #2a2440; letter-spacing: 1px"><span>DEMO 84</span><span>SIDE A</span></div>
+<div style="position: absolute; left: 55px; top: 218px; width: 28px; text-align: center; font-size: 24px; line-height: 28px; color: #8a84a8">A</div>
+
+<div style="position: absolute; left: 14px; top: 296px; width: 452px; display: flex; flex-direction: column; gap: 3px">
+<sc-for list="{{lanes}}" as="l" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 6px; height: 21px; background: {{l.rowBg}}">
+<span style="width: 18px; display: flex; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{l.dot}}"></span></span>
+<span style="width: 40px; font-size: 20px; color: {{l.col}}">{{l.name}}</span>
+<div style="flex-grow: 1; height: 15px; position: relative; background: #140a30">
+<sc-for list="{{l.blocks}}" as="b" hint-placeholder-count="6">
+<span style="position: absolute; top: {{b.top}}; height: {{b.h}}; left: {{b.left}}; width: {{b.w}}; background: {{b.c}}"></span>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<div class="ph" aria-hidden="true" style="position: absolute; top: -4px; left: 300px; width: 2px; height: 142px; background: #ffffff; box-shadow: 0 0 6px #ff2a8a"></div>
+</div>
+
+<div style="position: absolute; left: 0; bottom: 0; width: 480px; height: 36px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; font-size: 20px; color: #c9b8ff; background: #05021a">
+<span>REC = NEW PASS</span>
+<span>HOLD EDIT = UNDO PASS</span>
+</div>
+
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 480px; height: 480px; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px)"></div>
+<svg aria-hidden="true" width="480" height="480" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.08; mix-blend-mode: screen">
+<filter id="nz6"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="2"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+<rect width="480" height="480" filter="url(#nz6)"></rect>
+</svg>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 262px; width: 480px; height: 4px; pointer-events: none; background: rgba(255,255,255,0.07)"></div>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 480px; height: 480px; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,0.45) 100%)"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var defs = [
+      { name: 'DRM', col: '#ff2a8a', kind: 'drum' },
+      { name: 'BAS', col: '#ff8a00', kind: 'bass' },
+      { name: 'PAD', col: '#00e5ff', kind: 'pad' },
+      { name: 'KEY', col: '#7a2bff', kind: 'arp' },
+      { name: 'LED', col: '#ffd23f', kind: 'lead', rec: true },
+      { name: 'FX',  col: '#6dff9a', kind: 'fx' }
+    ];
+    var W = 368;
+    var seed = 17;
+    function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+    var lanes = defs.map(function (d) {
+      var blocks = [];
+      var i, x;
+      if (d.kind === 'drum') {
+        for (i = 0; i < 32; i++) blocks.push({ left: (i * W / 32) + 'px', w: '4px', top: (i % 4 === 0 ? 2 : 6) + 'px', h: (i % 4 === 0 ? 11 : 5) + 'px', c: d.col });
+      } else if (d.kind === 'bass') {
+        for (i = 0; i < 16; i++) blocks.push({ left: (i * W / 16) + 'px', w: '14px', top: (3 + (i % 4 === 2 ? 0 : 5)) + 'px', h: '5px', c: d.col });
+      } else if (d.kind === 'pad') {
+        for (i = 0; i < 4; i++) blocks.push({ left: (i * W / 4 + 1) + 'px', w: (W / 4 - 4) + 'px', top: (2 + (i % 2) * 4) + 'px', h: '7px', c: d.col });
+      } else if (d.kind === 'arp') {
+        for (i = 0; i < 48; i++) blocks.push({ left: (i * W / 48) + 'px', w: '5px', top: (2 + Math.floor(rnd() * 9)) + 'px', h: '3px', c: d.col });
+      } else if (d.kind === 'lead') {
+        x = 0;
+        while (x < W * 0.62) {
+          var len = 10 + Math.floor(rnd() * 30);
+          var fresh = x > W * 0.42;
+          blocks.push({ left: x + 'px', w: Math.min(len, W * 0.62 - x) + 'px', top: (1 + Math.floor(rnd() * 10)) + 'px', h: '3px', c: fresh ? '#ff2a4a' : d.col });
+          x += len + 4 + Math.floor(rnd() * 10);
+        }
+      } else {
+        blocks.push({ left: (W * 0.18) + 'px', w: '40px', top: '4px', h: '7px', c: d.col });
+        blocks.push({ left: (W * 0.86) + 'px', w: '30px', top: '4px', h: '7px', c: d.col });
+      }
+      return { name: d.name, col: d.col, blocks: blocks, rowBg: d.rec ? '#2a1238' : 'transparent', dot: d.rec ? '#ff2a4a' : 'transparent' };
+    });
+    return { lanes: lanes };
+  }
+}
+</script>
+</body>
+</html>

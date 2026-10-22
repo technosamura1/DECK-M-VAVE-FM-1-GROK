@@ -1,0 +1,542 @@
+{
+ "city": {
+  "parts": [
+   "INTRO"
+  ],
+  "image_y": 20,
+  "image_h": 200,
+  "signs": [
+   {
+    "role": "chord",
+    "rect": [
+     94,
+     93,
+     151,
+     124
+    ],
+    "style": "neon"
+   }
+  ],
+  "eq": {
+   "mode": "windows",
+   "region": [
+    0,
+    27,
+    240,
+    186
+   ]
+  },
+  "hot": {
+   "synth_keys": [
+    70,
+    200,
+    181,
+    217
+   ],
+   "synth_display": [
+    118,
+    191,
+    136,
+    194
+   ],
+   "cassette": [
+    190,
+    205,
+    220,
+    214
+   ]
+  },
+  "anim": [
+   "rain on glass (denser on hats)",
+   "synth keys on the windowsill light up with the notes you play",
+   "synth display blinks on the kick",
+   "cassette LED on the kick"
+  ]
+ },
+ "road": {
+  "parts": [
+   "VERSE"
+  ],
+  "image_y": 20,
+  "image_h": 200,
+  "signs": [
+   {
+    "role": "part",
+    "rect": [
+     50,
+     44,
+     90,
+     72
+    ],
+    "style": "neon"
+   },
+   {
+    "role": "chord",
+    "rect": [
+     94,
+     44,
+     146,
+     72
+    ],
+    "style": "neon"
+   },
+   {
+    "role": "next",
+    "rect": [
+     150,
+     44,
+     189,
+     72
+    ],
+    "style": "neon"
+   }
+  ],
+  "eq": {
+   "mode": "lamps",
+   "region": null
+  },
+  "hot": {
+   "car": [
+    71,
+    154,
+    168,
+    216
+   ],
+   "tail_l": [
+    77,
+    182,
+    104,
+    195
+   ],
+   "tail_r": [
+    136,
+    182,
+    163,
+    195
+   ],
+   "lamps": [
+    [
+     54,
+     81
+    ],
+    [
+     78,
+     98
+    ],
+    [
+     183,
+     81
+    ],
+    [
+     162,
+     98
+    ]
+   ],
+   "lane_l": [
+    [
+     110,
+     141
+    ],
+    [
+     -5,
+     191
+    ]
+   ],
+   "lane_r": [
+    [
+     130,
+     141
+    ],
+    [
+     245,
+     191
+    ]
+   ]
+  },
+  "anim": [
+   "lane lines run toward the viewer (speed = tempo)",
+   "car bobs 1px on the kick",
+   "taillights flash on the snare",
+   "street lamp glows pulse on the kick"
+  ]
+ },
+ "grid": {
+  "parts": [
+   "CHORUS"
+  ],
+  "image_y": 20,
+  "image_h": 200,
+  "signs": [
+   {
+    "role": "chord",
+    "rect": [
+     88,
+     34,
+     153,
+     65
+    ],
+    "style": "neon"
+   }
+  ],
+  "eq": {
+   "mode": "sun_stripes",
+   "region": [
+    70,
+    99,
+    170,
+    151
+   ]
+  },
+  "hot": {
+   "grid_floor": [
+    0,
+    155,
+    240,
+    220
+   ],
+   "sun": [
+    70,
+    73,
+    170,
+    151
+   ]
+  },
+  "anim": [
+   "grid floor scrolls toward the viewer (palette cycling of the horizontal lines)",
+   "each sun stripe = one track level (6 stripes bottom-up)",
+   "stars twinkle on KEYS/ARP notes",
+   "grid flashes brighter on the kick"
+  ]
+ },
+ "vhsroom": {
+  "parts": [
+   "BRIDGE"
+  ],
+  "image_y": 12,
+  "image_h": 216,
+  "signs": [
+   {
+    "role": "chord",
+    "rect": [
+     59,
+     117,
+     110,
+     167
+    ],
+    "style": "neon"
+   }
+  ],
+  "eq": {
+   "mode": "bars",
+   "region": [
+    178,
+    152,
+    217,
+    169
+   ]
+  },
+  "hot": {
+   "speaker_l": [
+    152,
+    149,
+    174,
+    188
+   ],
+   "speaker_r": [
+    221,
+    149,
+    240,
+    188
+   ],
+   "vcr": [
+    43,
+    188,
+    114,
+    200
+   ],
+   "window": [
+    169,
+    57,
+    240,
+    136
+   ]
+  },
+  "anim": [
+   "the graphic equalizer on the stereo = 6 tracks (literal bars, split the panel into 6 columns)",
+   "chord on the TV screen with CRT glow + rolling scanline",
+   "speakers pump on the kick/bass",
+   "VCR display blinks on the beat",
+   "city windows outside blink with KEYS notes"
+  ]
+ },
+ "drivein": {
+  "parts": [
+   "PRE"
+  ],
+  "image_y": 3,
+  "image_h": 234,
+  "signs": [
+   {
+    "role": "chord",
+    "rect": [
+     49,
+     84,
+     191,
+     159
+    ],
+    "style": "film"
+   }
+  ],
+  "eq": {
+   "mode": "car_lights",
+   "region": [
+    [
+     0,
+     181,
+     68,
+     228
+    ],
+    [
+     87,
+     181,
+     155,
+     228
+    ],
+    [
+     176,
+     181,
+     240,
+     228
+    ],
+    [
+     53,
+     168,
+     94,
+     191
+    ],
+    [
+     105,
+     168,
+     137,
+     183
+    ],
+    [
+     148,
+     168,
+     188,
+     191
+    ]
+   ]
+  },
+  "hot": {
+   "projector_beam": [
+    94,
+    3,
+    145,
+    83
+   ]
+  },
+  "anim": [
+   "the movie screen shows the chord as a film title (dark letters on the light screen, projector flicker)",
+   "taillights of 6 cars = 6 tracks (brighter = louder)",
+   "stars twinkle with KEYS",
+   "palm trees sway once per bar"
+  ]
+ },
+ "arcade": {
+  "parts": [
+   "DROP"
+  ],
+  "image_y": 27,
+  "image_h": 185,
+  "signs": [
+   {
+    "role": "chord",
+    "rect": [
+     101,
+     76,
+     139,
+     97
+    ],
+    "style": "neon"
+   }
+  ],
+  "eq": {
+   "mode": "screens",
+   "region": [
+    [
+     23,
+     63,
+     50,
+     102
+    ],
+    [
+     55,
+     73,
+     71,
+     102
+    ],
+    [
+     70,
+     78,
+     81,
+     101
+    ],
+    [
+     173,
+     80,
+     188,
+     105
+    ],
+    [
+     196,
+     88,
+     214,
+     122
+    ],
+    [
+     219,
+     85,
+     240,
+     127
+    ]
+   ]
+  },
+  "hot": {
+   "floor": [
+    35,
+    132,
+    206,
+    212
+   ]
+  },
+  "anim": [
+   "neon sign on the back wall shows the chord",
+   "arcade screens = 6 tracks (screen brightness/flash)",
+   "checkered floor reflects the kick (brief brightness pulse)",
+   "little sprite blips on screens on hats"
+  ]
+ },
+ "diner": {
+  "parts": [
+   "BREAK"
+  ],
+  "image_y": 12,
+  "image_h": 216,
+  "signs": [
+   {
+    "role": "chord",
+    "rect": [
+     23,
+     57,
+     86,
+     97
+    ],
+    "style": "neon"
+   },
+   {
+    "role": "part",
+    "rect": [
+     124,
+     120,
+     181,
+     136
+    ],
+    "style": "neon"
+   }
+  ],
+  "eq": {
+   "mode": "windows",
+   "region": [
+    84,
+    147,
+    240,
+    188
+   ]
+  },
+  "hot": {
+   "car": [
+    157,
+    166,
+    225,
+    200
+   ],
+   "road": [
+    0,
+    174,
+    84,
+    218
+   ]
+  },
+  "anim": [
+   "pole sign shows the chord, roof sign shows the part name",
+   "diner windows = 6 tracks (split into 6 columns)",
+   "car taillights on the snare",
+   "stars twinkle, a distant car passes on the road every 8 bars"
+  ]
+ },
+ "sunrise": {
+  "parts": [
+   "OUTRO"
+  ],
+  "image_y": 10,
+  "image_h": 220,
+  "signs": [
+   {
+    "role": "chord",
+    "rect": [
+     38,
+     196,
+     71,
+     213
+    ],
+    "style": "neon"
+   }
+  ],
+  "eq": {
+   "mode": "waves",
+   "region": [
+    0,
+    141,
+    240,
+    198
+   ]
+  },
+  "hot": {
+   "sun": [
+    98,
+    108,
+    142,
+    130
+   ],
+   "gulls": [
+    [
+     54,
+     101
+    ],
+    [
+     69,
+     113
+    ],
+    [
+     169,
+     93
+    ],
+    [
+     180,
+     101
+    ],
+    [
+     157,
+     108
+    ]
+   ]
+  },
+  "anim": [
+   "sun slowly rises over the length of the OUTRO part",
+   "seagulls glide across (sprites)",
+   "waves roll, wave crests brighten with track levels",
+   "reflection shimmers"
+  ]
+ }
+}

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Minimal mix</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00d8ff}a:hover{color:#ffffff}
+</style>
+</helmet>
+<div style="width: 480px; height: 480px; box-sizing: border-box; padding: 22px 26px; background: #000000; color: #e8e8e8; font-family: 'IBM Plex Mono', monospace; display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; letter-spacing: 1px; color: #8a8a8a">
+<span>MIX</span>
+<span>MASTER  -3 DB</span>
+</div>
+
+<div style="margin-top: 30px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); height: 250px">
+<sc-for list="{{ch}}" as="c" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+<div style="position: relative; width: 30px; height: 210px">
+<span style="position: absolute; left: 14px; top: 0; width: 1px; height: 210px; background: #2a2a2a"></span>
+<span style="position: absolute; left: 22px; bottom: 0; width: 3px; height: {{c.meter}}; background: {{c.col}}; opacity: 0.45"></span>
+<span style="position: absolute; left: 4px; width: 21px; height: 4px; bottom: {{c.fader}}; background: {{c.cap}}"></span>
+</div>
+<span style="font-size: 11px; letter-spacing: 1px; color: {{c.label}}; border-bottom: {{c.under}}; padding-bottom: 2px">{{c.name}}</span>
+</div>
+</sc-for>
+</div>
+
+<div style="margin-top: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; font-size: 11px; letter-spacing: 2px; color: #6a6a6a">
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ff3d8b"></span><span>VOL</span><span style="font-size: 22px; font-weight: 300; color: #e8e8e8; letter-spacing: 0">78</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #00d8ff"></span><span>PAN</span><span style="font-size: 22px; font-weight: 300; color: #e8e8e8; letter-spacing: 0">L12</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ff9a1f"></span><span>REVERB</span><span style="font-size: 22px; font-weight: 300; color: #e8e8e8; letter-spacing: 0">45</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var d = [['DRM', 160, 140], ['BAS', 130, 110], ['PAD', 150, 90], ['KEY', 110, 70], ['LED', 140, 120], ['FX', 90, 0]];
+    var sel = 2, muted = 5;
+    var ch = d.map(function (x, i) {
+      var s = i === sel, m = i === muted;
+      return {
+        name: m ? x[0] + ' M' : x[0],
+        fader: x[1] + 'px', meter: (m ? 0 : x[2]) + 'px',
+        col: s ? '#ff3d8b' : '#e8e8e8',
+        cap: m ? '#3a3a3a' : (s ? '#ff3d8b' : '#e8e8e8'),
+        label: m ? '#3a3a3a' : (s ? '#ffffff' : '#6a6a6a'),
+        under: s ? '2px solid #ffffff' : '2px solid transparent'
+      };
+    });
+    return { ch: ch };
+  }
+}
+</script>
+</body>
+</html>

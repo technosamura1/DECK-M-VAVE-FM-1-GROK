@@ -100,6 +100,7 @@ int32_t plat_enc(int role)
     return v;
 }
 uint32_t plat_master(void) { return master; }
+int32_t plat_battery(void) { return 610; }    /* (the simulator: a battery about two thirds full) */
 /* the lights ("leds"): bright, and dim (glow 0: none); PLAY's green counts as PLAY */
 void plat_lights(uint32_t b, uint32_t k, uint32_t db, uint32_t dk, int glow)
 {

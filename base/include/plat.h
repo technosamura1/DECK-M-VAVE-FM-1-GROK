@@ -35,6 +35,7 @@ uint32_t plat_buttons(void);           /* held: bit B_* */
 uint32_t plat_keys(void);              /* held: bit k = key k (0 = F3) */
 int32_t plat_enc(int role);            /* detents since the last call, + = clockwise; EN_* */
 uint32_t plat_master(void);            /* MASTER pot's position, 0..4096 (the render gets it as a gain: APP_GAIN) */
+int32_t plat_battery(void);           /* the battery divider's reading, 0..1023 (-1 none yet; DECK's addition) */
 
 /* lights: bright buttons and keys, and dim ones (a short pulse each scan frame; a bright bit wins); glow 0 the dim
  * ones off, 1 low, 2 high. Bit NB in buttons / dim_buttons is PLAY's second, green LED */

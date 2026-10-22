@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Seq drums</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00e5ff}a:hover{color:#ffffff}
+.osd{text-shadow:-1.5px 0 rgba(255,40,100,0.6),1.5px 0 rgba(0,229,255,0.6),2px 3px 0 #000000}
+</style>
+</helmet>
+<div style="width: 480px; height: 480px; position: relative; overflow: hidden; background: repeating-conic-gradient(#0b0626 0% 25%, #0e0832 0% 50%) 0 0 / 6px 6px; font-family: 'VT323', monospace; color: #ffffff; display: flex; flex-direction: column">
+<div style="height: 40px; flex-shrink: 0; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; gap: 14px; background: #05021a">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 26px">
+<svg width="16" height="18" viewBox="0 0 8 9" aria-hidden="true"><polygon points="0,0 8,4.5 0,9" fill="#ffffff"></polygon></svg>
+<span>PLAY</span>
+</div>
+<div style="display: flex; align-items: center; gap: 6px; font-size: 24px">
+<span style="background: #ff2a8a; color: #0a0318; padding: 0 6px; line-height: 24px">B</span>
+<span>CHORUS</span>
+</div>
+<div style="flex-grow: 1"></div>
+<div style="font-size: 24px">3.2</div>
+<div style="font-size: 24px">112</div>
+</div>
+
+<div style="height: 36px; flex-shrink: 0; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; gap: 10px; font-size: 26px">
+<span style="background: #ff2a8a; color: #0a0318; padding: 0 6px; line-height: 24px">1</span>
+<span class="osd" style="font-size: 30px">DRUMS</span>
+<span style="color: #c9b8ff; font-size: 22px">KIT84 / GATED</span>
+<div style="flex-grow: 1"></div>
+<span style="border: 2px solid #ffffff; padding: 0 6px; line-height: 22px; font-size: 22px">STEP</span>
+<span style="font-size: 22px; color: #c9b8ff">BAR 1/2</span>
+</div>
+
+<div style="flex-grow: 1; box-sizing: border-box; padding: 4px 14px 0; display: flex; flex-direction: column; gap: 4px">
+<sc-for list="{{rows}}" as="row" hint-placeholder-count="8">
+<div style="display: flex; align-items: center; gap: 6px; height: 31px; background: {{row.rowBg}}">
+<span style="width: 64px; flex-shrink: 0; font-size: 20px; color: {{row.labelColor}}; padding-left: 4px">{{row.name}}</span>
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; height: 23px">
+<sc-for list="{{row.cells}}" as="c" hint-placeholder-count="16">
+<span style="box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #0a0318; background: {{c.bg}}; border: {{c.border}}">{{c.txt}}</span>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="flex-shrink: 0; box-sizing: border-box; padding: 8px 14px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<div style="border: 2px solid #ff2a8a; padding: 2px 8px; display: flex; align-items: center; gap: 8px">
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #ff2a8a"></span>
+<span style="font-size: 20px; color: #ffb3d6">STEP</span>
+<span style="font-size: 26px; margin-left: auto">06</span>
+</div>
+<div style="border: 2px solid #00e5ff; padding: 2px 8px; display: flex; align-items: center; gap: 8px">
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #00e5ff"></span>
+<span style="font-size: 20px; color: #a8f4ff">VEL</span>
+<span style="font-size: 26px; margin-left: auto">ACC</span>
+</div>
+<div style="border: 2px solid #ff8a00; padding: 2px 8px; display: flex; align-items: center; gap: 8px">
+<span style="width: 12px; height: 12px; border-radius: 6px; background: #ff8a00"></span>
+<span style="font-size: 20px; color: #ffcf99">PROB</span>
+<span style="font-size: 26px; margin-left: auto">100</span>
+</div>
+</div>
+
+<div style="height: 34px; flex-shrink: 0; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; font-size: 20px; color: #c9b8ff">
+<span>WHITE = STEPS  BLACK = LANE</span>
+<span>HOLD REC = CLEAR</span>
+</div>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 480px; height: 480px; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px)"></div>
+<svg aria-hidden="true" width="480" height="480" style="position: absolute; left: 0; top: 0; pointer-events: none; opacity: 0.08; mix-blend-mode: screen">
+<filter id="nz2"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="3"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+<rect width="480" height="480" filter="url(#nz2)"></rect>
+</svg>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 214px; width: 480px; height: 4px; pointer-events: none; background: rgba(255,255,255,0.07)"></div>
+<div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 480px; height: 480px; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,0.45) 100%)"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var lanes = [
+      { name: 'KICK',  col: '#ff2a8a', on: [0,4,8,12,14] },
+      { name: 'SNARE', col: '#ff8a00', on: [4,12], acc: [12] },
+      { name: 'CLAP',  col: '#ffd23f', on: [12,15] },
+      { name: 'CHH',   col: '#00e5ff', on: [0,1,3,4,5,7,8,9,11,12,13,15], rat: [15] },
+      { name: 'OHH',   col: '#3ad6ff', on: [2,6,10,14] },
+      { name: 'TOM L', col: '#7a2bff', on: [14,15] },
+      { name: 'TOM H', col: '#a066ff', on: [13] },
+      { name: 'PERC',  col: '#6dff9a', on: [3,11], prob: [3,11] }
+    ];
+    var play = 5, sel = 1;
+    var rows = lanes.map(function (l, li) {
+      var cells = [];
+      for (var i = 0; i < 16; i++) {
+        var on = l.on.indexOf(i) >= 0;
+        var prob = l.prob && l.prob.indexOf(i) >= 0;
+        var beat = i % 4 === 0;
+        var bg = on ? l.col : (i === play ? '#3b2a70' : (beat ? '#2a1a55' : '#1d1240'));
+        var border = i === play ? '2px solid #ffffff' : '0';
+        if (on && prob) { bg = 'transparent'; border = '2px dashed ' + l.col; }
+        var txt = '';
+        if (l.rat && l.rat.indexOf(i) >= 0) txt = 'x3';
+        if (l.acc && l.acc.indexOf(i) >= 0) txt = '!';
+        cells.push({ bg: bg, border: border, txt: txt });
+      }
+      return { name: l.name, cells: cells, rowBg: li === sel ? '#2a1450' : 'transparent', labelColor: li === sel ? '#ffffff' : l.col };
+    });
+    return { rows: rows };
+  }
+}
+</script>
+</body>
+</html>

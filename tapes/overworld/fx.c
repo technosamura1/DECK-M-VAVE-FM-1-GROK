@@ -46,17 +46,28 @@ static void fx_vinyl(dk_fxst_t *s, float *l, float *r, int n, float amt, float a
     }
 }
 
+/* a slow LFO's phase n samples on (wrapped) */
+static inline float lfo_step(float ph, float inc, int n)
+{
+    ph += inc * (float)n;
+    return ph - (float)(int)ph;
+}
+
 /* TAPE: wow and flutter (a), saturation (b), the top worn with AMOUNT */
 static void fx_tape(dk_fxst_t *s, float *l, float *r, int n, float amt, float a, float b)
 {
     float *f = s->f, k = dk_lpk(16000.0f * fm_exp2f(-1.9f * amt)), drive = 1.0f + 2.5f * b * amt,
           mk = (1.0f + 0.15f * (drive - 1.0f)) / drive, depth = (8.0f + 60.0f * a) * amt;
+    float d, dd;
     int j;
+    /* the wow and the flutter are slow: their sines once a block, a straight line between */
+    d = 80.0f + depth * (0.5f + 0.5f * dk_sinx(f[2])) + depth * 0.12f * dk_sinx(f[3]);
+    f[2] = lfo_step(f[2], 0.53f / DK_SR, n);
+    f[3] = lfo_step(f[3], 6.1f / DK_SR, n);
+    dd = (80.0f + depth * (0.5f + 0.5f * dk_sinx(f[2])) + depth * 0.12f * dk_sinx(f[3]) - d) / (float)n;
     for (j = 0; j < n; j++) {
-        float m, d, x;
-        f[2] = dk_wrap1(f[2] + 0.53f / DK_SR);
-        f[3] = dk_wrap1(f[3] + 6.1f / DK_SR);
-        d = 80.0f + depth * (0.5f + 0.5f * dk_sinx(f[2])) + depth * 0.12f * dk_sinx(f[3]);
+        float m, x;
+        d += dd;
         m = (l[j] + r[j]) * 0.5f;
         fxbuf_put(s, m);
         x = fxbuf_get(s, d);
@@ -94,13 +105,18 @@ static void fx_lofi(dk_fxst_t *s, float *l, float *r, int n, float amt, float a,
 static void fx_chorus(dk_fxst_t *s, float *l, float *r, int n, float amt, float a, float b)
 {
     float *f = s->f, rate = (0.15f + 2.2f * a * a) / DK_SR, depth = 30.0f + 220.0f * b;
+    float d1 = 300.0f + depth * (0.5f + 0.5f * dk_sinx(f[0])), d2 = 330.0f + depth * (0.5f + 0.5f * dk_sinx(f[0] + 0.5f)), e1, e2;
     int j;
+    f[0] = lfo_step(f[0], rate, n);              /* the sway once a block, a straight line between */
+    e1 = (300.0f + depth * (0.5f + 0.5f * dk_sinx(f[0])) - d1) / (float)n;
+    e2 = (330.0f + depth * (0.5f + 0.5f * dk_sinx(f[0] + 0.5f)) - d2) / (float)n;
     for (j = 0; j < n; j++) {
         float m = (l[j] + r[j]) * 0.5f, y1, y2;
-        f[0] = dk_wrap1(f[0] + rate);
+        d1 += e1;
+        d2 += e2;
         fxbuf_put(s, m);
-        y1 = fxbuf_get(s, 300.0f + depth * (0.5f + 0.5f * dk_sinx(f[0])));
-        y2 = fxbuf_get(s, 330.0f + depth * (0.5f + 0.5f * dk_sinx(f[0] + 0.5f)));
+        y1 = fxbuf_get(s, d1);
+        y2 = fxbuf_get(s, d2);
         l[j] = l[j] * (1.0f - 0.35f * amt) + y1 * 0.8f * amt;
         r[j] = r[j] * (1.0f - 0.35f * amt) + y2 * 0.8f * amt;
     }
@@ -131,12 +147,14 @@ static void fx_tremolo(dk_fxst_t *s, float *l, float *r, int n, float amt, float
 {
     static const float DIV[5] = {2.0f, 1.0f, 0.5f, 1.0f / 3.0f, 0.25f};
     float *f = s->f, beats = DIV[(int)(a * 4.99f)], inc = 1.0f / (beats * (dk_ctx.spb > 1.0f ? dk_ctx.spb : 22050.0f));
+    float x = 1.0f - amt * (0.5f + 0.5f * dk_sinx(f[0])), y = 1.0f - amt * (0.5f + 0.5f * dk_sinx(f[0] + 0.5f * b)), dx, dy;
     int j;
+    f[0] = lfo_step(f[0], inc, n);               /* the swell once a block (16th notes: still ~40 blocks a cycle) */
+    dx = (1.0f - amt * (0.5f + 0.5f * dk_sinx(f[0])) - x) / (float)n;
+    dy = (1.0f - amt * (0.5f + 0.5f * dk_sinx(f[0] + 0.5f * b)) - y) / (float)n;
     for (j = 0; j < n; j++) {
-        float x, y;
-        f[0] = dk_wrap1(f[0] + inc);
-        x = 1.0f - amt * (0.5f + 0.5f * dk_sinx(f[0]));
-        y = 1.0f - amt * (0.5f + 0.5f * dk_sinx(f[0] + 0.5f * b));
+        x += dx;
+        y += dy;
         l[j] *= x;
         r[j] *= y;
     }
@@ -146,9 +164,13 @@ static void fx_tremolo(dk_fxst_t *s, float *l, float *r, int n, float amt, float
 static void fx_spring(dk_fxst_t *s, float *l, float *r, int n, float amt, float a, float b)
 {
     float *f = s->f, fb = 0.55f + 0.38f * a, k = dk_lpk(1800.0f + 5000.0f * b);
+    float sd = 900.0f + 12.0f * dk_sinx(f[11]), dsd;
     int j, i;
+    f[11] = lfo_step(f[11], 0.7f / DK_SR, n);
+    dsd = (900.0f + 12.0f * dk_sinx(f[11]) - sd) / (float)n;
     for (j = 0; j < n; j++) {
         float x, y;
+        sd += dsd;
         f[12] += 0.45f * ((l[j] + r[j]) * 0.5f - f[12]);   /* the tank's input softened: no ping off a sharp attack */
         x = f[12] + f[10] * fb;
         for (i = 0; i < 4; i++) {                          /* dispersion: four short all-passes (one-pole) */
@@ -158,8 +180,7 @@ static void fx_spring(dk_fxst_t *s, float *l, float *r, int n, float amt, float 
             x = y;
         }
         fxbuf_put(s, x);
-        y = fxbuf_get(s, 900.0f + 12.0f * dk_sinx(f[11]));
-        f[11] = dk_wrap1(f[11] + 0.7f / DK_SR);
+        y = fxbuf_get(s, sd);
         f[9] += k * (y - f[9]);
         f[10] = fm_flush(f[9]);
         l[j] += (f[9] - l[j] * 0.3f) * amt;

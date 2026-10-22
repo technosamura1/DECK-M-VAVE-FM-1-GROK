@@ -37,6 +37,19 @@ int32_t plat_enc(int role)
 
 static volatile uint32_t master_pos = 2048;   /* MASTER's position, 0..4096 (main_fm1.c reads the pot) */
 uint32_t plat_master(void) { return master_pos; }
+/* the battery: the scan reads it when it owns the converter (the keys' velocity); else the main loop, now and then */
+int32_t plat_battery(void)
+{
+    static int32_t last = -1;
+    static uint32_t at;
+    if (fm1_an.con)
+        return fm1_an.batt ? (int32_t)fm1_an.batt : -1;
+    if (last < 0 || fm1_ms - at > 2000u) {
+        last = fm1_adc_read(FM1_ADC_BATT);
+        at = fm1_ms;
+    }
+    return last;
+}
 
 /* LEDs: the picture is built off-line and copied one byte per column (Felucca: clearing
  * and relighting would let the 10 kHz scan catch the dark gap and flicker) */

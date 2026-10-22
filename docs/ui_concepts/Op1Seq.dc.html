@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Minimal seq</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#00d8ff}a:hover{color:#ffffff}
+</style>
+</helmet>
+<div style="width: 480px; height: 480px; box-sizing: border-box; padding: 22px 26px; background: #000000; color: #e8e8e8; font-family: 'IBM Plex Mono', monospace; display: flex; flex-direction: column; position: relative">
+<div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; letter-spacing: 1px; color: #8a8a8a">
+<span>1 DRUMS</span>
+<span>STEP  ·  1/2</span>
+</div>
+
+<div style="margin-top: 26px; display: flex; flex-direction: column; gap: 10px; position: relative">
+<sc-for list="{{rows}}" as="row" hint-placeholder-count="8">
+<div style="display: flex; align-items: center; gap: 10px; height: 22px">
+<span style="width: 52px; font-size: 11px; letter-spacing: 1px; color: {{row.labelCol}}">{{row.name}}</span>
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); align-items: center; justify-items: center">
+<sc-for list="{{row.cells}}" as="c" hint-placeholder-count="16">
+<span style="width: {{c.size}}; height: {{c.size}}; border-radius: 50%; box-sizing: border-box; background: {{c.bg}}; border: {{c.border}}"></span>
+</sc-for>
+</div>
+</div>
+</sc-for>
+<div aria-hidden="true" style="position: absolute; top: -6px; bottom: -6px; left: 188px; width: 1px; background: #ffffff"></div>
+</div>
+
+<div style="margin-top: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; font-size: 11px; letter-spacing: 2px; color: #6a6a6a">
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ff3d8b"></span><span>STEP</span><span style="font-size: 22px; font-weight: 300; color: #e8e8e8; letter-spacing: 0">06</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #00d8ff"></span><span>VEL</span><span style="font-size: 22px; font-weight: 300; color: #e8e8e8; letter-spacing: 0">ACC</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #ff9a1f"></span><span>PROB</span><span style="font-size: 22px; font-weight: 300; color: #e8e8e8; letter-spacing: 0">100</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var lanes = [
+      ['KICK', [0, 4, 8, 12, 14]], ['SNARE', [4, 12]], ['CLAP', [12, 15]], ['CHH', [0, 2, 4, 6, 8, 10, 12, 14]],
+      ['OHH', [2, 6, 10, 14]], ['TOM L', [14, 15]], ['TOM H', [13]], ['PERC', [3, 11]]
+    ];
+    var sel = 1;
+    var rows = lanes.map(function (l, li) {
+      var cells = [];
+      for (var i = 0; i < 16; i++) {
+        var on = l[1].indexOf(i) >= 0;
+        var col = li === sel ? '#ff3d8b' : '#e8e8e8';
+        cells.push({
+          size: on ? '12px' : '6px',
+          bg: on ? col : (i % 4 === 0 ? '#3a3a3a' : '#1e1e1e'),
+          border: '0'
+        });
+      }
+      return { name: l[0], cells: cells, labelCol: li === sel ? '#ff3d8b' : '#6a6a6a' };
+    });
+    return { rows: rows };
+  }
+}
+</script>
+</body>
+</html>

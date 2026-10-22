@@ -255,6 +255,8 @@ static int field_get(int f)
 static void say(const char *a, const char *b);
 static void mark_dirty(void);
 
+static char *cpy(char *d, const char *s);
+
 static void field_set(int f, int v)
 {
     dk_track_t *k = cur();
@@ -270,7 +272,11 @@ static void field_set(int f, int v)
     case F_MOOD:
         song_mood(v);
         dk_cmd(C_RETUNE, 0, 0, 0);
-        say("MOOD", TAPE.moods[v].name);
+        {                                /* the mood, and the key it brings */
+            char kb[24];
+            cpy(cpy(cpy(kb, DK_NOTE_NAME[dk_song.root % 12]), " "), DK_MODE_NAME[dk_song.mode % DK_NMODES]);
+            say(TAPE.moods[v].name, kb);
+        }
         break;
     case F_P0:
     case F_P1:
@@ -367,12 +373,17 @@ static void field_set(int f, int v)
     case F_GBARS: dk_song.part[ui_gpart].bars = (uint8_t)v; break;
     case F_PLAYMODE: dk_song.play_mode = (uint8_t)v; break;
     case F_ROOT:
-        dk_song.root = (uint8_t)v;
-        dk_cmd(C_RETUNE, 0, 0, 0);
-        break;
     case F_MODE:
-        dk_song.mode = (uint8_t)v;
+        if (f == F_ROOT)
+            dk_song.root = (uint8_t)v;
+        else
+            dk_song.mode = (uint8_t)v;
         dk_cmd(C_RETUNE, 0, 0, 0);
+        {                                /* the key, said plainly: A MINOR */
+            char kb[24];
+            cpy(cpy(cpy(kb, DK_NOTE_NAME[dk_song.root % 12]), " "), DK_MODE_NAME[dk_song.mode % DK_NMODES]);
+            say("KEY", kb);
+        }
         break;
     case F_CHORD: dk_song.chord = (uint8_t)v; break;
     case F_WHITE: dk_song.white = (uint8_t)v; break;

@@ -275,6 +275,22 @@ static const char *hint(void)
     }
 }
 
+/* the battery, 0..100 % (-1: no reading yet), from the divider's reading smoothed. The ends are a guess until
+ * measured on the device: BAT_LO a nearly flat battery, BAT_HI a full one (the PROJECT page shows the raw reading) */
+#define BAT_LO 520
+#define BAT_HI 640
+static int batt_pct(void)
+{
+    static int32_t avg = -1;
+    int32_t r = plat_battery();
+    if (r < 0)
+        return -1;
+    avg = avg < 0 ? r * 16 : avg + r - avg / 16;
+    r = avg / 16;
+    r = (r - BAT_LO) * 100 / (BAT_HI - BAT_LO);
+    return r < 0 ? 0 : r > 100 ? 100 : (int)r;
+}
+
 /* the header: the transport, the part, the bar and beat, the page, the tempo, the six tracks */
 static void draw_header(void)
 {
@@ -302,23 +318,37 @@ static void draw_header(void)
     s[x] = '.';
     itoa_b(beat, s + x + 1);
     cv_text(40, 4, &FONT_XS, s, TH_GRAY);
-    if (ui.page == PG_PLAY) {            /* PLAY: the part's name and the chord, in the header (not on the meadow) */
+    if (plat_ms() < ui.notes_until)      /* what you play, for a moment: its notes (or the drum) */
+        text_box(70, 2, 96, 0, &FONT_B, &FONT_XS, ui.notes, TH_ENC[1]);
+    else if (ui.page == PG_PLAY) {       /* PLAY: the part's name and the chord, in the header (not on the meadow) */
         int pcs[4], n = dk_harm_n ? dk_harm_n : 1, i;
         char c[12];
-        text_box(70, 4, 60, 0, &FONT_XS, &FONT_XS, LABEL_NAME[dk_song.part[part & 7].label & 7], TH_TEXT);
+        text_box(70, 4, 50, 0, &FONT_XS, &FONT_XS, LABEL_NAME[dk_song.part[part & 7].label & 7], TH_TEXT);
         for (i = 0; i < 4; i++)
             pcs[i] = 60 + dk_harm_pcs[i];
         dk_chord_name(pcs, n, c);
-        text_box(128, 1, 56, 1, &FONT_B, &FONT_XS, chord_deg >= 0 || dk_playing ? (have_chord && !dk_playing ? chord_name : c) : "", TH_ENC[0]);
+        text_box(120, 1, 46, 1, &FONT_B, &FONT_XS, chord_deg >= 0 || dk_playing ? (have_chord && !dk_playing ? chord_name : c) : "", TH_ENC[0]);
     } else {
         char tl[16];
         int k = (int)(itoa_b(dk_song.cur_track + 1, tl) - tl);
         tl[k] = ' ';
         cpy(tl + k + 1, track_label(dk_song.cur_track));
-        text_box(70, 4, 96, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC ? tl : PAGE_NAME[ui.page], TH_GRAY);
+        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC ? tl : PAGE_NAME[ui.page], TH_GRAY);
+    }
+    {                                    /* the battery: an outline, filled as far as it is charged (red when low) */
+        int pct = batt_pct(), w;
+        hline(167, 6, 11, TH_GRAY);
+        hline(167, 13, 11, TH_GRAY);
+        vline(167, 6, 8, TH_GRAY);
+        vline(177, 6, 8, TH_GRAY);
+        cv_rect(178, 8, 2, 4, TH_GRAY);
+        if (pct >= 0) {
+            w = (pct * 9 + 50) / 100;
+            cv_rect(168, 7, w < 1 ? 1 : w, 6, pct < 15 ? TH_REC : pct < 35 ? TH_ENC[2] : TH_TEXT);
+        }
     }
     itoa_b(dk_song.tempo, s);
-    text_box(184, 4, 22, 2, &FONT_XS, &FONT_XS, s, TH_TEXT);
+    text_box(182, 4, 24, 2, &FONT_XS, &FONT_XS, s, TH_TEXT);
     for (t = 0; t < DK_NTRACK; t++) {    /* the six tracks: the one you are on bright, a muted one hollow */
         int cx = 211 + (t % 3) * 9, cy = 6 + (t / 3) * 8;
         uint16_t c = t == dk_song.cur_track ? TH_TEXT : dk_level[t] > 0.01f ? TH_TRACK[t] : TH_GRAY;
@@ -828,14 +858,20 @@ static void draw_keys(void)
     int i, minor = dk_song.mode == 1 || dk_song.mode == 2 || dk_song.mode == 3 || dk_song.mode == 6 ||
                    dk_song.mode == 7 || dk_song.mode == 9 || dk_song.mode == 10;
     const char *nm = have_chord ? chord_name : "";
+    int drum = (TAPE.eng[cur()->eng % TAPE.neng]->flags & EF_DRUM) != 0;
     cv_text(8, 26, &FONT_XS, "KEYS", TH_GRAY);
     text_box(120, 26, 112, 2, &FONT_XS, &FONT_T, dk_song.white ? "WHITE = CHORDS" : "WHITE = NOTES", TH_GRAY);
-    if (nm[0]) {
+    if (nm[0] && plat_ms() >= ui.root_until) {
         int w = text2x_w(nm);
         if (w <= 224)
             text2x((240 - w) / 2, 40, nm, TH_TEXT);
         else
             text_box(8, 56, 224, 1, &FONT_L, &FONT_B, nm, TH_TEXT);
+    } else {                                 /* nothing played yet: the key itself, big (A MINOR) */
+        char *p = cpy(s, DK_NOTE_NAME[dk_song.root % 12]);
+        *p++ = ' ';
+        cpy(p, DK_MODE_NAME[dk_song.mode % DK_NMODES]);
+        text_box(8, 50, 224, 1, &FONT_L, &FONT_B, s, plat_ms() < ui.root_until ? TH_ENC[0] : TH_TEXT);
     }
     {
         char *p = s;
@@ -853,6 +889,16 @@ static void draw_keys(void)
         hline(x, 177, 13, TH_LINE);
         vline(x, 134, 44, TH_LINE);
         vline(x + 12, 134, 44, TH_LINE);
+        if (!drum && dk_song.layout) {       /* SCALE: each key's note (or the chord's degree), the tonic marked */
+            int nt = key_note_of(k, dk_song.cur_track), ton = nt % 12 == dk_song.root % 12 && !dk_song.white;
+            char dg[2] = {(char)('1' + i % 7), 0};
+            const char *lb = dk_song.white ? dg : DK_NOTE_NAME[nt % 12];
+            if (dk_song.white && i % 7 == 0)
+                ton = 1;
+            text_box(x + 1, 166, 11, 1, &FONT_T, &FONT_T, lb, lit ? TH_BG : ton ? TH_ENC[2] : TH_GRAY);
+            if (ton)
+                cv_rect(x + 4, 174, 5, 2, lit ? TH_BG : TH_ENC[2]);
+        }
     }
     for (i = 0; i < 11; i++) {
         int k = BLACK_K[i], w = white_of(k - 1), x = 9 + w * 14 + 9, lit = kh[k].trk >= 0 && kh[k].n;
@@ -907,7 +953,9 @@ static void draw_project(void)
         p = cpy(p, "  V ");
         p = itoa_b(dk_voices_on, p);
         p = cpy(p, "/");
-        itoa_b(dk_get_budget(), p);
+        p = itoa_b(dk_get_budget(), p);
+        p = cpy(p, "  BAT ");
+        itoa_b((int)plat_battery(), p);
         text_box(8, 162, 224, 1, &FONT_T, &FONT_T, s, dimc(TH_GRAY, 12));
     }
 }
