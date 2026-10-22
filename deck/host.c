@@ -179,6 +179,19 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         fl.grow = fl.shown = (float)atoi(a) * 0.01f;
         return 1;
     }
+    if (!strcmp(cmd, "uiprof")) {               /* the UI's cost: ms a frame, page by page (host) */
+        int pg, i, keep = ui.page;
+        for (pg = 0; pg < NPG; pg++) {
+            clock_t c0;
+            ui.page = (uint8_t)pg;
+            c0 = clock();
+            for (i = 0; i < 120; i++)
+                ui_frame();
+            printf("uiprof %-8s %.3f ms a frame\n", PAGE_NAME[pg], (double)(clock() - c0) * 1000.0 / CLOCKS_PER_SEC / 120.0);
+        }
+        ui.page = (uint8_t)keep;
+        return 1;
+    }
     if (!strcmp(cmd, "splash")) {
         app_splash();
         return 1;

@@ -26,6 +26,7 @@ static struct {
     dk_block_t road_clip;
     uint8_t road_clip_ok;
     uint8_t screen_dirty;
+    uint32_t draw_t;
 } ui;
 
 static void say(const char *a, const char *b)
@@ -957,6 +958,10 @@ void ui_frame(void)
         ui.prev = ui.page;
         ui.page = PG_REC;
     }
+    /* the screen at ~30 frames a second (a band or the garden each): the panel's link and the CPU kept for the rest */
+    if (now - ui.draw_t < 30u && now >= ui.draw_t)
+        return;
+    ui.draw_t = now;
     ui.frame++;
     draw_frame();
 }

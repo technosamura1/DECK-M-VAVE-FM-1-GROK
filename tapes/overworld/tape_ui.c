@@ -53,6 +53,7 @@ static inline rgb_t dim(rgb_t a, float k) { return mk((int)((float)a.r * k), (in
 enum { I_PIANO, I_PAD, I_BELL, I_BASS, I_DRUM };
 enum { D_BD1, D_BD2, D_SD1, D_SD2, D_RIM, D_CLAP, D_OTHER };
 #define GARDEN_FLOWER 0                /* the scene's own flower (OVERWORLD's FLOWER AUTO) */
+static void garden_overlay(int32_t y0, int32_t h);   /* the shell's (pages.c): what goes over the art */
 static int garden_drum_of(int note)
 {
     return note == 36 ? D_BD1 : note == 35 ? D_BD2 : note == 38 ? D_SD1 : note == 40 ? D_SD2 : note == 39 ? D_CLAP : D_OTHER;
@@ -297,17 +298,29 @@ static void world_draw(int bio, float nf, uint32_t now)
         }
 }
 
+/* the corners a little darker (it draws the eye to the flower): a table made once a biome, then integer shading */
+static uint8_t vig[GH][GW] DK_POOL;
+static int8_t vig_dark = -1;
 static void vignette(int bio)
 {
-    int x, y;
-    float k = WHAS(bio, W_DARK) ? 0.55f : 0.30f;
+    int x, y, dark = WHAS(bio, W_DARK) != 0;
+    if (vig_dark != dark) {
+        float k = dark ? 0.55f : 0.30f;
+        for (y = 0; y < GH; y++)
+            for (x = 0; x < GW; x++) {
+                float dx = ((float)x - 59.5f) / 60.0f, dy = ((float)y - 35.5f) / 36.0f, d = dx * dx * 0.8f + dy * dy * 0.6f;
+                vig[y][x] = (uint8_t)(d < 0.45f ? 0 : (int)(fm_minf(1.0f, (d - 0.45f) * k) * 255.0f));
+            }
+        vig_dark = (int8_t)dark;
+    }
     for (y = 0; y < GH; y++)
         for (x = 0; x < GW; x++) {
-            float dx = ((float)x - 59.5f) / 60.0f, dy = ((float)y - 35.5f) / 36.0f, d = dx * dx * 0.8f + dy * dy * 0.6f, a;
-            if (d < 0.45f)
+            uint32_t a = vig[y][x], c, m;
+            if (!a)
                 continue;
-            a = (d - 0.45f) * k;
-            gblend(x, y, mk(0, 0, 0), a);
+            c = lfb[y][x];
+            m = 256u - a;
+            lfb[y][x] = (uint16_t)((((c >> 11) * m >> 8) << 11) | ((((c >> 5) & 63u) * m >> 8) << 5) | ((c & 31u) * m >> 8));
         }
 }
 
@@ -477,6 +490,7 @@ static void garden_blit(int32_t y0)
             for (x = 0; x < 240; x++)
                 d[x] = row[x];
         }
+        garden_overlay(y0 + half * GH, GH);      /* the shell's message, in the same picture (no flicker) */
         cv_blit(0, (uint32_t)(y0 + half * GH));
     }
 }

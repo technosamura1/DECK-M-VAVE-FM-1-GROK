@@ -1017,6 +1017,18 @@ static void draw_body(void)
     }
 }
 
+/* over the PLAY page's art, before each of its bands goes out: the message (in the band's rows y0 .. y0+h) */
+static void garden_overlay(int32_t y0, int32_t h)
+{
+    if (plat_ms() >= ui.msg_until)
+        return;
+    cv_oy = -y0;
+    cv_y0 = 0;
+    cv_y1 = h;
+    draw_toast();
+    cv_oy = 0;
+}
+
 static void draw_page_band(int band)
 {
     band_begin(band * BAND_H, BAND_H);
@@ -1030,14 +1042,9 @@ static void draw_page_band(int band)
 static void draw_frame(void)
 {
     if (ui.page == PG_PLAY) {             /* the garden every other frame; the header and the foot between */
-        if (ui.frame & 1u) {
-            tape_play_draw(28);
-            if (plat_ms() < ui.msg_until) {   /* the message over the meadow */
-                band_begin(92, 40);
-                draw_toast();
-                band_end();
-            }
-        } else {
+        if (ui.frame & 1u)
+            tape_play_draw(28);              /* (its message drawn into it: garden_overlay) */
+        else {
             band_begin(0, 28);
             draw_header();
             band_end();

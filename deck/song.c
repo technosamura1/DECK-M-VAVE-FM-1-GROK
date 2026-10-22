@@ -7,7 +7,7 @@
 #include "song.h"
 
 dk_user_t dk_user;                       /* the user's presets: 4 an engine */
-static dk_ev_t ubuf[1536] DK_POOL;       /* undo: snapshots back to back (entries below) */
+static dk_ev_t ubuf[1024] DK_POOL;       /* undo: snapshots back to back (entries below) */
 static dk_ev_t rbuf[512] DK_POOL;        /* redo */
 static dk_ev_t clipboard[384] DK_POOL;
 static int clip_n = -1, clipb_len;
@@ -184,8 +184,8 @@ static void snap_restore(const snap_t *s, const dk_ev_t *buf)
     }
     song_edits++;
 }
-void undo_push(int clip) { snap_take(usnap, &un, NSNAP, ubuf, 1536, clip, 0), rn = 0; }
-void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, 1536, 0, 1), rn = 0; }
+void undo_push(int clip) { snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0), rn = 0; }
+void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, 1024, 0, 1), rn = 0; }
 int undo_count(void) { return un; }
 /* 1 = done; what: the clip (or -1 the road) */
 int song_undo(int *what)
@@ -211,7 +211,7 @@ int song_redo(int *what)
     s = rsnap[rn - 1];
     dk_lock();
     keep = rn;
-    snap_take(usnap, &un, NSNAP, ubuf, 1536, s.clip, s.kind);
+    snap_take(usnap, &un, NSNAP, ubuf, 1024, s.clip, s.kind);
     rn = keep;
     snap_restore(&s, rbuf);
     dk_unlock();
@@ -248,7 +248,7 @@ int rec_flush(void)
         if (r.clip >= DK_NCLIP)
             continue;
         if (r.pass != rec_snapped_pass || r.clip != rec_snapped_clip) {
-            snap_take(usnap, &un, NSNAP, ubuf, 1536, r.clip, 0);
+            snap_take(usnap, &un, NSNAP, ubuf, 1024, r.clip, 0);
             rn = 0;
             rec_snapped_pass = r.pass;
             rec_snapped_clip = r.clip;
