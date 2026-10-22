@@ -1,0 +1,42 @@
+/* SPDX-License-Identifier: MPL-2.0
+ * Copyright (C) 2026 DECK contributors */
+/* The song's edits (song.c), the user's presets. */
+#pragma once
+#include "core.h"
+
+typedef struct {
+    char name[12];
+    uint8_t used, fx, fxamt, fxa, fxb, rev, echo;
+    int8_t p[DK_NP], env[3], trim;
+    uint8_t mt[3];
+    int8_t ma[3];
+} dk_upreset_t;
+typedef struct {
+    uint32_t magic;
+    dk_upreset_t p[8][4];
+} dk_user_t;
+extern dk_user_t dk_user;
+extern uint32_t song_edits;
+
+int clip_len(int clip);
+int clip_len_raw(int clip);
+int clip_find(int clip, int pos, int note, int tol);
+void ev_delete(int clip, int k);
+void clip_clear(int clip);
+void clip_copy(int clip);
+int clip_paste(int clip);
+void clip_double(int clip);
+void clip_transpose(int clip, int steps);
+void clip_variate(int clip, uint32_t seed);
+void clip_humanize(int clip, uint32_t seed);
+void undo_push(int clip);
+void undo_push_road(void);
+int undo_count(void);
+int song_undo(int *what);
+int song_redo(int *what);
+int rec_flush(void);
+void rec_reset(void);
+const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp);
+void track_preset(int t, int slot);
+void song_template(int tp);
+void song_mood(int m);

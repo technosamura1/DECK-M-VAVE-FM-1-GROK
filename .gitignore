@@ -1,0 +1,6 @@
+build/
+deck/build/
+deck/fm1.toml
+*.wav
+*.exe
+__pycache__/

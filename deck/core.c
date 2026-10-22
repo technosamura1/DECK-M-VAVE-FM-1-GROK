@@ -1,0 +1,876 @@
+/* SPDX-License-Identifier: MPL-2.0
+ * Copyright (C) 2026 DECK contributors; the plate and the tape echo after OVERWORLD and AMB-1 (C) 2026 Charles Vestal */
+/* DECK's audio core (core.h). Its own -O2 unit; float only, no libm (fastmath.h). The sequencer is seq.c, the
+ * harmony's pure parts music.c, both part of this unit. */
+#include "core.h"
+#include "fastmath.h"
+#ifdef DK_PROF
+double dk_prof_now(void);
+double dk_prof[8];
+static double prof_t0;
+#define PROF_T(k) do { double t_ = dk_prof_now(); if (k) dk_prof[k] += t_ - prof_t0; prof_t0 = t_; } while (0)
+#else
+#define PROF_T(k) do { } while (0)
+#endif
+
+#define BARRIER() __asm__ volatile("" ::: "memory")
+
+dk_song_t dk_song;
+dk_ev_t dk_ev[DK_NEV] DK_POOL;
+dk_ctx_t dk_ctx;
+dk_metro_t dk_metro = {1, 1, METRO_WOOD, 0, 55, 0};
+uint8_t dk_midi_notes = 1, dk_midi_clock = 1;
+
+#include "music.c"
+
+/* ------------------------------------------------------------------ helpers --- */
+static uint32_t rng = 2654435769u;
+uint32_t dk_rnd(void)
+{
+    uint32_t x = rng;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    rng = x;
+    return x;
+}
+float dk_frand(void) { return (float)(dk_rnd() >> 8) * (1.0f / 16777216.0f); }
+float dk_white(void) { return (float)(int32_t)dk_rnd() * (1.0f / 2147483648.0f); }
+static int irand(int n) { return n > 0 ? (int)((dk_rnd() >> 8) % (uint32_t)n) : 0; }
+
+#define SN 1024
+float dk_sint[SN + 1];
+float dk_sine(float ph) { return dk_sinx(ph); }
+float dk_mtof(float n) { return 440.0f * dk_ctx.tune * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
+float dk_decay(float tau) { return fm_expf(-1.0f / (fm_maxf(tau, 0.0001f) * DK_SR)); }
+float dk_lpk(float fc) { return 1.0f - fm_expf(-6.2831853f * fm_clampf(fc, 20.0f, 18000.0f) * (1.0f / DK_SR)); }
+float dk_svf_f(float fc) { return 2.0f * fm_sinf(3.1415927f * fm_clampf(fc, 30.0f, 16000.0f) * (1.0f / DK_SR)); }
+float dk_saw(float t, float dt)
+{
+    float y = 2.0f * t - 1.0f;
+    if (t < dt) {
+        float x = t / dt;
+        y -= x + x - x * x - 1.0f;
+    } else if (t > 1.0f - dt) {
+        float x = (t - 1.0f) / dt;
+        y -= x * x + x + x + 1.0f;
+    }
+    return y;
+}
+
+/* ----------------------------------------------------------------- commands --- */
+typedef struct {
+    uint8_t c, a;
+    uint16_t b;
+    int32_t d;
+} cmd_t;
+#define QN 256u
+static cmd_t q[QN];
+static volatile uint32_t q_w, q_r;
+void dk_cmd(int c, int a, int b, int d)
+{
+    cmd_t *e;
+    if (q_w - q_r >= QN)
+        return;
+    e = &q[q_w % QN];
+    e->c = (uint8_t)c;
+    e->a = (uint8_t)a;
+    e->b = (uint16_t)b;
+    e->d = d;
+    BARRIER();
+    q_w++;
+}
+static volatile uint8_t locked;
+void dk_lock(void)
+{
+    locked = 1;
+    BARRIER();
+}
+void dk_unlock(void)
+{
+    BARRIER();
+    locked = 0;
+}
+
+/* ------------------------------------------------------------------- state --- */
+volatile dk_recev_t dk_recq[DK_RECQ];
+volatile uint32_t dk_recq_w;
+volatile uint32_t dk_seen_w;
+volatile uint32_t dk_seen[DK_SEEN];
+volatile uint8_t dk_playing, dk_recording, dk_counting, dk_rec_trk, dk_pass;
+volatile uint8_t dk_cur_part, dk_next_part = 0xFF, dk_road_i, dk_road_rep, dk_stems;
+volatile uint16_t dk_part_tick, dk_part_len = DK_TPB * 4;
+volatile uint32_t dk_ticks, dk_clock;
+volatile uint8_t dk_beat_flash;
+volatile float dk_level[DK_NTRACK], dk_master_level;
+volatile uint8_t dk_finger_on[DK_NTRACK];
+volatile uint32_t dk_finger_latch[DK_NTRACK];
+volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;
+volatile uint8_t dk_perform;
+volatile uint8_t dk_open_n;
+volatile uint16_t dk_open_pos[8];
+volatile uint8_t dk_open_note[8];
+volatile uint8_t dk_voices_on;
+volatile uint8_t dk_fill;
+volatile uint32_t dk_rec_hits;
+volatile float dk_tmb_angle;
+volatile int16_t dk_tmb_x[DK_NBALL], dk_tmb_y[DK_NBALL];
+volatile uint8_t dk_tmb_note[DK_NBALL], dk_tmb_n, dk_tmb_hit[DK_NBALL];
+volatile uint8_t dk_held_n[DK_NTRACK];
+volatile uint8_t dk_held[DK_NTRACK][8];
+volatile uint32_t dk_metro_clicks, dk_metro_err_max;
+
+static void seen(int note, int trk, int vel, int src)
+{
+    uint32_t w = dk_seen_w;
+    dk_seen[w % DK_SEEN] = (uint32_t)(note & 0x7F) | (uint32_t)trk << 8 | (uint32_t)(vel & 0x7F) << 16 | (uint32_t)src << 24;
+    BARRIER();
+    dk_seen_w = w + 1u;
+}
+
+/* ----------------------------------------------------------- the parameters --- */
+/* a track's values as its voices get them: the knobs, the MACRO, what the clip's motion holds, the modulators */
+static float tp[DK_NTRACK][PX_N];
+static float t_fxamt[DK_NTRACK], t_fxa[DK_NTRACK], t_fxb[DK_NTRACK], t_rev[DK_NTRACK], t_echo[DK_NTRACK];
+static float t_vol[DK_NTRACK], t_pan[DK_NTRACK], t_swing[DK_NTRACK];
+static int16_t mot[DK_NTRACK][T_N];           /* the clip's motion: the value (-1 none) */
+static uint32_t mot_until[DK_NTRACK][T_N];    /* a p-lock's end (dk_ticks), 0: a move (stays) */
+static float modv[DK_NTRACK][2];              /* the modulators now, -1..1 (PEDAL, FOLLOW: 0..1) */
+static float dice_v[DK_NTRACK][2], pedal_v[DK_NTRACK][2];
+static uint8_t perf_rain;
+
+const dk_engine_t *dk_engine(int t)
+{
+    int e = dk_song.trk[t].eng;
+    return TAPE.eng[(unsigned)e < TAPE.neng ? e : 0];
+}
+
+static int base_value(int t, int target, int *lo, int *hi)
+{
+    const dk_track_t *k = &dk_song.trk[t];
+    *lo = 0;
+    *hi = 100;
+    if (target >= T_P0 && target <= T_P7) {
+        const dk_engine_t *e = dk_engine(t);
+        int i = target - T_P0;
+        if (i >= e->nparams)
+            return 0;
+        *lo = e->params[i].lo;
+        *hi = e->params[i].hi;
+        return k->p[i];
+    }
+    switch (target) {
+    case T_ATT: return k->env[0];
+    case T_DEC: return k->env[1];
+    case T_REL: return k->env[2];
+    case T_FXAMT: return k->fxamt;
+    case T_FXA: return k->fxa;
+    case T_FXB: return k->fxb;
+    case T_REV: return k->rev;
+    case T_ECHO: return k->echo;
+    case T_VOL: return k->vol;
+    case T_PAN: *lo = -50; *hi = 50; return k->pan;
+    case T_SWING: *hi = 60; return k->swing;
+    default: return 0;
+    }
+}
+
+int dk_param_value(int t, int target)
+{
+    const dk_track_t *k = &dk_song.trk[t];
+    int lo, hi, v = base_value(t, target, &lo, &hi), i;
+    float f;
+    if (mot[t][target] >= 0)                  /* the clip's motion: 0..100 of the range */
+        v = lo + (mot[t][target] * (hi - lo) + 50) / 100;
+    f = (float)v;
+    for (i = 0; i < 3; i++)                    /* MACRO: amount % of the range at full */
+        if (k->mt[i] == target && k->ma[i])
+            f += (float)k->ma[i] * 0.01f * (float)k->macro * 0.01f * (float)(hi - lo);
+    for (i = 0; i < 2; i++)
+        if (k->mod[i][0] != MOD_OFF && k->mod[i][0] != MOD_TREMOLO && k->mod[i][3] == target)
+            f += modv[t][i] * (float)k->mod[i][1] * 0.01f * (float)(hi - lo) * 0.5f;
+    if (target == T_P1 && perf_rain && (dk_engine(t)->flags & EF_CONT))
+        f += 40.0f;
+    f = fm_clampf(f, (float)lo, (float)hi);
+    return (int)(f + (f >= 0.0f ? 0.5f : -0.5f));
+}
+
+static void params_update(void)
+{
+    int t, i;
+    for (t = 0; t < DK_NTRACK; t++) {
+        const dk_engine_t *e = dk_engine(t);
+        for (i = 0; i < DK_NP; i++)
+            tp[t][i] = i < e->nparams ? (float)dk_param_value(t, T_P0 + i) : 0.0f;
+        tp[t][PX_ATT] = (float)dk_param_value(t, T_ATT);
+        tp[t][PX_DEC] = (float)dk_param_value(t, T_DEC);
+        tp[t][PX_REL] = (float)dk_param_value(t, T_REL);
+        tp[t][PX_DRIFT] = (float)dk_song.trk[t].drift;
+        t_fxamt[t] = (float)dk_param_value(t, T_FXAMT) * 0.01f;
+        t_fxa[t] = (float)dk_param_value(t, T_FXA) * 0.01f;
+        t_fxb[t] = (float)dk_param_value(t, T_FXB) * 0.01f;
+        t_rev[t] = (float)dk_param_value(t, T_REV) * 0.01f;
+        t_echo[t] = (float)dk_param_value(t, T_ECHO) * 0.01f;
+        t_vol[t] = (float)dk_param_value(t, T_VOL) * 0.01f;
+        t_pan[t] = (float)dk_param_value(t, T_PAN) * 0.02f;
+        t_swing[t] = (float)dk_param_value(t, T_SWING) * 0.01f;
+    }
+}
+
+/* ------------------------------------------------------------------- voices --- */
+typedef struct {
+    uint8_t on, held, note, trk, src, eng, rsv[2];
+    int32_t gate, delay;
+    uint32_t age;
+    float st[DK_VSTATE];
+} voice_t;
+static voice_t vc[DK_NVOICE];
+static uint32_t age_ctr;
+static uint8_t shed;
+/* a voice taken while it still sounds fades out over a few milliseconds here, from a copy (no click) */
+#define NFADE 4
+static voice_t fv[NFADE];
+static float fv_g[NFADE];
+static void voice_fade(const voice_t *v)
+{
+    int i, k = 0;
+    if (!v->on || v->delay > 0 || TAPE.eng[v->eng]->level(v->st) < 0.002f)
+        return;
+    for (i = 1; i < NFADE; i++)
+        if (fv_g[i] < fv_g[k])
+            k = i;
+    fv[k] = *v;
+    fv_g[k] = 1.0f;
+}
+static float sc_env;                           /* the kick's envelope (the sidechain, FOLLOW) */
+
+static void midi(uint32_t st, uint32_t d1, uint32_t d2)
+{
+    if (dk_midi_notes)
+        dk_midi_out(st, d1, d2);
+}
+static uint32_t ch_of(int t) { return (uint32_t)((dk_song.trk[t].midi_ch ? dk_song.trk[t].midi_ch - 1 : t) & 15); }
+
+static void voice_release(voice_t *v)
+{
+    if (!v->held)
+        return;
+    v->held = 0;
+    v->gate = 0;
+    if (!(TAPE.eng[v->eng]->flags & EF_DRUM))   /* a drum rings out its own way (off: choked) */
+        TAPE.eng[v->eng]->off(v->st, tp[v->trk]);
+    midi(0x80u | ch_of(v->trk), v->note, 0);
+}
+
+static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
+{
+    int i, cnt = 0;
+    voice_t *best = 0;
+    float lo = 1e9f;
+    uint32_t oldest = 0;
+    *retrig = 0;
+    if (e->flags & EF_MONO) {                  /* one voice: played again while held (legato glides); a sound that
+                                                * goes on (the world) whenever it still sounds */
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on && vc[i].trk == t && vc[i].eng == dk_song.trk[t].eng && (vc[i].held || (e->flags & EF_CONT))) {
+                if (vc[i].held)
+                    midi(0x80u | ch_of(t), vc[i].note, 0);
+                *retrig = vc[i].held ? 2 : 1;
+                return &vc[i];
+            }
+    }
+    if (e->flags & EF_DRUM)                    /* a drum hit again: its own voice cut short */
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on && vc[i].trk == t && vc[i].note == note && vc[i].delay <= 0)
+                TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);
+    for (i = 0; i < DK_NVOICE; i++)
+        cnt += vc[i].on && vc[i].trk == t;
+    if (cnt >= e->max_voices) {                /* the track's own: its quietest let go, else its oldest */
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on && vc[i].trk == t) {
+                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f);
+                if (l < lo) {
+                    lo = l;
+                    best = &vc[i];
+                }
+            }
+    } else {
+        for (i = 0; i < DK_NVOICE; i++)
+            if (!vc[i].on)
+                return &vc[i];
+        for (i = 0; i < DK_NVOICE; i++) {      /* the pool full: the quietest let go anywhere, else the oldest */
+            float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+            if (!vc[i].held && l < lo) {
+                lo = l;
+                best = &vc[i];
+            }
+        }
+        if (!best)
+            for (i = 0; i < DK_NVOICE; i++)
+                if (age_ctr - vc[i].age >= oldest) {
+                    oldest = age_ctr - vc[i].age;
+                    best = &vc[i];
+                }
+    }
+    if (best && best->held)
+        midi(0x80u | ch_of(best->trk), best->note, 0);
+    if (best)
+        voice_fade(best);
+    return best;
+}
+
+/* a note starts: gate samples held (-1: until let go), delay samples late */
+/* the CPU's budget: the voices' cost (the engines' cost, tenths of a microsecond a block on the host) kept under what
+ * OVERWORLD's busiest moment cost: over it, the quietest tails go first (faded), then a quiet held voice; never a
+ * loud note */
+#define DK_BUDGET 165
+static void budget_make_room(int want)
+{
+    int guard = DK_NVOICE;
+    while (guard--) {
+        int i, total = want, best = -1;
+        float lo = 1e9f;
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on)
+                total += TAPE.eng[vc[i].eng]->cost;
+        if (total <= DK_BUDGET)
+            return;
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on) {
+                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 1.0f : 0.0f);
+                if (l < lo) {
+                    lo = l;
+                    best = i;
+                }
+            }
+        if (best < 0 || lo > 1.25f)              /* only loud held notes left: they stay */
+            return;
+        if (vc[best].held)
+            midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
+        voice_fade(&vc[best]);
+        vc[best].on = 0;
+    }
+}
+
+static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t delay, int src)
+{
+    const dk_engine_t *e = dk_engine(t);
+    voice_t *v;
+    int retrig, i;
+    if (note < 0 || note > 127 || vel <= 0.0f)
+        return 0;
+    if ((e->flags & EF_DRUM) && (note == 42 || note == 44 || note == 46))   /* the hats choke each other */
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on && vc[i].trk == t && (vc[i].note == 42 || vc[i].note == 44 || vc[i].note == 46))
+                TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);
+    budget_make_room(e->cost);
+    v = voice_get(t, e, &retrig, note);
+    if (!v)
+        return 0;
+    if (!retrig)
+        for (i = 0; i < DK_VSTATE; i++)
+            v->st[i] = 0.0f;
+    v->on = 1;
+    v->held = 1;
+    v->note = (uint8_t)note;
+    v->trk = (uint8_t)t;
+    v->src = (uint8_t)src;
+    v->eng = dk_song.trk[t].eng;
+    v->gate = gate;
+    v->delay = delay > 0 ? delay : 0;
+    v->age = age_ctr++;
+    e->on(v->st, note, vel, tp[t], retrig);
+    if ((e->flags & EF_DRUM) && (note == 35 || note == 36))
+        sc_env = 1.0f;
+    seen(note, t, (int)(vel * 127.0f), src);
+    midi(0x90u | ch_of(t), (uint32_t)note, (uint32_t)(vel * 127.0f) < 1u ? 1u : (uint32_t)(vel * 127.0f));
+    return v;
+}
+
+static void voices_off_note(int t, int note)
+{
+    int i;
+    for (i = 0; i < DK_NVOICE; i++)
+        if (vc[i].on && vc[i].held && vc[i].trk == t && vc[i].note == note && vc[i].gate < 0)
+            voice_release(&vc[i]);
+}
+static void voices_release_track(int t, int src_min)
+{
+    int i;
+    for (i = 0; i < DK_NVOICE; i++)
+        if (vc[i].on && vc[i].trk == t && vc[i].src >= src_min)
+            voice_release(&vc[i]);
+}
+
+/* ------------------------------------------------------- reverb: a plate --- */
+/* (as OVERWORLD's and AMB-1's, from FoMni) J. Dattorro, "Effect Design, Part 1", JAES 1997; its decay, damping and
+ * pre-delay from the song's SPACE (ROOM HALL CAVE SHIMMER) and SLEEP */
+#define DS(n) (((n) * 14818 + 5000) / 10000)
+#define PRE_N 1100
+#define EXC DS(16)
+enum { L_PRE, L_IN1, L_IN2, L_IN3, L_IN4, L_APL, L_D1L, L_AP2L, L_D2L, L_APR, L_D1R, L_AP2R, L_D2R, L_N };
+static const int DL_LEN[L_N] = {PRE_N, DS(142), DS(107), DS(379), DS(277), DS(672) + EXC + 2, DS(4453), DS(1800),
+                                DS(3720), DS(908) + EXC + 2, DS(4217), DS(2656), DS(3163)};
+#define DL_TOTAL (PRE_N + DS(142) + DS(107) + DS(379) + DS(277) + DS(672) + DS(4453) + DS(1800) + DS(3720) + DS(908) + \
+                  DS(4217) + DS(2656) + DS(3163) + 2 * (EXC + 2))
+static float pl_buf[DL_TOTAL] DK_POOL;
+typedef struct {
+    float *b;
+    int n, i;
+} dl_t;
+static dl_t dl[L_N];
+static float pl_bw, pl_bwk = 0.55f, pl_damp_l, pl_damp_r, pl_decay = 0.6f, pl_damp = 0.4f, lfo_s, lfo_c = 1.0f;
+static int pl_pre = PRE_N, pl_early;
+static inline float tap(const dl_t *d, int k)
+{
+    int j = d->i - k;
+    return d->b[j < 0 ? j + d->n : j];
+}
+static inline void push(dl_t *d, float x)
+{
+    d->b[d->i] = x;
+    if (++d->i >= d->n)
+        d->i = 0;
+}
+static inline float allpass(dl_t *d, int len, float x, float g)
+{
+    float z = tap(d, len), v = x - g * z;
+    push(d, fm_flush(v));
+    return z + g * v;
+}
+static inline float allpass_mod(dl_t *d, float len, float x, float g)
+{
+    int k = (int)len;
+    float f = len - (float)k, z = tap(d, k) + (tap(d, k + 1) - tap(d, k)) * f, v = x - g * z;
+    push(d, fm_flush(v));
+    return z + g * v;
+}
+static inline void reverb(float in, float *ol, float *or_)
+{
+    float x, a, b, fb_l = tap(&dl[L_D2R], DS(3163)), fb_r = tap(&dl[L_D2L], DS(3720)), er = 0.0f;
+    push(&dl[L_PRE], in);
+    x = tap(&dl[L_PRE], pl_pre);
+    if (pl_early)                               /* CAVE: the walls' first answers */
+        er = tap(&dl[L_PRE], 211) * 0.5f + tap(&dl[L_PRE], 487) * 0.35f + tap(&dl[L_PRE], 733) * 0.25f;
+    pl_bw += pl_bwk * (x - pl_bw);
+    x = allpass(&dl[L_IN1], DS(142), pl_bw, 0.75f);
+    x = allpass(&dl[L_IN2], DS(107), x, 0.75f);
+    x = allpass(&dl[L_IN3], DS(379), x, 0.625f);
+    x = allpass(&dl[L_IN4], DS(277), x, 0.625f);
+    {
+        float s = lfo_s + 0.0001f * lfo_c, c = lfo_c - 0.0001f * s;
+        lfo_s = s;
+        lfo_c = c;
+    }
+    a = allpass_mod(&dl[L_APL], (float)DS(672) + (float)EXC * lfo_s, x + pl_decay * fb_l, -0.7f);
+    push(&dl[L_D1L], a);
+    b = tap(&dl[L_D1L], DS(4453));
+    pl_damp_l += pl_damp * (b - pl_damp_l);
+    b = allpass(&dl[L_AP2L], DS(1800), pl_damp_l * pl_decay, 0.5f);
+    push(&dl[L_D2L], b);
+    a = allpass_mod(&dl[L_APR], (float)DS(908) + (float)EXC * lfo_c, x + pl_decay * fb_r, -0.7f);
+    push(&dl[L_D1R], a);
+    b = tap(&dl[L_D1R], DS(4217));
+    pl_damp_r += pl_damp * (b - pl_damp_r);
+    b = allpass(&dl[L_AP2R], DS(2656), pl_damp_r * pl_decay, 0.5f);
+    push(&dl[L_D2R], b);
+    *ol = 0.6f * (tap(&dl[L_D1R], DS(266)) + tap(&dl[L_D1R], DS(2974)) - tap(&dl[L_AP2R], DS(1913)) +
+                  tap(&dl[L_D2R], DS(1996)) - tap(&dl[L_D1L], DS(1990)) - tap(&dl[L_AP2L], DS(187)) -
+                  tap(&dl[L_D2L], DS(1066))) + er;
+    *or_ = 0.6f * (tap(&dl[L_D1L], DS(353)) + tap(&dl[L_D1L], DS(3627)) - tap(&dl[L_AP2L], DS(1228)) +
+                   tap(&dl[L_D2L], DS(2673)) - tap(&dl[L_D1R], DS(2111)) - tap(&dl[L_AP2R], DS(335)) -
+                   tap(&dl[L_D2R], DS(121))) + er * 0.9f;
+}
+static void plate_init(void)
+{
+    float *p = pl_buf;
+    int k, i;
+    for (k = 0; k < L_N; k++) {
+        dl[k].b = p;
+        dl[k].n = DL_LEN[k];
+        dl[k].i = 0;
+        p += DL_LEN[k];
+    }
+    for (i = 0; i < DL_TOTAL; i++)
+        pl_buf[i] = 0.0f;
+}
+/* SHIMMER: an octave up fed into the plate (two heads gliding through a short line, crossfaded) */
+#define SH_N 2048
+static float sh_buf[SH_N];
+static int sh_w;
+static float sh_ph;
+static uint8_t shimmer;
+static inline float shimmer_step(float x)
+{
+    float y, d1, d2, w1, r1, r2;
+    int i1, i2;
+    sh_buf[sh_w] = x;
+    sh_ph += 1.0f / 1400.0f;                   /* the heads move at twice the speed: an octave up */
+    if (sh_ph >= 1.0f)
+        sh_ph -= 1.0f;
+    d1 = sh_ph * 1400.0f;
+    d2 = (sh_ph < 0.5f ? sh_ph + 0.5f : sh_ph - 0.5f) * 1400.0f;
+    w1 = 1.0f - fm_fabsf(2.0f * sh_ph - 1.0f);
+    r1 = (float)sh_w - 1400.0f + d1;
+    r2 = (float)sh_w - 1400.0f + d2;
+    if (r1 < 0.0f)
+        r1 += (float)SH_N;
+    if (r2 < 0.0f)
+        r2 += (float)SH_N;
+    i1 = (int)r1 & (SH_N - 1);
+    i2 = (int)r2 & (SH_N - 1);
+    y = sh_buf[i1] * w1 + sh_buf[i2] * (1.0f - w1);
+    if (++sh_w >= SH_N)
+        sh_w = 0;
+    return y;
+}
+
+/* ------------------------------------------------------------- tape echo --- */
+/* (as OVERWORLD's) a mono line at half rate, 16-bit, up to 1.3 s; each repeat darker and a little worn */
+#define ECHO_N 28700
+static int16_t echo_buf[ECHO_N] DK_POOL;
+static int echo_w;
+static float echo_d = 10000.0f, echo_d_t = 10000.0f, echo_fb = 0.4f, echo_lp, echo_half, echo_out;
+static uint8_t echo_odd;
+static inline float echo_step(float in)
+{
+    if (echo_odd) {
+        float x, rp, fr, a, b;
+        int i0, i1;
+        echo_d += (echo_d_t - echo_d) * 0.0002f;
+        rp = (float)echo_w - echo_d;
+        if (rp < 0.0f)
+            rp += (float)ECHO_N;
+        i0 = (int)rp;
+        fr = rp - (float)i0;
+        i1 = i0 + 1 >= ECHO_N ? 0 : i0 + 1;
+        a = (float)echo_buf[i0] * (1.0f / 32768.0f);
+        b = (float)echo_buf[i1] * (1.0f / 32768.0f);
+        x = a + (b - a) * fr;
+        echo_lp += 0.28f * (x - echo_lp);
+        echo_out = echo_lp;
+        x = (in + echo_half) * 0.5f + fm_tanhf(echo_lp * echo_fb * 1.2f) * 0.833f;
+        echo_buf[echo_w] = (int16_t)(fm_clampf(x, -0.999f, 0.999f) * 32767.0f);
+        if (++echo_w >= ECHO_N)
+            echo_w = 0;
+    } else
+        echo_half = in;
+    echo_odd ^= 1u;
+    return echo_out;
+}
+
+/* ------------------------------------------------------------ the metronome --- */
+static struct {
+    float env, ph, inc, inc2, ton, nz, lp, mul;
+    uint8_t kind;
+} clk;
+static void metro_click(int accent)
+{
+    static const float F[METRO_N] = {2100.0f, 880.0f, 7000.0f, 560.0f, 1700.0f};
+    float f = F[dk_metro.sound % METRO_N] * (accent ? 1.5f : 1.0f);
+    clk.kind = dk_metro.sound % METRO_N;
+    clk.env = (accent ? 1.0f : 0.6f) * (float)dk_metro.vol * 0.01f;
+    clk.ph = 0.0f;
+    clk.inc = f * (1.0f / DK_SR);
+    clk.inc2 = f * 1.48f * (1.0f / DK_SR);
+    clk.mul = dk_decay(clk.kind == METRO_WOOD ? 0.035f : clk.kind == METRO_COWBELL ? 0.09f : clk.kind == METRO_HAT ? 0.02f : 0.012f);
+    clk.nz = clk.kind == METRO_HAT || clk.kind == METRO_RIM ? 1.0f : 0.0f;
+    dk_metro_clicks++;
+    dk_beat_flash = (uint8_t)(accent ? 2 : 1);
+}
+static inline float metro_step(void)
+{
+    float s = 0.0f;
+    if (clk.env < 1e-4f)
+        return 0.0f;
+    clk.ph = clk.ph + clk.inc;
+    if (clk.ph >= 1.0f)
+        clk.ph -= 1.0f;
+    switch (clk.kind) {
+    case METRO_WOOD: s = dk_sine(clk.ph) * 0.8f + dk_sine(clk.ph * 2.76f) * 0.2f; break;   /* a soft wood block */
+    case METRO_COWBELL: s = (clk.ph < 0.5f ? 0.3f : -0.3f) + dk_sine(clk.ph * 1.48f) * 0.4f; break;
+    case METRO_HAT: clk.lp += 0.6f * (dk_white() - clk.lp); s = (dk_white() - clk.lp) * 0.6f; break;
+    case METRO_RIM: s = dk_sine(clk.ph) * 0.6f + dk_white() * 0.25f; break;
+    default: s = dk_sine(clk.ph) * 0.9f; break;
+    }
+    s *= clk.env * 0.35f;
+    clk.env *= clk.mul;
+    return s;
+}
+
+/* -------------------------------------------------------------- the tracks --- */
+static dk_fxst_t fxs[DK_NTRACK];
+static int16_t fxbuf[DK_NTRACK][DK_FXBUF];
+static float bus_st[DK_NTRACK][16];
+static float g_cur[DK_NTRACK][2];             /* the gain now (left, right): glides to the knob */
+static int32_t tail[DK_NTRACK];               /* samples the effect still rings after the last voice */
+static uint8_t t_soloed, drop_mask, stems_solo = 0xFF, perf_mute_drums, perf_echo, dream_off;
+static float master_lp_k = 1.0f, master_lp_l, master_lp_r, master_lp_l2, master_lp_r2;
+static float mixl[DK_BLK], mixr[DK_BLK], rsend[DK_BLK], esend[DK_BLK], tl[DK_BLK], tr[DK_BLK];
+static float lvl_acc[DK_NTRACK];
+
+static int track_audible(int t)
+{
+    const dk_track_t *k = &dk_song.trk[t];
+    if (stems_solo != 0xFF)
+        return t == stems_solo;
+    if (k->mute || (drop_mask >> t & 1u))
+        return 0;
+    if (perf_mute_drums && (dk_engine(t)->flags & EF_DRUM))
+        return 0;
+    if (t_soloed && !k->solo)
+        return 0;
+    return 1;
+}
+
+static void render_tracks(uint32_t n)
+{
+    int t, i;
+    uint32_t j;
+    t_soloed = 0;
+    for (t = 0; t < DK_NTRACK; t++)
+        t_soloed |= dk_song.trk[t].solo;
+    for (t = 0; t < DK_NTRACK; t++) {
+        const dk_engine_t *e = dk_engine(t);
+        const dk_track_t *k = &dk_song.trk[t];
+        int any = 0, fx = k->fx;
+        float gt, gl, gr, dl_, dr_, pk = 0.0f, rv = t_rev[t], ec = t_echo[t] + (perf_echo ? 0.9f : 0.0f);
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on && vc[i].trk == t) {
+                any = 1;
+                break;
+            }
+        for (i = 0; i < NFADE; i++)
+            any |= fv_g[i] > 0.0f && fv[i].trk == t;
+        if (any)
+            tail[t] = (int32_t)(2.5f * DK_SR);
+        else if (tail[t] > 0)
+            tail[t] -= (int32_t)n;
+        else {
+            lvl_acc[t] *= 0.9f;
+            dk_level[t] = lvl_acc[t];
+            continue;
+        }
+        for (j = 0; j < n; j++)
+            tl[j] = tr[j] = 0.0f;
+        for (i = 0; i < DK_NVOICE; i++) {
+            voice_t *v = &vc[i];
+            uint32_t j0 = 0;
+            const dk_engine_t *ve;
+            if (!v->on || v->trk != t)
+                continue;
+            if (v->eng != k->eng) {            /* its track took another engine: let it go */
+                if (v->held)
+                    midi(0x80u | ch_of(t), v->note, 0);
+                voice_fade(v);
+                v->on = 0;
+                continue;
+            }
+            ve = TAPE.eng[v->eng];
+            if (v->delay > 0) {
+                if ((uint32_t)v->delay >= n) {
+                    v->delay -= (int32_t)n;
+                    continue;
+                }
+                j0 = (uint32_t)v->delay;
+                v->delay = 0;
+            }
+            if (v->held && v->gate > 0 && (v->gate -= (int32_t)n) <= 0)
+                voice_release(v);
+            if (!ve->render(v->st, tl + j0, tr + j0, (int)(n - j0), tp[t])) {
+                if (v->held)
+                    midi(0x80u | ch_of(t), v->note, 0);
+                v->on = 0;
+            } else if (shed && !v->held && ve->level(v->st) < 0.05f)
+                v->on = 0;
+        }
+        for (i = 0; i < NFADE; i++) {          /* the voices fading out */
+            static float fl_[DK_BLK], fr_[DK_BLK];
+            float g = fv_g[i], dg = 1.0f / (0.006f * DK_SR);
+            if (g <= 0.0f || fv[i].trk != t)
+                continue;
+            for (j = 0; j < n; j++)
+                fl_[j] = fr_[j] = 0.0f;
+            TAPE.eng[fv[i].eng]->render(fv[i].st, fl_, fr_, (int)n, tp[t]);
+            for (j = 0; j < n && g > 0.0f; j++, g -= dg) {
+                tl[j] += fl_[j] * g;
+                tr[j] += fr_[j] * g;
+            }
+            fv_g[i] = g;
+        }
+        PROF_T(1);
+        if (e->bus)
+            e->bus(bus_st[t], tl, tr, (int)n, tp[t]);
+        PROF_T(2);
+        if (fx > 0 && fx < TAPE.nfx && TAPE.fx[fx]->process)
+            TAPE.fx[fx]->process(&fxs[t], tl, tr, (int)n, t_fxamt[t], t_fxa[t], t_fxb[t]);
+        PROF_T(3);
+        /* the gain: VOL's square, its trim, the modulators' tremolo, the sidechain on the pads */
+        gt = track_audible(t) ? t_vol[t] * t_vol[t] * 2.0f * fm_db2lin((float)k->trim * 0.5f) : 0.0f;
+        for (i = 0; i < 2; i++)
+            if (k->mod[i][0] == MOD_TREMOLO)
+                gt *= 1.0f - (float)k->mod[i][1] * 0.01f * (0.5f + 0.5f * modv[t][i]);
+        if (k->role == R_PAD || e->role == R_PAD)
+            gt *= 1.0f - (float)dk_song.sidechain * 0.01f * sc_env * 0.8f;
+        gl = gt * fm_minf(1.0f, 1.0f - t_pan[t]);
+        gr = gt * fm_minf(1.0f, 1.0f + t_pan[t]);
+        dl_ = (gl - g_cur[t][0]) / (float)n;
+        dr_ = (gr - g_cur[t][1]) / (float)n;
+        for (j = 0; j < n; j++) {
+            float l, r;
+            g_cur[t][0] += dl_;
+            g_cur[t][1] += dr_;
+            l = tl[j] * g_cur[t][0];
+            r = tr[j] * g_cur[t][1];
+            mixl[j] += l;
+            mixr[j] += r;
+            rsend[j] += (l + r) * rv;
+            esend[j] += (l + r) * ec;
+            pk = fm_maxf(pk, fm_fabsf(l) + fm_fabsf(r));
+        }
+        lvl_acc[t] = fm_maxf(pk * 0.5f, lvl_acc[t] * 0.94f);
+        dk_level[t] = lvl_acc[t];
+    }
+}
+
+/* ----------------------------------------------------------------- the sequencer --- */
+static float tick_len = 1000.0f, tick_left;
+static float wow_ph, flutter_ph, stop_f = 1.0f, stop_to = 1.0f;
+static float master_acc;
+#include "seq.c"
+
+/* ------------------------------------------------------------------- render --- */
+static void render_chunk(int32_t *out, uint32_t n, float gain)
+{
+    uint32_t j;
+    float pk = 0.0f, dust = (float)dk_song.dust * 0.01f, slp = (float)dk_song.sleep * 0.01f;
+    if (dk_perform == PF_SLEEP)
+        slp = 1.0f;
+    if (dk_perform == PF_VINYLSTOP || dk_perform == PF_REWIND)
+        dust = fm_maxf(dust, 0.7f);
+    for (j = 0; j < n; j++)
+        mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
+    PROF_T(0);
+    render_tracks(n);
+    PROF_T(4);
+    for (j = 0; j < n; j++) {
+        float wl, wr, e, l, r, rin;
+        e = echo_step(esend[j] * 0.55f);
+        rin = (rsend[j] * 0.5f + e * 0.3f) * 0.55f;
+        if (shimmer)
+            rin += shimmer_step(rin) * 0.6f;
+        reverb(rin, &wl, &wr);
+        l = (mixl[j] + e * 0.8f + wl * 1.1f) * gain;
+        r = (mixr[j] + e * 0.8f + wr * 1.1f) * gain;
+        if (master_lp_k < 0.999f) {            /* the performance's low-pass (the music behind a wall) */
+            master_lp_l += master_lp_k * (l - master_lp_l);
+            master_lp_l2 += master_lp_k * (master_lp_l - master_lp_l2);
+            master_lp_r += master_lp_k * (r - master_lp_r);
+            master_lp_r2 += master_lp_k * (master_lp_r - master_lp_r2);
+            l = master_lp_l2;
+            r = master_lp_r2;
+        } else {
+            master_lp_l = master_lp_l2 = l;
+            master_lp_r = master_lp_r2 = r;
+        }
+        l *= stop_f > 0.3f ? 1.0f : stop_f * 3.3f;
+        r *= stop_f > 0.3f ? 1.0f : stop_f * 3.3f;
+        mixl[j] = l;
+        mixr[j] = r;
+        pk = fm_maxf(pk, fm_fabsf(l));
+    }
+    PROF_T(5);
+    if (TAPE.master)
+        TAPE.master(mixl, mixr, (int)n, dust, slp);
+    PROF_T(6);
+    for (j = 0; j < n; j++) {
+        float m = metro_step() * gain * 1.6f, l = fm_tanhf(mixl[j] + m), r = fm_tanhf(mixr[j] + m);
+        out[2 * j] = (int32_t)(l * 8300000.0f);
+        out[2 * j + 1] = (int32_t)(r * 8300000.0f);
+    }
+    sc_env *= fm_expf(-(float)n / (0.16f * DK_SR));
+    master_acc = fm_maxf(pk, master_acc * 0.97f);
+    dk_master_level = master_acc;
+}
+
+void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
+{
+    const float gain = (float)gain_q12 * (1.0f / 4096.0f);
+    float drift = 0.0012f;
+    int vo = 0, i;
+    drain();
+    params_update();                           /* the knobs, once a render (and when the clip moves one) */
+    /* the tape's slow wow and its flutter (DUST deepens them); a tape stop's fall */
+    wow_ph += (float)n * (0.37f / DK_SR);
+    if (wow_ph >= 1.0f)
+        wow_ph -= 1.0f;
+    flutter_ph += (float)n * (5.3f / DK_SR);
+    if (flutter_ph >= 1.0f)
+        flutter_ph -= 1.0f;
+    dk_ctx.lfo_slow += (float)n * (0.07f / DK_SR);
+    if (dk_ctx.lfo_slow >= 1.0f)
+        dk_ctx.lfo_slow -= 1.0f;
+    dk_ctx.lfo_mid += (float)n * (0.9f / DK_SR);
+    if (dk_ctx.lfo_mid >= 1.0f)
+        dk_ctx.lfo_mid -= 1.0f;
+    dk_ctx.lfo_fast += (float)n * (5.2f / DK_SR);
+    if (dk_ctx.lfo_fast >= 1.0f)
+        dk_ctx.lfo_fast -= 1.0f;
+    dk_ctx.trem += (float)n * (4.6f / DK_SR);
+    if (dk_ctx.trem >= 1.0f)
+        dk_ctx.trem -= 1.0f;
+    stop_f += (stop_to - stop_f) * fm_minf(1.0f, (float)n * (stop_to < stop_f ? 2.6f : 6.0f) / DK_SR);
+    {
+        float d = (float)dk_song.dust * 0.01f;
+        dk_ctx.wow = (1.0f + (drift + 0.0024f * d) * dk_sine(wow_ph) + 0.0005f * d * dk_sine(flutter_ph)) * stop_f;
+        if (dk_perform == PF_REWIND)
+            dk_ctx.wow *= 1.6f + 0.5f * dk_sine(flutter_ph * 3.0f);
+    }
+    while (n) {
+        uint32_t k = n > DK_BLK ? DK_BLK : n;
+        if (tick_left <= 0.0f && !locked) {
+            while (tick_left <= 0.0f) {        /* on time (or catching up after a lock) */
+                seq_tick();
+                tick_left += tick_len;
+            }
+        }
+        if (!locked && (float)k > tick_left)
+            k = (uint32_t)tick_left + 1u;
+        if (k > n)
+            k = n;
+        if (locked && k > 32u)
+            k = 32u;
+        tick_left -= (float)k;
+        render_chunk(out, k, gain);
+        out += 2 * k;
+        n -= k;
+    }
+    for (i = 0; i < DK_NVOICE; i++)
+        vo += vc[i].on;
+    dk_voices_on = (uint8_t)vo;
+    shed = 0;
+}
+
+void dk_shed(void) { shed = 1; }
+
+void dk_init(void)
+{
+    int i, t;
+    for (i = 0; i <= SN; i++)
+        dk_sint[i] = fm_sinf(6.2831853f * (float)i / (float)SN);
+    dk_ctx.tune = 1.0f;
+    dk_ctx.wow = 1.0f;
+    plate_init();
+    for (i = 0; i < ECHO_N; i++)
+        echo_buf[i] = 0;
+    for (t = 0; t < DK_NTRACK; t++) {
+        fxs[t].buf = fxbuf[t];
+        fxs[t].w = 0;
+        for (i = 0; i < T_N; i++)
+            mot[t][i] = -1;
+    }
+    dk_metro.sound = TAPE.metro_sound;
+    if (TAPE.init)
+        TAPE.init();
+    seq_init();
+}
