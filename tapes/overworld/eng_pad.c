@@ -122,7 +122,7 @@ static float pad_level(const float *st)
     const pad_v *v = (const pad_v *)st;
     return v->es * v->es * v->vel * 0.5f;
 }
-const dk_engine_t ENG_AIRPAD = {"AIRPAD", EF_POLY, 5, 7, 5, PAD_P, pad_on, pad_off, pad_render, pad_level, 0, 0, 0, 0,
+const dk_engine_t ENG_AIRPAD = {"AIRPAD", EF_POLY, 4, 7, 5, PAD_P, pad_on, pad_off, pad_render, pad_level, 0, 0, 0, 0,
                                 R_PAD};
 
 /* ------------------------------------------------------------------- GLASS --- */
@@ -197,14 +197,14 @@ static int bell_render(float *st, float *l, float *r, int n, const float *p)
         l[j] += a * v->gl;
         r[j] += a * v->gr;
     }
-    return v->es >= 1e-4f;
+    return v->es >= 8e-4f;
 }
 static float bell_level(const float *st)
 {
     const bell_v *v = (const bell_v *)st;
     return v->es * v->vel;
 }
-const dk_engine_t ENG_GLASS = {"GLASS", EF_POLY, 6, 8, 4, BELL_P, bell_on, bell_off, bell_render, bell_level, 0, 0, 0,
+const dk_engine_t ENG_GLASS = {"GLASS", EF_POLY, 5, 8, 4, BELL_P, bell_on, bell_off, bell_render, bell_level, 0, 0, 0,
                                0, R_BELL};
 
 /* ---------------------------------------------------------------- SOFTBASS --- */
@@ -305,7 +305,7 @@ static int bass_render(float *st, float *l, float *r, int n, const float *p)
         l[j] += a * v->gl;
         r[j] += a * v->gr;
     }
-    return !(v->held == 0.0f && v->att >= 1.0f && v->es < 1e-4f);
+    return !(v->held == 0.0f && v->att >= 1.0f && v->es < 1e-3f);
 }
 static float bass_level(const float *st)
 {

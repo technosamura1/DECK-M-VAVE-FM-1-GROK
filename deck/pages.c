@@ -1042,9 +1042,11 @@ static void draw_page_band(int band)
 static void draw_frame(void)
 {
     if (ui.page == PG_PLAY) {             /* the garden every other frame; the header and the foot between */
-        if (ui.frame & 1u)
+        uint32_t now = plat_ms();
+        if (now - ui.garden_t >= 70u || now < ui.garden_t) {   /* the garden ~14 times a second, the rest between */
+            ui.garden_t = now;
             tape_play_draw(28);              /* (its message drawn into it: garden_overlay) */
-        else {
+        } else {
             band_begin(0, 28);
             draw_header();
             band_end();

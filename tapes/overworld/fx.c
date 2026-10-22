@@ -148,7 +148,9 @@ static void fx_spring(dk_fxst_t *s, float *l, float *r, int n, float amt, float 
     float *f = s->f, fb = 0.55f + 0.38f * a, k = dk_lpk(1800.0f + 5000.0f * b);
     int j, i;
     for (j = 0; j < n; j++) {
-        float x = (l[j] + r[j]) * 0.5f + f[10] * fb, y;
+        float x, y;
+        f[12] += 0.45f * ((l[j] + r[j]) * 0.5f - f[12]);   /* the tank's input softened: no ping off a sharp attack */
+        x = f[12] + f[10] * fb;
         for (i = 0; i < 4; i++) {                          /* dispersion: four short all-passes (one-pole) */
             float g = 0.62f, z = f[i];
             y = -g * x + z;
@@ -161,7 +163,8 @@ static void fx_spring(dk_fxst_t *s, float *l, float *r, int n, float amt, float 
         f[9] += k * (y - f[9]);
         f[10] = fm_flush(f[9]);
         l[j] += (f[9] - l[j] * 0.3f) * amt;
-        r[j] += (fxbuf_get(s, 730.0f) - r[j] * 0.3f) * amt * 0.9f;
+        f[13] += k * (fxbuf_get(s, 730.0f) - f[13]);
+        r[j] += (f[13] - r[j] * 0.3f) * amt * 0.9f;
     }
 }
 

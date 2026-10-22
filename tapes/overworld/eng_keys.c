@@ -78,6 +78,7 @@ static void felt_off(float *st, const float *p)
     v->th = fm_maxf(v->th, 0.05f * v->vel * p[3] * 0.02f * (0.4f + p[1] * 0.012f) * fm_minf(1.0f, v->es * 3.0f));
     v->th_mul = dk_decay(0.024f);
     v->th_inc *= 0.8f;
+    v->th_ph = 0.0f;                             /* from a zero crossing: a thud, not a click */
 }
 static int felt_render(float *st, float *l, float *r, int n, const float *p)
 {
@@ -136,14 +137,14 @@ static int felt_render(float *st, float *l, float *r, int n, const float *p)
         v->th_lp = t1;
         v->noise_mul2 = t2;
     }
-    return !(v->ef + v->es < 1.5e-4f && v->att >= 1.0f && v->th <= 1e-4f);
+    return !(v->ef + v->es < 1e-3f && v->att >= 1.0f && v->th <= 1e-4f);   /* -60 dB: under the reverb, unheard */
 }
 static float felt_level(const float *st)
 {
     const felt_v *v = (const felt_v *)st;
     return (v->ef + v->es) * v->vel;
 }
-const dk_engine_t ENG_FELT = {"FELT", EF_POLY, 9, 13, 5, FELT_P, felt_on, felt_off, felt_render, felt_level, 0, 0, 0, 0,
+const dk_engine_t ENG_FELT = {"FELT", EF_POLY, 8, 13, 5, FELT_P, felt_on, felt_off, felt_render, felt_level, 0, 0, 0, 0,
                               R_KEYS};
 
 /* ------------------------------------------------------------------- TINE --- */
@@ -239,14 +240,14 @@ static int tine_render(float *st, float *l, float *r, int n, const float *p)
     v->ph1 = ph1;
     v->ph2 = ph2;
     v->lp = lp;
-    return !(v->es + v->ef < 1.5e-4f && v->att >= 1.0f);
+    return !(v->es + v->ef < 1e-3f && v->att >= 1.0f);
 }
 static float tine_level(const float *st)
 {
     const tine_v *v = (const tine_v *)st;
     return (v->es + v->ef) * v->vel;
 }
-const dk_engine_t ENG_TINE = {"TINE", EF_POLY, 6, 13, 5, TINE_P, tine_on, tine_off, tine_render, tine_level, 0, 0, 0, 0,
+const dk_engine_t ENG_TINE = {"TINE", EF_POLY, 5, 13, 5, TINE_P, tine_on, tine_off, tine_render, tine_level, 0, 0, 0, 0,
                               R_KEYS};
 
 /* ---------------------------------------------------------------- KALIMBA --- */
@@ -338,12 +339,12 @@ static int kal_render(float *st, float *l, float *r, int n, const float *p)
         l[j] += s * v->gl;
         r[j] += s * v->gr;
     }
-    return v->a1 > 1.2e-4f || v->wex > 1e-4f || fm_fabsf(v->wbp) > 1e-4f;
+    return v->a1 > 1e-3f || v->wex > 1e-4f || fm_fabsf(v->wbp) > 3e-4f;
 }
 static float kal_level(const float *st)
 {
     const kal_v *v = (const kal_v *)st;
     return v->a1 * v->vel;
 }
-const dk_engine_t ENG_KALIMBA = {"KALIMBA", EF_POLY, 6, 22, 3, KAL_P, kal_on, kal_off, kal_render, kal_level, 0, 0, 0,
+const dk_engine_t ENG_KALIMBA = {"KALIMBA", EF_POLY, 5, 22, 3, KAL_P, kal_on, kal_off, kal_render, kal_level, 0, 0, 0,
                                  0, R_ARP};

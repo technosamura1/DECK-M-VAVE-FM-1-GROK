@@ -55,13 +55,16 @@ static void tempo_set(void)
     echo_fb = fm_minf(0.82f, 0.40f + 0.25f * slp + (perf_echo ? 0.25f : 0.0f));
     /* the plate: ROOM HALL CAVE SHIMMER, SLEEP longer */
     switch (dk_song.space & 3) {
-    case 0: pl_decay = 0.48f; pl_damp = 0.55f; pl_pre = 180; pl_bwk = 0.6f; pl_early = 0; shimmer = 0; break;
+    case 0: pl_decay = 0.48f; pl_damp = 0.55f; pl_pre = 90; pl_bwk = 0.6f; pl_early = 0; shimmer = 0; break;
     case 2: pl_decay = 0.84f; pl_damp = 0.70f; pl_pre = PRE_N; pl_bwk = 0.35f; pl_early = 1; shimmer = 0; break;
-    case 3: pl_decay = 0.82f; pl_damp = 0.22f; pl_pre = 700; pl_bwk = 0.7f; pl_early = 0; shimmer = 1; break;
-    default: pl_decay = 0.70f; pl_damp = 0.40f; pl_pre = 900; pl_bwk = 0.55f; pl_early = 0; shimmer = 0; break;
+    case 3: pl_decay = 0.82f; pl_damp = 0.22f; pl_pre = 350; pl_bwk = 0.7f; pl_early = 0; shimmer = 1; break;
+    default: pl_decay = 0.70f; pl_damp = 0.40f; pl_pre = 450; pl_bwk = 0.55f; pl_early = 0; shimmer = 0; break;
     }
     pl_decay = fm_minf(0.9f, pl_decay + 0.08f * slp);
     pl_damp = fm_maxf(0.15f, pl_damp - 0.1f * slp);
+    /* the one-poles' coefficients for the half rate (the same corner in Hz) */
+    pl_damp = 1.0f - (1.0f - pl_damp) * (1.0f - pl_damp);
+    pl_bwk = 1.0f - (1.0f - pl_bwk) * (1.0f - pl_bwk);
 }
 
 /* ------------------------------------------------------------- the harmony --- */

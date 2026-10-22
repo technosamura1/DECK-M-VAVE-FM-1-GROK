@@ -263,10 +263,10 @@ static void tape_demo(void)
                 dn(P_BREAK, DT_BELLS, 2 * k + i / 8, i % 8, ARP[k][i % 8] + (i >= 8 && i % 8 == 3 ? 2 : 0), 1,
                    i % 4 == 0 ? 90 : 72);
         for (k = 0; k < 4; k++) {
-            dn(P_BREAK, DT_BASS, 2 * k, 0, RB[k], 2, 62);
-            dn(P_BREAK, DT_BASS, 2 * k, 4, RB[k] + 7 > 47 ? RB[k] - 5 : RB[k] + 7, 2, 54);
-            dn(P_BREAK, DT_BASS, 2 * k + 1, 0, RB[k], 2, 60);
-            dn(P_BREAK, DT_BASS, 2 * k + 1, 4, RB[k] + 7 > 47 ? RB[k] - 5 : RB[k] + 7, 2, 52);
+            dn(P_BREAK, DT_BASS, 2 * k, 0, RB[k], 2, 50);
+            dn(P_BREAK, DT_BASS, 2 * k, 4, RB[k] + 7 > 47 ? RB[k] - 5 : RB[k] + 7, 2, 44);
+            dn(P_BREAK, DT_BASS, 2 * k + 1, 0, RB[k], 2, 48);
+            dn(P_BREAK, DT_BASS, 2 * k + 1, 4, RB[k] + 7 > 47 ? RB[k] - 5 : RB[k] + 7, 2, 42);
         }
         for (i = 0; i < 8; i++)
             drums_put(P_BREAK, i, "5.......4.......", 0, "2.3.2.3.2.3.2.3.", 0, "5..3..5...3.5...", 76, 8);

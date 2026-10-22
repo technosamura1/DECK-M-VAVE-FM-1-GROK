@@ -26,7 +26,7 @@ static struct {
     dk_block_t road_clip;
     uint8_t road_clip_ok;
     uint8_t screen_dirty;
-    uint32_t draw_t;
+    uint32_t draw_t, garden_t;
 } ui;
 
 static void say(const char *a, const char *b)
@@ -952,6 +952,13 @@ void ui_frame(void)
     ui.last_ms = now;
     if (dt > 200u)
         dt = 200u;
+    {                                    /* the render's load, measured by the platform: the voices' budget follows */
+        static uint32_t load_t;
+        if (now - load_t >= 100u) {
+            load_t = now;
+            dk_set_load((int)plat_cpu_pct());
+        }
+    }
     tape_ui_step(dt);
     housekeeping(now);
     if (dk_recording && ui.page != PG_REC) {   /* the tape page whenever it records */

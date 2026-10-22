@@ -323,7 +323,20 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
 /* the CPU's budget: the voices' cost (the engines' cost, tenths of a microsecond a block on the host) kept under what
  * OVERWORLD's busiest moment cost: over it, the quietest tails go first (faded), then a quiet held voice; never a
  * loud note */
-#define DK_BUDGET 165
+/* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
+#define DK_BUDGET_MAX 150
+#define DK_BUDGET_MIN 50
+static volatile int dk_budget = 120;
+void dk_set_load(int pct)
+{
+    int b = dk_budget;
+    if (pct > 72)
+        b -= pct > 85 ? 12 : 4;
+    else if (pct < 50)
+        b += 2;
+    dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
+}
+int dk_get_budget(void) { return dk_budget; }
 static void budget_make_room(int want)
 {
     int guard = DK_NVOICE;
@@ -333,7 +346,7 @@ static void budget_make_room(int want)
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on)
                 total += TAPE.eng[vc[i].eng]->cost;
-        if (total <= DK_BUDGET)
+        if (total <= dk_budget)
             return;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on) {
@@ -343,7 +356,7 @@ static void budget_make_room(int want)
                     best = i;
                 }
             }
-        if (best < 0 || lo > 1.25f)              /* only loud held notes left: they stay */
+        if (best < 0 || lo > 1.15f)              /* only loud held notes left: they stay */
             return;
         if (vc[best].held)
             midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
@@ -405,8 +418,9 @@ static void voices_release_track(int t, int src_min)
 /* ------------------------------------------------------- reverb: a plate --- */
 /* (as OVERWORLD's and AMB-1's, from FoMni) J. Dattorro, "Effect Design, Part 1", JAES 1997; its decay, damping and
  * pre-delay from the song's SPACE (ROOM HALL CAVE SHIMMER) and SLEEP */
-#define DS(n) (((n) * 14818 + 5000) / 10000)
-#define PRE_N 1100
+/* at half rate (22.05 kHz, as the tape echo): Dattorro's lengths (for 29761 Hz) scaled by 22050/29761 */
+#define DS(n) (((n) * 7409 + 5000) / 10000)
+#define PRE_N 550
 #define EXC DS(16)
 enum { L_PRE, L_IN1, L_IN2, L_IN3, L_IN4, L_APL, L_D1L, L_AP2L, L_D2L, L_APR, L_D1R, L_AP2R, L_D2R, L_N };
 static const int DL_LEN[L_N] = {PRE_N, DS(142), DS(107), DS(379), DS(277), DS(672) + EXC + 2, DS(4453), DS(1800),
@@ -421,6 +435,8 @@ typedef struct {
 static dl_t dl[L_N];
 static float pl_bw, pl_bwk = 0.55f, pl_damp_l, pl_damp_r, pl_decay = 0.6f, pl_damp = 0.4f, lfo_s, lfo_c = 1.0f;
 static int pl_pre = PRE_N, pl_early;
+static float pl_rin, pl_wl0, pl_wl1, pl_wr0, pl_wr1, pl_ol, pl_ol2, pl_ol3, pl_or, pl_or2, pl_or3;
+static uint8_t pl_odd;
 static inline float tap(const dl_t *d, int k)
 {
     int j = d->i - k;
@@ -451,14 +467,14 @@ static inline void reverb(float in, float *ol, float *or_)
     push(&dl[L_PRE], in);
     x = tap(&dl[L_PRE], pl_pre);
     if (pl_early)                               /* CAVE: the walls' first answers */
-        er = tap(&dl[L_PRE], 211) * 0.5f + tap(&dl[L_PRE], 487) * 0.35f + tap(&dl[L_PRE], 733) * 0.25f;
+        er = tap(&dl[L_PRE], 105) * 0.5f + tap(&dl[L_PRE], 243) * 0.35f + tap(&dl[L_PRE], 366) * 0.25f;
     pl_bw += pl_bwk * (x - pl_bw);
     x = allpass(&dl[L_IN1], DS(142), pl_bw, 0.75f);
     x = allpass(&dl[L_IN2], DS(107), x, 0.75f);
     x = allpass(&dl[L_IN3], DS(379), x, 0.625f);
     x = allpass(&dl[L_IN4], DS(277), x, 0.625f);
     {
-        float s = lfo_s + 0.0001f * lfo_c, c = lfo_c - 0.0001f * s;
+        float s = lfo_s + 0.0002f * lfo_c, c = lfo_c - 0.0002f * s;
         lfo_s = s;
         lfo_c = c;
     }
@@ -495,7 +511,7 @@ static void plate_init(void)
         pl_buf[i] = 0.0f;
 }
 /* SHIMMER: an octave up fed into the plate (two heads gliding through a short line, crossfaded) */
-#define SH_N 2048
+#define SH_N 1024
 static float sh_buf[SH_N];
 static int sh_w;
 static float sh_ph;
@@ -505,14 +521,14 @@ static inline float shimmer_step(float x)
     float y, d1, d2, w1, r1, r2;
     int i1, i2;
     sh_buf[sh_w] = x;
-    sh_ph += 1.0f / 1400.0f;                   /* the heads move at twice the speed: an octave up */
+    sh_ph += 1.0f / 700.0f;                   /* the heads move at twice the speed: an octave up */
     if (sh_ph >= 1.0f)
         sh_ph -= 1.0f;
-    d1 = sh_ph * 1400.0f;
-    d2 = (sh_ph < 0.5f ? sh_ph + 0.5f : sh_ph - 0.5f) * 1400.0f;
+    d1 = sh_ph * 700.0f;
+    d2 = (sh_ph < 0.5f ? sh_ph + 0.5f : sh_ph - 0.5f) * 700.0f;
     w1 = 1.0f - fm_fabsf(2.0f * sh_ph - 1.0f);
-    r1 = (float)sh_w - 1400.0f + d1;
-    r2 = (float)sh_w - 1400.0f + d2;
+    r1 = (float)sh_w - 700.0f + d1;
+    r2 = (float)sh_w - 700.0f + d2;
     if (r1 < 0.0f)
         r1 += (float)SH_N;
     if (r2 < 0.0f)
@@ -642,8 +658,10 @@ static void render_tracks(uint32_t n)
             }
         for (i = 0; i < NFADE; i++)
             any |= fv_g[i] > 0.0f && fv[i].trk == t;
+        if (any)                               /* an effect (or the kit's grain) rings on a while; else nothing to do */
+            tail[t] = fx > 0 ? (int32_t)(1.5f * DK_SR) : e->bus ? (int32_t)(0.3f * DK_SR) : 0;
         if (any)
-            tail[t] = (int32_t)(2.5f * DK_SR);
+            ;
         else if (tail[t] > 0)
             tail[t] -= (int32_t)n;
         else {
@@ -757,9 +775,29 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         float wl, wr, e, l, r, rin;
         e = echo_step(esend[j] * 0.55f);
         rin = (rsend[j] * 0.5f + e * 0.3f) * 0.55f;
-        if (shimmer)
-            rin += shimmer_step(rin) * 0.6f;
-        reverb(rin, &wl, &wr);
+        if (pl_odd) {                           /* the plate at half rate: two samples in, one step, eased out */
+            rin = (rin + pl_rin) * 0.5f;
+            if (shimmer)
+                rin += shimmer_step(rin) * 0.6f;
+            pl_wl0 = pl_wl1;
+            pl_wr0 = pl_wr1;
+            reverb(rin, &pl_wl1, &pl_wr1);
+            wl = pl_wl1;
+            wr = pl_wr1;
+        } else {
+            pl_rin = rin;
+            wl = (pl_wl0 + pl_wl1) * 0.5f;
+            wr = (pl_wr0 + pl_wr1) * 0.5f;
+        }
+        pl_odd ^= 1u;
+        pl_ol += 0.44f * (wl - pl_ol);          /* the half rate's images gone: three poles near 4 kHz */
+        pl_ol2 += 0.44f * (pl_ol - pl_ol2);
+        pl_ol3 += 0.44f * (pl_ol2 - pl_ol3);
+        pl_or += 0.44f * (wr - pl_or);
+        pl_or2 += 0.44f * (pl_or - pl_or2);
+        pl_or3 += 0.44f * (pl_or2 - pl_or3);
+        wl = pl_ol3 * 1.12f;
+        wr = pl_or3 * 1.12f;
         l = (mixl[j] + e * 0.8f + wl * 1.1f) * gain;
         r = (mixr[j] + e * 0.8f + wr * 1.1f) * gain;
         if (master_lp_k < 0.999f) {            /* the performance's low-pass (the music behind a wall) */

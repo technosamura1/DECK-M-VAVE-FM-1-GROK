@@ -15,6 +15,8 @@ typedef struct {
     float pa[NPING], pm[NPING], pph[NPING], pinc[NPING], pdi[NPING], pgl[NPING], pnz[NPING];
     float ct[2], clen[2], cgap[2], cn[2], crest[2], cph[2], cinc[2], cdinc[2], camp[2], cgl[2];
     float fade, held, vel, kind, olp_l, olp_r, olp_l2, olp_r2, rumble, rumble_to, step_t;
+    float dcl, dcr, dxl, dxr;          /* the output's DC taken out */
+    uint32_t gseed;                    /* the gusts' own dice (the same weather each time it starts) */
 } world_v;
 CHECK_SIZE(world_v);
 static const dk_param_t WORLD_P[] = {
@@ -81,6 +83,7 @@ static void world_on(float *st, int note, float vel, const float *p, int retrig)
     w->crest[1] = frnd() * 1.5f * DK_SR;
     w->gust_to = 0.5f;
     w->rumble_to = 0.2f;
+    w->gseed = 2463534242u;
 }
 static void world_off(float *st, const float *p)
 {
@@ -101,9 +104,10 @@ static int world_render(float *st, float *l, float *r, int n, const float *p)
     w->gust_t += (float)n;
     if (w->gust_t > 1.6f * DK_SR) {
         w->gust_t = 0.0f;
-        w->gust_to = 0.1f + 0.9f * frnd();
-        if ((rnd() & 7u) == 0)
-            w->rumble_to = 0.2f + 0.8f * frnd();
+        w->gseed = w->gseed * 1664525u + 1013904223u;
+        w->gust_to = 0.1f + 0.9f * (float)(w->gseed >> 8) * (1.0f / 16777216.0f);
+        if ((w->gseed >> 4 & 7u) == 0)
+            w->rumble_to = 0.2f + 0.8f * (float)(w->gseed >> 12 & 255u) * (1.0f / 255.0f);
         else
             w->rumble_to *= 0.7f;
     }
@@ -261,8 +265,12 @@ static int world_render(float *st, float *l, float *r, int n, const float *p)
         w->olp_r += ok * (R - w->olp_r);
         w->olp_l2 += ok * (w->olp_l - w->olp_l2);
         w->olp_r2 += ok * (w->olp_r - w->olp_r2);
-        l[j] += w->olp_l2 * lvl * w->fade;
-        r[j] += w->olp_r2 * lvl * w->fade;
+        w->dcl = w->olp_l2 - w->dxl + 0.9985f * w->dcl;   /* a high-pass near 10 Hz: no offset from the rumble */
+        w->dxl = w->olp_l2;
+        w->dcr = w->olp_r2 - w->dxr + 0.9985f * w->dcr;
+        w->dxr = w->olp_r2;
+        l[j] += w->dcl * lvl * w->fade;
+        r[j] += w->dcr * lvl * w->fade;
     }
     return !(w->held == 0.0f && w->fade <= 0.0f);
 }

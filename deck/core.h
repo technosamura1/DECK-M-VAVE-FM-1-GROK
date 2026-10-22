@@ -81,4 +81,8 @@ extern volatile uint32_t dk_metro_err_max;              /* the worst offset of a
 /* the engine of a track and the values its voices get */
 const dk_engine_t *dk_engine(int trk);
 int dk_param_value(int trk, int target);                /* the value now (MACRO, motion and modulation applied) */
-uint32_t dk_cpu_cost(void);                             /* the render's cost, microseconds a block (host) */
+uint32_t dk_cpu_cost(void);
+/* the CPU's load (the render's %, the device's measure) to the voices' budget: it sheds sooner when the render runs
+ * long, and gives back slowly */
+void dk_set_load(int pct);
+int dk_get_budget(void);                             /* the render's cost, microseconds a block (host) */

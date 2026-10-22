@@ -320,5 +320,5 @@ static void kit_bus(float *bs, float *l, float *r, int n, const float *p)
         r[j] = bs[6];
     }
 }
-const dk_engine_t ENG_DUSTKIT = {"DUSTKIT", EF_DRUM | EF_POLY, 7, 9, 4, KIT_P, drum_on, drum_off, drum_render,
+const dk_engine_t ENG_DUSTKIT = {"DUSTKIT", EF_DRUM | EF_POLY, 6, 9, 4, KIT_P, drum_on, drum_off, drum_render,
                                  drum_level, kit_bus, 8, KIT_LANE, KIT_NOTE, R_DRUM};

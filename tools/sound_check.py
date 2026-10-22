@@ -75,7 +75,7 @@ def check(path):
         for i in range(2, nb - 2):
             ctx = np.concatenate([blocks[i - 2], blocks[i - 1], blocks[i + 1], blocks[i + 2]])
             ref = np.percentile(ctx, 95) + 1e-9
-            if bmax[i] > 0.02 and bmax[i] > 12 * ref and bmax[i] > 20 * (bmed[i] + 1e-9):
+            if bmax[i] > 0.03 and bmax[i] > 12 * ref and bmax[i] > 20 * (bmed[i] + 1e-9):
                 clicks += 1
                 where.append(round(i * win / SR, 3))
     r["clicks"] = clicks
