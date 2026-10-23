@@ -54,7 +54,11 @@ jobs:
           mkdir -p dist
           for t in $(ls tapes); do
             echo "::group::$t"
-            sh build.sh "$t"
+            if ! sh build.sh "$t" > "build-$t.log" 2>&1; then
+              tail -n 30 "build-$t.log" | while IFS= read -r l; do echo "::error::$l"; done
+              exit 1
+            fi
+            tail -n 3 "build-$t.log"
             d="dist/deck-$t"
             mkdir -p "$d"
             cp "out/deck-$t.fwsc" out/fm1_install.py "$d/"
