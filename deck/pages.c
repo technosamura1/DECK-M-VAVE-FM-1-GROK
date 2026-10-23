@@ -514,7 +514,9 @@ static void plate(int x, int y, int w, int h)
 }
 static void reel(int cx, int cy, float amount, int phase)
 {
-    int i, r = 8 + (int)(amount * 7.0f + 0.5f);   /* the tape wound on it: kept inside the window (r <= 15) */
+    int i, r = 8 + (int)(amount * 6.0f + 0.5f);   /* the tape wound on it: kept inside the window (r <= 14) */
+    disc(cx, cy, 15, RGB(58, 50, 44));       /* the reel itself, the same size full or empty */
+    circle(cx, cy, 15, RGB(86, 76, 66));
     disc(cx, cy, r, CS_TAPE);
     disc(cx, cy, 7, CS_LABEL);
     circle(cx, cy, 7, CS_BODY_D);
