@@ -91,6 +91,47 @@ empty:
     return -1;
 }
 
+/* the slot's image: the head, the song, the events, one after another (byte off of it, from RAM) */
+static const uint8_t *img_at(uint32_t off, uint32_t *run)
+{
+    uint32_t hs = (uint32_t)sizeof(phead_t), ss = (uint32_t)sizeof dk_song;
+    if (off < hs + ss) {
+        *run = hs + ss - off;
+        return (const uint8_t *)&dk_song + (off - hs);
+    }
+    *run = (uint32_t)dk_song.nev * sizeof(dk_ev_t) - (off - hs - ss);
+    return (const uint8_t *)dk_ev + (off - hs - ss);
+}
+static int img_same(uint32_t at, uint32_t a, uint32_t b)   /* the flash already holds [a, b) of it (a past the head) */
+{
+    const uint8_t *f = plat_data(at + a);
+    while (f && a < b) {
+        uint32_t run, i;
+        const uint8_t *m = img_at(a, &run);
+        if (run > b - a)
+            run = b - a;
+        for (i = 0; i < run; i++)
+            if (f[i] != m[i])
+                return 0;
+        a += run;
+        f += run;
+    }
+    return f != 0;
+}
+static int img_write(uint32_t at, uint32_t a, uint32_t b)
+{
+    while (a < b) {
+        uint32_t run;
+        const uint8_t *m = img_at(a, &run);
+        if (run > b - a)
+            run = b - a;
+        if (plat_data_write(at + a, m, run))
+            return -1;
+        a += run;
+    }
+    return 0;
+}
+
 int project_save(int slot)
 {
     static phead_t h;
@@ -105,20 +146,28 @@ int project_save(int slot)
     h.sum = song_sum();
     if (old && old->sum == h.sum && old->nev == h.nev)
         return 0;                          /* unchanged: spare the flash */
-    for (s = 0; s < DK_PROJ_SPAN; s += 0x1000u)
-        if (plat_data_erase(at + s))
-            return -1;
-    if (plat_data_write(at + sizeof h, &dk_song, sizeof dk_song))
-        return -1;
-    if (dk_song.nev && plat_data_write(at + sizeof h + sizeof dk_song, dk_ev, (uint32_t)dk_song.nev * sizeof(dk_ev_t)))
-        return -1;
-    if (plat_data_write(at, &h, sizeof h))  /* the head last */
+    /* only the sectors that changed: an erase holds the interrupts ~17 ms (the sound, the keys' scan and the lights
+     * stop: the device blinked and stuttered when all nine went at once), and a preset or a knob changes one */
+    {
+        uint32_t len = (uint32_t)sizeof h + sizeof dk_song + (uint32_t)dk_song.nev * sizeof(dk_ev_t);
+        for (s = 0; s < len && s < DK_PROJ_SPAN; s += 0x1000u) {
+            uint32_t end = s + 0x1000u < len ? s + 0x1000u : len, from = s ? s : (uint32_t)sizeof h;
+            if (s && img_same(at, s, end))
+                continue;
+            if (plat_data_erase(at + s) || img_write(at, from, end))
+                return -1;
+        }
+    }
+    if (plat_data_write(at, &h, sizeof h))  /* the head last (its sector was erased: it always changes) */
         return -1;
     return head_of(slot) && head_of(slot)->sum == h.sum ? 0 : -1;
 }
 
+static uint8_t settings_due;             /* a setting changed: written with the next save in the silence (ui.c) */
+void settings_save_later(void) { settings_due = 1; }
 void settings_save(void)
 {
+    settings_due = 0;
     set.magic = SET_MAGIC;
     set.metro[0] = dk_metro.mode;
     set.metro[1] = dk_metro.count;

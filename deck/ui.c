@@ -317,7 +317,7 @@ static void action(int a, int b)
         break;
     case A_METRO:
         dk_metro.mode = (uint8_t)(dk_metro.mode ? 0 : 1);
-        settings_save();
+        settings_save_later();
         say("METRO", dk_metro.mode ? "ON" : "OFF");
         break;
     case A_NEXT_TRACK: track_select((dk_song.cur_track + 1) % DK_NTRACK); break;
@@ -1135,11 +1135,14 @@ static void housekeeping(uint32_t now)
         }
     }
     /* saving by itself: a few seconds after a change, while all rests and is quiet (an erase stops the sound) */
-    if (ui.dirty && !dk_playing && !dk_recording && !dk_counting && now - ui.change_t > 4000u &&
-        dk_master_level < 0.004f && !ui.keys) {
+    if ((ui.dirty || settings_due) && !dk_playing && !dk_recording && !dk_counting && now - ui.change_t > 6000u &&
+        dk_master_level < 0.004f && !ui.keys && !ui.btn) {
+        if (settings_due)
+            settings_save();
         tape_ui_keep();
-        if (project_save(set.proj) == 0)
+        if (ui.dirty && project_save(set.proj) == 0)
             ui.dirty = 0;
+        ui.change_t = now;               /* (a failed save waits its turn again) */
     }
 }
 

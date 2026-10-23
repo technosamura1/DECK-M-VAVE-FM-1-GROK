@@ -67,6 +67,16 @@ reboot
 wait 300
 expect nev >8
 expect track 0
+# a small change saved again (only its sectors rewritten): the project still loads whole
+press HOME
+tapkey w3
+release HOME
+wait 8000
+expect dirty 0
+reboot
+wait 300
+expect nev >8
+expect track 0
 # the road: two blocks, SONG
 tap ENV
 wait 100
