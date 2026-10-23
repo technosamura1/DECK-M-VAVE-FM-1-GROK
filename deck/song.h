@@ -11,9 +11,11 @@ typedef struct {
     uint8_t mt[3];
     int8_t ma[3];
 } dk_upreset_t;
+#define DK_UENG 10                       /* the engines with user presets (a tape has up to ten) */
+#define DK_UENG_V1 8                     /* the store's old size: eight */
 typedef struct {
     uint32_t magic;
-    dk_upreset_t p[8][4];
+    dk_upreset_t p[DK_UENG][4];
 } dk_user_t;
 extern dk_user_t dk_user;
 extern uint32_t song_edits;
@@ -29,7 +31,10 @@ void clip_double(int clip);
 void clip_transpose(int clip, int steps);
 void clip_variate(int clip, uint32_t seed);
 void clip_humanize(int clip, uint32_t seed);
+void clip_cook(int clip, uint32_t seed, const dk_engine_t *e);     /* a little different, in the key (undoable) */
+void clip_random(int clip, uint32_t seed, const dk_engine_t *e);   /* the same rhythm (or as many hits), new notes */
 void undo_push(int clip);
+void undo_group(int on);                 /* undo_push-es until undo_group(0): one undo step */
 void undo_push_road(void);
 int undo_count(void);
 int song_undo(int *what);

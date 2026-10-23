@@ -21,23 +21,15 @@ shot sound_fx.png
 tap FX
 wait 120
 shot sound_mod.png
-tap SEL
+tap SEQ
 wait 120
 expect page 1
 shot seq_live.png
-tap GLO
-tap GLO
-tap GLO
-tap GLO
-tap GLO
+turn SELECT 5
 wait 120
 expect track 1
 shot seq_step_bass.png
-tap GLO
-tap GLO
-tap GLO
-tap GLO
-tap GLO
+turn SELECT 5
 wait 100
 expect track 0
 shot seq_step_drums.png

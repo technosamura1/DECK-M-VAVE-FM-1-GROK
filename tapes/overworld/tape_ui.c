@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------- theme --- */
 #define TH_BG RGB(0, 0, 0)
 #define TH_TEXT RGB(236, 232, 220)
-#define TH_GRAY RGB(106, 106, 106)
-#define TH_LINE RGB(42, 42, 42)
+#define TH_GRAY RGB(124, 124, 124)
+#define TH_LINE RGB(50, 50, 50)
 #define TH_REC RGB(232, 72, 64)
 static const uint16_t TH_ENC[3] = {RGB(124, 204, 96), RGB(110, 186, 244), RGB(246, 214, 92)};
 /* the parts' colours (A..H) and the tracks' (OVERWORLD's instruments') */

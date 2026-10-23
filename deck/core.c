@@ -103,6 +103,8 @@ volatile uint16_t dk_part_tick, dk_part_len = DK_TPB * 4;
 volatile uint32_t dk_ticks, dk_clock;
 volatile uint8_t dk_beat_flash;
 volatile float dk_level[DK_NTRACK], dk_master_level;
+volatile uint8_t dk_hush, dk_hushed;
+static float hush_g = 1.0f;
 volatile uint8_t dk_finger_on[DK_NTRACK];
 volatile uint32_t dk_finger_latch[DK_NTRACK];
 volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;
@@ -224,9 +226,10 @@ static void params_update(void) { params_update_some(1); }
 
 /* ------------------------------------------------------------------- voices --- */
 typedef struct {
-    uint8_t on, held, note, trk, src, eng, rsv[2];
+    uint8_t on, held, note, trk, src, eng, lane, rsv;   /* lane: a drum's sound + 1 (its own settings), 0 none */
     int32_t gate, delay;
     uint32_t age;
+    float ch_l, ch_r, ch_c;                            /* a drum sound's CRUSH: the sample held, its count */
     float st[DK_VSTATE];
 } voice_t;
 static voice_t vc[DK_NVOICE];
@@ -331,7 +334,7 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
 /* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
 #define DK_BUDGET_MAX 130
 #define DK_BUDGET_MIN 50
-static volatile int dk_budget = 100;
+static volatile int dk_budget = 100;     /* (the device's crackles were the flash's erases, not the load: 3.7 of 5.8 ms) */
 void dk_set_load(int pct)
 {
     int b = dk_budget;
@@ -397,7 +400,28 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
     v->gate = gate;
     v->delay = delay > 0 ? delay : 0;
     v->age = age_ctr++;
+    v->lane = 0;
+    v->ch_c = 0.0f;
+    if ((e->flags & EF_DRUM) && e->nlanes) {          /* a drum sound: its own tune and decay (the kit's p[0], p[1]) */
+        int l;
+        for (l = 0; l < e->nlanes && l < 8; l++)
+            if (e->lane_note[l] == note)
+                v->lane = (uint8_t)(l + 1);
+        if (v->lane) {
+            const dk_lane_t *ln = &dk_song.lane[t][v->lane - 1];
+            float pv[PX_N];
+            for (i = 0; i < PX_N; i++)
+                pv[i] = tp[t][i];
+            if (e->nparams > 0)
+                pv[0] = fm_minf(100.0f, fm_maxf(0.0f, pv[0] + (float)ln->tune));
+            if (e->nparams > 1)
+                pv[1] = fm_minf(100.0f, fm_maxf(0.0f, pv[1] + (float)ln->decay));
+            e->on(v->st, note, vel, pv, retrig);
+            goto started;
+        }
+    }
     e->on(v->st, note, vel, tp[t], retrig);
+started:
     if ((e->flags & EF_DRUM) && (note == 35 || note == 36))
         sc_env = 1.0f;
     seen(note, t, (int)(vel * 127.0f), src);
@@ -626,6 +650,7 @@ static float bus_st[DK_NTRACK][16];
 static float g_cur[DK_NTRACK][2];             /* the gain now (left, right): glides to the knob */
 static int32_t tail[DK_NTRACK];               /* samples the effect still rings after the last voice */
 static uint8_t t_soloed, drop_mask, stems_solo = 0xFF, perf_mute_drums, perf_echo, dream_off;
+int dk_dream_off(void) { return dream_off; }   /* PERFORM's DREAM key: the DREAM tracks silenced */
 static float master_lp_k = 1.0f, master_lp_l, master_lp_r, master_lp_l2, master_lp_r2;
 static float mixl[DK_BLK], mixr[DK_BLK], rsend[DK_BLK], esend[DK_BLK], tl[DK_BLK], tr[DK_BLK];
 static float lvl_acc[DK_NTRACK];
@@ -642,6 +667,26 @@ static int track_audible(int t)
     if (t_soloed && !k->solo)
         return 0;
     return 1;
+}
+
+/* a drum sound's own settings beyond its level, tune and decay (those at its start): any to apply while it rings */
+static int lane_fx(const dk_lane_t *ln) { return ln->level || ln->pan || ln->rev || ln->echo || ln->crush; }
+static float xrev[DK_BLK] DK_POOL, xecho[DK_BLK] DK_POOL, atmo_vl[DK_BLK] DK_POOL, atmo_vr[DK_BLK] DK_POOL;
+static int any_x = 1;
+static void lane_crush(voice_t *v, float *l, float *r, int n, int amt)
+{
+    float hold = 1.0f + (float)amt * 0.11f, q = fm_exp2f(12.0f - (float)amt * 0.08f), iq = 1.0f / q;   /* 1..12x, 12..4 bits */
+    int j;
+    for (j = 0; j < n; j++) {
+        v->ch_c -= 1.0f;
+        if (v->ch_c <= 0.0f) {
+            v->ch_c += hold;
+            v->ch_l = (float)(int)(l[j] * q) * iq;
+            v->ch_r = (float)(int)(r[j] * q) * iq;
+        }
+        l[j] = v->ch_l;
+        r[j] = v->ch_r;
+    }
 }
 
 static void render_tracks(uint32_t n)
@@ -676,6 +721,10 @@ static void render_tracks(uint32_t n)
         }
         for (j = 0; j < n; j++)
             tl[j] = tr[j] = 0.0f;
+        if (any_x)
+            for (j = 0; j < n; j++)
+                xrev[j] = xecho[j] = 0.0f;
+        any_x = 0;
         for (i = 0; i < DK_NVOICE; i++) {
             voice_t *v = &vc[i];
             uint32_t j0 = 0;
@@ -700,6 +749,33 @@ static void render_tracks(uint32_t n)
             }
             if (v->held && v->gate > 0 && (v->gate -= (int32_t)n) <= 0)
                 voice_release(v);
+            if (v->lane && lane_fx(&dk_song.lane[t][v->lane - 1])) {   /* a drum sound with its own pan, sends, crush */
+                const dk_lane_t *ln = &dk_song.lane[t][v->lane - 1];
+                static float vl[DK_BLK] DK_POOL, vr[DK_BLK] DK_POOL;
+                float lg = fm_db2lin((float)ln->level * 0.5f);
+                float pl = lg * fm_minf(1.0f, 1.0f - (float)ln->pan * 0.02f), pr = lg * fm_minf(1.0f, 1.0f + (float)ln->pan * 0.02f);
+                float rs = (float)ln->rev * 0.01f, es = (float)ln->echo * 0.01f;
+                int alive;
+                for (j = j0; j < n; j++)
+                    vl[j] = vr[j] = 0.0f;
+                alive = ve->render(v->st, vl + j0, vr + j0, (int)(n - j0), tp[t]);
+                if (ln->crush)                 /* CRUSH: the rate held down, the bits fewer */
+                    lane_crush(v, vl + j0, vr + j0, (int)(n - j0), ln->crush);
+                for (j = j0; j < n; j++) {
+                    tl[j] += vl[j] * pl;
+                    tr[j] += vr[j] * pr;
+                    xrev[j] += (vl[j] + vr[j]) * rs * lg;
+                    xecho[j] += (vl[j] + vr[j]) * es * lg;
+                }
+                any_x = 1;
+                if (!alive) {
+                    if (v->held)
+                        midi(0x80u | ch_of(t), v->note, 0);
+                    v->on = 0;
+                } else if (shed && !v->held && ve->level(v->st) < 0.05f)
+                    v->on = 0;
+                continue;
+            }
             if (!ve->render(v->st, tl + j0, tr + j0, (int)(n - j0), tp[t])) {
                 if (v->held)
                     midi(0x80u | ch_of(t), v->note, 0);
@@ -749,6 +825,11 @@ static void render_tracks(uint32_t n)
             mixr[j] += r;
             rsend[j] += (l + r) * rv;
             esend[j] += (l + r) * ec;
+            if (any_x) {                       /* the drum sounds' own sends, at the track's level */
+                float g = (g_cur[t][0] + g_cur[t][1]) * 0.5f;
+                rsend[j] += xrev[j] * g;
+                esend[j] += xecho[j] * g;
+            }
             pk = fm_maxf(pk, fm_fabsf(l) + fm_fabsf(r));
         }
         lvl_acc[t] = fm_maxf(pk * 0.5f, lvl_acc[t] * 0.94f);
@@ -763,6 +844,58 @@ static float master_acc;
 #include "seq.c"
 
 /* ------------------------------------------------------------------- render --- */
+/* ATMO: its layers, each a voice kept going while its level is up (faded out when it goes down) */
+#define NATMO 6
+static float atmo_st[NATMO][DK_VSTATE] DK_POOL, atmo_p[NATMO][PX_N], atmo_g[NATMO];
+static uint8_t atmo_on[NATMO];
+static void atmo_render(uint32_t n)
+{
+    static float al[DK_BLK] DK_POOL, ar[DK_BLK] DK_POOL;
+    int i, any = 0;
+    uint32_t j;
+    float master = dk_song.atmo_lvl ? (float)(dk_song.atmo_lvl - 1) * 0.01f : 1.0f;
+    for (i = 0; i < NATMO && i < TAPE.natmo; i++) {
+        const dk_atmo_t *a = &TAPE.atmo[i];
+        const dk_engine_t *e = TAPE.eng[a->eng % TAPE.neng];
+        float want = (float)dk_song.atmo[i] * 0.01f, g0 = atmo_g[i], dg;
+        int k;
+        if (want > 0.0f && !atmo_on[i]) {     /* up from nothing: the voice starts (it fades in itself) */
+            for (k = 0; k < DK_VSTATE; k++)
+                atmo_st[i][k] = 0.0f;
+            for (k = 0; k < PX_N; k++)
+                atmo_p[i][k] = k < 3 ? (float)a->p[k] : k == PX_DRIFT ? 0.0f : 50.0f;
+            e->on(atmo_st[i], 60, 1.0f, atmo_p[i], 0);
+            atmo_on[i] = 1;
+        } else if (want <= 0.0f && atmo_on[i] == 1) {
+            e->off(atmo_st[i], atmo_p[i]);
+            atmo_on[i] = 2;                    /* letting go: until it has faded */
+        }
+        if (!atmo_on[i])
+            continue;
+        if (!any)
+            for (j = 0; j < n; j++)
+                al[j] = ar[j] = 0.0f;
+        any = 1;
+        for (j = 0; j < n; j++)
+            atmo_vl[j] = atmo_vr[j] = 0.0f;
+        if ((!e->render(atmo_st[i], atmo_vl, atmo_vr, (int)n, atmo_p[i]) || e->level(atmo_st[i]) < 0.0005f) &&
+            atmo_on[i] == 2)
+            atmo_on[i] = 0;                    /* let go and faded: no more of it */
+        atmo_g[i] = want > 0.0f ? want * want * a->gain * master : g0;
+        dg = (atmo_g[i] - g0) / (float)n;
+        for (j = 0; j < n; j++, g0 += dg) {
+            al[j] += atmo_vl[j] * g0;
+            ar[j] += atmo_vr[j] * g0;
+        }
+    }
+    if (any)
+        for (j = 0; j < n; j++) {
+            mixl[j] += al[j];
+            mixr[j] += ar[j];
+            rsend[j] += (al[j] + ar[j]) * 0.12f;   /* a touch of the room on it */
+        }
+}
+
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
@@ -775,6 +908,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
     PROF_T(0);
     render_tracks(n);
+    atmo_render(n);
+    dk_ctx.tape = (float)dk_song.tapesim * 0.01f;
     PROF_T(4);
     for (j = 0; j < n; j++) {
         float wl, wr, e, l, r, rin;
@@ -828,9 +963,20 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     PROF_T(6);
     for (j = 0; j < n; j++) {
         float m = metro_step() * gain * 1.6f, l = fm_tanhf(mixl[j] + m), r = fm_tanhf(mixr[j] + m);
+        if (dk_hush)                           /* a save coming: down to nothing in ~6 ms, back the same */
+            hush_g = fm_maxf(0.0f, hush_g - (1.0f / 256.0f));
+        else if (hush_g < 1.0f)
+            hush_g = fm_minf(1.0f, hush_g + (1.0f / 256.0f));
+        l *= hush_g;
+        r *= hush_g;
         out[2 * j] = (int32_t)(l * 8300000.0f);
         out[2 * j + 1] = (int32_t)(r * 8300000.0f);
     }
+    if (dk_hush && hush_g <= 0.0f) {
+        if (dk_hushed < 255)
+            dk_hushed++;
+    } else
+        dk_hushed = 0;
     sc_env *= fm_expf(-(float)n / (0.16f * DK_SR));
     master_acc = fm_maxf(pk, master_acc * 0.97f);
     dk_master_level = master_acc;

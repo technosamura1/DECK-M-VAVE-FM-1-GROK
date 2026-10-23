@@ -34,10 +34,50 @@ static int black_of(int k)
 }
 static int trk_oct(int t) { return dk_song.trk[t].oct + (int8_t)dk_song.koct; }
 
+/* SCALE transposed, as a keyboard's TRANSPOSE: the C key plays the key's tonic, the D key its second, ... the B key its
+ * seventh (F minor: the C key F, the D key G, the E key A flat). On five- and six-note scales the scale's note nearest
+ * the transposed key. CHROMA moves the same way: every key up by the tonic (F: the C key plays F) */
+static int key_shift(void)               /* how far the keys move: the tonic above C, the nearer way (up to F#, then down) */
+{
+    int r = dk_song.root % 12;
+    return r > 6 ? r - 12 : r;
+}
+static int white_degree(int w)               /* 0..6 the degree, -1 when the scale is not seven notes */
+{
+    static const int8_t LETTER_OF_WHITE[12] = {0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6};   /* C . D . E F . G . A . B */
+    int st[12], m = dk_scale(dk_song.mode, st), pc = (53 + WHITE_K[w & 15]) % 12;
+    if (m != 7)
+        return -1;
+    return LETTER_OF_WHITE[pc];
+}
+static int white_pitch(int w, int t)         /* the note a white key plays in SCALE */
+{
+    static const int8_t C_MAJOR[7] = {0, 2, 4, 5, 7, 9, 11};
+    int st[12], m = dk_scale(dk_song.mode, st), root = dk_song.root % 12, phys = 53 + WHITE_K[w & 15] + 12 * trk_oct(t);
+    int d = white_degree(w), pc, p, i, best = 99, sh = key_shift();
+    if (d >= 0)                              /* the key's C plus the tonic's shift plus the degree */
+        return phys - C_MAJOR[d] + sh + st[d];
+    phys += sh;                              /* five or six notes: the nearest of them (a tie goes up) */
+    pc = root;
+    for (i = 0; i < m; i++) {
+        int q = (root + st[i]) % 12, dd = ((q - phys % 12) % 12 + 12) % 12;
+        if (dd > 6)
+            dd -= 12;
+        if ((dd < 0 ? -dd * 2 + 1 : dd * 2) < best) {
+            best = dd < 0 ? -dd * 2 + 1 : dd * 2;
+            pc = q;
+        }
+    }
+    p = phys - ((phys - pc) % 12 + 12) % 12;  /* at or below the key, then the nearer of the two */
+    if (phys - p > 6)
+        p += 12;
+    return p;
+}
+
 /* a chord for degree d (0..6, or 10..13 a borrowed one) in the song's key, voiced and led, around base */
 static int chord_build(int d, int base, int *out)
 {
-    int nt[8], n, i;
+    int nt[8], n, i, skip_pc = -1;
     int root = dk_song.root % 12;
     if (d >= 10) {
         int minorish = dk_song.mode == 1 || dk_song.mode == 2 || dk_song.mode == 3 || dk_song.mode == 6 ||
@@ -54,9 +94,12 @@ static int chord_build(int d, int base, int *out)
             }
             nt[j + 1] = v;
         }
-    } else if (dk_song.quality == 0)
+    } else if (dk_song.quality == 0) {
         n = dk_chord(root, dk_song.mode, d, dk_song.chord, 1, dk_song.dim, nt, base);
-    else {
+        skip_pc = dk_scale_note(root, dk_song.mode, d) % 12;   /* DIM SKIP took another degree: the key's own note */
+        if (n && nt[0] % 12 == skip_pc)                         /* stays the bass (vii: V7 over the vii, G7/B) */
+            skip_pc = -1;
+    } else {
         int pc = dk_scale_note(root, dk_song.mode, d) % 12;
         n = dk_chord(root, dk_song.mode, pc, dk_song.chord, 0, 0, nt, base);
     }
@@ -67,6 +110,34 @@ static int chord_build(int d, int base, int *out)
         for (i = 0; i < 8; i++)
             prev[i] = last_chord[i < 8 ? i : 7];
         n = dk_voice(nt, n, dk_song.voicing, dk_song.bass, dk_song.lead && have_chord ? prev : 0, out);
+    }
+    if (skip_pc >= 0 && n > 0) {             /* the key's note under it: the lowest of it, or added below */
+        int lo = 0, has = -1, j;
+        for (i = 0; i < n; i++) {
+            if (out[i] < out[lo])
+                lo = i;
+            if (out[i] % 12 == skip_pc && (has < 0 || out[i] < out[has]))
+                has = i;
+        }
+        if (has >= 0 && has != lo) {         /* it, down by octaves under the lowest: the bass */
+            int low = out[lo];
+            while (out[has] > low)
+                out[has] -= 12;
+        } else if (has < 0 && n < 7) {
+            int b = out[lo] - ((out[lo] - skip_pc) % 12 + 12) % 12;
+            if (b == out[lo])
+                b -= 12;
+            out[n++] = b;
+        }
+        for (i = 1; i < n; i++) {            /* low to high again */
+            int v = out[i];
+            j = i - 1;
+            while (j >= 0 && out[j] > v) {
+                out[j + 1] = out[j];
+                j--;
+            }
+            out[j + 1] = v;
+        }
     }
     for (i = 0; i < n && i < 8; i++)
         last_chord[i] = out[i];
@@ -106,11 +177,8 @@ static int key_note_of(int k, int t)
         return EXTRA_B[b];
     }
     if (!dk_song.layout || w < 0)               /* CHROMA (or a black key in it): the key's own pitch */
-        return 53 + k + 12 * trk_oct(t);
-    {
-        int base = 48 + dk_song.root % 12 + 12 * trk_oct(t), bi = dk_note_index(dk_song.root % 12, dk_song.mode, base);
-        return dk_scale_note(dk_song.root % 12, dk_song.mode, bi + w);
-    }
+        return 53 + k + 12 * trk_oct(t) + key_shift();
+    return white_pitch(w, t);
 }
 
 /* a key down: what it plays (vel 1..127) */
@@ -151,17 +219,9 @@ void keys_down(int k, int vel)
                 kh[k].trk = 0;
             }
             return;
-        case 2:                                  /* OCTAVE: down, up, NOTE REPEAT (later), FILL */
-            if (b == 0 || b == 1) {
-                int o = dk_song.trk[t].oct + (b ? 1 : -1);
-                if (o >= -3 && o <= 3)
-                    dk_song.trk[t].oct = (int8_t)o;
-            } else if (b == 3) {
-                dk_cmd(C_FILL, 1, 0, 0);
-                kh[k].kind = 1;
-                kh[k].notes[0] = 0xFF;
-                kh[k].trk = 0;
-            }
+        case 2:                                  /* NOTES: the black keys play their own pitch (the sharps and flats) */
+            nt[0] = 53 + k + 12 * trk_oct(t) + key_shift();
+            notes_post(k, t, nt, 1, vel, 0);
             return;
         default:                                 /* CHORDS: the degrees, then the borrowed four */
             n = chord_build(b < 7 ? b : 10 + (b - 7), 48 + 12 * trk_oct(harm), nt);
@@ -169,9 +229,9 @@ void keys_down(int k, int vel)
             return;
         }
     }
-    if (w >= 0 && dk_song.layout && dk_song.white) {   /* WHITE = CHORDS: a chord a degree */
-        int deg = w % 7 + (w >= 7 ? 7 : 0);
-        n = chord_build(deg % 7, 48 + 12 * trk_oct(harm) + (deg >= 7 ? 12 : 0), nt);
+    if (w >= 0 && dk_song.layout && dk_song.white) {   /* WHITE = CHORDS: a chord a degree (the key's letter) */
+        int deg = white_degree(w) >= 0 ? white_degree(w) : w % 7;
+        n = chord_build(deg, white_pitch(w, harm), nt);   /* the chord's root on the key's own note (as NOTES plays it) */
         notes_post(k, harm, nt, n, vel, dk_song.strum > 0);
         return;
     }

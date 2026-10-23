@@ -5,8 +5,9 @@
  * recording, undo, saving by itself in the silence, the lights, MIDI in, the export's stream. The pages are drawn in
  * pages.c. Part of the unity build. */
 
-enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, NPG };
-static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC"};
+enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, PG_GLOB, PG_ATMO, NPG };
+static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP", "GLOBAL",
+                                          "ATMO"};
 
 static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
@@ -26,10 +27,23 @@ static struct {
     dk_block_t road_clip;
     uint8_t road_clip_ok;
     uint8_t screen_dirty;
-    uint32_t draw_t, garden_t, notes_until;
+    uint32_t draw_t, garden_t, notes_until, page_t, save_t;   /* page_t: the page or its row changed (the hint shows
+                                                                * 3 s); save_t: the last save by itself */
     char notes[28];
+    uint32_t trk_until;                  /* SEL: the six tracks shown, the one chosen bright */
+    uint8_t mix_key;
+    uint8_t notes_k;                     /* a PERFORM key held (+1): its name stays up top until it is let go */
+    uint32_t mix_t;                      /* MIX: the white key down (mix_key: its track + 1): a tap mutes, 1 s clears */
+    uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
+    uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
+    uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
+                                                            * 1 a part (the garage), 2 the road */
 } ui;
 
+#define ERASE_SHOW 350u                    /* REC held: ERASE shown; at ERASE_1 the clip goes, at ERASE_2 the track */
+#define ERASE_1 1000u
+#define ERASE_2 2500u
+#define AUTOSAVE_MS 90000u                 /* the autosave: no more often than this */
 static void say(const char *a, const char *b)
 {
     uint32_t i;
@@ -67,6 +81,7 @@ static int held(int b) { return (int)(ui.btn >> b & 1u); }
 /* ------------------------------------------------------------------ actions --- */
 static void page_go(int p)
 {
+    ui.page_t = plat_ms();
     if (ui.page == p) {                  /* again: its next tab or row */
         ui.row[p] = (uint8_t)((ui.row[p] + 1) % page_rows(p));
         if (p == PG_SOUND) {
@@ -86,20 +101,176 @@ static void track_select(int t)
     keys_all_up();
     dk_song.cur_track = (uint8_t)(t % DK_NTRACK);
     ui_step_ev = -1;
-    say(track_label(t), cur_eng()->name);
+    ui.trk_until = plat_ms() + 1400u;    /* the track bar instead of a message */
+    ui.msg_until = 0;
 }
 
+/* the KEYS track (TAPE.keys_set): its twelve presets are on three engines */
+static int keys_group(void)              /* (the track on one of the set's engines: another one, say WINDS, its own) */
+{
+    int i;
+    if (!TAPE.keys_set || (cur()->role != TAPE.keys_role && cur()->role != R_BELL))
+        return 0;
+    for (i = 0; i < DK_NFACT; i++)
+        if (TAPE.keys_set[i][0] == cur()->eng)
+            return 1;
+    return 0;
+}
+static int keys_group_at(void)           /* where the track is in it, -1 off it */
+{
+    int i;
+    for (i = 0; i < DK_NFACT; i++)
+        if (TAPE.keys_set[i][0] == cur()->eng && TAPE.keys_set[i][1] == cur()->preset)
+            return i;
+    return -1;
+}
 static void preset_select(int slot)
 {
     dk_preset_t tmp;
+    if (slot < DK_NFACT && keys_group()) {
+        keys_all_up();
+        cur()->eng = TAPE.keys_set[slot][0];
+        slot = TAPE.keys_set[slot][1];
+    }
     track_preset(dk_song.cur_track, slot);
     mark_dirty();
     say(preset_of(cur()->eng, slot, &tmp)->name, slot >= DK_NFACT ? "USER" : cur_eng()->name);
 }
 
+/* ARP -> SEQ: the arpeggio of the notes held (or latched, or the song's chord) as notes in the clip, the length of
+ * the clip, the way the ARP would play them; the track then STEP and the ARP off (one undo step) */
+static void arp_bake(void)
+{
+    static const float GATE[ARPG_N] = {0.55f, 0.25f, 0.85f, 1.02f};
+    dk_track_t *k = cur();
+    int t = dk_song.cur_track, n = dk_held_n[t], srt[8], i, clip = cur_clip(), len = clip_len(clip), s, hits = 0;
+    int div = DK_ARP_DIV[k->arp[1] % DK_ARP_NDIV], octs = k->arp[2] < 1 ? 1 : k->arp[2] > 3 ? 3 : k->arp[2], total;
+    float gate = GATE[k->arp_opt & 3];
+    uint32_t seed = 0x2545F491u;
+    if (!n && ((k->arp_opt >> 2) & 1) && dk_harm_n) {   /* PLAYS CHORD: the song's chord */
+        int prev = -1;
+        n = dk_harm_n > 4 ? 4 : dk_harm_n;
+        for (i = 0; i < n; i++) {
+            int v = 60 + 12 * k->oct + dk_harm_pcs[i] % 12;
+            while (v <= prev)
+                v += 12;
+            srt[i] = prev = v;
+        }
+    } else {
+        if (n > 8)
+            n = 8;
+        for (i = 0; i < n; i++)
+            srt[i] = dk_held[t][i];
+    }
+    if (!n) {
+        say("ARP", "HOLD OR LATCH NOTES");
+        return;
+    }
+    {
+        int order[8];
+        for (i = 0; i < n; i++)
+            order[i] = srt[i];
+        for (i = 1; i < n; i++) {            /* sorted (ORDER keeps the order played) */
+            int v = srt[i], j = i - 1;
+            while (j >= 0 && srt[j] > v) {
+                srt[j + 1] = srt[j];
+                j--;
+            }
+            srt[j + 1] = v;
+        }
+        undo_push(clip);
+        keys_all_up();
+        dk_lock();
+        clip_clear(clip);
+        total = n * octs;
+        for (s = 0; s * div < len; s++) {
+            int hit = DK_ARP_RHY[k->arp_rhy % ARPR_N][s & 15], idx, note;
+            dk_ev_t ev;
+            seed = seed * 1664525u + 1013904223u;
+            if (k->arp_rhy == ARPR_SKIP && (s & 3) && (seed >> 28) == 0)
+                hit = 0;
+            if (!hit)
+                continue;
+            switch (k->arp[0] % 6) {
+            case 1: idx = total - 1 - hits % total; break;
+            case 2: {
+                int per = total > 1 ? 2 * total - 2 : 1, x = hits % per;
+                idx = x < total ? x : per - x;
+                break;
+            }
+            case 3: idx = (int)((seed >> 8) % (uint32_t)total); break;
+            default: idx = hits % total; break;
+            }
+            hits++;
+            ev.pos = (uint16_t)(s * div);
+            ev.dur = (uint16_t)((int)((float)div * gate) > 1 ? (int)((float)div * gate) : 1);
+            ev.vel = (uint8_t)(hit == 2 ? 92 : 74);
+            ev.fl = 0;
+            ev.layer = 0;
+            if (k->arp[0] % 6 == 5) {        /* CHORD: the whole stack each hit */
+                for (i = 0; i < n; i++) {
+                    ev.note = (uint8_t)srt[i];
+                    dk_song_insert(clip, &ev);
+                }
+                continue;
+            }
+            note = (k->arp[0] % 6 == 4 ? order[idx % n] : srt[idx % n]) + 12 * (idx / n);
+            ev.note = (uint8_t)(note > 127 ? 127 : note);
+            dk_song_insert(clip, &ev);
+        }
+        dk_unlock();
+    }
+    k->arp_opt &= (uint8_t)~ARPO_ON;
+    dk_cmd(C_ARPCLR, t, 0, 0);
+    field_set(F_SEQTYPE, 0);                 /* STEP: the notes on its grid, to edit */
+    mark_dirty();
+    page_go(PG_SEQ);
+    say("ARP -> STEP", "COPIED");
+}
+
+static void preset_step(int d)          /* PRESET: the next one (the user's only where saved) */
+{
+    int s = cur()->preset, n;
+    if (keys_group()) {                  /* KEYS: along its twelve */
+        int g = keys_group_at();
+        preset_select(((g < 0 ? 0 : g) + d + DK_NFACT) % DK_NFACT);
+        return;
+    }
+    for (n = 0; n < DK_NFACT + 4; n++) {
+        s = (s + d + DK_NFACT + 4) % (DK_NFACT + 4);
+        if (s < DK_NFACT || dk_user.p[cur()->eng % DK_UENG][(s - DK_NFACT) & 3].used)
+            break;
+    }
+    preset_select(s);
+}
+
+/* HOME + PRESET: a melodic track onto the next melodic engine (FELT TINE AIRPAD GLASS SOFTBASS KALIMBA WINDS), its
+ * first preset; the drums and the world stay theirs */
+static void engine_step(int d)
+{
+    int e = cur()->eng, n;
+    if (cur_eng()->flags & (EF_DRUM | EF_CONT)) {
+        say(cur_eng()->name, "ITS OWN");
+        return;
+    }
+    for (n = 0; n < TAPE.neng; n++) {
+        e = (e + d + TAPE.neng) % TAPE.neng;
+        if (!(TAPE.eng[e]->flags & (EF_DRUM | EF_CONT)))
+            break;
+    }
+    keys_all_up();
+    cur()->eng = (uint8_t)e;
+    track_preset(dk_song.cur_track, 0);
+    mark_dirty();
+    {
+        dk_preset_t tmp;
+        say(TAPE.eng[e]->name, preset_of(e, 0, &tmp)->name);
+    }
+}
+
 static void preset_save(int slot)        /* SAVE held + white 13..16 */
 {
-    dk_upreset_t *u = &dk_user.p[cur()->eng & 7][slot & 3];
+    dk_upreset_t *u = &dk_user.p[cur()->eng % DK_UENG][slot & 3];
     const dk_track_t *k = cur();
     dk_preset_t tmp;
     const dk_preset_t *from = preset_of(k->eng, k->preset, &tmp);
@@ -143,6 +314,13 @@ static void rec_start(void)
         dk_song.clip[clip].len = 0;
         dk_unlock();
     }
+    ui_auto_on = 0;
+    if (!dk_playing && ui_rec_auto && part_empty(dk_song.cur_part)) {   /* AUTO: open, up to 16 bars, REC ends it */
+        ui.auto_prev = dk_song.part[dk_song.cur_part & 7].bars;
+        part_bars_set(dk_song.cur_part, 16);
+        ui_auto_on = 1;
+        ui.auto_max = 0;
+    }
     dk_cmd(C_REC, 1, 0, t | t2 << 16);
     ui.rec_end = 0;
     if (ui.page != PG_REC) {
@@ -152,10 +330,48 @@ static void rec_start(void)
     say("REC", dk_playing ? "NEW PASS" : dk_metro.on_note ? "PLAY A NOTE" : "COUNT IN");
 }
 
+static void auto_end(void)               /* AUTO's take ends (REC or PLAY): the loop at the nearest bar line */
+{
+    if (ui_auto_on && dk_playing && !dk_counting) {
+        int b = (dk_part_tick + DK_TPB / 4) / DK_TPB;
+        ui.auto_fix = (uint8_t)(b < 1 ? 1 : b > 16 ? 16 : b);
+    } else if (ui_auto_on)                 /* stopped in the count-in: the part as it was */
+        part_bars_set(dk_song.cur_part, ui.auto_prev);
+    ui_auto_on = 0;
+}
 static void rec_stop_ui(void)
 {
     dk_cmd(C_REC, 0, 0, 0);
+    auto_end();
     say("REC", "OFF");
+}
+/* AUTO's end: the take's notes past the new end wrapped round to its start, the part that long */
+static void auto_apply(void)
+{
+    int p = dk_song.cur_part & 7, len = ui.auto_fix * DK_TPB, t, i;
+    char s[16];
+    rec_flush();
+    dk_lock();
+    for (t = 0; t < DK_NTRACK; t++) {
+        int c = p * DK_NTRACK + t;
+        dk_clip_t *cl = &dk_song.clip[c];
+        for (i = cl->n - 1; i >= 0; i--) {
+            dk_ev_t *e = &dk_ev[cl->at + i];
+            if (e->pos < len)
+                continue;
+            if (e->pos < 2 * len)
+                e->pos = (uint16_t)(e->pos - len);
+            else
+                ev_delete(c, i);
+        }
+        clip_sort(c);
+    }
+    dk_unlock();
+    part_bars_set(p, ui.auto_fix);
+    bars_text(ui.auto_fix, s);
+    say("LOOP", s);
+    ui.auto_fix = 0;
+    mark_dirty();
 }
 
 static int bar_ms(void) { return (int)(240000u / (dk_song.tempo ? dk_song.tempo : 120)); }
@@ -203,22 +419,46 @@ static void action(int a, int b)
 {
     switch (a) {
     case A_PAGE_SOUND: page_go(PG_SOUND); break;
-    case A_PAGE_SEQ: page_go(PG_SEQ); break;
+    case A_PAGE_SEQ:
+        if (ui.page == PG_ARP && dk_arp_on(cur())) {   /* on the ARP's page: what it plays, written into SEQ's grid */
+            arp_bake();
+            break;
+        }
+        page_go(PG_SEQ);
+        break;
     case A_PAGE_ROAD: page_go(PG_ROAD); break;
     case A_PAGE_MIX: page_go(PG_MIX); break;
     case A_PAGE_KEYS: page_go(PG_KEYS); break;
     case A_PAGE_PROJECT:
+        if (ui.page == PG_PROJECT) {         /* SAVE again on its page: saved now */
+            if (dk_playing || dk_recording || dk_counting)
+                say("SAVE", "STOP FIRST");
+            else {
+                if (settings_due)
+                    settings_save();
+                tape_ui_keep();
+                if (project_save(set.proj) == 0) {
+                    ui.dirty = 0;
+                    say("SAVED", "");
+                } else
+                    say("SAVE", "FAILED");
+            }
+            break;
+        }
         page_go(PG_PROJECT);
         ui_slot_sel = -1;
         break;
+    case A_PAGE_GLOBAL: page_go(PG_GLOB); break;
+    case A_PAGE_ATMO: page_go(PG_ATMO); break;
     case A_PAGE_PLAY: page_go(PG_PLAY); break;
     case A_PLAY:
         if (dk_playing || dk_counting) {
+            auto_end();
             dk_cmd(C_PLAY, 0, 0, 0);
             ui.change_t = plat_ms() - 3000u;   /* saved soon after the stop */
             ui.road_rec = 0;
-        } else
-            dk_cmd(C_PLAY, 1, 0, 0);
+        } else                               /* on ROAD: from the block chosen there */
+            dk_cmd(C_PLAY, 1, ui.page == PG_ROAD && !ui.garage ? ui_road_cur : 0, 0);
         break;
     case A_PLAYMODE:
         dk_song.play_mode ^= 1u;
@@ -280,7 +520,7 @@ static void action(int a, int b)
         break;
     case A_METRO:
         dk_metro.mode = (uint8_t)(dk_metro.mode ? 0 : 1);
-        settings_save();
+        settings_save_later();
         say("METRO", dk_metro.mode ? "ON" : "OFF");
         break;
     case A_NEXT_TRACK: track_select((dk_song.cur_track + 1) % DK_NTRACK); break;
@@ -293,6 +533,33 @@ static void action(int a, int b)
             say(s, cur()->mute ? "MUTED" : "ON");
         }
         break;
+    case A_ARP: {                         /* the ARP's page (and the ARP on); again there: its next row */
+        dk_track_t *k = cur();
+        if (cur_eng()->flags & EF_DRUM) {
+            say("ARP", "NOT ON DRUMS");
+            break;
+        }
+        if (!dk_arp_on(k)) {
+            keys_all_up();
+            k->arp_opt |= ARPO_ON;
+            mark_dirty();
+            ui.row[PG_ARP] = 0;
+            if (ui.page != PG_ARP)
+                page_go(PG_ARP);
+            say("ARP", "ON");
+        } else
+            page_go(PG_ARP);
+        break;
+    }
+    case A_ARP_OFF: {
+        dk_track_t *k = cur();
+        keys_all_up();
+        k->arp_opt &= (uint8_t)~ARPO_ON;
+        dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
+        mark_dirty();
+        say("ARP", "OFF");
+        break;
+    }
     case A_NEXT_PART: {
         int p = ((dk_next_part != 0xFF ? dk_next_part : dk_song.cur_part) + 1) % DK_NPART;
         char s[16] = "PART A";
@@ -319,9 +586,9 @@ static void action(int a, int b)
             rec_reset();
             dk_cmd(C_REC, 1, 0, dk_song.cur_track | (bars ? bars : 1) << 8 | 0xFF << 16);
             ui.baking = 1;
-            say("BAKE", "DRIVE TO STEP");
+            say("BAKE", "DREAM TO STEP");
         } else
-            say("BAKE", "ONLY DRIVE");
+            say("BAKE", "ONLY DREAM");
         break;
     case A_UNDO:
     case A_REDO: {
@@ -381,18 +648,25 @@ static void notes_show(int k)
             cpy(p, set_[kh[k].notes[0] & 15].name);
         else
             cpy(p, "VARIATION");
-    } else if (kh[k].kind == 1)
+    } else if (kh[k].kind == 1) {          /* PERFORM: the effect's name, up top for as long as it is held */
+        int j;
+        cpy(p, kh[k].notes[0] == 0xFF ? "FILL" : "PERFORM");
+        for (j = 0; TAPE.perform_act && j < 11; j++)
+            if (TAPE.perform_act[j] == kh[k].notes[0])
+                cpy(p, TAPE.perform[j]);
+        ui.notes_until = plat_ms() + 400u;
+        ui.notes_k = (uint8_t)(k + 1);
         return;
-    else if (e->flags & EF_DRUM) {
+    } else if (e->flags & EF_DRUM) {
         int l;
         cpy(p, "DRUM");
         for (l = 0; l < e->nlanes; l++)
             if (n && e->lane_note[l] == kh[k].notes[0])
                 cpy(p, e->lane_name[l]);
     } else {
-        if (n >= 3 && have_chord) {
-            p = cpy(p, chord_name);
-            p = cpy(p, "  ");
+        if (n >= 3 && have_chord) {          /* a chord: its name only (the notes are on KEYS) */
+            cpy(p, chord_name);
+            n = 0;
         }
         for (i = 0; i < n && i < 4; i++) {
             int nt = kh[k].notes[i];
@@ -452,10 +726,32 @@ static void key_down(int k, int vel)
         say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
-    if (held(B_SEL) && w >= 0 && w < SQ_N) {
-        ui.used[B_SEL] = 1;
+    if (held(B_SEQ) && b >= 0 && b < 2) {   /* SEQ held + black 1: COOK, black 2: RANDOM (each an undo step) */
+        static uint32_t seed = 0x9E3779B9u;
+        static uint8_t cooks;
+        char s[12] = "COOK ";
+        ui.used[B_SEQ] = 1;
+        seed = seed * 2654435761u + plat_ms();
+        if (!dk_song.clip[cur_clip()].n && b == 0) {
+            say("COOK", "THE CLIP IS EMPTY");
+            return;
+        }
+        if (b == 0) {
+            clip_cook(cur_clip(), seed, cur_eng());
+            cooks = (uint8_t)(cooks % 99 + 1);
+            itoa_b(cooks, s + 5);
+            say(s, "SEQ+OCT- = BACK");
+        } else {
+            clip_random(cur_clip(), seed, cur_eng());
+            say("RANDOM", "SEQ+OCT- = BACK");
+        }
+        mark_dirty();
+        return;
+    }
+    if (held(B_SEQ) && w >= 0 && w < NSEQ) {
+        ui.used[B_SEQ] = 1;
         field_set(F_SEQTYPE, w);
-        say("SEQUENCER", SEQ_NAME[w]);
+        say("SEQUENCER", SEQ_NAME[SQ_LIST[w]]);
         return;
     }
     switch (ui.page) {
@@ -562,10 +858,9 @@ static void key_down(int k, int vel)
         }
         break;
     case PG_MIX:
-        if (w >= 0 && w < DK_NTRACK) {
-            dk_song.trk[w].mute ^= 1u;
-            mark_dirty();
-            say(track_label(w), dk_song.trk[w].mute ? "MUTED" : "ON");
+        if (w >= 0 && w < DK_NTRACK) {       /* the mute on the release; held 1 s: the track's clip cleared */
+            ui.mix_key = (uint8_t)(w + 1);
+            ui.mix_t = plat_ms();
             return;
         }
         if (b >= 0 && b < DK_NTRACK) {
@@ -609,7 +904,7 @@ static void key_down(int k, int vel)
                 say("LANE", e->lane_name[b]);
                 return;
             }
-        } else if (trk->seq == SQ_STEP) {   /* melodic: the key's note (or chord) at the cursor, then on */
+        } else if (trk->seq == SQ_STEP || seq_edit_row()) {   /* melodic: the key's note (or chord) at the cursor, then on */
             int clip = cur_clip(), nt[10], n, i, pos = ui_cursor * DK_T16;
             keys_down(k, vel);
             notes_show(k);
@@ -622,29 +917,14 @@ static void key_down(int k, int vel)
                 int at = clip_find(clip, pos, nt[i], 0);
                 if (at >= 0)
                     ev_delete(clip, at);       /* the same note again: gone */
-                else {
-                    dk_ev_t ev;
-                    ev.pos = (uint16_t)pos;
-                    ev.dur = (uint16_t)(ui_slen * DK_T16 - 2);
-                    ev.note = (uint8_t)nt[i];
-                    ev.vel = (uint8_t)vel;
-                    ev.fl = 0;
-                    ev.layer = 1;
-                    ui_step_ev = (int8_t)dk_song_insert(clip, &ev);
-                }
+                else
+                    ui_step_ev = (int8_t)se_put(clip, pos, nt[i], vel, ui_slen * DK_T16 - 2);
             }
             dk_unlock();
+            se_pitch = (uint8_t)nt[0];
+            se_f = -1;
             ui.step_key = (uint8_t)(k + 1);
             mark_dirty();
-            return;
-        }
-        break;
-    case PG_KEYS:
-        if (plat_ms() < ui.root_until) {     /* ROOT chosen: the key's note is the root */
-            int pc = (53 + k) % 12;
-            field_set(F_ROOT, pc);
-            say("ROOT", DK_NOTE_NAME[pc]);
-            ui.root_until = 0;
             return;
         }
         break;
@@ -658,6 +938,14 @@ static void key_down(int k, int vel)
 
 static void key_up(int k)
 {
+    if (ui.mix_key && white_of(k) == ui.mix_key - 1) {
+        int w = ui.mix_key - 1;
+        ui.mix_key = 0;
+        dk_song.trk[w].mute ^= 1u;
+        mark_dirty();
+        say(track_label(w), dk_song.trk[w].mute ? "MUTED" : "ON");
+        return;
+    }
     if (ui.page == PG_SEQ && ui.step_key == k + 1) {
         ui.step_key = 0;
         ui_cursor = (uint8_t)((ui_cursor + ui_slen) % (clip_len(cur_clip()) / DK_T16));
@@ -672,7 +960,7 @@ static void turn(int i, int e)
 {
     int f, lo, hi, step = 1;
     uint32_t now = plat_ms();
-    if (ui.page == PG_SOUND && held(B_LFO) && ui.row[PG_SOUND] == 0) {   /* LFO held: MOD 1 onto this knob */
+    if (ui.page == PG_SOUND && held(B_LFO) && ui.row[PG_SOUND] == 0 && i < 4) {   /* LFO held: MOD 1 onto this knob */
         dk_track_t *k = cur();
         ui.used[B_LFO] = 1;
         if (k->mod[0][0] == MOD_OFF)
@@ -711,13 +999,37 @@ static void turn(int i, int e)
         mark_dirty();
         return;
     }
+    if (f == F_SENOTE || f == F_SETIE || f == F_SEPITCH || f == F_SHIFT || f == F_MOVE || (f == F_CURSOR && held(B_HOME))) {
+        int d = e > 0 ? 1 : -1;             /* the step editor: each turn an edit (a fast one counts once) */
+        if (f == F_SENOTE)
+            se_note(d);
+        else if (f == F_SETIE)
+            se_tie(d);
+        else if (f == F_SEPITCH)
+            se_move(d, held(B_HOME));
+        else if (f == F_SHIFT)
+            se_rotate(d);
+        else if (f == F_MOVE)
+            se_transpose(d);
+        else                                 /* HOME + K1: a bar at a time */
+            field_set(F_CURSOR, (ui_cursor / 16 + d) * 16 + ui_cursor % 16 < 0 ? ui_cursor : (ui_cursor / 16 + d) * 16 + ui_cursor % 16);
+        ui.touched = (int8_t)i;
+        ui.touch_until = now + 800u;
+        return;
+    }
     field_set(f, field_get(f) + e * step);
     if (f == F_ROOT)
         ui.root_until = now + 3000u;
     if (f == F_MOOD)
         tape_mood(dk_song.mood);
-    ui.touched = (int8_t)i;
-    ui.touch_until = now + 800u;
+    if (i < 4) {
+        ui.touched = (int8_t)i;
+        ui.touch_until = now + 800u;
+    } else {                             /* ALGO's extra: not on the screen, so a message */
+        char t[24];
+        field_text(f, t);
+        say(field_label(f), t);
+    }
     /* recording LIVE: the knob's move into the clip */
     if (dk_recording && dk_rec_trk == dk_song.cur_track && ui.page == PG_SOUND) {
         int tgt = f >= F_P0 && f <= F_P5 ? T_P0 + (f - F_P0) : f == F_ATT ? T_ATT : f == F_DEC ? T_DEC :
@@ -737,6 +1049,28 @@ static void turn(int i, int e)
             dk_unlock();
         }
     }
+}
+
+/* SELECT and PRESET: on PLAY the tempo and the mood; elsewhere the track and its preset */
+static void enc_side(int sel, int e)     /* SELECT (sel 1): the track; PRESET: the preset; HOME + SELECT the tempo */
+{
+    if (sel && held(B_HOME)) {
+        char t[16];
+        ui.used[B_HOME] = 1;
+        field_set(F_TEMPO, field_get(F_TEMPO) + e);
+        itoa_b(dk_song.tempo, t);
+        say("TEMPO", t);
+        return;
+    }
+    if (!sel && held(B_HOME)) {          /* HOME + PRESET: the instrument itself (a melodic track's) */
+        ui.used[B_HOME] = 1;
+        engine_step(e > 0 ? 1 : -1);
+        return;
+    }
+    if (sel)
+        track_select((dk_song.cur_track + DK_NTRACK + (e > 0 ? 1 : -1)) % DK_NTRACK);
+    else
+        preset_step(e > 0 ? 1 : -1);
 }
 
 /* ----------------------------------------------------------------- MIDI in --- */
@@ -771,17 +1105,56 @@ static void midi_in(void)
     }
 }
 
+/* the device's own diagnostics (tools/deck_diag.py): F0 7D 44 4B 53 F7 asks, the answer is one line of text in
+ * F0 7D 44 4B 53 <ASCII> F7; the maxima are cleared by each ask. Filled by app.c (the render's and the frame's times) */
+static volatile uint32_t dg_rmax, dg_rsum, dg_rn, dg_fmax, dg_fn, dg_vmax;
+static char *dg_kv(char *p, const char *k, uint32_t v)
+{
+    p = cpy(p, k);
+    p = itoa_b((int)v, p);
+    *p++ = ' ';
+    *p = 0;
+    return p;
+}
 int app_sysex(const uint8_t *p, uint32_t n)
 {
-    (void)p;
-    (void)n;
-    return 0;                            /* (the export goes out; nothing comes in yet) */
+    static uint8_t f[200];
+    char *q;
+    uint32_t i, k = 0;
+    if (n < 4 || p[0] != 0x7D || p[1] != 0x44 || p[2] != 0x4B || p[3] != 0x53)
+        return 0;
+    f[k++] = 0xF0, f[k++] = 0x7D, f[k++] = 0x44, f[k++] = 0x4B, f[k++] = 0x53;
+    q = (char *)&f[k];
+    q = dg_kv(q, "t=", plat_ms());
+    q = dg_kv(q, "cpu=", plat_cpu_pct());
+    q = dg_kv(q, "rmax=", dg_rmax);
+    q = dg_kv(q, "ravg=", dg_rn ? dg_rsum / dg_rn : 0);
+    q = dg_kv(q, "xrun=", plat_xruns());
+    q = dg_kv(q, "ui_max_ms=", dg_fmax);
+    q = dg_kv(q, "frames=", dg_fn);
+    q = dg_kv(q, "voices_max=", dg_vmax);
+    q = dg_kv(q, "budget=", (uint32_t)dk_get_budget());
+    q = dg_kv(q, "play=", dk_playing);
+    q = dg_kv(q, "page=", ui.page);
+#ifndef PLAT_HOST
+    q = dg_kv(q, "irqoff_max_us=", lock_max);
+    q = dg_kv(q, "scan_gap_max_us=", fm1_in_stat.gap_max / FM1_TICKS_PER_US);
+    lock_max = 0;
+    fm1_in_stat.gap_max = 0;
+#endif
+    dg_rmax = dg_rsum = dg_rn = dg_fmax = dg_fn = dg_vmax = 0;
+    for (i = k; f[i]; i++)
+        f[i] &= 0x7Fu;
+    k = i;
+    f[k++] = 0xF7;
+    plat_sysex_send(f, k);
+    return 1;
 }
 
 /* ------------------------------------------------------------------- input --- */
 static void lights(void)
 {
-    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEL, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC};
+    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP, B_GLO, B_SEL};
     uint32_t now = plat_ms(), b = 1u << PAGE_BTN[ui.page], keys = ui.keys, dimk = 0, dimb = 0;
     int k;
     const dk_track_t *trk = cur();
@@ -791,7 +1164,13 @@ static void lights(void)
     if (dk_playing)
         b |= LED_PLAY_GREEN;
     if (dk_fill)
-        b |= 1u << B_SEQ;
+        b |= 1u << B_GLO;
+    if (dk_arp_on(trk))                  /* the ARP on this track: its button lit */
+        b |= 1u << B_ARP;
+    if (trk->oct > 0)                    /* the octave away from home: its button lit */
+        b |= 1u << B_OCTUP;
+    else if (trk->oct < 0)
+        b |= 1u << B_OCTDN;
     if (ui.dirty)
         dimb |= 1u << B_SAVE;
     if (ui.page == PG_SEQ && trk->seq == SQ_STEP && (e->flags & EF_DRUM)) {   /* the steps on, the step running */
@@ -816,7 +1195,7 @@ static void lights(void)
         int root = dk_song.root % 12;
         uint32_t pool = DK_MODE_POOL[dk_song.mode % DK_NMODES] | 1u;
         for (k = 0; k < NKEYS; k++) {
-            int pc = ((53 + k) - root + 120) % 12;
+            int pc = ((dk_song.layout && white_of(k) >= 0 ? key_note_of(k, dk_song.cur_track) : 53 + k + key_shift()) - root + 120) % 12;
             if (dk_song.layout && white_of(k) >= 0)
                 dimk |= 1u << k;
             else if (!dk_song.layout && (pool >> pc & 1u))
@@ -827,7 +1206,76 @@ static void lights(void)
     }
     dk_beat_flash = 0;
     plat_play_red(dk_recording ? 1 : 0);
-    plat_lights(b, keys, dimb | ((1u << NB) - 1u), dimk, 1);
+    /* the glow at DIM HI (as OVERWORLD's): DIM LO's pulse is ~1.6 us, and a busy render (flash cache misses in the
+     * scan's shift) made the glowing keys flicker on the device */
+    plat_lights(b, keys, dimb | ((1u << NB) - 1u), dimk, 2);
+}
+
+/* ERASE: REC held (not recording). On the screen from 0.35 s with what goes: at 1 s the track's clip in this part,
+ * held on to 2.5 s the track in all eight parts. In the garage the part (all six tracks), on ROAD the road. Let go
+ * before 1 s: nothing. One undo step (HOLD EDIT) brings all of it back */
+static void erase_do(int stage)
+{
+    int t = dk_song.cur_track, p, c;
+    if (stage == 1)
+        undo_group(1);
+    if (ui.erase_kind == 2) {                /* the road */
+        undo_push_road();
+        dk_lock();
+        dk_song.nroad = 0;
+        dk_unlock();
+    } else if (ui.erase_kind == 1) {         /* the garage's part: its six */
+        for (t = 0; t < DK_NTRACK; t++) {
+            c = ui_gpart % DK_NPART * DK_NTRACK + t;
+            if (!dk_song.clip[c].n)
+                continue;
+            undo_push(c);
+            dk_lock();
+            clip_clear(c);
+            dk_unlock();
+        }
+    } else {
+        if (stage == 1 && cur()->seq == SQ_TOMBOLA) {
+            dk_cmd(C_TOMBOLA, 0, 0, 0);
+            dk_song.nball = 0;
+        }
+        for (p = 0; p < DK_NPART; p++) {     /* stage 1 this part, 2 the others */
+            c = p * DK_NTRACK + t;
+            if ((stage == 1) != (p == dk_song.cur_part % DK_NPART) || !dk_song.clip[c].n)
+                continue;
+            undo_push(c);
+            dk_lock();
+            clip_clear(c);
+            dk_unlock();
+        }
+    }
+    mark_dirty();
+}
+static void erase_hold(uint32_t dt)
+{
+    if (dt < ERASE_SHOW)
+        return;
+    ui.used[B_REC] = 1;                      /* (let go now: no recording) */
+    if (!ui.erase_on) {
+        ui.erase_on = 1;
+        ui.erase_stage = 0;
+        ui.erase_kind = (uint8_t)(ui.page == PG_ROAD ? (ui.garage ? 1 : 2) : 0);
+    }
+    if (ui.erase_stage == 0 && dt >= ERASE_1) {
+        erase_do(1);
+        ui.erase_stage = 1;
+    } else if (ui.erase_stage == 1 && ui.erase_kind == 0 && dt >= ERASE_2) {
+        erase_do(2);
+        ui.erase_stage = 2;
+    }
+}
+static void erase_end(void)
+{
+    undo_group(0);
+    if (ui.erase_on && ui.erase_stage)
+        say("ERASED", "UNDO: HOLD EDIT");
+    ui.erase_on = 0;
+    ui.erase_stage = 0;
 }
 
 static void input(void)
@@ -860,14 +1308,28 @@ static void input(void)
             ui.used[k] = 0;
             ui.held_done[k] = 0;
             ui.btn |= bit;
-            if (k != B_HOME && (btn >> B_HOME & 1u) && m->home != A_NONE) {
+            if (k == B_REC)                  /* ERASE by holding it, when not recording (nor with SEQ / HOME) */
+                ui.erase_ok = (uint8_t)(!dk_recording && !dk_counting && !held(B_SEQ) && !held(B_HOME) && !ui.road_rec);
+            if ((k == B_OCTDN || k == B_OCTUP) && held(B_SEQ)) {   /* SEQ held + OCT-/OCT+: undo / redo, step by step */
+                ui.used[B_SEQ] = 1;
+                ui.used[k] = 1;
+                action(k == B_OCTDN ? A_UNDO : A_REDO, 1);
+            } else if (k == B_REC && held(B_SEQ)) {   /* SEQ held + REC: the track's clip cleared at once */
+                ui.used[B_SEQ] = 1;
+                ui.used[k] = 1;
+                action(A_CLEAR, 1);
+            } else if (k != B_HOME && (btn >> B_HOME & 1u) && m->home != A_NONE) {
                 ui.used[B_HOME] = 1;
                 ui.used[k] = 1;
                 action(m->home, 1);
             } else if (m->tap == A_FILL)
                 action(A_FILL, 1);
+            else if (m->tap == A_PLAY)             /* PLAY starts on the press (in time); held on: PART/SONG */
+                action(A_PLAY, 1);
             else if (!m->hold_ms)
                 action(m->tap, 1), ui.used[k] = 1;
+        } else if (k == B_REC && (btn & bit) && ui.erase_ok && (ui.erase_on || !ui.used[k])) {   /* REC held: ERASE */
+            erase_hold(now - ui.down_t[k]);
         } else if ((btn & bit) && !ui.used[k] && m->hold_ms && m->hold_ms != HOLD_MOD) {   /* held */
             if (now - ui.down_t[k] >= m->hold_ms) {
                 ui.used[k] = 1;
@@ -875,28 +1337,59 @@ static void input(void)
             }
         } else if (!(btn & bit) && (ui.btn & bit)) {             /* up */
             ui.btn &= ~bit;
+            if (k == B_REC && ui.erase_on)
+                erase_end();
             if (m->tap == A_FILL)
                 action(A_FILL, 0);
-            else if (!ui.used[k])
+            else if (m->hold == A_FILL && ui.used[k])   /* GLO held: the FILL ends with it */
+                action(A_FILL, 0);
+            else if (!ui.used[k] && m->tap != A_PLAY)
                 action(m->tap, 1);
         }
     }
     ui.btn = btn;
-    midi_in();
-    if ((e = plat_enc(EN_SELECT)) != 0)
-        turn(0, e);
-    if ((e = plat_enc(EN_ALGO)) != 0)
-        turn(1, e);
-    if ((e = plat_enc(EN_PRESET)) != 0)
-        turn(2, e);
-    for (k = 0; k < 4; k++)
-        if ((e = plat_enc(EN_K1 + (int)k)) != 0) {
-            int f = KNOB_FIELD[k];
-            char s[12];
-            field_set(f, field_get(f) + e * 2);
-            field_text(f, s);
-            say(field_label(f), s);
+    se_hear_step(now);                   /* the step editor's note heard for a moment: off */
+    if (ui_auto_on && dk_playing && !dk_counting) {   /* AUTO's take: past 16 bars it wraps, 16 it is */
+        if (dk_part_tick >= ui.auto_max)
+            ui.auto_max = dk_part_tick;
+        else if (ui.auto_max > DK_TPB && dk_part_tick + DK_TPB < ui.auto_max)
+            ui_auto_on = 0;
+    }
+    if (ui.auto_fix && !dk_recording)
+        auto_apply();
+    if (ui.notes_k) {                    /* a PERFORM key still held: its name kept */
+        if (kh[ui.notes_k - 1].trk >= 0 && kh[ui.notes_k - 1].kind == 1)
+            ui.notes_until = now + 300u;
+        else
+            ui.notes_k = 0;
+    }
+    if (ui.mix_key && now - ui.mix_t >= 1000u) {   /* MIX: a white held 1 s, its track's clip in this part cleared */
+        int t = ui.mix_key - 1, c = dk_song.cur_part % DK_NPART * DK_NTRACK + t;
+        char s[16] = "TRACK 1";
+        ui.mix_key = 0;
+        undo_push(c);
+        dk_lock();
+        clip_clear(c);
+        dk_unlock();
+        if (dk_song.trk[t].seq == SQ_TOMBOLA && t == dk_song.cur_track) {
+            dk_cmd(C_TOMBOLA, 0, 0, 0);
+            dk_song.nball = 0;
         }
+        mark_dirty();
+        s[6] = (char)('1' + t);
+        say(s, "CLEARED");
+    }
+    midi_in();
+    /* K1..K4: the page's four; ALGO its extra (PLAY: the MOOD); SELECT the track, PRESET the preset */
+    for (k = 0; k < 4; k++)
+        if ((e = plat_enc(EN_K1 + (int)k)) != 0)
+            turn((int)k, e);
+    if ((e = plat_enc(EN_ALGO)) != 0)
+        turn(4, e);
+    if ((e = plat_enc(EN_SELECT)) != 0)
+        enc_side(1, e);
+    if ((e = plat_enc(EN_PRESET)) != 0)
+        enc_side(0, e);
     lights();
 }
 
@@ -938,15 +1431,7 @@ static void housekeeping(uint32_t now)
         mark_dirty();
     }
     /* the tape page goes back a bar after the recording */
-    if (ui.page == PG_REC && !dk_recording && !dk_counting) {
-        if (!ui.rec_end)
-            ui.rec_end = now + (uint32_t)bar_ms();
-        else if (now >= ui.rec_end) {
-            ui.page = ui.prev;
-            ui.rec_end = 0;
-        }
-    } else
-        ui.rec_end = 0;
+    ui.rec_end = 0;                      /* (the tape page stays after a take: its settings to look at) */
     /* the road recorded live: each part's loops become a block when the next one starts */
     if (ui.road_rec && dk_playing) {
         if (dk_part_tick < ui.road_last_tick && dk_cur_part == ui.road_part)
@@ -979,12 +1464,17 @@ static void housekeeping(uint32_t now)
             plat_sysex_send(f, (uint32_t)n);
         }
     }
-    /* saving by itself: a few seconds after a change, while all rests and is quiet (an erase stops the sound) */
-    if (ui.dirty && !dk_playing && !dk_recording && !dk_counting && now - ui.change_t > 4000u &&
-        dk_master_level < 0.004f && !ui.keys) {
+    /* saving by itself: once in 90 s at most (SAVE on PROJECT saves at once), a few seconds after the last change,
+     * while all rests and is quiet (an erase stops the sound; it is faded out first) */
+    if ((ui.dirty || settings_due) && !dk_playing && !dk_recording && !dk_counting && now - ui.change_t > 6000u &&
+        now - ui.save_t >= AUTOSAVE_MS && dk_master_level < 0.004f && !ui.keys && !ui.btn) {
+        ui.save_t = now;
+        if (settings_due)
+            settings_save();
         tape_ui_keep();
-        if (project_save(set.proj) == 0)
+        if (ui.dirty && project_save(set.proj) == 0)
             ui.dirty = 0;
+        ui.change_t = now;               /* (a failed save waits its turn again) */
     }
 }
 

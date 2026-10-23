@@ -15,8 +15,10 @@ typedef struct {
     uint8_t kind, clip;                  /* 0 a clip, 1 the road */
     uint16_t n, len, at;                 /* events, the clip's length; where in the buffer */
     uint8_t layers, nroad;
+    uint8_t grp;                         /* snapshots of one edit over several clips: undone together (0 alone) */
     dk_block_t road[DK_NROAD];
 } snap_t;
+static uint8_t grp_now, grp_seq;
 #define NSNAP 24
 static snap_t usnap[NSNAP], rsnap[8];
 static int un, rn;                       /* entries */
@@ -184,21 +186,40 @@ static void snap_restore(const snap_t *s, const dk_ev_t *buf)
     }
     song_edits++;
 }
-void undo_push(int clip) { snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0), rn = 0; }
+void undo_push(int clip)
+{
+    if (snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0) == 0)
+        usnap[un - 1].grp = grp_now;
+    rn = 0;
+}
+void undo_group(int on)                  /* the pushes until undo_group(0) are one undo step */
+{
+    if (on) {
+        if (!++grp_seq)
+            grp_seq = 1;
+        grp_now = grp_seq;
+    } else
+        grp_now = 0;
+}
 void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, 1024, 0, 1), rn = 0; }
 int undo_count(void) { return un; }
 /* 1 = done; what: the clip (or -1 the road) */
 int song_undo(int *what)
 {
     snap_t s;
+    uint8_t g;
     if (!un)
         return 0;
-    s = usnap[un - 1];
-    dk_lock();
-    snap_take(rsnap, &rn, 8, rbuf, 512, s.clip, s.kind);
-    snap_restore(&s, ubuf);
-    dk_unlock();
-    un--;
+    do {                                 /* (a group: all of it) */
+        s = usnap[un - 1];
+        g = s.grp;
+        dk_lock();
+        if (snap_take(rsnap, &rn, 8, rbuf, 512, s.clip, s.kind) == 0)
+            rsnap[rn - 1].grp = g;
+        snap_restore(&s, ubuf);
+        dk_unlock();
+        un--;
+    } while (g && un && usnap[un - 1].grp == g);
     *what = s.kind ? -1 : s.clip;
     return 1;
 }
@@ -206,16 +227,21 @@ int song_redo(int *what)
 {
     snap_t s;
     int keep;
+    uint8_t g;
     if (!rn)
         return 0;
-    s = rsnap[rn - 1];
-    dk_lock();
-    keep = rn;
-    snap_take(usnap, &un, NSNAP, ubuf, 1024, s.clip, s.kind);
-    rn = keep;
-    snap_restore(&s, rbuf);
-    dk_unlock();
-    rn--;
+    do {
+        s = rsnap[rn - 1];
+        g = s.grp;
+        dk_lock();
+        keep = rn;
+        if (snap_take(usnap, &un, NSNAP, ubuf, 1024, s.clip, s.kind) == 0)
+            usnap[un - 1].grp = g;
+        rn = keep;
+        snap_restore(&s, rbuf);
+        dk_unlock();
+        rn--;
+    } while (g && rn && rsnap[rn - 1].grp == g);
     *what = s.kind ? -1 : s.clip;
     return 1;
 }
@@ -318,12 +344,17 @@ void clip_double(int clip)
     dk_song.clip[clip].len = (uint16_t)(len * 2);
     dk_unlock();
 }
-/* by scale steps (or semitones for a chromatic keyboard) */
+/* by scale steps (or semitones for a chromatic keyboard); _nu: without its undo step (the caller's) */
+static void clip_transpose_nu(int clip, int steps);
 void clip_transpose(int clip, int steps)
+{
+    undo_push(clip);
+    clip_transpose_nu(clip, steps);
+}
+static void clip_transpose_nu(int clip, int steps)
 {
     const dk_clip_t *c = &dk_song.clip[clip];
     int i;
-    undo_push(clip);
     dk_lock();
     for (i = 0; i < c->n; i++) {
         dk_ev_t *e = &dk_ev[c->at + i];
@@ -387,13 +418,133 @@ void clip_humanize(int clip, uint32_t seed)
     song_edits++;
 }
 
+/* COOK: the clip a little different each time, staying in the key: some notes a scale step up or down, the dynamics
+ * breathing, a note a sixteenth longer or shorter; on drums the hits' strength, one off the beat moved, now and then
+ * a ghost. Each one is an undo step (SEQ + OCT- walks back to where it began) */
+static uint32_t ck_rnd(uint32_t *s) { return (*s = *s * 1664525u + 1013904223u) >> 8; }
+static int scale_move(int note, int steps)
+{
+    int idx = dk_note_index(dk_song.root, dk_song.mode, note) + steps, n = dk_scale_note(dk_song.root, dk_song.mode, idx);
+    return n < 24 ? note : n > 108 ? note : n;
+}
+void clip_cook(int clip, uint32_t seed, const dk_engine_t *e)
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, len = clip_len(clip), drum = (e->flags & EF_DRUM) != 0, ghosts = 0;
+    undo_push(clip);
+    dk_lock();
+    for (i = 0; i < c->n; i++) {
+        dk_ev_t *ev = &dk_ev[c->at + i];
+        int v = ev->vel + (int)(ck_rnd(&seed) % 25u) - 12, r = (int)(ck_rnd(&seed) % 100u);
+        if (ev->fl & EV_MOTION)
+            continue;
+        ev->vel = (uint8_t)(v < 20 ? 20 : v > 127 ? 127 : v);
+        if (drum) {
+            if (r < 10 && ev->pos % DK_PPQ) {          /* off the beat: a sixteenth this way or that */
+                int p = ev->pos + (ck_rnd(&seed) & 1u ? DK_T16 : -DK_T16);
+                if (p >= 0 && p < len && clip_find(clip, p, ev->note, 0) < 0)
+                    ev->pos = (uint16_t)p;
+            }
+            continue;
+        }
+        {
+            int same = (i > 0 && dk_ev[c->at + i - 1].pos == ev->pos) ||
+                       (i + 1 < c->n && dk_ev[c->at + i + 1].pos == ev->pos);   /* a chord's note */
+            if (r < (same ? 12 : 28))
+                ev->note = (uint8_t)scale_move(ev->note, r < 4 ? (r & 1 ? 2 : -2) : (r & 1 ? 1 : -1));
+            else if (r > 90 && ev->dur >= 2 * DK_T16)
+                ev->dur = (uint16_t)(ev->dur + (r & 1 ? DK_T16 : -DK_T16));
+        }
+    }
+    clip_sort(clip);
+    if (drum && e->nlanes > 1 && ck_rnd(&seed) % 100u < 45u)   /* now and then a ghost note */
+        for (i = 0; i < 8 && ghosts < 1; i++) {
+            dk_ev_t g;
+            int l = 1 + (int)(ck_rnd(&seed) % (uint32_t)(e->nlanes - 1)), st = (int)(ck_rnd(&seed) % (uint32_t)(len / DK_T16));
+            if (clip_find(clip, st * DK_T16, e->lane_note[l], 0) >= 0 || !(st & 1))
+                continue;
+            g.pos = (uint16_t)(st * DK_T16);
+            g.dur = DK_T16;
+            g.note = e->lane_note[l];
+            g.vel = (uint8_t)(32 + ck_rnd(&seed) % 18u);
+            g.fl = 0;
+            g.layer = 0;
+            dk_song_insert(clip, &g);
+            ghosts++;
+        }
+    dk_unlock();
+    song_edits++;
+}
+/* RANDOM: melodic, the same rhythm with new notes of the key (a chord moved whole, so it stays a chord); drums, each
+ * sound as many hits as it had, scattered anew (the kick leaning to the beats) */
+void clip_random(int clip, uint32_t seed, const dk_engine_t *e)
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, len = clip_len(clip);
+    undo_push(clip);
+    dk_lock();
+    if (e->flags & EF_DRUM) {
+        int cnt[8] = {0}, l, steps = len / DK_T16;
+        for (i = 0; i < c->n; i++)
+            for (l = 0; l < e->nlanes && l < 8; l++)
+                if (!(dk_ev[c->at + i].fl & EV_MOTION) && dk_ev[c->at + i].note == e->lane_note[l])
+                    cnt[l]++;
+        clip_clear(clip);
+        for (l = 0; l < e->nlanes && l < 8; l++) {
+            int tries = 0;
+            if (!cnt[l] && l < 3)
+                cnt[l] = l == 0 ? steps / 4 : l == 1 ? steps / 8 : steps / 2;   /* an empty clip: a beat to start from */
+            while (cnt[l] > 0 && tries++ < 200) {
+                int st = (int)(ck_rnd(&seed) % (uint32_t)steps);
+                dk_ev_t g;
+                if (l == 0 && (st & 3) && ck_rnd(&seed) % 100u < 60u)
+                    st &= ~3;                    /* the kick: mostly on the beat */
+                if (clip_find(clip, st * DK_T16, e->lane_note[l], 0) >= 0)
+                    continue;
+                g.pos = (uint16_t)(st * DK_T16);
+                g.dur = DK_T16;
+                g.note = e->lane_note[l];
+                g.vel = (uint8_t)(st % 4 ? 60 + ck_rnd(&seed) % 30u : 90 + ck_rnd(&seed) % 30u);
+                g.fl = 0;
+                g.layer = 0;
+                dk_song_insert(clip, &g);
+                cnt[l]--;
+            }
+        }
+    } else {
+        int lo = 127, hi = 0, prev_pos = -1, shift = 0;
+        for (i = 0; i < c->n; i++)
+            if (!(dk_ev[c->at + i].fl & EV_MOTION)) {
+                lo = dk_ev[c->at + i].note < lo ? dk_ev[c->at + i].note : lo;
+                hi = dk_ev[c->at + i].note > hi ? dk_ev[c->at + i].note : hi;
+            }
+        for (i = 0; i < c->n; i++) {
+            dk_ev_t *ev = &dk_ev[c->at + i];
+            int n2, guard = 0;
+            if (ev->fl & EV_MOTION)
+                continue;
+            if (ev->pos != prev_pos)             /* a new moment: a new move (a chord's notes share it) */
+                shift = (int)(ck_rnd(&seed) % 9u) - 4;
+            prev_pos = ev->pos;
+            do
+                n2 = scale_move(ev->note, shift);
+            while ((n2 < lo - 5 || n2 > hi + 5) && (shift = -shift / 2, ++guard < 4));
+            ev->note = (uint8_t)n2;
+            ev->vel = (uint8_t)(55 + ck_rnd(&seed) % 50u);
+        }
+    }
+    clip_sort(clip);
+    dk_unlock();
+    song_edits++;
+}
+
 /* ------------------------------------------------------------- the tracks --- */
 const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp)
 {
     if (slot < DK_NFACT)
         return &TAPE.presets[eng * DK_NFACT + slot];
     {
-        const dk_upreset_t *u = &dk_user.p[eng & 7][(slot - DK_NFACT) & 3];
+        const dk_upreset_t *u = &dk_user.p[eng % DK_UENG][(slot - DK_NFACT) & 3];
         int i;
         if (!u->used)
             return &TAPE.presets[eng * DK_NFACT];
@@ -459,14 +610,14 @@ static void track_defaults(int t)
     for (i = 0; i < (int)sizeof *k; i++)
         ((uint8_t *)k)[i] = 0;
     k->vol = 72;
-    k->pan = (int8_t)(t == 3 ? -12 : t == 4 ? 14 : 0);
+    k->pan = (int8_t)(t == 2 ? -12 : t == 1 ? 14 : 0);   /* the pad a little left, the keys right */
     k->midi_ch = (uint8_t)(t + 1);
     k->drift = 35;
     k->drv[0] = 45;
     k->drv[1] = dk_song.style;
     k->drv[2] = 50;
     k->arp[0] = 0;
-    k->arp[1] = 1;
+    k->arp[1] = 3;                      /* 1/16 */
     k->arp[2] = 1;
     k->tmb[0] = 60;
     k->tmb[1] = 45;
@@ -507,7 +658,7 @@ void dk_song_clear(void)
     dk_song.lead = 1;
     dk_song.strum = 40;
     dk_song.dim = 1;
-    dk_song.harm_track = 2;
+    dk_song.harm_track = 0;   /* SPLIT: the chords to the piano */
     dk_song.style = 0;
     dk_song.dust = 25;
     dk_song.sidechain = 15;
@@ -563,10 +714,8 @@ void song_mood(int m)
     dk_song.dust = md->dust;
     dk_song.space = md->space;
     for (t = 0; t < DK_NTRACK; t++) {
-        if (md->eng[t] >= 0 && md->eng[t] != dk_song.trk[t].eng) {
+        if (md->eng[t] >= 0 && md->eng[t] != dk_song.trk[t].eng)   /* (the track keeps its role: PIANO, KEYS ...) */
             dk_song.trk[t].eng = (uint8_t)md->eng[t];
-            dk_song.trk[t].role = TAPE.eng[md->eng[t]]->role;
-        }
         if (md->preset[t] >= 0)
             track_preset(t, md->preset[t]);
         dk_song.trk[t].drv[1] = md->style;

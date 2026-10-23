@@ -27,6 +27,7 @@ static inline float wnoise(void) { return (float)(int32_t)rnd() * (1.0f / 214748
 #include "eng_pad.c"
 #include "eng_kit.c"
 #include "eng_world.c"
+#include "eng_wind.c"
 #include "fx.c"
 
 /* ------------------------------------------------------------- FINGER patterns --- */
@@ -106,8 +107,9 @@ static void finger_build(void)
 #define KIT_M {T_P2, T_SWING, T_FXAMT}, {50, 40, 40}
 #define WORLD_M {T_P1, T_P2, T_REV}, {45, -40, 40}
 #define KAL_M {T_P2, T_REV, T_P0}, {50, 40, -25}
+#define WIND_M {T_P0, T_P1, T_REV}, {40, 35, 35}
 #define E50 {50, 50, 50}
-static const dk_preset_t PRESETS[8 * DK_NFACT] = {
+static const dk_preset_t PRESETS[9 * DK_NFACT] = {
     /* FELT */
     {"MEADOW", 0, {45, 40, 55, 50, 55}, E50, FX_N_TAPE, 15, 30, 20, 60, 12, FELT_M, 0},
     {"SWEDEN", 0, {40, 50, 60, 55, 60}, E50, FX_N_TAPE, 25, 35, 25, 70, 15, FELT_M, 0},
@@ -212,10 +214,23 @@ static const dk_preset_t PRESETS[8 * DK_NFACT] = {
     {"STARLIGHT", 7, {65, 70, 30}, E50, FX_N_NONE, 0, 0, 0, 80, 25, KAL_M, -6},
     {"TINY", 7, {80, 30, 25}, E50, FX_N_NONE, 0, 0, 0, 45, 15, KAL_M, -1},
     {"DEEP", 7, {30, 65, 60}, E50, FX_N_NONE, 0, 0, 0, 55, 10, KAL_M, -1},
+    /* WINDS */
+    {"FLUTE", 8, {50, 40, 40, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 55, 12, WIND_M, 1},
+    {"PAN FLUTE", 8, {40, 70, 25, 1, 40}, E50, FX_N_NONE, 0, 0, 0, 65, 15, WIND_M, 1},
+    {"OCARINA", 8, {30, 30, 35, 2, 50}, E50, FX_N_NONE, 0, 0, 0, 60, 15, WIND_M, 1},
+    {"SHAKUHACHI", 8, {35, 90, 50, 1, 60}, E50, FX_N_NONE, 0, 0, 0, 80, 20, WIND_M, 1},
+    {"CLARINET", 8, {45, 20, 30, 3, 50}, E50, FX_N_NONE, 0, 0, 0, 50, 10, WIND_M, -1},
+    {"TRUMPET", 8, {60, 15, 35, 4, 45}, E50, FX_N_NONE, 0, 0, 0, 50, 10, WIND_M, 0},
+    {"MUTED", 8, {50, 15, 30, 5, 45}, E50, FX_N_TAPE, 20, 25, 20, 55, 15, WIND_M, 0},
+    {"HORN", 8, {35, 10, 25, 6, 55}, E50, FX_N_NONE, 0, 0, 0, 75, 8, WIND_M, 1},
+    {"BRASS", 8, {55, 10, 20, 7, 55}, E50, FX_N_NONE, 0, 0, 0, 60, 8, WIND_M, 0},
+    {"FLUGEL", 8, {40, 20, 40, 4, 58}, E50, FX_N_TAPE, 20, 25, 25, 65, 12, WIND_M, 0},
+    {"MORNING", 8, {60, 50, 50, 0, 40}, E50, FX_N_CHORUS, 25, 25, 30, 85, 25, WIND_M, -1},
+    {"OLD BAND", 8, {50, 20, 30, 7, 50}, E50, FX_N_VINYL, 35, 40, 30, 45, 10, WIND_M, 1},
 };
 
-static const dk_engine_t *const ENGINES[8] = {&ENG_FELT, &ENG_TINE, &ENG_AIRPAD, &ENG_GLASS, &ENG_SOFTBASS, &ENG_DUSTKIT,
-                                              &ENG_WORLD, &ENG_KALIMBA};
+static const dk_engine_t *const ENGINES[9] = {&ENG_FELT, &ENG_TINE, &ENG_AIRPAD, &ENG_GLASS, &ENG_SOFTBASS, &ENG_DUSTKIT,
+                                              &ENG_WORLD, &ENG_KALIMBA, &ENG_WINDS};
 
 /* ---------------------------------------------------------------- the harmony --- */
 static const char *const STYLE_NAME[NSTYLE] = {"C418", "LOFI", "AMBIENT", "CAMPFIRE"};
@@ -237,21 +252,32 @@ static const uint8_t PERFORM_ACT[11] = {PF_TAPESTOP, PF_REWIND, PF_VINYLSTOP, PF
 /* the biomes (the garden's scenes): DAWN BLOSSOM RAIN EMBER SNOW LAGOON NIGHT AURORA DUSK */
 static const char *const BIOME_NAME[9] = {"DAWN", "BLOSSOM", "RAIN", "EMBER", "SNOW", "LAGOON", "NIGHT", "AURORA", "DUSK"};
 /* name, tempo, mode, style, biome, world preset, dust, space (ROOM HALL CAVE SHIMMER); the tracks' engines, presets */
+/* the tracks: PIANO (FELT) KEYS (TINE / GLASS / KALIMBA) PAD (AIRPAD) BASS DRUMS NATURE */
 static const dk_mood_t MOODS[8] = {
-    {"PLAINS", 76, 0, ST_C418, 0, 6, 25, 1, {5, 4, 0, 2, 3, 6}, {4, 1, 0, 0, 0, 6}},
-    {"RAIN", 72, 2, ST_LOFI, 2, 0, 45, 0, {5, 4, 0, 1, 3, 6}, {0, 0, 9, 0, 2, 0}},
-    {"CAVE", 64, 1, ST_AMBIENT, 7, 4, 20, 2, {5, 4, 0, 2, 3, 6}, {4, 6, 7, 5, 7, 4}},
-    {"SNOW", 68, 4, ST_AMBIENT, 4, 9, 20, 3, {5, 4, 0, 2, 3, 6}, {4, 1, 4, 3, 3, 9}},
-    {"OCEAN", 70, 5, ST_C418, 5, 7, 25, 1, {5, 4, 0, 7, 3, 6}, {4, 0, 1, 0, 0, 7}},
-    {"NIGHT", 60, 0, ST_C418, 6, 5, 30, 1, {5, 4, 0, 2, 3, 6}, {4, 10, 10, 1, 10, 5}},
-    {"CAMPFIRE", 82, 8, ST_CAMPFIRE, 3, 2, 30, 0, {5, 4, 7, 7, 3, 6}, {9, 2, 4, 0, 8, 2}},
-    {"STUDY", 84, 2, ST_LOFI, 8, 11, 55, 0, {5, 4, 0, 1, 3, 6}, {3, 8, 9, 5, 4, 11}},
+    {"PLAINS", 76, 0, ST_C418, 0, 6, 25, 1, {0, 3, 2, 4, 5, 6}, {0, 0, 0, 1, 4, 6}},
+    {"RAIN", 72, 2, ST_LOFI, 2, 0, 45, 0, {0, 1, 2, 4, 5, 6}, {9, 0, 7, 0, 0, 0}},
+    {"CAVE", 64, 1, ST_AMBIENT, 7, 4, 20, 2, {0, 3, 2, 4, 5, 6}, {7, 7, 5, 6, 4, 4}},
+    {"SNOW", 68, 4, ST_AMBIENT, 4, 9, 20, 3, {0, 3, 2, 4, 5, 6}, {4, 3, 3, 1, 4, 9}},
+    {"OCEAN", 70, 5, ST_C418, 5, 7, 25, 1, {0, 7, 2, 4, 5, 6}, {1, 0, 9, 0, 4, 7}},
+    {"NIGHT", 60, 0, ST_C418, 6, 5, 30, 1, {0, 3, 2, 4, 5, 6}, {10, 10, 1, 10, 4, 5}},
+    {"CAMPFIRE", 82, 8, ST_CAMPFIRE, 3, 2, 30, 0, {0, 7, 2, 4, 5, 6}, {2, 4, 2, 2, 9, 2}},
+    {"STUDY", 84, 2, ST_LOFI, 8, 11, 55, 0, {0, 1, 2, 4, 5, 6}, {9, 5, 8, 8, 3, 11}},
 };
 
-/* the tracks by default: DRUMS BASS PIANO KEYS BELLS NATURE */
-static const uint8_t DEF_ENG[DK_NTRACK] = {5, 4, 0, 1, 3, 6}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 6},
-                     DEF_SEQ[DK_NTRACK] = {SQ_FINGER, SQ_STEP, SQ_LIVE, SQ_ARP, SQ_TOMBOLA, SQ_HOLD},
-                     DEF_ROLE[DK_NTRACK] = {R_DRUM, R_BASS, R_KEYS, R_ARP, R_BELL, R_NATURE};
+/* the tracks by default: PIANO KEYS PAD BASS DRUMS NATURE (the piano first: it is played the most) */
+static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 5, 6}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 6},
+                     DEF_SEQ[DK_NTRACK] = {SQ_LIVE, SQ_LIVE, SQ_LIVE, SQ_STEP, SQ_FINGER, SQ_LIVE},
+                     DEF_ROLE[DK_NTRACK] = {R_KEYS, R_ARP, R_PAD, R_BASS, R_DRUM, R_NATURE};
+/* the KEYS track's twelve: electric pianos, bells, kalimbas (HOME + white 1-12, the PRESET knob) */
+static const uint8_t KEYS_SET[DK_NFACT][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9},  {3, 0}, {3, 1},
+                                              {3, 3}, {3, 4}, {7, 0}, {7, 1}, {7, 7}, {7, 9}};
+
+/* ATMO (the SEL page): the place under the music, each layer a WORLD voice of its own (TYPE, AMOUNT, TONE) */
+static const dk_atmo_t ATMO[6] = {
+    {"RAIN", 6, {W_RAIN, 55, 50}, 0.9f},     {"FIRE", 6, {W_FIRE, 60, 55}, 1.0f},
+    {"BIRDS", 6, {W_BIRDS, 50, 60}, 0.8f},   {"OCEAN", 6, {W_OCEAN, 55, 45}, 0.9f},
+    {"WIND", 6, {W_WIND, 50, 45}, 0.8f},     {"CRICKETS", 6, {W_CRICKETS, 50, 55}, 0.7f},
+};
 
 #include "demo.c"
 
@@ -263,7 +289,8 @@ static void tape_init(void)
 }
 
 const dk_tape_t TAPE = {
-    "OVERWORLD", tape_init, ENGINES, 8, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
+    "OVERWORLD", tape_init, ENGINES, 9, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
     STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FINGER_DRUM, FINGER_MEL, PERFORM, PERFORM_ACT, MOODS, 8,
-    BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE,
+    BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
+    ATMO, 6,
 };

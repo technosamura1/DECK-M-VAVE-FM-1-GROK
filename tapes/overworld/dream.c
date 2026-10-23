@@ -223,10 +223,10 @@ static void drums(const dk_drive_t *d)
     switch (d->style) {
     case ST_LOFI: pat = LOFI_OF[d->energy * 5 / 100]; break;
     case ST_CAMPFIRE: pat = CAMP_OF[d->energy * 2 / 100]; break;
-    default:
-        if (d->energy < 55)
+    default:                                   /* C418, AMBIENT: soft, ENERGY from a shaker to a lazy beat */
+        if (d->energy < 10)
             return;
-        pat = d->energy < 80 ? 0 : 2;          /* C418, AMBIENT: a shaker at most */
+        pat = d->energy < 35 ? 0 : d->energy < 60 ? 1 : d->energy < 80 ? 3 : 4;
         break;
     }
     step = (int)(d->bar_tick / DK_T16);

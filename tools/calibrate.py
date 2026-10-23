@@ -9,8 +9,8 @@ import sys
 
 # each engine's loudness (gated, K-weighted, dB): the piano the reference, the pads a little under, the world behind
 TARGET = {"FELT": -20.5, "TINE": -21.5, "KALIMBA": -21.5, "GLASS": -21.5, "AIRPAD": -23.0, "SOFTBASS": -23.5,
-          "DUSTKIT": -24.0, "WORLD": -33.0}
-ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "SOFTBASS", "DUSTKIT", "WORLD", "KALIMBA"]
+          "DUSTKIT": -24.0, "WORLD": -33.0, "WINDS": -22.0}
+ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "SOFTBASS", "DUSTKIT", "WORLD", "KALIMBA", "WINDS"]
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
             ln = f"{m.group(1)}{new}}},"
             k += 1
         out.append(ln)
-    if k != 96:
+    if k != 12 * len(ORDER):
         raise SystemExit(f"found {k} presets")
     open(path, "w", newline="").write(src[:a] + "\n".join(out) + src[b:])
     print("trims set for", k, "presets")

@@ -3,19 +3,24 @@
 «Свой OP-1» на FM-1: 6 дорожек, 8 частей, трасса-аранжировка, умная клавиатура, 8 секвенсоров, микшер, экспорт в .mid.
 Звук и картинка — из сменной кассеты; первая — **OVERWORLD** (лоу-фай эмбиент в духе C418, сад на экране).
 
-- Прошивка: [`out/deck-overworld.fwsc`](out/deck-overworld.fwsc), установка — `out/install-deck.bat` (на ПК, FM-1 по USB).
+- Прошивка: **Releases → latest** (собирается автоматически) или [`out/deck-overworld.fwsc`](out/deck-overworld.fwsc); установка — `install-deck.bat` (на ПК, FM-1 по USB).
 - Инструкция: [`out/DECK_инструкция.pdf`](out/DECK_инструкция.pdf). Звуки: `out/listen.html` (WAV — только на домашнем ПК).
 - Скриншоты экранов: `out/screens/`, `out/pages_1.png`, `out/pages_2.png`.
 - ТЗ и макеты: `docs/` (DECK_SPEC, OVERWORLD_TAPE, OUTRUN_TAPE, CLAUDE_TASK, ui_concepts, scenes).
 - Карта кода, кнопки, ограничения: [`CLAUDE.md`](CLAUDE.md) — её читает Claude Code в начале каждой сессии.
 
+## Свежая прошивка — без сборки
+GitHub сам собирает прошивку после каждого изменения.
+- **Готовая из `main`:** вкладка **Releases → latest** → скачай `deck-overworld.zip`.
+- **Из любой ветки/PR:** вкладка **Actions** → нужный запуск «firmware» → внизу **Artifacts**.
+
+Установка: распакуй zip на ПК → подключи FM-1 по USB → `install-deck.bat`. Лучше на второй FM-1.
+
 ## Работа с телефона (Claude Code в браузере / приложении Claude)
 1. claude.ai → Code → выбрать этот репозиторий → написать задачу по-русски, как дома.
-2. В облаке собирается и проверяется **симулятор** (обычный gcc + python):
-   `./build.sh overworld --host` и `sh tests/run_tests.sh` (ожидается ALL OK; звуки, сценарии, экспорт, скриншоты).
-3. **Файл прошивки (.fwsc) в облаке не собрать** — нужен тулчейн JieLi, он только на домашнем ПК
-   (`../../jlwin`, SDK `../../jieli/sdk`). Дома: `git pull`, `./build.sh overworld` → `out/deck-overworld.fwsc`.
-4. Облачная сессия коммитит в свою ветку и открывает PR — посмотреть изменения и смёржить можно с телефона.
+2. Claude правит код, собирает симулятор, гоняет тесты (звуки, сценарии, скриншоты) и открывает PR.
+3. В PR дождись зелёной галочки «firmware» — значит прошивка собралась (её можно скачать из Artifacts этого запуска).
+4. Нажми **Merge** → через пару минут свежая прошивка появится в **Releases → latest**.
 
 ## Сборка дома (Windows, Git Bash)
 ```

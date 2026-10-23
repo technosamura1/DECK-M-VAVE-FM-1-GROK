@@ -6,8 +6,11 @@ shot g_plains_day.png
 tap PLAY
 wait 9000
 shot p01_play.png
+turn SELECT 1
+wait 300
+shot p20_trackbar.png
 press HOME
-tapkey b2
+tapkey b0
 release HOME
 wait 50
 wait 1000
@@ -23,14 +26,14 @@ shot p04_sound_fx.png
 tap FX
 wait 1000
 shot p05_sound_mod.png
-tap SEL
+tap SEQ
 wait 1000
 shot p06_seq_live_piano.png
 press HOME
-tapkey b0
+tapkey b4
 release HOME
 wait 50
-wait 1000
+wait 1600
 shot p07_seq_step_drums.png
 tap LFO
 wait 1000
@@ -44,7 +47,7 @@ release ENV
 wait 1000
 shot p10_garage.png
 press HOME
-tapkey b2
+tapkey b0
 release HOME
 wait 50
 tap EDIT
@@ -76,7 +79,7 @@ tap REC
 wait 4000
 tap PLAY
 wait 300
-# TOMBOLA, ARP, DRIVE, FINGER views (the tape's tracks)
+# TOMBOLA, ARP, DRIVE, FINGER views (a new song: the tape's tracks)
 tap SAVE
 wait 100
 tapkey w4
@@ -84,11 +87,14 @@ wait 200
 tap HOME
 wait 100
 press HOME
-tapkey b4
+tapkey b1
 release HOME
 wait 50
+press SEQ
+tapkey w4
+release SEQ
 wait 50
-tap SEL
+tap SEQ
 tap PLAY
 tapkey w2
 tapkey w5
@@ -96,10 +102,11 @@ tapkey w7
 tapkey w9
 wait 3000
 shot p15_seq_tombola.png
-press HOME
-tapkey b3
-release HOME
+press SEQ
+tapkey w1
+release SEQ
 wait 50
+tap ARP
 wait 50
 key w0 down 90
 key w4 down 90
@@ -108,7 +115,11 @@ shot p16_seq_arp.png
 key w0 up
 key w4 up
 press HOME
-tapkey b0
+tap ARP
+release HOME
+wait 50
+press HOME
+tapkey b4
 release HOME
 wait 50
 wait 50
@@ -116,29 +127,64 @@ tapkey w6
 tapkey w11
 wait 1200
 shot p17_seq_finger.png
-press SEL
-tapkey w4
-release SEL
+press SEQ
+tapkey w2
+release SEQ
 wait 50
-turn ALGO 1
+turn K2 1
 wait 1500
 shot p18_seq_drive.png
+tap GLO
+wait 1000
+shot p19_global.png
+demo
+wait 200
 press HOME
-tapkey b5
+tapkey b4
 release HOME
 wait 50
+tap SEQ
 wait 50
-press SEL
-tapkey w6
-release SEL
+row 1
+turn K2 -4
+wait 1600
+shot p21_kit.png
+tap FX
 wait 50
+row 2
+turn K1 1
+turn K2 10
+turn K4 6
+wait 300
+shot p22_kit_fx.png
+tap SEL
+wait 50
+row 0
+turn K1 14
+turn K2 10
+turn K4 6
+wait 1200
+shot p23_atmo.png
+tap HOME
+wait 300
+press HOME
+tapkey b1
+release HOME
+wait 50
+tap ARP
+wait 1500
+key w0 down 90
 key w2 down 90
 key w4 down 90
-wait 1000
+wait 900
+shot p24_arp_copy.png
+tap SEQ
+wait 300
+key w0 up
 key w2 up
 key w4 up
-wait 500
-shot p19_seq_hold.png
+wait 300
+shot p25_arp_step.png
 tap PLAY
 wait 300
 # the garden: the moods' biomes, by day and by night

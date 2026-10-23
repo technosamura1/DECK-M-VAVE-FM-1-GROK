@@ -28,7 +28,22 @@ void app_init(void)
     dk_cmd(C_SEED, 0, 0, (int)(plat_ms() * 2654435761u + 12345u));
     dk_cmd(C_RETUNE, 0, 0, 0);
 }
+#ifndef PLAT_HOST
+void app_render(int32_t *lr, uint32_t n, uint32_t gain_q12)   /* timed: the diagnostics (ui.c app_sysex) */
+{
+    uint32_t t0 = fm1_ticks(), us;
+    dk_render(lr, n, gain_q12);
+    us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;
+    if (us > dg_rmax)
+        dg_rmax = us;
+    dg_rsum += us;
+    dg_rn++;
+    if (dk_voices_on > dg_vmax)
+        dg_vmax = dk_voices_on;
+}
+#else
 void app_render(int32_t *lr, uint32_t n, uint32_t gain_q12) { dk_render(lr, n, gain_q12); }
+#endif
 void app_panic(void)
 {
     dk_cmd(C_PLAY, 0, 0, 0);
@@ -36,7 +51,15 @@ void app_panic(void)
 }
 void app_overload(void) { dk_shed(); }
 void app_ui_init(void) { ui_init(); }
-void app_frame(void) { ui_frame(); }
+void app_frame(void)
+{
+    uint32_t t0 = plat_ms(), dt;
+    ui_frame();
+    dt = plat_ms() - t0;
+    if (dt > dg_fmax)
+        dg_fmax = dt;
+    dg_fn++;
+}
 void app_input_only(void) { ui_input_only(); }
 void app_say(const char *a, const char *b) { ui_say(a, b); }
 

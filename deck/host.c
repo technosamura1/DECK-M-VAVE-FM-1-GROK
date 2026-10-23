@@ -3,10 +3,26 @@
 /* DECK in fm1-base's host simulator: its checks for "expect" and its commands.
  *   expect: playing recording counting page track part next tempo root mode seq nev events(of the clip now) eventsAB
  *   (part A..H, track 1..6: events of that clip) nroad pass rectrk dirty voices clicks metro fill perform harmroot
- *   textfit (texts cut short: 0) undo playmode tmb
+ *   textfit (texts cut short: 0) undo playmode tmb; the step editor's cursor senotes selen sepitch; keywN (white key N's
+ *   note)
  *   commands: demo (the tape's demo song), export FILE (the song's SysEx stream to a .syx file), textaudit (every page,
  *   row, track and engine drawn: the texts that did not fit counted), page N, track N, wavsolo T */
 static int host_events(int part, int trk) { return dk_song.clip[(part & 7) * DK_NTRACK + (trk % DK_NTRACK)].n; }
+static uint32_t host_mark;                   /* "mark": the clip now, to compare with ("same": 1 if it is as marked) */
+static uint32_t host_clip_hash(void)
+{
+    const dk_clip_t *c = &dk_song.clip[cur_clip()];
+    uint32_t h = 2166136261u;
+    int i;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        h = (h ^ e->pos) * 16777619u;
+        h = (h ^ e->note) * 16777619u;
+        h = (h ^ e->vel) * 16777619u;
+        h = (h ^ e->dur) * 16777619u;
+    }
+    return h;
+}
 
 int app_expect(const char *what, int *got)
 {
@@ -24,6 +40,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "seq")) g = cur()->seq;
     else if (!strcmp(what, "nev")) g = dk_song.nev;
     else if (!strcmp(what, "events")) g = dk_song.clip[cur_clip()].n;
+    else if (!strcmp(what, "same")) g = host_clip_hash() == host_mark;
     else if (!strncmp(what, "events", 6) && what[6] && what[7]) g = host_events(what[6] - 'A', what[7] - '1');
     else if (!strcmp(what, "nroad")) g = dk_song.nroad;
     else if (!strcmp(what, "pass")) g = dk_pass;
@@ -43,6 +60,12 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "eng")) g = cur()->eng;
     else if (!strcmp(what, "mute")) g = cur()->mute;
     else if (!strcmp(what, "proj")) g = set.proj;
+    else if (!strcmp(what, "bars")) g = dk_song.part[dk_song.cur_part & 7].bars;   /* the part's */
+    else if (!strcmp(what, "cursor")) g = ui_cursor;                 /* the step editor's */
+    else if (!strcmp(what, "senotes")) g = field_get(F_SENOTE);
+    else if (!strcmp(what, "selen")) g = se_len_of();
+    else if (!strcmp(what, "sepitch")) g = field_get(F_SEPITCH);
+    else if (!strncmp(what, "keyw", 4)) g = key_note_of(WHITE_K[atoi(what + 4) & 15], dk_song.cur_track);   /* a white key's note */
     else
         return 0;
     *got = g;
@@ -122,6 +145,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     (void)b;
     (void)c;
     (void)d;
+    if (!strcmp(cmd, "mark")) {
+        host_mark = host_clip_hash();
+        return 1;
+    }
     if (!strcmp(cmd, "demo")) {
         dk_lock();
         TAPE.demo();
@@ -147,6 +174,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "textaudit")) {
         host_textaudit();
+        return 1;
+    }
+    if (!strcmp(cmd, "row")) {               /* row N: the page's row (the screenshots) */
+        ui.row[ui.page] = (uint8_t)atoi(a);
         return 1;
     }
     if (!strcmp(cmd, "page")) {

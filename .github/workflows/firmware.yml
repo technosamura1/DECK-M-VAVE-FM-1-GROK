@@ -1,0 +1,92 @@
+# Сборка прошивки DECK в облаке GitHub (Linux-тулчейн JieLi; из SDK нужны 3 файла — лежат в ci/ac79-sdk).
+# На каждый push и PR: собирает .fwsc для каждой кассеты из tapes/ и кладёт архив «к установке» в Artifacts.
+# На push в main: дополнительно обновляет релиз «latest» — оттуда прошивку удобно скачать с телефона/ПК.
+name: firmware
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firmware-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python-пакеты сборки
+        run: pip install --quiet pillow
+
+      - name: Кэш тулчейна JieLi
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.jieli
+          key: jieli-linux-tc-v1
+
+      - name: Скачать тулчейн JieLi
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: sh base/tools/get_toolchain.sh ~/.jieli
+
+      - name: Файлы SDK для упаковки (из ci/ac79-sdk, со сверкой SHA-256)
+        run: |
+          cd ci/ac79-sdk
+          sha256sum -c - <<'SUMS'
+          4e3b4c220dc96641cb5a723f41e68ce41d5261ae9434bb33fbd7f2c59976ded4  cpu/wl82/tools/uboot.boot
+          276579954f076886a6a7694f65dc71c034a63a2c204b76749065c0ac7b010d1b  cpu/wl82/tools/cfg_tool.bin
+          41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d  cpu/wl82/tools/cfg/eq_cfg_hw.bin
+          SUMS
+
+      - name: Собрать прошивку для каждой кассеты
+        env:
+          JIELI_TOOLCHAIN: /home/runner/.jieli/toolchain
+          AC79_SDK: ${{ github.workspace }}/ci/ac79-sdk
+        run: |
+          set -e
+          mkdir -p dist
+          for t in $(ls tapes); do
+            echo "::group::$t"
+            if ! sh build.sh "$t" > "build-$t.log" 2>&1; then
+              tail -n 30 "build-$t.log" | while IFS= read -r l; do echo "::error::$l"; done
+              exit 1
+            fi
+            tail -n 3 "build-$t.log"
+            echo "::notice::deck-$t.fwsc md5 $(md5sum out/deck-$t.fwsc | cut -c1-32)"
+            d="dist/deck-$t"
+            mkdir -p "$d"
+            cp "out/deck-$t.fwsc" out/fm1_install.py "$d/"
+            sed "s/deck-overworld.fwsc/deck-$t.fwsc/; s/DECK + OVERWORLD/DECK + $(echo $t | tr a-z A-Z)/" out/install-deck.bat > "$d/install-deck.bat"
+            [ -f "out/DECK_инструкция.pdf" ] && cp "out/DECK_инструкция.pdf" "$d/" || true
+            (cd dist && zip -qr "deck-$t.zip" "deck-$t")
+            echo "::endgroup::"
+          done
+          ls -la dist
+
+      - name: Архив в Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deck-firmware-${{ github.sha }}
+          path: dist/*.zip
+          retention-days: 30
+
+      - name: Релиз «latest» (только main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest dist/*.zip \
+            --title "Свежая прошивка (${GITHUB_SHA::7})" \
+            --notes "Собрано автоматически из main. Скачай deck-<кассета>.zip, распакуй на ПК, подключи FM-1 по USB и запусти install-deck.bat. Лучше на второй FM-1." \
+            --latest

@@ -204,7 +204,67 @@ enum { FX_N_NONE, FX_N_VINYL, FX_N_TAPE, FX_N_LOFI, FX_N_CHORUS, FX_N_FILTER, FX
 /* the master: DUST (0 clean, 1 a cassette from childhood: a worn top, its saturation, a hiss that follows the music,
  * a crackle), SLEEP (darker, softer) */
 static float ms_l1, ms_l2, ms_r1, ms_r2, ms_crk, ms_crkm, ms_cf, ms_lvl;
+
+/* ATMO's TAPE: the mix through a tape machine, as the plugins do it: wow and flutter (a delay line swaying, with a
+ * little scrape of noise in the flutter), the head bump (the lows lifted near 100 Hz), saturation that leans one way
+ * (the even harmonics) and squeezes the peaks, the highs lost as it gets older, and its hiss */
+#define TP_N 1024u
+static float tp_bl[TP_N] DK_POOL, tp_br[TP_N] DK_POOL;
+static uint32_t tp_w;
+static float tp_wph, tp_fph, tp_scr, tp_bl1, tp_br1, tp_hl1, tp_hl2, tp_hr1, tp_hr2, tp_hiss, tp_env;
+static void tape_sim(float *l, float *r, int n, float a)
+{
+    float kb = dk_lpk(105.0f), kh = dk_lpk(17000.0f * fm_exp2f(-1.5f * a)), drive = 1.0f + 2.2f * a,
+          back = 1.0f / (1.0f + 1.1f * a) / (1.0f + 0.4f * a), bump = 0.55f * a, wow = 26.0f * a, flut = 3.2f * a;
+    int j;
+    for (j = 0; j < n; j++) {
+        float d, fr, xl, xr, s, yl, yr;
+        uint32_t i0;
+        tp_wph += 0.53f / DK_SR;
+        if (tp_wph >= 1.0f)
+            tp_wph -= 1.0f;
+        tp_fph += 6.7f / DK_SR;
+        if (tp_fph >= 1.0f)
+            tp_fph -= 1.0f;
+        tp_scr += 0.002f * (wnoise() - tp_scr);   /* the scrape: slow noise in the flutter */
+        d = 150.0f + wow * (fm_sinf(6.2831853f * tp_wph) + 0.3f * fm_sinf(6.2831853f * tp_wph * 2.7f + 1.0f)) +
+            flut * fm_sinf(6.2831853f * tp_fph) + 90.0f * a * tp_scr;
+        tp_bl[tp_w & (TP_N - 1u)] = l[j];
+        tp_br[tp_w & (TP_N - 1u)] = r[j];
+        i0 = (uint32_t)d;
+        fr = d - (float)i0;
+        i0 = tp_w - i0;
+        xl = tp_bl[i0 & (TP_N - 1u)] * (1.0f - fr) + tp_bl[(i0 - 1u) & (TP_N - 1u)] * fr;
+        xr = tp_br[i0 & (TP_N - 1u)] * (1.0f - fr) + tp_br[(i0 - 1u) & (TP_N - 1u)] * fr;
+        tp_w++;
+        tp_bl1 += kb * (xl - tp_bl1);             /* the head bump */
+        tp_br1 += kb * (xr - tp_br1);
+        xl += tp_bl1 * bump;
+        xr += tp_br1 * bump;
+        s = fm_fabsf(xl) + fm_fabsf(xr);          /* the squeeze: the peaks held a little */
+        tp_env += (s > tp_env ? 0.01f : 0.0003f) * (s - tp_env);
+        s = 1.0f / (1.0f + 0.6f * a * fm_maxf(0.0f, tp_env - 0.4f));
+        xl *= s;
+        xr *= s;
+        yl = fm_tanhf(drive * xl + 0.18f * a * xl * xl) * back;
+        yr = fm_tanhf(drive * xr + 0.18f * a * xr * xr) * back;
+        tp_hl1 += kh * (yl - tp_hl1);             /* the highs it loses */
+        tp_hl2 += kh * (tp_hl1 - tp_hl2);
+        tp_hr1 += kh * (yr - tp_hr1);
+        tp_hr2 += kh * (tp_hr1 - tp_hr2);
+        tp_hiss += 0.3f * (wnoise() - tp_hiss);
+        l[j] = tp_hl2 + tp_hiss * 0.0016f * a;
+        r[j] = tp_hr2 - tp_hiss * 0.0013f * a;
+    }
+}
+static void tape_master_dust(float *l, float *r, int n, float dust, float sleep);
 static void tape_master(float *l, float *r, int n, float dust, float sleep)
+{
+    tape_master_dust(l, r, n, dust, sleep);
+    if (dk_ctx.tape > 0.0f)
+        tape_sim(l, r, n, dk_ctx.tape);
+}
+static void tape_master_dust(float *l, float *r, int n, float dust, float sleep)
 {
     float k = dk_lpk(16500.0f * fm_exp2f(-2.0f * dust - 2.2f * sleep)), drive = 1.0f + 1.0f * dust,
           mk = (1.0f + 0.15f * (drive - 1.0f)) / drive * (1.0f - 0.2f * sleep), pk = 0.0f;

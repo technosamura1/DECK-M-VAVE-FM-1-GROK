@@ -1,0 +1,45 @@
+# the tape as a looper: BARS on AUTO, an empty part, the first take's length set by REC (to the nearest bar line);
+# then a fixed BARS; SEQ's BARS is the part's (all tracks); ARP baked into the part's bars
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+press HOME
+tapkey b0
+release HOME
+wait 50
+tap REC
+wait 3200
+expect recording 1
+key w4 down 100
+wait 300
+key w4 up
+wait 1500
+key w6 down 100
+wait 300
+key w6 up
+wait 4500
+shot looper_auto.png
+tap REC
+wait 200
+expect bars 2
+expect playing 1
+expect recording 0
+expect events >1
+tap PLAY
+wait 100
+# BARS fixed at 1 on the tape: a take loops at one bar
+turn K1 -1
+wait 50
+expect bars 1
+shot looper_fixed.png
+# SEQ's BARS sets the part
+tap SEQ
+tap SEQ
+wait 50
+turn K2 3
+wait 50
+expect bars 4
+expect textfit 0

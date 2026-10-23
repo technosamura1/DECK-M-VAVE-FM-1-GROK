@@ -1,6 +1,6 @@
-# the sequencers: ARP, TOMBOLA, FINGER, DRIVE (and BAKE), HOLD; FILL; a performance effect
+# the sequencers: ARP (over LIVE), TOMBOLA, FINGER, DRIVE (and BAKE); FILL
 wait 300
-# a new empty song: the tape's tracks (FINGER STEP LIVE ARP TOMBOLA HOLD)
+# a new empty song: the tape's tracks (PIANO PAD KEYS BASS DRUMS NATURE: LIVE LIVE LIVE STEP FINGER LIVE)
 tap SAVE
 wait 100
 tapkey w4
@@ -8,11 +8,15 @@ wait 200
 tap HOME
 wait 100
 press HOME
-tapkey b3
+tapkey b1
 release HOME
 wait 50
-expect track 3
-expect seq 3
+expect track 1
+expect seq 1
+# ARP over LIVE on the keys
+tap ARP
+wait 100
+expect seq 1
 key w0 down 90
 key w2 down 90
 wait 1000
@@ -20,14 +24,16 @@ expect voices >0
 key w0 up
 key w2 up
 wait 300
-# TOMBOLA on the bells
 press HOME
-tapkey b4
+tap ARP
 release HOME
 wait 50
+# TOMBOLA on the keys (SEQ held + white 5)
+press SEQ
+tapkey w4
+release SEQ
+wait 50
 expect seq 7
-tap SEL
-wait 100
 tap PLAY
 tapkey w2
 tapkey w5
@@ -39,7 +45,7 @@ tap PLAY
 wait 200
 # FINGER on the drums: a pattern held
 press HOME
-tapkey b0
+tapkey b4
 release HOME
 wait 50
 expect seq 5
@@ -49,16 +55,16 @@ expect voices >0
 shot finger.png
 key w6 up
 # DRIVE on the drums, then BAKE it to STEP
-press SEL
-tapkey w4
-release SEL
+press SEQ
+tapkey w2
+release SEQ
 wait 50
 expect seq 4
 tap HOME
 wait 50
-tap SEL
+tap SEQ
 wait 100
-turn ALGO 1
+turn K2 1
 wait 100
 shot drive.png
 tap PLAY
@@ -75,10 +81,10 @@ wait 200
 # FILL held while playing
 tap PLAY
 wait 500
-press SEQ
-wait 200
+press GLO
+wait 450
 expect fill 1
-release SEQ
+release GLO
 wait 100
 expect fill 0
 tap PLAY
