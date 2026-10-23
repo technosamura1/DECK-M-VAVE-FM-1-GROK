@@ -26,7 +26,7 @@ static struct {
     dk_block_t road_clip;
     uint8_t road_clip_ok;
     uint8_t screen_dirty;
-    uint32_t draw_t, garden_t, notes_until;
+    uint32_t draw_t, garden_t, notes_until, page_t;   /* page_t: the page or its row changed (the hint shows 3 s) */
     char notes[28];
 } ui;
 
@@ -67,6 +67,7 @@ static int held(int b) { return (int)(ui.btn >> b & 1u); }
 /* ------------------------------------------------------------------ actions --- */
 static void page_go(int p)
 {
+    ui.page_t = plat_ms();
     if (ui.page == p) {                  /* again: its next tab or row */
         ui.row[p] = (uint8_t)((ui.row[p] + 1) % page_rows(p));
         if (p == PG_SOUND) {
@@ -293,6 +294,34 @@ static void action(int a, int b)
             say(s, cur()->mute ? "MUTED" : "ON");
         }
         break;
+    case A_ARP: {                         /* one button: ARP on this track; pressed again, LATCH */
+        dk_track_t *k = cur();
+        if (cur_eng()->flags & EF_DRUM) {
+            say("ARP", "NOT ON DRUMS");
+            break;
+        }
+        if (k->seq != SQ_ARP) {
+            k->prev_seq = (uint8_t)(k->seq + 1);
+            field_set(F_SEQTYPE, SQ_ARP);
+            page_go(PG_SEQ);
+            say("ARP", "ON");
+        } else {
+            field_set(F_ARPLATCH, k->arp[3] ? 0 : 1);
+            say("ARP", k->arp[3] ? "LATCH" : "FREE");
+        }
+        mark_dirty();
+        break;
+    }
+    case A_ARP_OFF: {
+        dk_track_t *k = cur();
+        if (k->seq == SQ_ARP) {
+            field_set(F_SEQTYPE, k->prev_seq ? (k->prev_seq - 1) % SQ_N : SQ_LIVE);
+            k->prev_seq = 0;
+            mark_dirty();
+        }
+        say("ARP", "OFF");
+        break;
+    }
     case A_NEXT_PART: {
         int p = ((dk_next_part != 0xFF ? dk_next_part : dk_song.cur_part) + 1) % DK_NPART;
         char s[16] = "PART A";
@@ -390,9 +419,9 @@ static void notes_show(int k)
             if (n && e->lane_note[l] == kh[k].notes[0])
                 cpy(p, e->lane_name[l]);
     } else {
-        if (n >= 3 && have_chord) {
-            p = cpy(p, chord_name);
-            p = cpy(p, "  ");
+        if (n >= 3 && have_chord) {          /* a chord: its name only (the notes are on KEYS) */
+            cpy(p, chord_name);
+            n = 0;
         }
         for (i = 0; i < n && i < 4; i++) {
             int nt = kh[k].notes[i];

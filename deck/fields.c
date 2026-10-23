@@ -10,7 +10,7 @@ enum {
     /* SOUND */ F_P0, F_P1, F_P2, F_P3, F_P4, F_P5, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
     F_MODTGT, F_MODSLOT,
     /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING, F_DIV,
-    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
+    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
     F_SEQTYPE, F_OCT, F_DRIFT, F_MIDICH, F_ROLE,
     /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP,
     /* ROAD */ F_ROADCUR, F_ROADPART, F_ROADREPS, F_GPART, F_GLABEL, F_GBARS, F_PLAYMODE,
@@ -25,7 +25,11 @@ enum {
 static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DRIVE", "FINGER", "HOLD", "TOMBOLA"};
 static const char *const MOD_NAME[MOD_N] = {"OFF", "SWING", "DICE", "PEDAL", "FOLLOW", "TREMOLO"};
 static const char *const ARP_NAME[6] = {"UP", "DOWN", "UPDN", "RAND", "ORDER", "CHORD"};
-static const char *const DIV_NAME[4] = {"1/8", "1/16", "1/16T", "1/32"};
+static const char *const DIV_NAME[DK_ARP_NDIV] = {"1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32"};
+static const char *const ARPR_NAME[ARPR_N] = {"STRAIGHT", "PULSE", "OFFBEAT", "DOTTED", "GALLOP", "RISE", "SKIP"};
+static const char *const ARPG_NAME[ARPG_N] = {"SHORT", "NORMAL", "LONG", "TIE"};   /* as the encoder turns */
+static const uint8_t ARPG_ORDER[ARPG_N] = {ARPG_SHORT, ARPG_NORMAL, ARPG_LONG, ARPG_TIE};
+static const char *const ARPSRC_NAME[2] = {"KEYS", "CHORD"};
 static const char *const EDIV_NAME[4] = {"1/4", "1/8", "1/16", "1/8T"};
 static const char *const VOICING_NAME[VC_N] = {"CLOSE", "OPEN", "SPREAD", "DROP2", "POWER"};
 static const char *const WHITE_NAME[2] = {"NOTES", "CHORDS"};
@@ -49,6 +53,15 @@ static const char *const ROLE_NAME[R_N] = {"DRUM", "BASS", "KEYS", "ARP", "PAD",
 
 static dk_track_t *cur(void) { return &dk_song.trk[dk_song.cur_track % DK_NTRACK]; }
 static const dk_engine_t *cur_eng(void) { return TAPE.eng[cur()->eng % TAPE.neng]; }
+/* a modulation target's name: an engine knob by its own name (CUTOFF, not P1) */
+static const char *target_label(int v)
+{
+    const dk_engine_t *e = cur_eng();
+    v %= T_N;
+    if (v >= T_P0 && v <= T_P7 && v - T_P0 < e->nparams)
+        return e->params[v - T_P0].name;
+    return TARGET_NAME[v];
+}
 static int ui_tmp_template, ui_slot_sel = -1;
 static uint8_t ui_mod_slot, ui_lane, ui_cursor, ui_step_page, ui_slen = 1, ui_svel = 100, ui_road_cur, ui_gpart;
 static int8_t ui_step_ev = -1;          /* the step last touched (its event in the clip), for VEL/PROB */
@@ -95,7 +108,10 @@ static void field_range(int f, int *lo, int *hi)
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_DIV: *hi = 3; break;
     case F_ARPMODE: *hi = 5; break;
-    case F_ARPDIV: *hi = 3; break;
+    case F_ARPDIV: *hi = DK_ARP_NDIV - 1; break;
+    case F_ARPRHY: *hi = ARPR_N - 1; break;
+    case F_ARPGATE: *hi = ARPG_N - 1; break;
+    case F_ARPSRC: *hi = 1; break;
     case F_ARPOCT: *lo = 1; *hi = 3; break;
     case F_ARPLATCH:
     case F_FLATCH:
@@ -186,7 +202,16 @@ static int field_get(int f)
     case F_TSWING: return k->swing;
     case F_DIV: return k->div & 3;
     case F_ARPMODE: return k->arp[0] % 6;
-    case F_ARPDIV: return k->arp[1] & 3;
+    case F_ARPDIV: return k->arp[1] % DK_ARP_NDIV;
+    case F_ARPRHY: return k->arp_rhy % ARPR_N;
+    case F_ARPGATE: {
+        int i;
+        for (i = 0; i < ARPG_N; i++)
+            if (ARPG_ORDER[i] == (k->arp_opt & 3))
+                return i;
+        return 1;
+    }
+    case F_ARPSRC: return (k->arp_opt >> 2) & 1;
     case F_ARPOCT: return k->arp[2] ? k->arp[2] : 1;
     case F_ARPLATCH:
     case F_FLATCH: return k->arp[3] ? 1 : 0;
@@ -324,6 +349,9 @@ static void field_set(int f, int v)
     case F_DIV: k->div = (uint8_t)v; break;
     case F_ARPMODE: k->arp[0] = (uint8_t)v; break;
     case F_ARPDIV: k->arp[1] = (uint8_t)v; break;
+    case F_ARPRHY: k->arp_rhy = (uint8_t)v; break;
+    case F_ARPGATE: k->arp_opt = (uint8_t)((k->arp_opt & ~3u) | ARPG_ORDER[v % ARPG_N]); break;
+    case F_ARPSRC: k->arp_opt = (uint8_t)((k->arp_opt & 3u) | (v ? 4u : 0u)); break;
     case F_ARPOCT: k->arp[2] = (uint8_t)v; break;
     case F_ARPLATCH:
     case F_FLATCH:
@@ -463,6 +491,9 @@ static const char *field_label(int f)
     case F_DIV: return "DIVISION";
     case F_ARPMODE: return "MODE";
     case F_ARPDIV: return "RATE";
+    case F_ARPRHY: return "RHYTHM";
+    case F_ARPGATE: return "GATE";
+    case F_ARPSRC: return "PLAYS";
     case F_ARPOCT: return "OCTAVES";
     case F_ARPLATCH:
     case F_FLATCH: return "LATCH";
@@ -586,7 +617,7 @@ static void field_text(int f, char *b)
         else
             itoa_b(v, b);
         break;
-    case F_MODTGT: cpy(b, TARGET_NAME[v % T_N]); break;
+    case F_MODTGT: cpy(b, target_label(v)); break;
     case F_MODSLOT: itoa_b(v + 1, b); break;
     case F_LANE: cpy(b, cur_eng()->nlanes ? cur_eng()->lane_name[v % cur_eng()->nlanes] : "-"); break;
     case F_SVEL: cpy(b, v > 110 ? "ACCENT" : v < 60 ? "SOFT" : "NORMAL"); break;
@@ -596,7 +627,10 @@ static void field_text(int f, char *b)
     case F_CURSOR: itoa_b(v + 1, b); break;
     case F_DIV: cpy(b, EDIV_NAME[v & 3]); break;
     case F_ARPMODE: cpy(b, ARP_NAME[v % 6]); break;
-    case F_ARPDIV: cpy(b, DIV_NAME[v & 3]); break;
+    case F_ARPDIV: cpy(b, DIV_NAME[v % DK_ARP_NDIV]); break;
+    case F_ARPRHY: cpy(b, ARPR_NAME[v % ARPR_N]); break;
+    case F_ARPGATE: cpy(b, ARPG_NAME[v % ARPG_N]); break;
+    case F_ARPSRC: cpy(b, ARPSRC_NAME[v & 1]); break;
     case F_STYLE:
     case F_SONGSTYLE: cpy(b, TAPE.style_name[v % TAPE.nstyle]); break;
     case F_TQUANT: cpy(b, QUANT3[v % 3]); break;

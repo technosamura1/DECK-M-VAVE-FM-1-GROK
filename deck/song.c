@@ -466,7 +466,7 @@ static void track_defaults(int t)
     k->drv[1] = dk_song.style;
     k->drv[2] = 50;
     k->arp[0] = 0;
-    k->arp[1] = 1;
+    k->arp[1] = 3;                      /* 1/16 */
     k->arp[2] = 1;
     k->tmb[0] = 60;
     k->tmb[1] = 45;

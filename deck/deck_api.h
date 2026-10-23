@@ -131,14 +131,19 @@ typedef struct {
     uint8_t mod[2][4];                  /* type (MOD_*), depth 0..100, rate 0..100 (FOLLOW: the source track), target T_* */
     uint8_t swing, drift;
     uint8_t drv[3];                     /* DRIVE: ENERGY, STYLE, VARIATION */
-    uint8_t arp[4];                     /* ARP: mode, division, octaves, latch */
+    uint8_t arp[4];                     /* ARP: mode, rate (ARPD_*: 1/4 1/8 1/8T 1/16 1/16T 1/32), octaves, latch */
     uint8_t tmb[4];                     /* TOMBOLA: SPIN, GRAVITY, BOUNCE, QUANT */
     uint8_t div;                        /* ENDLESS: the division (ticks / 6) */
     uint8_t qnt;                        /* LIVE: quantize strength 0..100 */
     uint8_t role;
-    uint8_t rsv[3];
+    uint8_t arp_rhy;                    /* ARP: its rhythm (ARPR_*) */
+    uint8_t arp_opt;                    /* ARP: the gate (ARPG_*) | the source << 2 (0 the keys, 1 the song's chord) */
+    uint8_t prev_seq;                   /* the sequencer before ARP + 1 (the ARP button turns it back), 0 none */
 } dk_track_t;
 
+enum { ARPR_STRAIGHT, ARPR_PULSE, ARPR_OFFBEAT, ARPR_DOTTED, ARPR_GALLOP, ARPR_RISE, ARPR_SKIP, ARPR_N };
+enum { ARPG_NORMAL, ARPG_SHORT, ARPG_LONG, ARPG_TIE, ARPG_N };
+#define DK_ARP_NDIV 6
 enum { MOD_OFF, MOD_SWING, MOD_DICE, MOD_PEDAL, MOD_FOLLOW, MOD_TREMOLO, MOD_N };
 enum { TR_HALF = 1, TR_DOUBLE = 2, TR_REVERSE = 4, TR_UP = 8, TR_DOWN = 16, TR_STOP = 32 };
 typedef struct {

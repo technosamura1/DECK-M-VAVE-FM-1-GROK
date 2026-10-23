@@ -6,7 +6,7 @@
 
 enum { A_NONE, A_PAGE_SOUND, A_PAGE_SEQ, A_PAGE_ROAD, A_PAGE_MIX, A_PAGE_KEYS, A_PAGE_PROJECT, A_PAGE_PLAY, A_PLAY,
        A_REC, A_NEXT_TRACK, A_NEXT_PART, A_FILL, A_TAP_TEMPO, A_PLAYMODE, A_CLEAR, A_METRO, A_MUTE, A_BAKE, A_UNDO,
-       A_REDO, A_GARAGE, A_OCT_DOWN, A_OCT_UP, A_MOD, A_TRANS_DOWN, A_TRANS_UP, A_N };
+       A_REDO, A_GARAGE, A_OCT_DOWN, A_OCT_UP, A_MOD, A_TRANS_DOWN, A_TRANS_UP, A_ARP, A_ARP_OFF, A_N };
 /* a hold: 0 none, a time (ms) for a timed one, HOLD_MOD a modifier (its tap on release unless it was used) */
 #define HOLD_MOD 0xFFFFu
 typedef struct {
@@ -22,7 +22,7 @@ static const ui_map_t UI_MAP[] = {
     {B_PLAY, A_PLAY, A_PLAYMODE, A_TAP_TEMPO, 800, "play/stop | hold: PART/SONG | HOME+: tap tempo"},
     {B_REC, A_REC, A_CLEAR, A_METRO, 1000, "record (count-in) | hold 1 s: clear the clip | HOME+: metronome"},
     {B_GLO, A_NEXT_TRACK, A_MUTE, A_NONE, 700, "next track | hold: mute | HOME + black 1-6: a track"},
-    {B_ARP, A_NEXT_PART, A_NONE, A_NONE, HOLD_MOD, "next part (from the bar's end) | hold + white A-H: a part"},
+    {B_ARP, A_ARP, A_NONE, A_ARP_OFF, HOLD_MOD, "ARP on the track; again: LATCH on/off | HOME+: ARP off | hold + white A-H: a part"},
     {B_SEQ, A_FILL, A_NONE, A_BAKE, 0, "FILL while held | HOME+: BAKE (DRIVE to STEP)"},
     {B_EDIT, A_PAGE_KEYS, A_UNDO, A_REDO, 700, "KEYS; again: its next row | hold: UNDO | HOME+: REDO"},
     {B_SAVE, A_PAGE_PROJECT, A_NONE, A_NONE, HOLD_MOD, "PROJECT; again: next row | hold + white 13-16: save preset"},

@@ -184,6 +184,9 @@ static int page_field(int i, int home)
         int drum = (cur_eng()->flags & EF_DRUM) != 0;
         if (row == 1) {
             static const uint8_t R2[3] = {F_SEQTYPE, F_TSWING, F_CLIPLEN};
+            static const uint8_t ARP2[3] = {F_ARPRHY, F_ARPGATE, F_ARPSRC};
+            if (k->seq == SQ_ARP && !home)
+                return ARP2[i];
             if (k->seq == SQ_STEP && i < 2)
                 return i == 0 ? F_SRATCH : F_SPROB;
             return R2[i];
@@ -263,6 +266,8 @@ static const char *hint(void)
             return "HOME+SEQ = BAKE TO STEP";
         if (k->seq == SQ_TOMBOLA)
             return "PLAY TO DROP  HOLD REC = EMPTY";
+        if (k->seq == SQ_ARP)
+            return "ARP = LATCH  HOME+ARP = OFF  SEL = RHYTHM";
         return "HOLD SEL + WHITE = SEQUENCER";
     case PG_SOUND: return "FX = NEXT TAB  HOLD LFO+TURN = MOD";
     case PG_MIX: return "WHITE MUTE  BLACK SOLO  LFO = ROW";
@@ -319,7 +324,7 @@ static void draw_header(void)
     itoa_b(beat, s + x + 1);
     cv_text(40, 4, &FONT_XS, s, TH_GRAY);
     if (plat_ms() < ui.notes_until)      /* what you play, for a moment: its notes (or the drum) */
-        text_box(70, 2, 96, 0, &FONT_B, &FONT_XS, ui.notes, TH_ENC[1]);
+        text_box(70, 4, 92, 0, &FONT_XS, &FONT_T, ui.notes, TH_ENC[1]);
     else if (ui.page == PG_PLAY) {       /* PLAY: the part's name and the chord, in the header (not on the meadow) */
         int pcs[4], n = dk_harm_n ? dk_harm_n : 1, i;
         char c[12];
@@ -327,7 +332,7 @@ static void draw_header(void)
         for (i = 0; i < 4; i++)
             pcs[i] = 60 + dk_harm_pcs[i];
         dk_chord_name(pcs, n, c);
-        text_box(120, 1, 46, 1, &FONT_B, &FONT_XS, chord_deg >= 0 || dk_playing ? (have_chord && !dk_playing ? chord_name : c) : "", TH_ENC[0]);
+        text_box(122, 4, 42, 1, &FONT_XS, &FONT_T, chord_deg >= 0 || dk_playing ? (have_chord && !dk_playing ? chord_name : c) : "", TH_ENC[0]);
     } else {
         char tl[16];
         int k = (int)(itoa_b(dk_song.cur_track + 1, tl) - tl);
@@ -335,8 +340,10 @@ static void draw_header(void)
         cpy(tl + k + 1, track_label(dk_song.cur_track));
         text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC ? tl : PAGE_NAME[ui.page], TH_GRAY);
     }
-    {                                    /* the battery: an outline, filled as far as it is charged (red when low) */
+    {                                    /* the battery: shown only when low or HOME held (a quiet header) */
         int pct = batt_pct(), w;
+        if (pct < 0 || (pct >= 30 && !held(B_HOME)))
+            goto no_batt;
         hline(167, 6, 11, TH_GRAY);
         hline(167, 13, 11, TH_GRAY);
         vline(167, 6, 8, TH_GRAY);
@@ -347,6 +354,7 @@ static void draw_header(void)
             cv_rect(168, 7, w < 1 ? 1 : w, 6, pct < 15 ? TH_REC : pct < 35 ? TH_ENC[2] : TH_TEXT);
         }
     }
+no_batt:
     itoa_b(dk_song.tempo, s);
     text_box(182, 4, 24, 2, &FONT_XS, &FONT_XS, s, TH_TEXT);
     for (t = 0; t < DK_NTRACK; t++) {    /* the six tracks: the one you are on bright, a muted one hollow */
@@ -379,9 +387,10 @@ static void draw_footer(int y)
         else
             disc(x + 6, y + 6, 3, TH_ENC[i]);
         text_box(x + 16, y + 1, 56, 0, &FONT_T, &FONT_T, field_label(f), lit ? TH_ENC[i] : TH_GRAY);
-        text_box(x, y + 15, 74, 0, &FONT_M, &FONT_XS, s, TH_TEXT);
+        text_box(x, y + 15, 68, 0, &FONT_M, &FONT_XS, s, TH_TEXT);
     }
-    text_box(4, y + 43, 232, 1, &FONT_T, &FONT_T, hint(), dimc(TH_GRAY, 12));
+    if (now - ui.page_t < 3000u || held(B_HOME))
+        text_box(4, y + 43, 232, 1, &FONT_T, &FONT_T, hint(), dimc(TH_GRAY, 12));
 }
 
 /* a VHS-plate's message: what just happened, for 0.6 s */
@@ -561,7 +570,7 @@ static void draw_sound(void)
             px = 12 + i;
             py = y;
         }
-        text_box(8, 98, 224, 1, &FONT_XS, &FONT_T, TARGET_NAME[m[3] % T_N], TH_ENC[2]);
+        text_box(8, 98, 224, 1, &FONT_XS, &FONT_T, target_label(m[3]), TH_ENC[2]);
         break;
     }
     }
@@ -656,20 +665,64 @@ static void draw_seq(void)
         if (!c->n)
             text_box(8, 98, 224, 1, &FONT_S, &FONT_XS, k->seq == SQ_ENDLESS ? "REC, THEN PLAY NOTES" : "REC TO RECORD", TH_GRAY);
         break;
-    case SQ_ARP: {
-        int n = dk_held_n[dk_song.cur_track];
-        text_box(8, 50, 224, 1, &FONT_L, &FONT_B, ARP_NAME[k->arp[0] % 6], TH_TEXT);
-        for (i = 0; i < 16; i++) {           /* its shape: the steps going up and down */
-            static const int8_t SH[6][16] = {{0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}, {3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 0},
-                                             {0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0, 1, 2, 3}, {2, 0, 3, 1, 1, 3, 0, 2, 3, 1, 2, 0, 0, 2, 1, 3},
-                                             {0, 2, 1, 3, 0, 2, 1, 3, 0, 2, 1, 3, 0, 2, 1, 3}, {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3}};
-            int v = SH[k->arp[0] % 6][i], cx = 22 + i * 13;
-            disc(cx, 150 - v * 9, 3, i == (int)(dk_clock / 24u % 16u) && n ? TH_ENC[0] : TH_GRAY);
+    case SQ_ARP: {                           /* one picture: the rhythm across, each note at its height (the real order) */
+        int t = dk_song.cur_track, n = dk_held_n[t], src = (k->arp_opt >> 2) & 1, octs = k->arp[2] < 1 ? 1 : k->arp[2],
+            mode = k->arp[0] % 6, total, live, cur_step = dk_arp_rpos[t] & 15, hits = 0;
+        const uint8_t *rhy = DK_ARP_RHY[k->arp_rhy % ARPR_N];
+        char nm[24];
+        if (!n && src && dk_harm_n)
+            n = dk_harm_n > 4 ? 4 : dk_harm_n;
+        live = n && (dk_playing || dk_held_n[t]);
+        total = (n ? n : 3) * (octs > 3 ? 3 : octs);
+        text_box(8, 44, 224, 1, &FONT_L, &FONT_B, ARP_NAME[mode], TH_TEXT);
+        if (k->arp[3])
+            text_box(172, 26, 60, 2, &FONT_XS, &FONT_XS, "LATCH", TH_ENC[0]);
+        if (dk_held_n[t]) {                  /* what it plays: the notes held, or the song's chord */
+            int p = 0, j;
+            for (j = 0; j < dk_held_n[t] && j < 6; j++) {
+                const char *q = DK_NOTE_NAME[dk_held[t][j] % 12];
+                while (*q)
+                    nm[p++] = *q++;
+                nm[p++] = ' ';
+            }
+            nm[p ? p - 1 : 0] = 0;
+        } else if (src) {
+            int pcs[4], j;
+            for (j = 0; j < 4; j++)
+                pcs[j] = 60 + dk_harm_pcs[j];
+            dk_chord_name(pcs, dk_harm_n > 4 ? 4 : dk_harm_n ? dk_harm_n : 1, nm);
+        } else
+            cpy(nm, k->arp[3] ? "PLAY A CHORD" : "HOLD NOTES");
+        text_box(8, 78, 224, 1, &FONT_XS, &FONT_T, nm, dk_held_n[t] || src ? TH_ENC[1] : TH_GRAY);
+        hline(14, 160, 212, TH_LINE);
+        for (i = 0; i < 16; i++) {
+            int cx = 20 + i * 13, h = rhy[i], idx, y, on = live && i == cur_step;
+            uint16_t col = on ? TH_ENC[0] : h == 2 ? TH_TEXT : dimc(TH_TEXT, 10);
+            if (!h || (k->arp_rhy == ARPR_SKIP && i % 4 == 3)) {
+                cv_rect(cx - 1, 159, 2, 3, on ? TH_ENC[0] : TH_GRAY);
+                continue;
+            }
+            switch (mode) {
+            case 1: idx = total - 1 - hits % total; break;
+            case 2: {
+                int per = total > 1 ? 2 * total - 2 : 1, x2 = hits % per;
+                idx = x2 < total ? x2 : per - x2;
+                break;
+            }
+            case 3: idx = (int)(((uint32_t)hits * 2654435761u >> 16) % (uint32_t)total); break;
+            default: idx = hits % total; break;
+            }
+            hits++;
+            if (mode == 5) {                 /* CHORD: the whole stack each hit */
+                int j;
+                for (j = 0; j < (n ? n : 3); j++)
+                    disc(cx, 150 - j * 10, h == 2 ? 3 : 2, col);
+                continue;
+            }
+            y = 150 - (total > 1 ? idx * 56 / (total - 1) : 0);
+            vline(cx, y, 160 - y, on ? TH_ENC[0] : TH_LINE);
+            disc(cx, y, h == 2 ? 4 : 3, col);
         }
-        for (i = 0; i < n && i < 8; i++)
-            text_box(8 + i * 28, 102, 28, 1, &FONT_XS, &FONT_T, DK_NOTE_NAME[dk_held[dk_song.cur_track][i] % 12], TH_ENC[1]);
-        if (!n)
-            text_box(8, 102, 224, 1, &FONT_XS, &FONT_T, k->arp[3] ? "LATCH: PLAY A CHORD" : "HOLD NOTES", TH_GRAY);
         break;
     }
     case SQ_DRIVE: {
@@ -687,11 +740,34 @@ static void draw_seq(void)
             int cx = 8 + (i % 4) * 57, cy = 44 + (i / 4) * 32, on = (dk_finger_latch[dk_song.cur_track] >> i & 1u) != 0;
             uint16_t col = on ? TH_ENC[0] : TH_LINE;
             if (on)
-                cv_rect(cx, cy, 54, 28, dimc(TH_ENC[0], 4));
-            hline(cx, cy, 54, col);
+                cv_rect(cx, cy, 54, 28, dimc(TH_ENC[0], 3));
             hline(cx, cy + 27, 54, col);
-            text_box(cx + 3, cy + 9, 48, 0, &FONT_T, &FONT_T, set_ ? set_[i].name : "", on ? TH_TEXT : TH_GRAY);
+            if (set_) {                      /* the pattern itself, small: hits per lane, or a melody's contour */
+                const dk_finger_t *f = &set_[i];
+                uint16_t dc = on ? TH_TEXT : dimc(TH_TEXT, 11);
+                int st, l;
+                for (st = 0; st < 16; st++) {
+                    int x = cx + 3 + st * 3;
+                    if (e->flags & EF_DRUM) {
+                        for (l = 0; l < 4; l++)
+                            if (f->lanes[l][st])
+                                cv_rect(x, cy + 3 + l * 6, 2, 4, f->lanes[l][st] > 6 ? dc : dimc(dc, 8));
+                    } else if (f->lanes[0][st]) {
+                        int len = f->lanes[1][st] ? f->lanes[1][st] : 1, y = cy + 21 - (f->lanes[0][st] - 1) * 2
+                                  - (f->lanes[2][st] > 1 ? 4 : 0);
+                        if (y < cy + 3)
+                            y = cy + 3;
+                        cv_rect(x, y, len * 3 - 1 > 51 - st * 3 ? 51 - st * 3 : len * 3 - 1, 2, dc);
+                    }
+                }
+            }
         }
+        if (set_ && dk_finger_latch[dk_song.cur_track])   /* the latched one's name, once */
+            for (i = 0; i < 16; i++)
+                if (dk_finger_latch[dk_song.cur_track] >> i & 1u) {
+                    text_box(70, 26, 162, 2, &FONT_XS, &FONT_T, set_[i].name, TH_ENC[0]);
+                    break;
+                }
         break;
     }
     case SQ_HOLD: {
@@ -734,18 +810,26 @@ static void draw_mix(void)
 {
     int t;
     char s[16];
-    cv_text(8, 26, &FONT_XS, "MASTER", TH_GRAY);
+    /* the selected track's name above; under each fader only its number in its colour (dim when muted) */
+    text_box(8, 26, 150, 0, &FONT_XS, &FONT_T, track_label(dk_song.cur_track), TH_TRACK[dk_song.cur_track]);
     itoa_b((int)(dk_master_level * 100.0f), s);
-    cv_text(60, 26, &FONT_XS, s, TH_TEXT);
+    text_box(160, 26, 72, 2, &FONT_XS, &FONT_T, s, TH_GRAY);
     for (t = 0; t < DK_NTRACK; t++) {
         int x = 12 + t * 38, top = 46, h = 110, fy = top + h - (int)dk_song.trk[t].vol * h / 100,
-            m = (int)(fm_minf(1.0f, dk_level[t] * 3.0f) * (float)h), sel = t == dk_song.cur_track;
+            m = (int)(fm_minf(1.0f, dk_level[t] * 3.0f) * (float)h), sel = t == dk_song.cur_track,
+            mute = dk_song.trk[t].mute;
         vline(x + 14, top, h, TH_LINE);
         cv_rect(x + 22, top + h - m, 3, m, dimc(TH_TRACK[t], 8));
-        cv_rect(x + 4, fy - 2, 21, 4, sel ? TH_ENC[0] : dk_song.trk[t].mute ? TH_GRAY : TH_TEXT);
-        text_box(x, top + h + 6, 36, 1, &FONT_T, &FONT_T, track_label(t), sel ? TH_TEXT : dk_song.trk[t].mute ? TH_LINE : TH_GRAY);
+        cv_rect(x + 4, fy - 2, 21, 4, sel ? TH_ENC[0] : mute ? TH_GRAY : TH_TEXT);
+        if (mute)
+            circle(x + 14, top + h + 12, 7, TH_LINE);
+        else
+            disc(x + 14, top + h + 12, 7, TH_TRACK[t]);
+        s[0] = (char)('1' + t);
+        s[1] = 0;
+        text_box(x + 8, top + h + 6, 13, 1, &FONT_T, &FONT_T, s, mute ? TH_GRAY : TH_BG);
         if (sel)
-            hline(x + 4, top + h + 19, 28, TH_TEXT);
+            hline(x + 6, top + h + 23, 17, TH_TEXT);
         if (dk_song.trk[t].solo)
             cv_text(x + 2, top - 12, &FONT_T, "S", TH_ENC[2]);
         if (dk_song.trk[t].pan)                /* the pan: a tick left or right of the line */
@@ -789,8 +873,8 @@ static void draw_road(void)
     {
         int cur_b = dk_playing && dk_song.play_mode ? dk_road_i : ui_road_cur, z;
         /* the road from the car to the horizon, the blocks ahead as bands of their parts' colours */
-        cv_line(118, hy, 30, by, TH_GRAY);
-        cv_line(122, hy, 210, by, TH_GRAY);
+        cv_line(118, hy, 62, by, TH_GRAY);
+        cv_line(122, hy, 178, by, TH_GRAY);
         for (z = 5; z >= 0; z--) {
             int bi = cur_b + z, y1, y2, w1, w2, y;
             float f1 = 1.0f / (1.0f + (float)z * 0.7f), f2 = 1.0f / (1.0f + (float)(z + 1) * 0.7f), prog = 0.0f;
@@ -806,7 +890,7 @@ static void draw_road(void)
                 y1 = by;
             for (y = y2; y < y1; y++) {
                 float f = (float)(y - hy) / (float)(by - hy);
-                w1 = (int)(4.0f + f * 176.0f);
+                w1 = (int)(4.0f + f * 112.0f);
                 w2 = w1 / 2;
                 if (y == y2 || y == y2 + 1)
                     cv_rect(120 - w2, y, w1, 1, bi == ui_road_cur ? TH_ENC[0] : TH_TEXT);
@@ -819,7 +903,7 @@ static void draw_road(void)
                 s[0] = (char)('A' + (b->part & 7));
                 s[1] = 0;
                 cv_text(4, ty, &FONT_XS, s, TH_PART[b->part & 7]);
-                text_box(16, ty, 60, 0, &FONT_T, &FONT_T, LABEL_NAME[dk_song.part[b->part & 7].label & 7], TH_GRAY);
+                text_box(16, ty, 42, 0, &FONT_T, &FONT_T, LABEL_NAME[dk_song.part[b->part & 7].label & 7], TH_GRAY);
                 if (b->reps > 1) {
                     s[0] = 'X';
                     itoa_b(b->reps, s + 1);
@@ -913,30 +997,25 @@ static void draw_keys(void)
 static void draw_project(void)
 {
     char s[40], *p;
-    int i;
-    cv_text(8, 26, &FONT_XS, "PROJECT", TH_GRAY);
-    text_box(8, 42, 224, 1, &FONT_M, &FONT_B, dk_song.name, TH_TEXT);
-    p = cpy(s, "SLOT ");
-    p = itoa_b(set.proj + 1, p);
-    p = cpy(p, "   ");
-    p = cpy(p, DK_NOTE_NAME[dk_song.root % 12]);
+    int i, fill = dk_song.nev * 200 / DK_NEV;
+    text_box(8, 34, 224, 1, &FONT_M, &FONT_B, dk_song.name, TH_TEXT);
+    p = cpy(s, DK_NOTE_NAME[dk_song.root % 12]);
     p = cpy(p, " ");
     cpy(p, DK_MODE_NAME[dk_song.mode % DK_NMODES]);
-    text_box(8, 74, 224, 1, &FONT_XS, &FONT_T, s, TH_GRAY);
-    p = itoa_b(dk_song.nev, s);
-    p = cpy(p, " NOTES   ");
-    p = itoa_b(dk_song.nroad, p);
-    p = cpy(p, " BLOCKS   ");
-    p = itoa_b(dk_song.nev * 100 / DK_NEV, p);
-    cpy(p, "% FULL");
-    text_box(8, 92, 224, 1, &FONT_XS, &FONT_T, s, TH_GRAY);
-    for (i = 0; i < DK_NPROJ; i++) {         /* the four slots */
+    text_box(8, 66, 224, 1, &FONT_XS, &FONT_T, s, TH_GRAY);
+    cv_rect(20, 88, 200, 2, TH_LINE);          /* how full the project is: one line */
+    cv_rect(20, 88, fill > 200 ? 200 : fill, 2, fill > 160 ? TH_REC : TH_ENC[1]);
+    for (i = 0; i < DK_NPROJ; i++) {         /* the four slots: a cell each */
         char nm[12];
-        int x = 14 + i * 54, on = i == set.proj;
-        hline(x, 114, 48, on ? TH_ENC[0] : TH_LINE);
+        int x = 14 + i * 54, on = i == set.proj, used = project_used(i);
+        cv_rect(x, 104, 48, 44, on ? dimc(TH_ENC[0], 2) : TH_BG);
+        cv_rect(x, 104, 48, 2, on ? TH_ENC[0] : TH_LINE);
         itoa_b(i + 1, s);
-        cv_text(x, 120, &FONT_XS, s, on ? TH_TEXT : TH_GRAY);
-        text_box(x, 136, 48, 0, &FONT_T, &FONT_T, project_used(i) ? project_name(i, nm) : "EMPTY", on ? TH_TEXT : TH_GRAY);
+        cv_text(x + 4, 110, &FONT_XS, s, on ? TH_ENC[0] : TH_GRAY);
+        if (used)
+            text_box(x + 2, 130, 44, 0, &FONT_T, &FONT_T, project_name(i, nm), on ? TH_TEXT : TH_GRAY);
+        else
+            cv_rect(x + 4, 136, 8, 2, TH_LINE);
     }
     if (export_busy()) {                     /* the export's progress */
         int w = export_pct() * 200 / 100;
@@ -946,8 +1025,13 @@ static void draw_project(void)
     } else if (dk_stems) {
         cv_text(20, 162, &FONT_T, "STEMS: RECORD THE OUTPUT", TH_ENC[2]);
     } else {
-        p = cpy(s, "CPU ");                  /* the sound's load, its dropouts, the voices (and their budget) */
+        p = cpy(s, "CPU ");                  /* the load; HOME held: the dropouts, the voices, the raw battery */
         p = itoa_b((int)plat_cpu_pct(), p);
+        if (!held(B_HOME)) {
+            cpy(p, "%");
+            text_box(8, 162, 224, 1, &FONT_T, &FONT_T, s, dimc(TH_GRAY, 12));
+            return;
+        }
         p = cpy(p, "%  XRUN ");
         p = itoa_b((int)plat_xruns(), p);
         p = cpy(p, "  V ");

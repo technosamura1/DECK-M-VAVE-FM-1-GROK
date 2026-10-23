@@ -14,6 +14,7 @@ static uint16_t endless_n;
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */
 static uint8_t open_vel[128], open_trk[128];
 static uint8_t arp_step[DK_NTRACK], arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
+volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
 static uint8_t hold_keys[DK_NTRACK];
 static uint16_t finger_held[DK_NTRACK];        /* FINGER: the patterns held (a bit each) */
 static uint8_t finger_var[DK_NTRACK];          /* its variations: 1 HALF 2 DOUBLE 4 ACCENT 8 GHOST 16 SHIFT- 32 SHIFT+ */
@@ -429,24 +430,58 @@ static void finger_tick(int t, uint32_t pats, uint8_t var, int is_fill)
 }
 
 /* -------------------------------------------------------------------- ARP --- */
+/* the rates (ticks), 1/4 .. 1/32 in the order the encoder turns */
+const uint8_t DK_ARP_DIV[DK_ARP_NDIV] = {96, 48, 32, 24, 16, 12};
+/* the rhythms: 16 steps of the rate, 0 a rest, 1 a note, 2 an accent (SKIP: STRAIGHT with a rest at random) */
+const uint8_t DK_ARP_RHY[ARPR_N][16] = {
+    {2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1},   /* STRAIGHT */
+    {2, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1, 0, 1, 0},   /* PULSE: every other */
+    {0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1},   /* OFFBEAT: off the beat */
+    {2, 0, 0, 1, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 1, 0},   /* DOTTED: 3 + 3 + 2 */
+    {2, 1, 1, 0, 2, 1, 1, 0, 2, 1, 1, 0, 2, 1, 1, 0},   /* GALLOP */
+    {2, 0, 0, 0, 1, 0, 1, 0, 2, 1, 1, 0, 2, 1, 1, 1},   /* RISE: sparse to full */
+    {2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 1},   /* SKIP */
+};
 static void arp_tick(int t)
 {
-    static const uint8_t DIV[4] = {48, 24, 16, 12};
+    static const float GATE[ARPG_N] = {0.55f, 0.25f, 0.85f, 1.02f};   /* NORMAL SHORT LONG TIE */
     const dk_track_t *k = &dk_song.trk[t];
-    int n = arp_n[t], div = DIV[k->arp[1] & 3], octs = k->arp[2] < 1 ? 1 : k->arp[2] > 3 ? 3 : k->arp[2], total, idx,
-        s, i, srt[8];
-    if (!n || gt % (uint32_t)div)
+    int n = arp_n[t], div = DK_ARP_DIV[k->arp[1] % DK_ARP_NDIV], octs = k->arp[2] < 1 ? 1 : k->arp[2] > 3 ? 3 : k->arp[2],
+        total, idx, s, i, srt[8], hit, rp, src_chord = (k->arp_opt >> 2) & 1;
+    float gate = GATE[k->arp_opt & 3];
+    if (gt % (uint32_t)div)
         return;
-    for (i = 0; i < n; i++)
-        srt[i] = arp_order[t][i];
-    for (i = 1; i < n; i++) {
-        int v = srt[i], j = i - 1;
-        while (j >= 0 && srt[j] > v) {
-            srt[j + 1] = srt[j];
-            j--;
+    if (!n && src_chord && dk_playing && dk_harm_n) {    /* no hands: the song's chord (only while the song plays) */
+        int base = 60 + 12 * k->oct, prev = -1;
+        n = dk_harm_n > 4 ? 4 : dk_harm_n;
+        for (i = 0; i < n; i++) {
+            int v = base + dk_harm_pcs[i] % 12;
+            while (v <= prev)
+                v += 12;
+            srt[i] = prev = v;
         }
-        srt[j + 1] = v;
+    } else if (!n) {
+        return;
+    } else {
+        for (i = 0; i < n; i++)
+            srt[i] = arp_order[t][i];
+        for (i = 1; i < n; i++) {
+            int v = srt[i], j = i - 1;
+            while (j >= 0 && srt[j] > v) {
+                srt[j + 1] = srt[j];
+                j--;
+            }
+            srt[j + 1] = v;
+        }
     }
+    rp = (int)((gt / (uint32_t)div) & 15u);           /* locked to the bar, so the rhythm sits on the beat */
+    dk_arp_rpos[t] = (uint8_t)rp;
+    hit = DK_ARP_RHY[k->arp_rhy % ARPR_N][rp];
+    if (k->arp_rhy == ARPR_SKIP && rp % 4 && irand(4) == 0)
+        hit = 0;
+    if (!hit)
+        return;
+    dk_arp_hit[t] = 1;
     total = n * octs;
     s = arp_step[t]++;
     switch (k->arp[0] % 6) {
@@ -460,17 +495,17 @@ static void arp_tick(int t)
     case 4: idx = s % total; break;                                          /* ORDER (as played) */
     case 5:                                                                  /* CHORD */
         for (i = 0; i < n; i++)
-            note_play(t, srt[i], 0.62f, (int32_t)((float)div * tick_len * 0.55f), swing_delay(t, (int)(gt % DK_TPB)), 2);
+            note_play(t, srt[i], hit == 2 ? 0.7f : 0.58f, (int32_t)((float)div * tick_len * gate), swing_delay(t, (int)(gt % DK_TPB)), 2);
         return;
     default: idx = s % total; break;                                         /* UP */
     }
     {
-        int note = ((k->arp[0] % 6) == 4 ? arp_order[t][idx % n] : srt[idx % n]) + 12 * (idx / n);
-        int vel = 70 + (s % 4 == 0 ? 14 : 0);
-        note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)div * tick_len * 0.55f),
+        int note = ((k->arp[0] % 6) == 4 && arp_n[t] ? arp_order[t][idx % n] : srt[idx % n]) + 12 * (idx / n);
+        int vel = hit == 2 ? 86 : 68;
+        note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)div * tick_len * gate),
                   swing_delay(t, (int)(gt % DK_TPB)), 2);
         if (rec_track_of(t))
-            rec_done(t, note, vel, div / 2);
+            rec_done(t, note, vel, (int)((float)div * gate) > 1 ? (int)((float)div * gate) : 1);
     }
 }
 static void arp_publish(int t)

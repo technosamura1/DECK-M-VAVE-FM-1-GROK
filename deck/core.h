@@ -62,6 +62,8 @@ extern volatile int16_t dk_tmb_x[DK_NBALL], dk_tmb_y[DK_NBALL];
 extern volatile uint8_t dk_tmb_note[DK_NBALL], dk_tmb_n, dk_tmb_hit[DK_NBALL];
 /* ARP / HOLD: the notes held for them */
 extern volatile uint8_t dk_held_n[DK_NTRACK];
+extern volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* ARP: its rhythm's step, a note just now */
+extern const uint8_t DK_ARP_DIV[DK_ARP_NDIV], DK_ARP_RHY[ARPR_N][16];
 extern volatile uint8_t dk_held[DK_NTRACK][8];
 /* the metronome (global settings, not the song's) */
 typedef struct {
