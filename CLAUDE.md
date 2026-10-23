@@ -53,7 +53,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
   вставить, режимы PART/SONG, запись трассы вживую (REC на странице ROAD), шаблоны EMPTY/POP/CLUB/AMBIENT, гараж частей.
 - Метроном: REC/ALWAYS/OFF, счёт 1–2 такта (4…3…2…1 на кассете), 5 тембров (OVERWORLD — WOOD), деление, громкость,
   мимо ревера/эха/сайдчейна, не попадает в экспорт; HOME+REC; TAP TEMPO (HOME+PLAY).
-- Звук OVERWORLD: FELT TINE AIRPAD GLASS KALIMBA SOFTBASS DUSTKIT WORLD × 12 пресетов + 4 своих слота;
+- Звук OVERWORLD: FELT TINE AIRPAD GLASS KALIMBA SOFTBASS DUSTKIT WORLD WINDS × 12 пресетов + 4 своих слота;
   эффекты VINYL TAPE LOFI CHORUS FILTER TREMOLO SPRING; посылы ECHO/REVERB (ROOM HALL CAVE SHIMMER);
   мастер DUST/SLEEP + лимитер; сайдчейн пад ← бочка 15 %; модуляторы SWING DICE PEDAL FOLLOW TREMOLO; MACRO у пресета;
   8 MOOD-ов (= биомы сада); 11 перформанс-эффектов; демо-песня FIRST LIGHT (8 блоков, 4:41).
@@ -137,6 +137,15 @@ out/                  прошивка, установщик, WAV, listen.html, 
   сюда обрывается, начатая здесь — короче); K4 высота по ладу (HOME — октава; на пустом шаге — какую поставит K2);
   ALGO — сила. Клавиши пишут ноту на шаг. Серия поворотов одной ручкой = 1 undo. Ряд 1 у STEP: K1 SHIFT (весь клип по
   шагам), K2 LENGTH, K3 VEL, K4 PROB. Тест `tests/scenarios/stepedit.dk` (expect cursor senotes selen sepitch keywN).
+
+## Добавлено 2026-10-24 (2)
+- Модуль крупнее: плата `plate(1, 38, 238, 189)`, окно 6,52 228×100, ручки `KNOB_Y 186`; в окне свои цвета `W_BG W_LINE
+  W_GRAY W_INK` (TH_LINE/TH_GRAY на коричневом пропадали), подписи ручек тёмные; TH_GRAY 124, TH_LINE 50. ATMO-плитки
+  57×50, ARP-точки крупнее, барабанная сетка 12 px, шаговый редактор ярче.
+- 9-й движок WINDS (`tapes/overworld/eng_wind.c`: FLUTE PAN OCARINA REED TRUMPET MUTED HORN BRASS; BRIGHT BREATH VIBRATO
+  TYPE SWELL), 12 пресетов, уровень −22 (calibrate.py: WINDS в TARGET/ORDER). HOME + PRESET — сменить движок мелодической
+  дорожки (`engine_step` в ui.c; барабаны и WORLD не меняются). Свои пресеты: `dk_user.p[DK_UENG=10][4]`, старый
+  файл на 8 движков грузится (хвост нулями). 7-й дорожки нет — это переделка формата песни, MIX, MIDI, чёрных клавиш.
 
 ## Проверено на железе частично
 Прошивка запущена на FM-1 (2026-10-23): работает, лаги найдены и исправлены по замеру. Под вопросом: реальная нагрузка CPU, отклик клавиш/энкодеров, скорость

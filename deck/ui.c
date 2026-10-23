@@ -97,9 +97,15 @@ static void track_select(int t)
 }
 
 /* the KEYS track (TAPE.keys_set): its twelve presets are on three engines */
-static int keys_group(void)
+static int keys_group(void)              /* (the track on one of the set's engines: another one, say WINDS, its own) */
 {
-    return TAPE.keys_set && (cur()->role == TAPE.keys_role || cur()->role == R_BELL);
+    int i;
+    if (!TAPE.keys_set || (cur()->role != TAPE.keys_role && cur()->role != R_BELL))
+        return 0;
+    for (i = 0; i < DK_NFACT; i++)
+        if (TAPE.keys_set[i][0] == cur()->eng)
+            return 1;
+    return 0;
 }
 static int keys_group_at(void)           /* where the track is in it, -1 off it */
 {
@@ -223,15 +229,39 @@ static void preset_step(int d)          /* PRESET: the next one (the user's only
     }
     for (n = 0; n < DK_NFACT + 4; n++) {
         s = (s + d + DK_NFACT + 4) % (DK_NFACT + 4);
-        if (s < DK_NFACT || dk_user.p[cur()->eng & 7][(s - DK_NFACT) & 3].used)
+        if (s < DK_NFACT || dk_user.p[cur()->eng % DK_UENG][(s - DK_NFACT) & 3].used)
             break;
     }
     preset_select(s);
 }
 
+/* HOME + PRESET: a melodic track onto the next melodic engine (FELT TINE AIRPAD GLASS SOFTBASS KALIMBA WINDS), its
+ * first preset; the drums and the world stay theirs */
+static void engine_step(int d)
+{
+    int e = cur()->eng, n;
+    if (cur_eng()->flags & (EF_DRUM | EF_CONT)) {
+        say(cur_eng()->name, "ITS OWN");
+        return;
+    }
+    for (n = 0; n < TAPE.neng; n++) {
+        e = (e + d + TAPE.neng) % TAPE.neng;
+        if (!(TAPE.eng[e]->flags & (EF_DRUM | EF_CONT)))
+            break;
+    }
+    keys_all_up();
+    cur()->eng = (uint8_t)e;
+    track_preset(dk_song.cur_track, 0);
+    mark_dirty();
+    {
+        dk_preset_t tmp;
+        say(TAPE.eng[e]->name, preset_of(e, 0, &tmp)->name);
+    }
+}
+
 static void preset_save(int slot)        /* SAVE held + white 13..16 */
 {
-    dk_upreset_t *u = &dk_user.p[cur()->eng & 7][slot & 3];
+    dk_upreset_t *u = &dk_user.p[cur()->eng % DK_UENG][slot & 3];
     const dk_track_t *k = cur();
     dk_preset_t tmp;
     const dk_preset_t *from = preset_of(k->eng, k->preset, &tmp);
@@ -973,6 +1003,11 @@ static void enc_side(int sel, int e)     /* SELECT (sel 1): the track; PRESET: t
         field_set(F_TEMPO, field_get(F_TEMPO) + e);
         itoa_b(dk_song.tempo, t);
         say("TEMPO", t);
+        return;
+    }
+    if (!sel && held(B_HOME)) {          /* HOME + PRESET: the instrument itself (a melodic track's) */
+        ui.used[B_HOME] = 1;
+        engine_step(e > 0 ? 1 : -1);
         return;
     }
     if (sel)

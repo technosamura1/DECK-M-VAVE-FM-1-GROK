@@ -11,9 +11,11 @@ typedef struct {
     uint8_t mt[3];
     int8_t ma[3];
 } dk_upreset_t;
+#define DK_UENG 10                       /* the engines with user presets (a tape has up to ten) */
+#define DK_UENG_V1 8                     /* the store's old size: eight */
 typedef struct {
     uint32_t magic;
-    dk_upreset_t p[8][4];
+    dk_upreset_t p[DK_UENG][4];
 } dk_user_t;
 extern dk_user_t dk_user;
 extern uint32_t song_edits;

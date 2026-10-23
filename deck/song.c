@@ -513,7 +513,7 @@ const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp)
     if (slot < DK_NFACT)
         return &TAPE.presets[eng * DK_NFACT + slot];
     {
-        const dk_upreset_t *u = &dk_user.p[eng & 7][(slot - DK_NFACT) & 3];
+        const dk_upreset_t *u = &dk_user.p[eng % DK_UENG][(slot - DK_NFACT) & 3];
         int i;
         if (!u->used)
             return &TAPE.presets[eng * DK_NFACT];

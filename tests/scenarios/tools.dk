@@ -99,3 +99,38 @@ turn K4 12
 wait 2500
 expect voices >=0
 shot atmo.png
+# HOME + PRESET: the piano onto the other melodic engines, WINDS (8) last; the drums stay a kit
+tap HOME
+press HOME
+tapkey b0
+release HOME
+wait 50
+expect eng 0
+press HOME
+turn PRESET -1
+release HOME
+wait 50
+expect eng 8
+expect preset 0
+tap FX
+wait 1500
+shot winds.png
+key w4 down 100
+wait 600
+key w4 up
+wait 400
+expect voices >=0
+press HOME
+turn PRESET 1
+release HOME
+wait 50
+expect eng 0
+press HOME
+tapkey b4
+release HOME
+press HOME
+turn PRESET 1
+release HOME
+wait 50
+expect eng 5
+expect textfit 0
