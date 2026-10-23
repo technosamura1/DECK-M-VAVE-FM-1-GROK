@@ -32,6 +32,15 @@ def main():
     first_x = last_x = None
     with mido.open_input(i_name) as i, mido.open_output(o_name) as o, open(log, "w", encoding="utf-8") as f:
         f.write("port %s / %s\n" % (i_name, o_name))
+        o.send(mido.Message("sysex", data=[0x7D, 0x4C, 0x47]))   # the platform's log: the last crash, the boots
+        t = time.time() + 1.5
+        while time.time() < t:
+            m = i.poll()
+            if m is None:
+                time.sleep(0.005)
+                continue
+            if m.type == "sysex" and list(m.data[:3]) == [0x7D, 0x4C, 0x47]:
+                f.write("LOG " + bytes(m.data[3:]).decode("ascii", "replace") + "\n")
         print("Пишу %d с в %s. Играй то, что лагает." % (secs, log))
         end = time.time() + secs
         got = 0
