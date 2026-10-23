@@ -62,6 +62,7 @@ jobs:
               exit 1
             fi
             tail -n 3 "build-$t.log"
+            echo "::notice::deck-$t.fwsc md5 $(md5sum out/deck-$t.fwsc | cut -c1-32)"
             d="dist/deck-$t"
             mkdir -p "$d"
             cp "out/deck-$t.fwsc" out/fm1_install.py "$d/"
