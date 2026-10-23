@@ -398,7 +398,7 @@ static void draw_footer(int y)
 {
     int i;
     uint32_t now = plat_ms();
-    for (i = 0; i < 4 && ui.page != PG_SOUND; i++) {   /* (SOUND: its knobs are on its plate) */
+    for (i = 0; i < 4 && (ui.page == PG_PLAY || ui.page == PG_REC); i++) {   /* (the modules: their knobs on their plate) */
         int f = page_field(i, 0), x = 4 + i * 59, lo, hi, v, lit = ui.touched == i && now < ui.touch_until;
         char s[24];
         if (f == F_NONE)
@@ -583,13 +583,31 @@ static void knob_row(int y)
         text_box(cx - 28, y + 22, 56, 1, &FONT_XS, &FONT_T, t, CS_INK);
     }
 }
+/* ------------------------------------------------------------ the module --- */
+/* every page but the garden and the tape is a module like SOUND's: the cassette's plate with its screws, its name
+ * printed on it (left, and a word on the right), a dark window with the page's picture, the four knobs under it */
+#define WX 10
+#define WY 58
+#define WW 220
+#define WH 84
+#define KNOB_Y 176
+static void module(const char *left, const char *right)
+{
+    plate(4, 42, 232, 186);
+    if (left)
+        text_box(18, 46, 120, 0, &FONT_T, &FONT_T, left, CS_INK);
+    if (right)
+        text_box(112, 46, 110, 2, &FONT_T, &FONT_T, right, CS_INK);
+    cv_rect(WX, WY, WW, WH, CS_WINDOW);
+}
+
 static void draw_sound(void)                /* a synth module: the preset in its window, the tab's picture, 4 knobs */
 {
     static const char *const TAB[4] = {"ENG", "ENV", "FX", "MOD"};
     const dk_track_t *k = cur();
     const dk_engine_t *e = cur_eng();
     dk_preset_t tmp;
-    int tab = ui.row[PG_SOUND] & 3, i, x = 132, wy = 60, wh = 58;
+    int tab = ui.row[PG_SOUND] & 3, i, x = 132, wy = WY, wh = WH;
     uint32_t now = plat_ms();
     for (i = 0; i < 4; i++) {            /* the tabs */
         uint16_t c = i == tab ? TH_TEXT : TH_GRAY;
@@ -598,9 +616,7 @@ static void draw_sound(void)                /* a synth module: the preset in its
             hline(x, 39, text_w(&FONT_XS, TAB[i]), TH_TEXT);
         x += text_w(&FONT_XS, TAB[i]) + 10;
     }
-    plate(4, 42, 232, 186);
-    text_box(18, 47, 150, 0, &FONT_T, &FONT_T, e->name, CS_INK);   /* the engine's name, as if printed on it */
-    cv_rect(10, wy, 220, wh, CS_WINDOW);     /* the window */
+    module(e->name, 0);                      /* the engine's name, as if printed on it; the window */
     text_box(14, wy + 4, 212, 1, &FONT_B, &FONT_XS, preset_of(k->eng, k->preset, &tmp)->name, TH_TEXT);
     switch (tab) {
     case 0: {                            /* the engine's first knob's picture, small, under the name */
@@ -676,7 +692,6 @@ static void draw_sound(void)                /* a synth module: the preset in its
         break;
     }
     }
-    knob_row(166);
 }
 
 /* -------------------------------------------------------------------- SEQ --- */
@@ -706,7 +721,70 @@ static void roll(const dk_clip_t *c, int x0, int y0, int w, int h, int len, uint
         x = x0 + e->pos * w / (len ? len : 1);
         ww = e->dur * w / (len ? len : 1);
         y = y0 + h - 2 - (e->note - lo) * (h - 3) / (hi - lo ? hi - lo : 1);
+        if (x < WX || x >= WX + WW)
+            continue;
+        if (x + ww > WX + WW)
+            ww = WX + WW - x;
         cv_rect(x, y, ww < 2 ? 2 : ww, 2, pass_red && (e->layer & 0x7F) == dk_pass && dk_recording ? TH_REC : col);
+    }
+}
+
+static void draw_arp_view(const dk_track_t *k)   /* the rhythm across, each note at its height (the real order) */
+{
+    int t = dk_song.cur_track, n = dk_held_n[t], src = (k->arp_opt >> 2) & 1, octs = k->arp[2] < 1 ? 1 : k->arp[2],
+        mode = k->arp[0] % 6, total, live, cur_step = dk_arp_rpos[t] & 15, hits = 0, i, base = WY + WH - 8;
+    const uint8_t *rhy = DK_ARP_RHY[k->arp_rhy % ARPR_N];
+    char nm[24];
+    if (!n && src && dk_harm_n)
+        n = dk_harm_n > 4 ? 4 : dk_harm_n;
+    live = n && (dk_playing || dk_held_n[t]);
+    total = (n ? n : 3) * (octs > 3 ? 3 : octs);
+    text_box(WX + 6, WY + 4, 100, 0, &FONT_B, &FONT_XS, ARP_NAME[mode], TH_TEXT);
+    if (dk_held_n[t]) {                      /* what it plays: the notes held, or the song's chord */
+        int p = 0, j;
+        for (j = 0; j < dk_held_n[t] && j < 6; j++) {
+            const char *q = DK_NOTE_NAME[dk_held[t][j] % 12];
+            while (*q)
+                nm[p++] = *q++;
+            nm[p++] = ' ';
+        }
+        nm[p ? p - 1 : 0] = 0;
+    } else if (src) {
+        int pcs[4], j;
+        for (j = 0; j < 4; j++)
+            pcs[j] = 60 + dk_harm_pcs[j];
+        dk_chord_name(pcs, dk_harm_n > 4 ? 4 : dk_harm_n ? dk_harm_n : 1, nm);
+    } else
+        cpy(nm, k->arp[3] ? "PLAY A CHORD" : "HOLD NOTES");
+    text_box(WX + 100, WY + 6, 114, 2, &FONT_XS, &FONT_T, nm, dk_held_n[t] || src ? TH_ENC[1] : TH_GRAY);
+    hline(WX + 6, base + 2, WW - 12, TH_LINE);
+    for (i = 0; i < 16; i++) {
+        int cx = WX + 12 + i * 13, h = rhy[i], idx, y, on = live && i == cur_step;
+        uint16_t col = on ? TH_ENC[0] : h == 2 ? TH_TEXT : dimc(TH_TEXT, 10);
+        if (!h || (k->arp_rhy == ARPR_SKIP && i % 4 == 3)) {
+            cv_rect(cx - 1, base + 1, 2, 3, on ? TH_ENC[0] : TH_GRAY);
+            continue;
+        }
+        switch (mode) {
+        case 1: idx = total - 1 - hits % total; break;
+        case 2: {
+            int per = total > 1 ? 2 * total - 2 : 1, x2 = hits % per;
+            idx = x2 < total ? x2 : per - x2;
+            break;
+        }
+        case 3: idx = (int)(((uint32_t)hits * 2654435761u >> 16) % (uint32_t)total); break;
+        default: idx = hits % total; break;
+        }
+        hits++;
+        if (mode == 5) {                     /* CHORD: the whole stack each hit */
+            int j;
+            for (j = 0; j < (n ? n : 3); j++)
+                disc(cx, base - 4 - j * 8, h == 2 ? 3 : 2, col);
+            continue;
+        }
+        y = base - 4 - (total > 1 ? idx * 44 / (total - 1) : 0);
+        vline(cx, y, base + 2 - y, on ? TH_ENC[0] : TH_LINE);
+        disc(cx, y, h == 2 ? 3 : 2, col);
     }
 }
 
@@ -717,205 +795,150 @@ static void draw_seq(void)
     const dk_clip_t *c = &dk_song.clip[cur_clip()];
     int len = clip_len(cur_clip()), i, x;
     uint32_t now = plat_ms();
-    char s[24];
-    int view = ui.page == PG_ARP ? SQ_ARP : k->seq;   /* the ARP's page draws its picture here too */
-    if (view == SQ_ARP && !dk_arp_on(k))
-        cv_text(8, 26, &FONT_XS, "ARP OFF", TH_REC);
-    else
-        cv_text(8, 26, &FONT_XS, view == SQ_ARP ? "ARP" : SEQ_NAME[k->seq % SQ_N], TH_GRAY);
-    if (view != SQ_ARP && dk_arp_on(k))
-        text_box(150, 26, 82, 2, &FONT_XS, &FONT_T, "+ ARP", TH_ENC[1]);
+    char s[24], r[24];
+    int view = ui.page == PG_ARP ? SQ_ARP : k->seq, drum = (e->flags & EF_DRUM) != 0;
+    if (view == SQ_ARP) {
+        cpy(cpy(r, k->arp[3] ? "LATCH  " : ""), dk_arp_on(k) ? "" : "OFF");
+        module("ARP", r);
+        draw_arp_view(k);
+        return;
+    }
+    r[0] = 0;
+    if (drum && k->seq == SQ_STEP) {
+        x = (int)(itoa_b(ui_step_page + 1, r) - r);
+        r[x] = '/';
+        itoa_b(len / DK_TPB, r + x + 1);
+    }
+    if (dk_arp_on(k)) {
+        char *p = r;
+        while (*p)
+            p++;
+        if (p != r)
+            p = cpy(p, "  ");
+        cpy(p, "+ ARP");
+    }
+    {
+        char lt[24];
+        const char *nm = drum && ui.row[PG_SEQ] % 3 == 1 ? "KIT" : SEQ_NAME[k->seq % SQ_N];
+        if (drum && e->nlanes)               /* drums: the sound you are on, by its name */
+            cpy(cpy(cpy(lt, nm), "  "), e->lane_name[ui_lane % e->nlanes]);
+        else
+            cpy(lt, nm);
+        module(lt, r);
+    }
     switch (view) {
     case SQ_STEP:
-        if (e->flags & EF_DRUM) {            /* the lanes, the steps: on a big dot, off a small grey one */
+        if (drum) {                          /* the lanes, the steps: on a dot, off a small grey one */
             int lanes = e->nlanes ? e->nlanes : 8, l, ph = (int)(dk_part_tick % (uint16_t)len) / DK_T16 - ui_step_page * 16;
-            x = (int)(itoa_b(ui_step_page + 1, s) - s);
-            s[x] = '/';
-            itoa_b(len / DK_TPB, s + x + 1);
-            text_box(180, 26, 52, 2, &FONT_XS, &FONT_XS, s, TH_GRAY);
-            if (ui.row[PG_SEQ] % 3 == 1) {     /* KIT: each sound's level (a bar), its tune, decay and pan */
-                for (l = 0; l < lanes && l < 8; l++) {
+            if (lanes > 8)
+                lanes = 8;
+            if (ui.row[PG_SEQ] % 3 == 1) {   /* KIT: each sound's level (a bar), its tune, decay and its own FX */
+                for (l = 0; l < lanes; l++) {
                     const dk_lane_t *ln = &dk_song.lane[dk_song.cur_track][l];
-                    int y = 48 + l * 16, on_lane = l == ui_lane % lanes, w = (ln->level + 24) * 110 / 36, any;
-                    text_box(8, y - 5, 40, 0, &FONT_T, &FONT_T, e->lane_name[l], on_lane ? TH_ENC[0] : TH_GRAY);
-                    cv_rect(54, y - 2, 110, 4, TH_LINE);
-                    cv_rect(54, y - 2, w, 4, on_lane ? TH_ENC[1] : TH_GRAY);
-                    vline(54 + 24 * 110 / 36, y - 4, 8, TH_TEXT);   /* 0 dB */
-                    any = ln->tune || ln->decay || ln->pan || ln->rev || ln->echo || ln->crush;
+                    int y = WY + 6 + l * 10, on_lane = l == ui_lane % lanes, w = (ln->level + 24) * 110 / 36;
+                    text_box(WX + 4, y - 4, 40, 0, &FONT_T, &FONT_T, e->lane_name[l], on_lane ? TH_ENC[0] : TH_GRAY);
+                    cv_rect(WX + 48, y - 1, 110, 3, TH_LINE);
+                    cv_rect(WX + 48, y - 1, w, 3, on_lane ? TH_ENC[1] : TH_GRAY);
+                    vline(WX + 48 + 24 * 110 / 36, y - 3, 7, TH_TEXT);   /* 0 dB */
                     if (ln->tune)
-                        text_box(170, y - 5, 18, 0, &FONT_T, &FONT_T, ln->tune > 0 ? "T+" : "T-", TH_ENC[2]);
+                        text_box(WX + 162, y - 4, 16, 0, &FONT_T, &FONT_T, ln->tune > 0 ? "T+" : "T-", TH_ENC[2]);
                     if (ln->decay)
-                        text_box(188, y - 5, 18, 0, &FONT_T, &FONT_T, ln->decay > 0 ? "D+" : "D-", RGB(250, 150, 70));
+                        text_box(WX + 180, y - 4, 16, 0, &FONT_T, &FONT_T, ln->decay > 0 ? "D+" : "D-", RGB(250, 150, 70));
                     if (ln->rev || ln->echo || ln->crush)
-                        text_box(206, y - 5, 26, 0, &FONT_T, &FONT_T, ln->crush ? "FX8" : "FX", TH_ENC[1]);
-                    (void)any;
+                        text_box(WX + 198, y - 4, 20, 0, &FONT_T, &FONT_T, ln->crush ? "FX8" : "FX", TH_ENC[1]);
                 }
                 break;
             }
             for (l = 0; l < lanes; l++) {
-                int y = 48 + l * 16, on_lane = l == ui_lane % lanes;
-                text_box(8, y - 5, 40, 0, &FONT_T, &FONT_T, e->lane_name[l], on_lane ? TH_ENC[0] : TH_GRAY);
+                int y = WY + 6 + l * 10, on_lane = l == ui_lane % lanes;
+                {                            /* two letters a lane (the one you are on by its name, above) */
+                    char ab[3] = {e->lane_name[l][0], e->lane_name[l][1], 0};
+                    text_box(WX + 6, y - 5, 20, 0, &FONT_T, &FONT_T, ab, on_lane ? TH_ENC[0] : dimc(TH_GRAY, 12));
+                    if (on_lane)
+                        cv_rect(WX + 1, y - 2, 3, 4, TH_ENC[0]);
+                }
                 for (i = 0; i < 16; i++) {
-                    int cx = 54 + i * 11, pos = (ui_step_page * 16 + i) * DK_T16, hit = clip_find(cur_clip(), pos, e->lane_note[l], 0);
+                    int cx = WX + 34 + i * 11 + i / 4 * 2, pos = (ui_step_page * 16 + i) * DK_T16,
+                        hit = clip_find(cur_clip(), pos, e->lane_note[l], 0);
                     if (pos >= len)
                         break;
                     if (hit >= 0)
-                        disc(cx, y, 4, on_lane ? TH_ENC[0] : TH_TEXT);
+                        disc(cx, y, 3, on_lane ? TH_ENC[0] : TH_TEXT);
                     else
-                        cv_rect(cx - 1, y - 1, 2, 2, i % 4 ? TH_LINE : dimc(TH_GRAY, 10));
+                        cv_rect(cx - 2, y - 1, 4, 3, on_lane ? dimc(TH_ENC[0], 6)
+                                                    : i % 4 ? RGB(62, 57, 50) : RGB(98, 90, 78));
                 }
             }
             if (dk_playing && ph >= 0 && ph < 16)
-                vline(54 + ph * 11, 40, 8 * 16 + 4, TH_TEXT);
+                vline(WX + 34 + ph * 11 + ph / 4 * 2, WY + 1, WH - 2, TH_TEXT);
         } else {                             /* melodic: the bar's sixteenths, the notes by pitch, the cursor */
-            int bar = ui_cursor / 16, x0 = 12, w = 216;
+            int bar = ui_cursor / 16, x0 = WX + 4, w = WW - 8;
             dk_clip_t sub = *c;
-            cv_rect(x0 + (ui_cursor % 16) * w / 16, 44, w / 16 - 1, 128, dimc(TH_ENC[0], 4));
+            cv_rect(x0 + (ui_cursor % 16) * w / 16, WY + 2, w / 16 - 1, WH - 4, dimc(TH_ENC[0], 4));
             for (i = 0; i <= 16; i++)
-                vline(x0 + i * w / 16, 44, i % 4 ? 2 : 6, TH_LINE);
-            (void)bar;
-            roll(&sub, x0 - bar * w, 52, w * (len / DK_TPB), 118, len, TH_TEXT, 0);
+                vline(x0 + i * w / 16, WY + 2, i % 4 ? 2 : 5, TH_LINE);
+            roll(&sub, x0 - bar * w, WY + 8, w * (len / DK_TPB), WH - 14, len, TH_TEXT, 0);
             if (dk_playing) {
-                int ph = (int)(dk_part_tick % (uint16_t)len);
-                if (ph / DK_TPB == bar)
-                    vline(x0 + (ph % DK_TPB) * w / DK_TPB, 44, 128, TH_TEXT);
+                int ph2 = (int)(dk_part_tick % (uint16_t)len);
+                if (ph2 / DK_TPB == bar)
+                    vline(x0 + (ph2 % DK_TPB) * w / DK_TPB, WY + 1, WH - 2, TH_TEXT);
             }
         }
         break;
     case SQ_LIVE:
     case SQ_ENDLESS:
-        roll(c, 12, 50, 216, 116, len, TH_TRACK[dk_song.cur_track], 1);
-        hline(12, 168, 216, TH_LINE);
+        roll(c, WX + 4, WY + 4, WW - 8, WH - 14, len, TH_TRACK[dk_song.cur_track], 1);
+        hline(WX + 4, WY + WH - 6, WW - 8, TH_LINE);
         for (i = 0; i <= len / DK_TPB; i++)
-            vline(12 + i * DK_TPB * 216 / (len ? len : 1), 164, 5, TH_GRAY);
+            vline(WX + 4 + i * DK_TPB * (WW - 8) / (len ? len : 1), WY + WH - 9, 5, TH_GRAY);
         if (dk_playing)
-            vline(12 + (int)(dk_part_tick % (uint16_t)len) * 216 / len, 46, 124, TH_TEXT);
+            vline(WX + 4 + (int)(dk_part_tick % (uint16_t)len) * (WW - 8) / len, WY + 1, WH - 2, TH_TEXT);
         if (!c->n)
-            text_box(8, 98, 224, 1, &FONT_S, &FONT_XS, k->seq == SQ_ENDLESS ? "REC, THEN PLAY NOTES" : "REC TO RECORD", TH_GRAY);
+            text_box(WX, WY + 34, WW, 1, &FONT_XS, &FONT_T, "REC TO RECORD", TH_GRAY);
         break;
-    case SQ_ARP: {                           /* one picture: the rhythm across, each note at its height (the real order) */
-        int t = dk_song.cur_track, n = dk_held_n[t], src = (k->arp_opt >> 2) & 1, octs = k->arp[2] < 1 ? 1 : k->arp[2],
-            mode = k->arp[0] % 6, total, live, cur_step = dk_arp_rpos[t] & 15, hits = 0;
-        const uint8_t *rhy = DK_ARP_RHY[k->arp_rhy % ARPR_N];
-        char nm[24];
-        if (!n && src && dk_harm_n)
-            n = dk_harm_n > 4 ? 4 : dk_harm_n;
-        live = n && (dk_playing || dk_held_n[t]);
-        total = (n ? n : 3) * (octs > 3 ? 3 : octs);
-        text_box(8, 44, 224, 1, &FONT_L, &FONT_B, ARP_NAME[mode], TH_TEXT);
-        if (k->arp[3])
-            text_box(172, 26, 60, 2, &FONT_XS, &FONT_XS, "LATCH", TH_ENC[0]);
-        if (dk_held_n[t]) {                  /* what it plays: the notes held, or the song's chord */
-            int p = 0, j;
-            for (j = 0; j < dk_held_n[t] && j < 6; j++) {
-                const char *q = DK_NOTE_NAME[dk_held[t][j] % 12];
-                while (*q)
-                    nm[p++] = *q++;
-                nm[p++] = ' ';
-            }
-            nm[p ? p - 1 : 0] = 0;
-        } else if (src) {
-            int pcs[4], j;
-            for (j = 0; j < 4; j++)
-                pcs[j] = 60 + dk_harm_pcs[j];
-            dk_chord_name(pcs, dk_harm_n > 4 ? 4 : dk_harm_n ? dk_harm_n : 1, nm);
-        } else
-            cpy(nm, k->arp[3] ? "PLAY A CHORD" : "HOLD NOTES");
-        text_box(8, 78, 224, 1, &FONT_XS, &FONT_T, nm, dk_held_n[t] || src ? TH_ENC[1] : TH_GRAY);
-        hline(14, 160, 212, TH_LINE);
-        for (i = 0; i < 16; i++) {
-            int cx = 20 + i * 13, h = rhy[i], idx, y, on = live && i == cur_step;
-            uint16_t col = on ? TH_ENC[0] : h == 2 ? TH_TEXT : dimc(TH_TEXT, 10);
-            if (!h || (k->arp_rhy == ARPR_SKIP && i % 4 == 3)) {
-                cv_rect(cx - 1, 159, 2, 3, on ? TH_ENC[0] : TH_GRAY);
-                continue;
-            }
-            switch (mode) {
-            case 1: idx = total - 1 - hits % total; break;
-            case 2: {
-                int per = total > 1 ? 2 * total - 2 : 1, x2 = hits % per;
-                idx = x2 < total ? x2 : per - x2;
-                break;
-            }
-            case 3: idx = (int)(((uint32_t)hits * 2654435761u >> 16) % (uint32_t)total); break;
-            default: idx = hits % total; break;
-            }
-            hits++;
-            if (mode == 5) {                 /* CHORD: the whole stack each hit */
-                int j;
-                for (j = 0; j < (n ? n : 3); j++)
-                    disc(cx, 150 - j * 10, h == 2 ? 3 : 2, col);
-                continue;
-            }
-            y = 150 - (total > 1 ? idx * 56 / (total - 1) : 0);
-            vline(cx, y, 160 - y, on ? TH_ENC[0] : TH_LINE);
-            disc(cx, y, h == 2 ? 4 : 3, col);
-        }
-        break;
-    }
     case SQ_DRIVE: {
-        text_box(8, 50, 224, 1, &FONT_L, &FONT_B, TAPE.style_name[k->drv[1] % TAPE.nstyle], TH_TEXT);
+        text_box(WX, WY + 4, WW, 1, &FONT_B, &FONT_XS, TAPE.style_name[k->drv[1] % TAPE.nstyle], TH_TEXT);
         for (i = 0; i < 24; i++) {           /* how busy: bars of the energy, wandering with VARIATION */
             uint32_t hh = (uint32_t)i * 2654435761u + (dk_ticks / DK_TPB) * 40503u;
-            int h = 4 + (int)((float)k->drv[0] * 0.5f * (0.4f + 0.6f * (float)((hh >> 24) & 255u) / 255.0f * (0.3f + (float)k->drv[2] * 0.007f)));
-            cv_rect(14 + i * 9, 166 - h, 5, h, i % 4 == 0 ? TH_ENC[0] : dimc(TH_ENC[0], 9));
+            int h = 3 + (int)((float)k->drv[0] * 0.38f * (0.4f + 0.6f * (float)((hh >> 24) & 255u) / 255.0f * (0.3f + (float)k->drv[2] * 0.007f)));
+            if (h > 52)
+                h = 52;
+            cv_rect(WX + 6 + i * 9, WY + WH - 4 - h, 5, h, i % 4 == 0 ? TH_ENC[0] : dimc(TH_ENC[0], 9));
         }
         break;
     }
     case SQ_FINGER: {
-        const dk_finger_t *set_ = (e->flags & EF_DRUM) ? TAPE.finger_drum : TAPE.finger_mel;
+        const dk_finger_t *set_ = drum ? TAPE.finger_drum : TAPE.finger_mel;
         for (i = 0; i < 16; i++) {           /* the sixteen patterns: held or latched, lit */
-            int cx = 8 + (i % 4) * 57, cy = 44 + (i / 4) * 32, on = (dk_finger_latch[dk_song.cur_track] >> i & 1u) != 0;
-            uint16_t col = on ? TH_ENC[0] : TH_LINE;
+            int cx = WX + 2 + (i % 4) * 54, cy = WY + 2 + (i / 4) * 20, on = (dk_finger_latch[dk_song.cur_track] >> i & 1u) != 0;
             if (on)
-                cv_rect(cx, cy, 54, 28, dimc(TH_ENC[0], 3));
-            hline(cx, cy + 27, 54, col);
+                cv_rect(cx, cy, 52, 19, dimc(TH_ENC[0], 4));
+            hline(cx, cy + 19, 52, on ? TH_ENC[0] : TH_LINE);
             if (set_) {                      /* the pattern itself, small: hits per lane, or a melody's contour */
                 const dk_finger_t *f = &set_[i];
                 uint16_t dc = on ? TH_TEXT : dimc(TH_TEXT, 11);
                 int st, l;
                 for (st = 0; st < 16; st++) {
-                    int x = cx + 3 + st * 3;
-                    if (e->flags & EF_DRUM) {
+                    int xx = cx + 2 + st * 3;
+                    if (drum) {
                         for (l = 0; l < 4; l++)
                             if (f->lanes[l][st])
-                                cv_rect(x, cy + 3 + l * 6, 2, 4, f->lanes[l][st] > 6 ? dc : dimc(dc, 8));
+                                cv_rect(xx, cy + 2 + l * 4, 2, 3, f->lanes[l][st] > 6 ? dc : dimc(dc, 8));
                     } else if (f->lanes[0][st]) {
-                        int len = f->lanes[1][st] ? f->lanes[1][st] : 1, y = cy + 21 - (f->lanes[0][st] - 1) * 2
-                                  - (f->lanes[2][st] > 1 ? 4 : 0);
-                        if (y < cy + 3)
-                            y = cy + 3;
-                        cv_rect(x, y, len * 3 - 1 > 51 - st * 3 ? 51 - st * 3 : len * 3 - 1, 2, dc);
+                        int ln = f->lanes[1][st] ? f->lanes[1][st] : 1, y = cy + 15 - (f->lanes[0][st] - 1) * 2
+                                 - (f->lanes[2][st] > 1 ? 3 : 0);
+                        if (y < cy + 2)
+                            y = cy + 2;
+                        cv_rect(xx, y, ln * 3 - 1 > 49 - st * 3 ? 49 - st * 3 : ln * 3 - 1, 2, dc);
                     }
                 }
             }
         }
-        if (set_ && dk_finger_latch[dk_song.cur_track])   /* the latched one's name, once */
-            for (i = 0; i < 16; i++)
-                if (dk_finger_latch[dk_song.cur_track] >> i & 1u) {
-                    text_box(70, 26, 162, 2, &FONT_XS, &FONT_T, set_[i].name, TH_ENC[0]);
-                    break;
-                }
-        break;
-    }
-    case SQ_HOLD: {
-        int n = dk_held_n[dk_song.cur_track], p = 0;
-        s[0] = 0;
-        for (i = 0; i < n && i < 4; i++) {
-            const char *nm = DK_NOTE_NAME[dk_held[dk_song.cur_track][i] % 12];
-            while (*nm)
-                s[p++] = *nm++;
-            s[p++] = ' ';
-        }
-        s[p ? p - 1 : 0] = 0;
-        text_box(8, 70, 224, 1, &FONT_L, &FONT_XS, n ? s : "PLAY A CHORD", n ? TH_TEXT : TH_GRAY);
-        for (i = 0; i < 216; i += 3)          /* the drone: a slow line */
-            cv_rect(12 + i, 140 + (int)(4.0f * fm_sinf((float)i * 0.05f + (float)now * 0.001f)), 2, 1, n ? TH_ENC[1] : TH_LINE);
         break;
     }
     case SQ_TOMBOLA: {                       /* the drum turning, the balls in it */
         float a0 = dk_tmb_angle * 6.2831853f;
-        int cx = 120, cy = 104, R = 62;
+        int cx = WX + WW / 2, cy = WY + WH / 2, R = 38;
         for (i = 0; i < 6; i++) {
             float a = a0 + (float)i * 1.0471976f, b = a + 1.0471976f;
             cv_line(cx + (int)((float)R * fm_cosf(a)), cy + (int)((float)R * fm_sinf(a)), cx + (int)((float)R * fm_cosf(b)),
@@ -923,48 +946,46 @@ static void draw_seq(void)
         }
         for (i = 0; i < dk_tmb_n; i++) {
             int bx = cx + dk_tmb_x[i] * R / 1000, by = cy + dk_tmb_y[i] * R / 1000;
-            disc(bx, by, 4, dk_tmb_hit[i] ? TH_ENC[2] : TH_ENC[1]);
+            disc(bx, by, 3, dk_tmb_hit[i] ? TH_ENC[2] : TH_ENC[1]);
         }
         if (!dk_tmb_n)
-            text_box(8, 98, 224, 1, &FONT_XS, &FONT_T, "PLAY NOTES TO DROP BALLS", TH_GRAY);
+            text_box(WX, WY + 36, WW, 1, &FONT_T, &FONT_T, "PLAY NOTES TO DROP BALLS", TH_GRAY);
         break;
     }
-    default: break;
+    default:
+        (void)now;
+        (void)s;
+        break;
     }
 }
 
 /* -------------------------------------------------------------------- MIX --- */
-/* MIX: a little desk on the cassette's plate: a pan knob each, the fader in its slot, the meter's lights, the tape
- * strip with the number at the foot (muted: grey and M; solo: S) */
+/* MIX: a little desk in the window: a pan knob each, the fader in its slot, the meter's lights, the tape strip with
+ * the number at its foot (muted: grey and M; solo: S) */
 static void draw_mix(void)
 {
     int t;
     char s[16];
-    text_box(8, 26, 150, 0, &FONT_XS, &FONT_T, track_label(dk_song.cur_track), TH_TRACK[dk_song.cur_track]);
     itoa_b((int)(dk_master_level * 100.0f), s);
-    text_box(160, 26, 72, 2, &FONT_XS, &FONT_T, s, TH_GRAY);
-    plate(4, 42, 232, 140);
+    module(track_label(dk_song.cur_track), s);
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_track_t *k = &dk_song.trk[t];
-        int x = 10 + t * 37, cx = x + 16, top = 74, h = 72, fy = top + h - (int)k->vol * h / 100, sel = t == dk_song.cur_track,
-            lv = (int)(fm_minf(1.0f, dk_level[t] * 3.0f) * 9.0f), i;
+        int x = WX + 2 + t * 36, cx = x + 15, top = WY + 20, h = 44, fy = top + h - (int)k->vol * h / 100,
+            sel = t == dk_song.cur_track, lv = (int)(fm_minf(1.0f, dk_level[t] * 3.0f) * 7.0f), i;
         if (sel)
-            cv_rect(x, 46, 33, 132, RGB(228, 222, 206));
-        knob(cx, 58, 7, (float)(k->pan + 64) / 128.0f, sel ? TH_ENC[1] : CS_BODY_D, 0);
-        cv_rect(cx - 1, top, 3, h, CS_WINDOW);       /* the slot */
-        for (i = 0; i < 9; i++)                       /* the meter: nine lights, green, then yellow, then red */
-            cv_rect(x + 27, top + h - 6 - i * 8, 3, 5,
-                    i < lv ? (i < 6 ? TH_ENC[0] : i < 8 ? TH_ENC[2] : TH_REC) : CS_BODY_D);
-        cv_rect(cx - 9, fy - 5, 19, 10, sel ? RGB(60, 56, 50) : RGB(96, 90, 82));   /* the cap */
-        hline(cx - 9, fy, 19, sel ? TH_ENC[0] : RGB(236, 232, 220));
-        cv_rect(x + 3, 156, 27, 16, k->mute ? CS_BODY_D : TH_TRACK[t]);         /* the strip of tape */
-        s[0] = (char)('1' + t);
+            cv_rect(x, WY + 1, 34, WH - 2, RGB(52, 46, 40));
+        knob(cx, WY + 9, 5, (float)(k->pan + 64) / 128.0f, sel ? TH_ENC[1] : TH_GRAY, 0);
+        cv_rect(cx - 1, top, 3, h, RGB(16, 14, 12));      /* the slot */
+        for (i = 0; i < 7; i++)                            /* the meter: seven lights */
+            cv_rect(x + 27, top + h - 5 - i * 6, 3, 4, i < lv ? (i < 4 ? TH_ENC[0] : i < 6 ? TH_ENC[2] : TH_REC) : RGB(60, 54, 48));
+        cv_rect(cx - 8, fy - 4, 17, 8, sel ? CS_LABEL : CS_BODY_D);   /* the cap */
+        hline(cx - 8, fy, 17, sel ? TH_ENC[0] : CS_INK);
+        cv_rect(x + 4, WY + WH - 14, 24, 12, k->mute ? CS_BODY_D : TH_TRACK[t]);   /* the strip of tape */
+        s[0] = (char)(k->mute ? 'M' : '1' + t);
         s[1] = 0;
-        if (k->mute)
-            s[0] = 'M';
-        text_box(x + 3, 157, 27, 1, &FONT_XS, &FONT_T, s, k->mute ? CS_INK : TH_BG);
+        text_box(x + 4, WY + WH - 14, 24, 1, &FONT_T, &FONT_T, s, k->mute ? CS_INK : TH_BG);
         if (k->solo)
-            text_box(x + 3, 47, 12, 0, &FONT_T, &FONT_T, "S", TH_REC);
+            text_box(x + 2, WY + 1, 10, 0, &FONT_T, &FONT_T, "S", TH_REC);
     }
 }
 
@@ -972,26 +993,27 @@ static void draw_mix(void)
 static void draw_road(void)
 {
     int i;
-    char s[16];
+    char s[16], r[20];
     if (ui.garage) {                        /* the garage: the eight parts, their labels, their lengths, their clips */
+        module("GARAGE", "THE PARTS");
         for (i = 0; i < DK_NPART; i++) {
-            int y = 30 + i * 18, t, sel = i == ui_gpart;
-            cv_rect(10, y, 14, 14, TH_PART[i]);
+            int x = WX + 2 + (i / 4) * 110, y = WY + 2 + (i % 4) * 20, t, sel = i == ui_gpart;
+            if (sel)
+                cv_rect(x, y, 106, 19, RGB(52, 46, 40));
+            cv_rect(x + 2, y + 3, 13, 13, TH_PART[i]);
             s[0] = (char)('A' + i);
             s[1] = 0;
-            cv_text(13, y + 1, &FONT_XS, s, TH_BG);
-            text_box(32, y + 1, 80, 0, &FONT_XS, &FONT_T, LABEL_NAME[dk_song.part[i].label & 7], sel ? TH_ENC[1] : TH_TEXT);
+            text_box(x + 2, y + 3, 13, 1, &FONT_T, &FONT_T, s, TH_BG);
+            text_box(x + 18, y + 4, 46, 0, &FONT_T, &FONT_T, LABEL_NAME[dk_song.part[i].label & 7], sel ? TH_ENC[1] : TH_TEXT);
             itoa_b(dk_song.part[i].bars, s);
-            text_box(116, y + 1, 30, 2, &FONT_XS, &FONT_T, s, sel ? TH_ENC[2] : TH_GRAY);
+            text_box(x + 62, y + 4, 12, 2, &FONT_T, &FONT_T, s, sel ? TH_ENC[2] : TH_GRAY);
             for (t = 0; t < DK_NTRACK; t++)
-                disc(162 + t * 12, y + 7, 3, CLIP(i, t)->n ? TH_TRACK[t] : TH_LINE);
-            if (sel)
-                hline(10, y + 16, 220, TH_ENC[0]);
+                disc(x + 80 + t * 4, y + 10, 1, CLIP(i, t)->n ? TH_TRACK[t] : TH_LINE);
         }
         return;
     }
-    {   /* the song as a tape: the blocks are pieces of coloured label stuck on it, running under the head */
-        int cur_b = dk_playing && dk_song.play_mode ? dk_road_i : ui_road_cur, bi, head = 84, ty = 108, th = 32;
+    {   /* the song as a tape between two reels: the blocks pieces of coloured label on it, running under the head */
+        int cur_b = dk_playing && dk_song.play_mode ? dk_road_i : ui_road_cur, bi, head = WX + 84, ty = WY + 38, th = 26;
         int start[DK_NROAD + 1], total = 0, pos, phase = dk_playing ? (int)(dk_ticks * 8u / DK_TPB) % 48 : 0;
         float prog = 0.0f, wound;
         for (bi = 0; bi < dk_song.nroad; bi++) {
@@ -1005,115 +1027,99 @@ static void draw_road(void)
             prog = (float)dk_part_tick / (float)dk_part_len;
         pos = cur_b < dk_song.nroad ? start[cur_b] + (int)(prog * (float)(start[cur_b + 1] - start[cur_b])) : total;
         wound = total ? (float)pos / (float)total : 0.0f;
-        /* the reels, up in the corners, the tape coming down from them */
-        plate(10, 28, 220, 62);                /* the cassette: SONG or PART, the blocks, the reels winding */
-        text_box(24, 34, 90, 0, &FONT_T, &FONT_T, dk_song.play_mode ? "SONG" : "PART", CS_INK);
-        {
-            char *p = itoa_b(dk_song.nroad, s);
-            cpy(p, dk_song.nroad == 1 ? " BLOCK" : " BLOCKS");
-            text_box(114, 34, 102, 2, &FONT_T, &FONT_T, s, CS_INK);
-        }
-        if (ui.road_rec)
-            text_box(24, 34, 90, 0, &FONT_T, &FONT_T, "REC", TH_REC);
-        cv_rect(54, 46, 132, 36, CS_WINDOW);
-        reel(74, 64, 1.0f - wound, phase);
-        reel(166, 64, wound, phase);
-        cv_rect(0, ty - 2, 240, th + 4, CS_TAPE);
+        cpy(itoa_b(dk_song.nroad, r), dk_song.nroad == 1 ? " BLOCK" : " BLOCKS");
+        module(ui.road_rec ? "REC" : dk_song.play_mode ? "SONG" : "PART", r);
+        reel(WX + 20, WY + 18, 1.0f - wound, phase);    /* the reels, the tape between them */
+        reel(WX + WW - 20, WY + 18, wound, phase);
+        hline(WX + 20, WY + 3, WW - 40, CS_TAPE);
+        cv_rect(WX, ty, WW, th, CS_TAPE);
         for (bi = 0; bi < dk_song.nroad; bi++) {
             const dk_block_t *b = &dk_song.road[bi];
-            int x = head + start[bi] - pos, w = start[bi + 1] - start[bi] - 2, on = bi == ui_road_cur;
+            int x = head + start[bi] - pos, w = start[bi + 1] - start[bi] - 2, on = bi == ui_road_cur, x0, x1;
             uint16_t c = TH_PART[b->part & 7];
-            if (x > 240 || x + w < 0)
+            if (x > WX + WW || x + w < WX)
                 continue;
-            if (bi < cur_b || (bi == cur_b && 0))
+            x0 = x < WX ? WX : x;
+            x1 = x + w > WX + WW ? WX + WW : x + w;
+            if (bi < cur_b)
                 c = dimc(c, 9);              /* played: a little faded */
-            cv_rect(x, ty, w, th, c);
+            cv_rect(x0, ty + 2, x1 - x0, th - 4, c);
             if (on) {                        /* the block you are on: a frame inside it */
-                int j;
-                for (j = 0; j < 2; j++) {
-                    hline(x + j, ty + j, w - 2 * j, TH_TEXT);
-                    hline(x + j, ty + th - 1 - j, w - 2 * j, TH_TEXT);
-                    vline(x + j, ty + j, th - 2 * j, TH_TEXT);
-                    vline(x + w - 1 - j, ty + j, th - 2 * j, TH_TEXT);
+                hline(x0, ty + 2, x1 - x0, TH_TEXT);
+                hline(x0, ty + th - 3, x1 - x0, TH_TEXT);
+                if (x >= WX)
+                    vline(x, ty + 2, th - 4, TH_TEXT);
+                if (x + w <= WX + WW)
+                    vline(x + w - 1, ty + 2, th - 4, TH_TEXT);
+            }
+            if (x >= WX && x + 40 <= WX + WW) {
+                s[0] = (char)('A' + (b->part & 7));
+                s[1] = 0;
+                text_box(x + 3, ty + 3, 12, 0, &FONT_T, &FONT_T, s, TH_BG);
+                text_box(x + 3, ty + 13, w - 6 > 4 ? (x1 - x - 6 > 4 ? x1 - x - 6 : 4) : 4, 0, &FONT_T, &FONT_T,
+                         LABEL_NAME[dk_song.part[b->part & 7].label & 7], TH_BG);
+                if (b->reps > 1 && x + w <= WX + WW) {
+                    s[0] = 'X';
+                    itoa_b(b->reps, s + 1);
+                    text_box(x + w - 22, ty + 3, 20, 2, &FONT_T, &FONT_T, s, TH_BG);
                 }
             }
-            s[0] = (char)('A' + (b->part & 7));
-            s[1] = 0;
-            text_box(x + 5, ty + 3, 14, 0, &FONT_XS, &FONT_T, s, TH_BG);
-            text_box(x + 5, ty + 19, w - 8 > 4 ? w - 8 : 4, 0, &FONT_T, &FONT_T,
-                     LABEL_NAME[dk_song.part[b->part & 7].label & 7], TH_BG);
-            if (b->reps > 1) {
-                s[0] = 'X';
-                itoa_b(b->reps, s + 1);
-                text_box(x + w - 26, ty + 4, 22, 2, &FONT_T, &FONT_T, s, TH_BG);
-            }
-            if (b->tricks || b->drop) {      /* its tricks: a row of dots under it */
+            if ((b->tricks || b->drop) && x >= WX) {   /* its tricks: dots under it */
                 int d = 0, j;
                 for (j = 0; j < 7; j++)
                     if ((j < 6 ? b->tricks >> j : b->drop) & 1u)
-                        disc(x + 6 + 6 * d++, ty + th + 7, 2, TH_ENC[2]);
+                        disc(x + 5 + 5 * d++, ty + th + 3, 1, TH_ENC[2]);
             }
         }
-        /* the head: where the song is */
-        {                                    /* the head: a marker above and under the tape, a hairline across */
+        {                                    /* the head: a marker above and under the tape */
             uint16_t hc = dk_playing ? TH_REC : TH_TEXT;
             int j;
-            for (j = 0; j < 5; j++) {
-                hline(head - 4 + j, ty - 9 + j, 9 - 2 * j, hc);
-                hline(head - 4 + j, ty + th + 8 - j, 9 - 2 * j, hc);
+            for (j = 0; j < 4; j++) {
+                hline(head - 3 + j, ty - 5 + j, 7 - 2 * j, hc);
+                hline(head - 3 + j, ty + th + 4 - j, 7 - 2 * j, hc);
             }
-            vline(head, ty - 4, th + 8, hc);
+            vline(head, ty, th, hc);
         }
         if (!dk_song.nroad)
-            text_box(8, 112, 224, 1, &FONT_XS, &FONT_T, "WHITE A-H: ADD A BLOCK", TH_TEXT);
-        /* the whole song, small: each block's colour, where you are */
-        for (bi = 0; bi < dk_song.nroad && total; bi++) {
-            int x0 = 10 + start[bi] * 220 / total, x1 = 10 + start[bi + 1] * 220 / total;
-            cv_rect(x0, 166, x1 - x0 - 1 > 1 ? x1 - x0 - 1 : 1, 5, TH_PART[dk_song.road[bi].part & 7]);
+            text_box(WX, ty + 7, WW, 1, &FONT_T, &FONT_T, "WHITE A-H: ADD A BLOCK", TH_TEXT);
+        for (bi = 0; bi < dk_song.nroad && total; bi++) {   /* the whole song, small */
+            int x0 = WX + 30 + start[bi] * (WW - 60) / total, x1 = WX + 30 + start[bi + 1] * (WW - 60) / total;
+            cv_rect(x0, WY + WH - 6, x1 - x0 - 1 > 1 ? x1 - x0 - 1 : 1, 3, TH_PART[dk_song.road[bi].part & 7]);
         }
         if (total)
-            cv_rect(10 + pos * 220 / total - 1, 162, 3, 13, TH_TEXT);
+            cv_rect(WX + 30 + pos * (WW - 60) / total - 1, WY + WH - 9, 2, 8, TH_TEXT);
     }
 }
 
 /* ------------------------------------------------------------------- KEYS --- */
 static void draw_keys(void)
 {
-    char s[32];
+    char s[32], r[32];
     int i, minor = dk_song.mode == 1 || dk_song.mode == 2 || dk_song.mode == 3 || dk_song.mode == 6 ||
                    dk_song.mode == 7 || dk_song.mode == 9 || dk_song.mode == 10;
     const char *nm = have_chord ? chord_name : "";
-    int drum = (TAPE.eng[cur()->eng % TAPE.neng]->flags & EF_DRUM) != 0;
-    cv_text(8, 26, &FONT_XS, "KEYS", TH_GRAY);
-    text_box(120, 26, 112, 2, &FONT_XS, &FONT_T, dk_song.white ? "WHITE = CHORDS" : "WHITE = NOTES", TH_GRAY);
-    if (nm[0] && plat_ms() >= ui.root_until) {
-        int w = text2x_w(nm);
-        if (w <= 224)
-            text2x((240 - w) / 2, 40, nm, TH_TEXT);
-        else
-            text_box(8, 56, 224, 1, &FONT_L, &FONT_B, nm, TH_TEXT);
-    } else {                                 /* nothing played yet: the key itself, big (A MINOR) */
-        char *p = cpy(s, DK_NOTE_NAME[dk_song.root % 12]);
-        *p++ = ' ';
-        cpy(p, DK_MODE_NAME[dk_song.mode % DK_NMODES]);
-        text_box(8, 50, 224, 1, &FONT_L, &FONT_B, s, plat_ms() < ui.root_until ? TH_ENC[0] : TH_TEXT);
-    }
+    int drum = (TAPE.eng[cur()->eng % TAPE.neng]->flags & EF_DRUM) != 0, ky = WY + 40, kh_ = WH - 42, root_lit = plat_ms() < ui.root_until;
     {
-        char *p = s;
+        char *p = r;
         if (chord_deg >= 0)
             p = cpy(cpy(p, degree_name(chord_deg, minor)), "  ");
         p = cpy(p, DK_NOTE_NAME[dk_song.root % 12]);
         *p++ = ' ';
         cpy(p, DK_MODE_NAME[dk_song.mode % DK_NMODES]);
-        text_box(8, 112, 224, 1, &FONT_S, &FONT_T, s, plat_ms() < ui.root_until ? TH_ENC[0] : TH_GRAY);
+    }
+    module(dk_song.white ? "WHITE = CHORDS" : "WHITE = NOTES", r);
+    if (nm[0] && !root_lit)
+        text_box(WX, WY + 2, WW, 1, &FONT_L, &FONT_B, nm, TH_TEXT);
+    else {                                   /* nothing played yet (or the root turning): the key itself, big */
+        char *p = cpy(s, DK_NOTE_NAME[dk_song.root % 12]);
+        *p++ = ' ';
+        cpy(p, DK_MODE_NAME[dk_song.mode % DK_NMODES]);
+        text_box(WX, WY + 2, WW, 1, &FONT_L, &FONT_B, s, root_lit ? TH_ENC[0] : TH_TEXT);
     }
     for (i = 0; i < 16; i++) {               /* the keys: outlines, the sounding ones filled */
-        int x = 9 + i * 14, k = WHITE_K[i], lit = kh[k].trk >= 0 && kh[k].kind == 0 && kh[k].n;
-        cv_rect(x, 134, 13, 44, lit ? TH_ENC[0] : TH_BG);
-        hline(x, 134, 13, TH_LINE);
-        hline(x, 177, 13, TH_LINE);
-        vline(x, 134, 44, TH_LINE);
-        vline(x + 12, 134, 44, TH_LINE);
+        int x = WX + 2 + i * 13 + 3, k = WHITE_K[i], lit = kh[k].trk >= 0 && kh[k].kind == 0 && kh[k].n;
+        cv_rect(x, ky, 12, kh_, lit ? TH_ENC[0] : CS_LABEL);
+        vline(x + 11, ky, kh_, CS_BODY_D);
         if (!drum && dk_song.layout) {       /* SCALE: each key's note (or the chord's degree), the tonic marked */
             int nt = key_note_of(k, dk_song.cur_track), ton = nt % 12 == dk_song.root % 12 && !dk_song.white,
                 dgi = white_degree(i) >= 0 ? white_degree(i) : i % 7;
@@ -1121,22 +1127,19 @@ static void draw_keys(void)
             const char *lb = dk_song.white ? dg : DK_NOTE_NAME[nt % 12];
             if (dk_song.white && dgi == 0)
                 ton = 1;
-            text_box(x + 1, 166, 11, 1, &FONT_T, &FONT_T, lb, lit ? TH_BG : ton ? TH_ENC[2] : TH_GRAY);
+            text_box(x, ky + kh_ - 12, 11, 1, &FONT_T, &FONT_T, lb, lit ? TH_BG : ton ? RGB(200, 140, 30) : CS_INK);
             if (ton)
-                cv_rect(x + 4, 174, 5, 2, lit ? TH_BG : TH_ENC[2]);
+                cv_rect(x + 3, ky + kh_ - 3, 5, 2, lit ? TH_BG : RGB(200, 140, 30));
         }
     }
     for (i = 0; i < 11; i++) {
-        int k = BLACK_K[i], w = white_of(k - 1), x = 9 + w * 14 + 9, lit = kh[k].trk >= 0 && kh[k].n;
-        cv_rect(x, 134, 9, 26, lit ? TH_ENC[1] : TH_BG);
-        hline(x, 159, 9, TH_GRAY);
-        vline(x, 134, 26, TH_GRAY);
-        vline(x + 8, 134, 26, TH_GRAY);
+        int k = BLACK_K[i], w = white_of(k - 1), x = WX + 2 + w * 13 + 3 + 8, lit = kh[k].trk >= 0 && kh[k].n;
+        cv_rect(x, ky, 8, kh_ / 2 + 2, lit ? TH_ENC[1] : RGB(24, 20, 18));
     }
 }
 
 /* ---------------------------------------------------------------- PROJECT --- */
-/* PROJECT: the four projects as cassettes on a shelf; the one open pulled out, its reels turning while it plays */
+/* PROJECT: the four projects as cassettes in a row; the one open pulled up, its reels turning while it plays */
 static void mini_reel(int cx, int cy, int phase, int on)
 {
     int i;
@@ -1147,74 +1150,61 @@ static void mini_reel(int cx, int cy, int phase, int on)
         cv_rect(cx + (int)(2.0f * fm_cosf(a)), cy + (int)(2.0f * fm_sinf(a)), 1, 1, CS_BODY_D);
     }
 }
-static void mini_cassette(int x, int y, int w, int slot, int open, int sel, int phase)
-{
-    char nm[12], s[4];
-    int used = project_used(slot), h = 58, i;
-    s[0] = (char)('1' + slot);
-    s[1] = 0;
-    if (!used && !open) {                    /* an empty place on the shelf: the outline, its number */
-        for (i = 0; i < w; i += 6) {
-            hline(x + i, y, 3, TH_LINE);
-            hline(x + i, y + h - 1, 3, TH_LINE);
-        }
-        for (i = 0; i < h; i += 6) {
-            vline(x, y + i, 3, TH_LINE);
-            vline(x + w - 1, y + i, 3, TH_LINE);
-        }
-        text_box(x, y + 18, w, 1, &FONT_S, &FONT_XS, s, sel ? TH_ENC[0] : TH_GRAY);
-        text_box(x, y + 38, w, 1, &FONT_T, &FONT_T, "EMPTY", TH_LINE);
-        return;
-    }
-    if (open)
-        y -= 4;                              /* pulled out of the shelf */
-    cv_rect(x, y, w, h, CS_BODY);
-    hline(x, y + h - 1, w, CS_BODY_D);
-    disc(x + 4, y + 4, 1, CS_BODY_D);
-    disc(x + w - 5, y + 4, 1, CS_BODY_D);
-    cv_rect(x + 5, y + 6, w - 10, 30, CS_LABEL);
-    for (i = 0; i < 3; i++)
-        cv_rect(x + 5, y + 30 + i, w - 10, 1, CS_STRIPE[i]);
-    text_box(x + 8, y + 8, w - 30, 0, &FONT_XS, &FONT_T, open ? dk_song.name : project_name(slot, nm), CS_INK);
-    text_box(x + w - 22, y + 8, 14, 2, &FONT_XS, &FONT_T, s, CS_INK);
-    cv_rect(x + w / 2 - 22, y + 40, 44, 12, CS_WINDOW);
-    mini_reel(x + w / 2 - 12, y + 46, open ? phase : 0, open);
-    mini_reel(x + w / 2 + 12, y + 46, open ? phase : 0, open);
-    if (sel) {                               /* K1's choice: a frame */
-        hline(x - 2, y - 2, w + 4, TH_ENC[0]);
-        hline(x - 2, y + h + 1, w + 4, TH_ENC[0]);
-        vline(x - 2, y - 2, h + 4, TH_ENC[0]);
-        vline(x + w + 1, y - 2, h + 4, TH_ENC[0]);
-    }
-}
 static void draw_project(void)
 {
-    char s[40];
-    int i, fill = dk_song.nev * 200 / DK_NEV, sel = field_get(F_SLOT),
+    char nm[12], s[4];
+    int i, fill = dk_song.nev * (WW - 20) / DK_NEV, sel = field_get(F_SLOT),
         phase = dk_playing ? (int)(dk_ticks * 8u / DK_TPB) % 24 : 0;
-    hline(6, 98, 228, CS_BODY_D);            /* the shelves */
-    hline(6, 99, 228, TH_LINE);
-    hline(6, 168, 228, CS_BODY_D);
-    hline(6, 169, 228, TH_LINE);
-    for (i = 0; i < DK_NPROJ; i++)
-        mini_cassette(i & 1 ? 124 : 10, i & 2 ? 108 : 38, 106, i, i == set.proj, i == sel && sel != set.proj, phase);
-    if (ui.dirty)                            /* not saved yet: a dot by the open one */
-        disc(230, 30, 3, TH_ENC[2]);
-    if (export_busy()) {                     /* the export's progress */
-        int w = export_pct() * 200 / 100;
-        cv_rect(20, 174, 200, 3, TH_LINE);
-        cv_rect(20, 174, w, 3, TH_ENC[1]);
-    } else if (dk_stems)
-        text_box(8, 172, 224, 1, &FONT_T, &FONT_T, "STEMS: RECORD THE OUTPUT", TH_ENC[2]);
-    else {
-        cv_rect(20, 176, 200, 2, TH_LINE);   /* how full the open one is */
-        cv_rect(20, 176, fill > 200 ? 200 : fill, 2, fill > 160 ? TH_REC : dimc(TH_ENC[1], 10));
+    module("PROJECTS", export_busy() ? "EXPORT..." : dk_stems ? "STEMS: RECORD IT" : ui.dirty ? "NOT SAVED" : "SAVED");
+    for (i = 0; i < DK_NPROJ; i++) {
+        int x = WX + 4 + i * 54, y = WY + 16, w = 50, h = 46, open = i == set.proj, used = project_used(i) || open, j;
+        s[0] = (char)('1' + i);
+        s[1] = 0;
+        if (open)
+            y -= 6;                          /* pulled up */
+        if (!used) {                         /* an empty place: its outline, its number */
+            for (j = 0; j < w; j += 5)
+                hline(x + j, y, 2, TH_LINE), hline(x + j, y + h - 1, 2, TH_LINE);
+            for (j = 0; j < h; j += 5)
+                vline(x, y + j, 2, TH_LINE), vline(x + w - 1, y + j, 2, TH_LINE);
+            text_box(x, y + 16, w, 1, &FONT_XS, &FONT_T, s, i == sel ? TH_ENC[0] : TH_GRAY);
+        } else {
+            cv_rect(x, y, w, h, CS_BODY);
+            hline(x, y + h - 1, w, CS_BODY_D);
+            cv_rect(x + 3, y + 3, w - 6, 20, CS_LABEL);
+            for (j = 0; j < 3; j++)
+                cv_rect(x + 3, y + 19 + j, w - 6, 1, CS_STRIPE[j]);
+            text_box(x + 3, y + 6, w - 6, 1, &FONT_T, &FONT_T, s, CS_INK);  /* its number; the name under the shelf */
+            cv_rect(x + 9, y + 27, w - 18, 12, CS_WINDOW);
+            mini_reel(x + 17, y + 33, open ? phase : 0, open);
+            mini_reel(x + w - 17, y + 33, open ? phase : 0, open);
+        }
+        if (i == sel && !open) {             /* K1's choice: a frame */
+            hline(x - 2, y - 2, w + 4, TH_ENC[0]);
+            hline(x - 2, y + h + 1, w + 4, TH_ENC[0]);
+            vline(x - 2, y - 2, h + 4, TH_ENC[0]);
+            vline(x + w + 1, y - 2, h + 4, TH_ENC[0]);
+        }
     }
-    (void)s;
+    {                                        /* K1's cassette by its name */
+        char line[24];
+        const char *n = sel == set.proj ? dk_song.name : project_used(sel) ? project_name(sel, nm) : "EMPTY";
+        s[0] = (char)('1' + sel);
+        s[1] = 0;
+        cpy(cpy(cpy(line, s), "  "), n);
+        text_box(WX + 4, WY + 64, WW - 8, 1, &FONT_T, &FONT_T, line, TH_ENC[0]);
+    }
+    if (export_busy()) {
+        cv_rect(WX + 10, WY + WH - 8, WW - 20, 3, TH_LINE);
+        cv_rect(WX + 10, WY + WH - 8, export_pct() * (WW - 20) / 100, 3, TH_ENC[1]);
+    } else {                                 /* how full the open one is */
+        cv_rect(WX + 10, WY + WH - 7, WW - 20, 2, TH_LINE);
+        cv_rect(WX + 10, WY + WH - 7, fill > WW - 20 ? WW - 20 : fill, 2, fill > (WW - 20) * 4 / 5 ? TH_REC : dimc(TH_ENC[1], 10));
+    }
 }
 
-/* ATMO: eight tiles, each a little picture of the layer (it moves while it plays), its name, how much of it; the
- * row the knobs are on framed in their colours */
+/* ATMO: eight tiles in the window, each a little picture of the layer (it moves while it plays), its name, how much;
+ * the row the knobs are on framed in their colours */
 static void atmo_icon(int kind, int cx, int cy, int on, uint32_t now)
 {
     uint16_t c = on ? TH_TEXT : TH_LINE;
@@ -1225,7 +1215,7 @@ static void atmo_icon(int kind, int cx, int cy, int on, uint32_t now)
         disc(cx + 3, cy - 8, 8, on ? RGB(170, 180, 200) : TH_LINE);
         disc(cx + 10, cy - 5, 5, on ? RGB(150, 160, 180) : TH_LINE);
         for (i = 0; i < 4; i++) {
-            int y = cy + 2 + (int)((now / 60u + (uint32_t)i * 5u) % 12u);
+            int y = cy + 1 + (int)((now / 60u + (uint32_t)i * 5u) % 8u);
             vline(cx - 9 + i * 6, on ? y : cy + 4, 3, on ? RGB(110, 186, 244) : TH_LINE);
         }
         break;
@@ -1263,26 +1253,26 @@ static void atmo_icon(int kind, int cx, int cy, int on, uint32_t now)
         break;
     case 5:                                  /* CRICKETS: the moon, the stars blinking */
         disc(cx - 4, cy - 2, 9, on ? RGB(246, 236, 210) : TH_LINE);
-        disc(cx + 1, cy - 5, 8, TH_BG);
+        disc(cx + 1, cy - 5, 8, on ? RGB(44, 38, 34) : CS_WINDOW);
         for (i = 0; i < 4; i++)
             if (!on || ((now / 300u + (uint32_t)i) % 3u))
                 cv_rect(cx + 6 + (i & 1) * 5, cy - 9 + i * 5, 2, 2, on ? RGB(246, 214, 92) : TH_LINE);
         break;
     case 6:                                  /* the DUST: a record turning, its crackle */
-        disc(cx, cy, 13, on ? RGB(30, 30, 30) : TH_BG);
-        circle(cx, cy, 13, c);
-        circle(cx, cy, 9, on ? TH_GRAY : TH_LINE);
-        circle(cx, cy, 6, on ? TH_GRAY : TH_LINE);
+        disc(cx, cy, 11, on ? RGB(24, 22, 20) : CS_WINDOW);
+        circle(cx, cy, 11, c);
+        circle(cx, cy, 8, on ? TH_GRAY : TH_LINE);
+        circle(cx, cy, 5, on ? TH_GRAY : TH_LINE);
         disc(cx, cy, 3, on ? RGB(232, 72, 64) : TH_LINE);
         if (on) {
             float a = (float)now * 0.006f;
-            cv_rect(cx + (int)(11.0f * fm_cosf(a)), cy + (int)(11.0f * fm_sinf(a)), 2, 2, TH_TEXT);
+            cv_rect(cx + (int)(9.0f * fm_cosf(a)), cy + (int)(9.0f * fm_sinf(a)), 2, 2, TH_TEXT);
         }
         break;
     default: {                               /* TAPE: a little cassette, its reels turning */
         int ph = on ? (int)(now / 40u % 24u) : 0;
         cv_rect(cx - 15, cy - 10, 30, 20, on ? CS_BODY : TH_LINE);
-        cv_rect(cx - 11, cy - 3, 22, 8, on ? CS_WINDOW : TH_BG);
+        cv_rect(cx - 11, cy - 3, 22, 8, CS_WINDOW);
         mini_reel(cx - 6, cy + 1, ph, on);
         mini_reel(cx + 6, cy + 1, ph, on);
         break;
@@ -1294,65 +1284,60 @@ static void draw_atmo(void)
     static const uint8_t FLD[8] = {F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_DUST, F_ATAPE};
     int i, row = ui.row[PG_ATMO] & 1;
     uint32_t now = plat_ms();
+    module("ATMO", row ? "LAYERS 5-6  DUST  TAPE" : "LAYERS 1-4");
     for (i = 0; i < 8; i++) {
-        int x = 4 + (i & 3) * 59, y = 30 + (i >> 2) * 76, f = FLD[i], v = field_get(f), on = v > 0,
+        int x = WX + 1 + (i & 3) * 55, y = WY + 1 + (i >> 2) * 41, f = FLD[i], v = field_get(f), on = v > 0,
             mine = (i >> 2) == row;
-        cv_rect(x, y, 55, 72, on ? RGB(14, 14, 16) : TH_BG);
-        if (mine) {                          /* the knobs' row: each tile framed in its knob's colour */
-            uint16_t kc = knob_col(i & 3);
-            hline(x, y, 55, kc);
-            hline(x, y + 71, 55, dimc(kc, 6));
-        } else
-            hline(x, y, 55, TH_LINE);
-        atmo_icon(i, x + 27, y + 24, on, now);
-        text_box(x + 1, y + 45, 53, 1, &FONT_T, &FONT_T, field_label(f), on ? TH_TEXT : TH_GRAY);
-        cv_rect(x + 6, y + 61, 43, 3, TH_LINE);
-        cv_rect(x + 6, y + 61, v * 43 / 100, 3, mine ? knob_col(i & 3) : TH_GRAY);
+        if (on)
+            cv_rect(x, y, 53, 40, RGB(44, 38, 34));
+        if (mine)
+            hline(x, y, 53, knob_col(i & 3));
+        atmo_icon(i, x + 26, y + 13, on, now);
+        text_box(x, y + 29, 53, 1, &FONT_T, &FONT_T, field_label(f), on ? TH_TEXT : TH_GRAY);
+        cv_rect(x + 8, y + 38, 37, 1, TH_LINE);
+        cv_rect(x + 8, y + 38, v * 37 / 100, 1, mine ? knob_col(i & 3) : TH_GRAY);
     }
 }
 
-/* GLOBAL: a wooden metronome swinging in time, the tempo big, the swing and the dust under it */
+/* GLOBAL: a wooden metronome swinging in time, the tempo big, the metronome's mode */
 static void draw_global(void)
 {
     char s[16];
-    int px = 70, py = 162, i;
+    int px = WX + 40, py = WY + WH - 6, i;
     float a = 0.0f;
     static const uint16_t WOOD = RGB(150, 98, 58), WOOD_D = RGB(104, 66, 38);
-    if (dk_playing) {
-        float b = (float)(dk_ticks % (2u * DK_PPQ)) / (float)DK_PPQ;   /* 0..2: there and back, two beats */
-        a = 0.45f * fm_cosf(3.1415927f * b);
-    }
-    for (i = 0; i < 110; i++) {              /* the body: a tall trapezoid */
-        int half = 14 + i * 22 / 110;
-        hline(px - half, 52 + i, 2 * half, i < 3 ? WOOD_D : WOOD);
-    }
-    cv_rect(px - 30, 162, 60, 6, WOOD_D);
-    cv_rect(px - 10, 70, 20, 70, RGB(232, 222, 196));   /* the scale behind the arm */
-    for (i = 0; i < 7; i++)
-        hline(px - 6, 76 + i * 9, 12, RGB(150, 140, 120));
-    {
-        int tx = px + (int)(96.0f * fm_sinf(a)), ty = py - 14 - (int)(96.0f * fm_cosf(a));
-        cv_line(px, py - 14, tx, ty, RGB(60, 60, 60));
-        cv_line(px + 1, py - 14, tx + 1, ty, RGB(60, 60, 60));
-        {
-            int wx = px + (int)(60.0f * fm_sinf(a)), wy = py - 14 - (int)(60.0f * fm_cosf(a));
-            cv_rect(wx - 6, wy - 4, 12, 8, dk_beat_flash ? TH_ENC[2] : RGB(200, 200, 200));
-        }
-        disc(px, py - 14, 3, RGB(60, 60, 60));
-    }
-    itoa_b(dk_song.tempo, s);
-    text_box(120, 60, 112, 1, &FONT_L, &FONT_B, s, TH_TEXT);
-    text_box(120, 104, 112, 1, &FONT_XS, &FONT_T, "BPM", TH_GRAY);
-    {
-        static const char *const MM[3] = {"METRO OFF", "METRO REC", "METRO ON"};
-        text_box(120, 126, 112, 1, &FONT_T, &FONT_T, MM[dk_metro.mode % 3], dk_metro.mode ? TH_ENC[0] : TH_GRAY);
-    }
     {
         char *p = cpy(s, "CPU ");
         p = itoa_b((int)plat_cpu_pct(), p);
-        p = cpy(p, "%  X");
-        itoa_b((int)plat_xruns(), p);
-        text_box(120, 144, 112, 1, &FONT_T, &FONT_T, s, dimc(TH_GRAY, 12));
+        cpy(p, "%");
+    }
+    module("GLOBAL", s);
+    if (dk_playing) {
+        float b = (float)(dk_ticks % (2u * DK_PPQ)) / (float)DK_PPQ;   /* there and back, two beats */
+        a = 0.45f * fm_cosf(3.1415927f * b);
+    }
+    for (i = 0; i < 68; i++) {               /* the body: a tall trapezoid */
+        int half = 9 + i * 14 / 68;
+        hline(px - half, WY + 8 + i, 2 * half, i < 2 ? WOOD_D : WOOD);
+    }
+    cv_rect(px - 20, py - 2, 40, 4, WOOD_D);
+    cv_rect(px - 6, WY + 18, 12, 44, RGB(232, 222, 196));   /* the scale behind the arm */
+    for (i = 0; i < 6; i++)
+        hline(px - 4, WY + 22 + i * 7, 8, RGB(150, 140, 120));
+    {
+        int tx = px + (int)(60.0f * fm_sinf(a)), ty = py - 8 - (int)(60.0f * fm_cosf(a));
+        int wx = px + (int)(38.0f * fm_sinf(a)), wy = py - 8 - (int)(38.0f * fm_cosf(a));
+        cv_line(px, py - 8, tx, ty, RGB(60, 60, 60));
+        cv_line(px + 1, py - 8, tx + 1, ty, RGB(60, 60, 60));
+        cv_rect(wx - 4, wy - 3, 8, 6, dk_beat_flash ? TH_ENC[2] : RGB(200, 200, 200));
+        disc(px, py - 8, 2, RGB(60, 60, 60));
+    }
+    itoa_b(dk_song.tempo, s);
+    text_box(WX + 90, WY + 10, 126, 1, &FONT_L, &FONT_B, s, TH_TEXT);
+    text_box(WX + 90, WY + 46, 126, 1, &FONT_T, &FONT_T, "BPM", TH_GRAY);
+    {
+        static const char *const MM[3] = {"METRO OFF", "METRO REC", "METRO ON"};
+        text_box(WX + 90, WY + 62, 126, 1, &FONT_T, &FONT_T, MM[dk_metro.mode % 3], dk_metro.mode ? TH_ENC[0] : TH_GRAY);
     }
 }
 
@@ -1452,6 +1437,8 @@ static void draw_body(void)
     case PG_ATMO: draw_atmo(); break;
     default: break;
     }
+    if (ui.page != PG_PLAY && ui.page != PG_REC)
+        knob_row(KNOB_Y);                    /* the module's four knobs, on its plate */
 }
 
 /* over the PLAY page's art, before each of its bands goes out: the message (in the band's rows y0 .. y0+h) */

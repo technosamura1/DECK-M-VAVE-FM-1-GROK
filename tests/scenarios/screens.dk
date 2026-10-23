@@ -33,7 +33,7 @@ press HOME
 tapkey b4
 release HOME
 wait 50
-wait 1000
+wait 1600
 shot p07_seq_step_drums.png
 tap LFO
 wait 1000
