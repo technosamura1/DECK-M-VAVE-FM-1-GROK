@@ -23,7 +23,7 @@ shot p04_sound_fx.png
 tap FX
 wait 1000
 shot p05_sound_mod.png
-tap SEL
+tap SEQ
 wait 1000
 shot p06_seq_live_piano.png
 press HOME
@@ -88,7 +88,7 @@ tapkey b4
 release HOME
 wait 50
 wait 50
-tap SEL
+tap SEQ
 tap PLAY
 tapkey w2
 tapkey w5
@@ -116,9 +116,9 @@ tapkey w6
 tapkey w11
 wait 1200
 shot p17_seq_finger.png
-press SEL
+press SEQ
 tapkey w4
-release SEL
+release SEQ
 wait 50
 turn ALGO 1
 wait 1500
@@ -128,9 +128,9 @@ tapkey b5
 release HOME
 wait 50
 wait 50
-press SEL
+press SEQ
 tapkey w6
-release SEL
+release SEQ
 wait 50
 key w2 down 90
 key w4 down 90

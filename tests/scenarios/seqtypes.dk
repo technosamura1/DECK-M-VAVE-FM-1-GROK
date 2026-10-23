@@ -26,7 +26,7 @@ tapkey b4
 release HOME
 wait 50
 expect seq 7
-tap SEL
+tap SEQ
 wait 100
 tap PLAY
 tapkey w2
@@ -49,14 +49,14 @@ expect voices >0
 shot finger.png
 key w6 up
 # DRIVE on the drums, then BAKE it to STEP
-press SEL
+press SEQ
 tapkey w4
-release SEL
+release SEQ
 wait 50
 expect seq 4
 tap HOME
 wait 50
-tap SEL
+tap SEQ
 wait 100
 turn ALGO 1
 wait 100
@@ -75,10 +75,10 @@ wait 200
 # FILL held while playing
 tap PLAY
 wait 500
-press SEQ
+press GLO
 wait 200
 expect fill 1
-release SEQ
+release GLO
 wait 100
 expect fill 0
 tap PLAY

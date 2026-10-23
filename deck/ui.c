@@ -481,8 +481,8 @@ static void key_down(int k, int vel)
         say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
-    if (held(B_SEL) && w >= 0 && w < SQ_N) {
-        ui.used[B_SEL] = 1;
+    if (held(B_SEQ) && w >= 0 && w < SQ_N) {
+        ui.used[B_SEQ] = 1;
         field_set(F_SEQTYPE, w);
         say("SEQUENCER", SEQ_NAME[w]);
         return;
@@ -810,7 +810,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
 /* ------------------------------------------------------------------- input --- */
 static void lights(void)
 {
-    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEL, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC};
+    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC};
     uint32_t now = plat_ms(), b = 1u << PAGE_BTN[ui.page], keys = ui.keys, dimk = 0, dimb = 0;
     int k;
     const dk_track_t *trk = cur();
@@ -820,7 +820,7 @@ static void lights(void)
     if (dk_playing)
         b |= LED_PLAY_GREEN;
     if (dk_fill)
-        b |= 1u << B_SEQ;
+        b |= 1u << B_GLO;
     if (ui.dirty)
         dimb |= 1u << B_SAVE;
     if (ui.page == PG_SEQ && trk->seq == SQ_STEP && (e->flags & EF_DRUM)) {   /* the steps on, the step running */

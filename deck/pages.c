@@ -259,7 +259,7 @@ static const char *hint(void)
     case PG_PLAY: return "HOME+WHITE PRESET  HOME+BLACK TRACK";
     case PG_SEQ:
         if (k->seq == SQ_STEP)
-            return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEL ROW" : "KEYS AT CURSOR  SAME NOTE = ERASE";
+            return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "KEYS AT CURSOR  SAME NOTE = ERASE";
         if (k->seq == SQ_FINGER)
             return "WHITE PATTERNS  BLACK VARIATIONS";
         if (k->seq == SQ_DRIVE)
@@ -267,8 +267,8 @@ static const char *hint(void)
         if (k->seq == SQ_TOMBOLA)
             return "PLAY TO DROP  HOLD REC = EMPTY";
         if (k->seq == SQ_ARP)
-            return "ARP = LATCH  HOME+ARP = OFF  SEL = RHYTHM";
-        return "HOLD SEL + WHITE = SEQUENCER";
+            return "ARP = LATCH  HOME+ARP = OFF  SEQ = RHYTHM";
+        return "HOLD SEQ + WHITE = SEQUENCER";
     case PG_SOUND: return "FX = NEXT TAB  HOLD LFO+TURN = MOD";
     case PG_MIX: return "WHITE MUTE  BLACK SOLO  LFO = ROW";
     case PG_ROAD:
