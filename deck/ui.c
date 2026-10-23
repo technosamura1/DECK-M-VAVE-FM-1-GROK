@@ -97,9 +97,25 @@ static void preset_select(int slot)
     say(preset_of(cur()->eng, slot, &tmp)->name, slot >= DK_NFACT ? "USER" : cur_eng()->name);
 }
 
+static void engine_select(int e)         /* FX held + white 1..11: the track's engine, its first preset */
+{
+    int t = dk_song.cur_track;
+    const dk_track_t *k = cur();
+    if (e >= TAPE.neng)
+        return;
+    if (e != k->eng) {
+        keys_all_up();
+        dk_lock();
+        dk_track_setup(t, e, 0, k->seq, TAPE.eng[e]->role);
+        dk_unlock();
+        mark_dirty();
+    }
+    say(TAPE.eng[e]->name, preset_of(e, cur()->preset, 0)->name);
+}
+
 static void preset_save(int slot)        /* SAVE held + white 13..16 */
 {
-    dk_upreset_t *u = &dk_user.p[cur()->eng & 7][slot & 3];
+    dk_upreset_t *u = &dk_user.p[cur()->eng & 15][slot & 3];
     const dk_track_t *k = cur();
     dk_preset_t tmp;
     const dk_preset_t *from = preset_of(k->eng, k->preset, &tmp);
@@ -450,6 +466,11 @@ static void key_down(int k, int vel)
             dk_song.cur_part = (uint8_t)w;
         s[5] = (char)('A' + w);
         say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
+        return;
+    }
+    if (held(B_FX) && w >= 0) {
+        ui.used[B_FX] = 1;
+        engine_select(w);
         return;
     }
     if (held(B_SEL) && w >= 0 && w < SQ_N) {

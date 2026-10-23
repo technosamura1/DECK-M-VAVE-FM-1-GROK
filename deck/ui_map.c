@@ -15,7 +15,7 @@ typedef struct {
     const char *what;                    /* for CLAUDE.md and the hints */
 } ui_map_t;
 static const ui_map_t UI_MAP[] = {
-    {B_FX, A_PAGE_SOUND, A_NONE, A_NONE, 0, "SOUND; again: ENGINE ENV FX MOD"},
+    {B_FX, A_PAGE_SOUND, A_NONE, A_NONE, HOLD_MOD, "SOUND; again: ENGINE ENV FX MOD | hold + white 1-11: the engine"},
     {B_SEL, A_PAGE_SEQ, A_NONE, A_NONE, HOLD_MOD, "SEQ; again: its next row | hold + white 1-8: the sequencer"},
     {B_ENV, A_PAGE_ROAD, A_GARAGE, A_NONE, 600, "ROAD | hold: the garage of parts"},
     {B_LFO, A_PAGE_MIX, A_NONE, A_NONE, HOLD_MOD, "MIX; again: reverb/echo | hold + turn a SOUND knob: MOD 1 on it"},

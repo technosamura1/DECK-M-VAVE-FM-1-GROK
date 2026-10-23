@@ -13,7 +13,7 @@ typedef struct {
 } dk_upreset_t;
 typedef struct {
     uint32_t magic;
-    dk_upreset_t p[8][4];
+    dk_upreset_t p[16][4];          /* the user's 4 an engine (16 engines at most) */
 } dk_user_t;
 extern dk_user_t dk_user;
 extern uint32_t song_edits;

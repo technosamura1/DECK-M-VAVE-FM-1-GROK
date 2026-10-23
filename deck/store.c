@@ -149,6 +149,7 @@ static void settings_load(void)
     if (set.proj >= DK_NPROJ)
         set.proj = 0;
 }
+typedef char user_fits_store_[sizeof(dk_user_t) <= 4096u - 256u ? 1 : -1];   /* a store object's payload */
 void user_save(void)
 {
     dk_user.magic = USER_MAGIC;

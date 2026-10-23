@@ -50,10 +50,10 @@ out/                  прошивка, установщик, WAV, listen.html, 
   вставить, режимы PART/SONG, запись трассы вживую (REC на странице ROAD), шаблоны EMPTY/POP/CLUB/AMBIENT, гараж частей.
 - Метроном: REC/ALWAYS/OFF, счёт 1–2 такта (4…3…2…1 на кассете), 5 тембров (OVERWORLD — WOOD), деление, громкость,
   мимо ревера/эха/сайдчейна, не попадает в экспорт; HOME+REC; TAP TEMPO (HOME+PLAY).
-- Звук OVERWORLD: FELT TINE AIRPAD GLASS KALIMBA SOFTBASS DUSTKIT WORLD × 12 пресетов + 4 своих слота;
-  эффекты VINYL TAPE LOFI CHORUS FILTER TREMOLO SPRING; посылы ECHO/REVERB (ROOM HALL CAVE SHIMMER);
+- Звук OVERWORLD: FELT TINE AIRPAD GLASS KALIMBA SOFTBASS DUSTKIT WORLD BEATKIT FM PLUCK × 12 пресетов + 4 своих слота;
+  эффекты VINYL TAPE LOFI CHORUS FILTER TREMOLO SPRING PUNCH; посылы ECHO/REVERB (ROOM HALL CAVE SHIMMER);
   мастер DUST/SLEEP + лимитер; сайдчейн пад ← бочка 15 %; модуляторы SWING DICE PEDAL FOLLOW TREMOLO; MACRO у пресета;
-  8 MOOD-ов (= биомы сада); 11 перформанс-эффектов; демо-песня FIRST LIGHT (8 блоков, 4:41).
+  10 MOOD-ов (= биомы сада; BEATS и SUNSET — на новых движках); 11 перформанс-эффектов; демо-песня FIRST LIGHT (8 блоков, 4:41).
 - Экран: минимализм OP-1 (чёрный фон, 3 цветных поля внизу, подсказка), страницы PLAY (сад OVERWORLD как есть),
   SEQ, SOUND (4 вкладки), MIX, ROAD (дорога с машинкой) + гараж, KEYS (аккорд крупно), PROJECT, REC (кассета с бобинами,
   намоткой, головкой, 6 лентами-дорожками). Все надписи влезают (аудит `textaudit`: 0 обрезанных).
@@ -96,6 +96,23 @@ out/                  прошивка, установщик, WAV, listen.html, 
   совпадают (кроме цифры CPU на PROJECT). TOMBOLA ни при чём: физика < 0,7 %, её рисунок ~1,5 % времени.
 - Не сделано (меняет тайминг или нужен base/): не дробить аудиоблок на тиках секвенсора (~5 %); DSP в RAM вместо XIP.
 
+## Новые движки 2026-10-23 (универсальность, упор в лоу-фай/эмбиент/биты)
+- **BEATKIT** (`eng_beat.c`): сэмплы `kits.h` из `tools/make_kits.py` — свой синтез в духе 707/808/909/CR78 + DUSTY
+  (бум-бэп) + TAPE (кассета), без «хруста» (µ-law 8 бит, 38 дБ; 149 КБ флеша). Сэмплы: бочка, малый, рим, хлопок,
+  закрытый хэт, перкуссия; томы/кобелл/открытый хэт/тарелки/шейкер — синтез голосами DUSTKIT (+ Баттерворт 9 кГц
+  против алиасинга). Ручки TUNE DECAY TONE | KIT CRUSH KICK (тон бочки); TONE и CRUSH на шине дорожки. Свои WAV:
+  `python tools/make_kits.py --wav ПАПКА ИМЯ` (kick/snare/rim/clap/hat/perc.wav).
+- **FM** (`eng_fm.c`): 4 оператора, 5 алгоритмов, TYPE = E.PIANO BELL BASS BRASS ORGAN CLAV MALLET PLUCK PAD LEAD;
+  ручки TONE DECAY GRIT | TYPE DETUNE VIBRATO; DC-блокер, операторы выше 16 кГц выключаются.
+- **PLUCK** (`eng_pluck.c`): Karplus-Strong, 12 линий по 1024 int16 в пуле (24 КБ), TYPE = NYLON STEEL HARP KOTO
+  BASS MUTED; ручки PICK DECAY TONE | TYPE PLACE.
+- **PUNCH** — эффект дорожки для барабанов: компрессор с пропуском атаки (SNAP) + сатурация (DRIVE).
+- **Выбор движка**: держать FX + белая 1–11 (пока держишь — таблица движков на экране); тап FX — SOUND, как раньше.
+  Свои пресеты — на 16 движков (`dk_user.p[16][4]`; старые сохранённые свои пресеты сбросятся — размер другой).
+- 36 новых пресетов откалиброваны `tools/calibrate.py` (старые 96 не тронуты, звучат побайтно как раньше);
+  sound_check: ALL CLEAN на всех 132. Память (оценка, прошивку не собирал): образ ~420 КБ из ~568, пул ~320 из 344 КБ,
+  RAM +1,3 КБ.
+
 ## Не проверено на железе (ничего!)
 Прошивка ни разу не запускалась на FM-1. Под вопросом: реальная нагрузка CPU, отклик клавиш/энкодеров, скорость
 перерисовки по полосам 240×80, отправка SysEx-экспорта по USB (если не пойдёт — экспортировать через живой MIDI OUT +
@@ -104,7 +121,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
 ## Кнопки (из `deck/ui_map.c`)
 | Кнопка | Тап | Удержание | HOME + |
 |---|---|---|---|
-| FX | SOUND; ещё раз — вкладка ENGINE/ENV/FX/MOD | — | — |
+| FX | SOUND; ещё раз — вкладка ENGINE/ENV/FX/MOD | + белая 1–11: движок дорожки | — |
 | SEL | SEQ; ещё раз — 2-й ряд | + белая 1–8: тип секвенсора | — |
 | ENV | ROAD | 0,6 с: гараж частей | — |
 | LFO | MIX; ещё раз — 2-й ряд | + крутить ручку SOUND: MOD 1 на неё | — |

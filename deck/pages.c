@@ -269,7 +269,7 @@ static const char *hint(void)
         if (k->seq == SQ_TOMBOLA)
             return "PLAY TO DROP  HOLD REC = EMPTY";
         return "HOLD SEL + WHITE = SEQUENCER";
-    case PG_SOUND: return "FX = NEXT TAB  HOLD LFO+TURN = MOD";
+    case PG_SOUND: return "FX = TAB  HOLD FX+WHITE = ENGINE";
     case PG_MIX: return "WHITE MUTE  BLACK SOLO  LFO = ROW";
     case PG_ROAD:
         return ui.garage ? "HOLD ENV = BACK TO ROAD" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
@@ -387,6 +387,28 @@ static void draw_footer(int y)
         text_box(x, y + 15, 74, 0, &FONT_M, &FONT_XS, s, TH_TEXT);
     }
     text_box(4, y + 43, 232, 1, &FONT_T, &FONT_T, hint(), dimc(TH_GRAY, 12));
+}
+
+/* FX held (a moment, not a tap): the tape's engines on their white keys, the track's own lit */
+static int engines_shown(void) { return held(B_FX) && plat_ms() - ui.down_t[B_FX] > 250u && !ui.used[B_FX]; }
+static void draw_engines(void)
+{
+    int i, n = TAPE.neng, rows = (n + 1) / 2, h = 18 + rows * 15, y = 120 - h / 2, x = 14;
+    cv_rect(x, y, 212, h, TH_BG);
+    hline(x, y, 212, TH_TEXT);
+    hline(x, y + h - 1, 212, TH_TEXT);
+    vline(x, y, h, TH_TEXT);
+    vline(x + 211, y, h, TH_TEXT);
+    text_box(x + 8, y + 4, 196, 0, &FONT_T, &FONT_T, "ENGINE: WHITE KEY", TH_GRAY);
+    for (i = 0; i < n; i++) {
+        int cx = x + 8 + (i / rows) * 104, cy = y + 16 + (i % rows) * 15, on = i == cur()->eng;
+        char s[4];
+        itoa_b(i + 1, s);
+        if (on)
+            cv_rect(cx - 3, cy - 1, 100, 14, dimc(TH_ENC[1], 5));
+        text_box(cx, cy + 1, 16, 2, &FONT_XS, &FONT_XS, s, on ? TH_ENC[1] : TH_GRAY);
+        text_box(cx + 22, cy + 1, 72, 0, &FONT_XS, &FONT_XS, TAPE.eng[i]->name, on ? TH_TEXT : TH_GRAY);
+    }
 }
 
 /* a VHS-plate's message: what just happened, for 0.6 s */
@@ -1075,12 +1097,15 @@ static void draw_body(void)
 /* over the PLAY page's art, before each of its bands goes out: the message (in the band's rows y0 .. y0+h) */
 static void garden_overlay(int32_t y0, int32_t h)
 {
-    if (plat_ms() >= ui.msg_until)
+    if (plat_ms() >= ui.msg_until && !engines_shown())
         return;
     cv_oy = -y0;
     cv_y0 = 0;
     cv_y1 = h;
-    draw_toast();
+    if (engines_shown())
+        draw_engines();
+    else
+        draw_toast();
     cv_oy = 0;
 }
 
@@ -1094,6 +1119,8 @@ static void draw_page_band(int band)
         draw_footer(186);
     if (in_band(96, 30))
         draw_toast();
+    if (engines_shown())
+        draw_engines();
     band_end();
 }
 

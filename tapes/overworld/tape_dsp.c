@@ -27,6 +27,9 @@ static inline float wnoise(void) { return (float)(int32_t)rnd() * (1.0f / 214748
 #include "eng_pad.c"
 #include "eng_kit.c"
 #include "eng_world.c"
+#include "eng_beat.c"
+#include "eng_fm.c"
+#include "eng_pluck.c"
 #include "fx.c"
 
 /* ------------------------------------------------------------- FINGER patterns --- */
@@ -106,8 +109,12 @@ static void finger_build(void)
 #define KIT_M {T_P2, T_SWING, T_FXAMT}, {50, 40, 40}
 #define WORLD_M {T_P1, T_P2, T_REV}, {45, -40, 40}
 #define KAL_M {T_P2, T_REV, T_P0}, {50, 40, -25}
+#define BEAT_M {T_P2, T_P4, T_FXAMT}, {-45, 40, 40}
+#define FM_M {T_P0, T_P1, T_FXAMT}, {45, 30, 40}
+#define PLUCK_M {T_P0, T_P2, T_REV}, {40, 40, 35}
 #define E50 {50, 50, 50}
-static const dk_preset_t PRESETS[8 * DK_NFACT] = {
+#define NENG 11
+static const dk_preset_t PRESETS[NENG * DK_NFACT] = {
     /* FELT */
     {"MEADOW", 0, {45, 40, 55, 50, 55}, E50, FX_N_TAPE, 15, 30, 20, 60, 12, FELT_M, 0},
     {"SWEDEN", 0, {40, 50, 60, 55, 60}, E50, FX_N_TAPE, 25, 35, 25, 70, 15, FELT_M, 0},
@@ -212,10 +219,49 @@ static const dk_preset_t PRESETS[8 * DK_NFACT] = {
     {"STARLIGHT", 7, {65, 70, 30}, E50, FX_N_NONE, 0, 0, 0, 80, 25, KAL_M, -6},
     {"TINY", 7, {80, 30, 25}, E50, FX_N_NONE, 0, 0, 0, 45, 15, KAL_M, -1},
     {"DEEP", 7, {30, 65, 60}, E50, FX_N_NONE, 0, 0, 0, 55, 10, KAL_M, -1},
+    /* BEATKIT: TUNE DECAY TONE KIT CRUSH KICK */
+    {"707", 8, {50, 85, 50, 0, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BEAT_M, 11},
+    {"808", 8, {50, 90, 50, 1, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BEAT_M, 2},
+    {"909", 8, {50, 85, 52, 2, 0, 50}, E50, FX_N_PUNCH, 35, 40, 20, 8, 0, BEAT_M, -5},
+    {"CR78", 8, {50, 80, 46, 3, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 20, 0, BEAT_M, 12},
+    {"BOOM BAP", 8, {46, 85, 45, 4, 0, 46}, E50, FX_N_PUNCH, 40, 50, 35, 10, 0, BEAT_M, -12},
+    {"LOFI BEAT", 8, {44, 80, 38, 4, 15, 45}, E50, FX_N_VINYL, 30, 35, 25, 12, 0, BEAT_M, -3},
+    {"CASSETTE", 8, {48, 80, 42, 5, 0, 50}, E50, FX_N_TAPE, 35, 30, 40, 12, 0, BEAT_M, -1},
+    {"TRAP 808", 8, {50, 100, 55, 1, 0, 40}, E50, FX_N_PUNCH, 30, 30, 30, 6, 0, BEAT_M, -3},
+    {"DREAM 707", 8, {44, 75, 40, 0, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 45, 15, BEAT_M, 11},
+    {"TINY", 8, {62, 55, 60, 3, 0, 55}, E50, FX_N_NONE, 0, 0, 0, 25, 0, BEAT_M, 14},
+    {"CRUNCH", 8, {48, 80, 50, 2, 45, 50}, E50, FX_N_PUNCH, 45, 40, 45, 8, 0, BEAT_M, -8},
+    {"SLOW JAM", 8, {42, 90, 40, 4, 0, 44}, E50, FX_N_TAPE, 25, 20, 30, 15, 0, BEAT_M, -4},
+    /* FM: TONE DECAY GRIT TYPE DETUNE VIBRATO */
+    {"DX PIANO", 9, {50, 50, 0, 0, 25, 0}, E50, FX_N_CHORUS, 25, 30, 40, 35, 10, FM_M, 1},
+    {"LOFI EP", 9, {40, 50, 5, 0, 35, 0}, E50, FX_N_TAPE, 45, 50, 40, 40, 12, FM_M, -2},
+    {"GLASS EP", 9, {65, 55, 0, 0, 40, 0}, E50, FX_N_NONE, 0, 0, 0, 45, 15, FM_M, 0},
+    {"FM BASS", 9, {55, 50, 10, 2, 10, 0}, E50, FX_N_NONE, 0, 0, 0, 8, 0, FM_M, 2},
+    {"TUBULAR", 9, {55, 60, 0, 1, 15, 0}, E50, FX_N_NONE, 0, 0, 0, 60, 15, FM_M, -8},
+    {"MALLETS", 9, {50, 50, 0, 6, 10, 0}, E50, FX_N_NONE, 0, 0, 0, 40, 10, FM_M, 2},
+    {"BRASS", 9, {50, 50, 15, 3, 40, 20}, E50, FX_N_NONE, 0, 0, 0, 30, 5, FM_M, 3},
+    {"ORGAN", 9, {50, 50, 10, 4, 10, 30}, E50, FX_N_TREM, 30, 50, 40, 25, 0, FM_M, 0},
+    {"CLAV", 9, {55, 50, 10, 5, 10, 0}, E50, FX_N_NONE, 0, 0, 0, 15, 0, FM_M, 2},
+    {"KOTO", 9, {60, 50, 0, 7, 10, 0}, E50, FX_N_NONE, 0, 0, 0, 40, 20, FM_M, 1},
+    {"WARM PAD", 9, {40, 60, 0, 8, 50, 10}, E50, FX_N_CHORUS, 40, 30, 40, 70, 10, FM_M, 4},
+    {"SOFT LEAD", 9, {45, 50, 20, 9, 30, 40}, E50, FX_N_NONE, 0, 0, 0, 35, 25, FM_M, -1},
+    /* PLUCK: PICK DECAY TONE TYPE PLACE */
+    {"NYLON", 10, {50, 50, 50, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 40, 5, PLUCK_M, 9},
+    {"STEEL", 10, {50, 50, 50, 1, 50}, E50, FX_N_NONE, 0, 0, 0, 35, 5, PLUCK_M, 11},
+    {"HARP", 10, {50, 55, 50, 2, 50}, E50, FX_N_NONE, 0, 0, 0, 65, 15, PLUCK_M, 5},
+    {"KOTO", 10, {55, 50, 55, 3, 50}, E50, FX_N_NONE, 0, 0, 0, 45, 15, PLUCK_M, 16},
+    {"BASS", 10, {50, 50, 50, 4, 50}, E50, FX_N_NONE, 0, 0, 0, 10, 0, PLUCK_M, 11},
+    {"MUTED", 10, {50, 50, 50, 5, 50}, E50, FX_N_NONE, 0, 0, 0, 20, 5, PLUCK_M, 24},
+    {"LOFI GUITAR", 10, {40, 45, 40, 0, 55}, E50, FX_N_TAPE, 40, 40, 30, 30, 10, PLUCK_M, 9},
+    {"DREAM HARP", 10, {45, 70, 45, 2, 60}, E50, FX_N_NONE, 0, 0, 0, 85, 30, PLUCK_M, 1},
+    {"SPRING GTR", 10, {55, 50, 55, 1, 40}, E50, FX_N_SPRING, 40, 50, 40, 20, 5, PLUCK_M, 13},
+    {"TWANG", 10, {75, 40, 65, 3, 25}, E50, FX_N_NONE, 0, 0, 0, 25, 10, PLUCK_M, 20},
+    {"CHORUS GTR", 10, {50, 50, 55, 1, 50}, E50, FX_N_CHORUS, 40, 30, 40, 40, 10, PLUCK_M, 13},
+    {"SOFT BASS", 10, {35, 40, 40, 4, 60}, E50, FX_N_NONE, 0, 0, 0, 10, 0, PLUCK_M, 15},
 };
 
-static const dk_engine_t *const ENGINES[8] = {&ENG_FELT, &ENG_TINE, &ENG_AIRPAD, &ENG_GLASS, &ENG_SOFTBASS, &ENG_DUSTKIT,
-                                              &ENG_WORLD, &ENG_KALIMBA};
+static const dk_engine_t *const ENGINES[NENG] = {&ENG_FELT, &ENG_TINE, &ENG_AIRPAD, &ENG_GLASS, &ENG_SOFTBASS,
+                                                 &ENG_DUSTKIT, &ENG_WORLD, &ENG_KALIMBA, &ENG_BEATKIT, &ENG_FM, &ENG_PLUCK};
 
 /* ---------------------------------------------------------------- the harmony --- */
 static const char *const STYLE_NAME[NSTYLE] = {"C418", "LOFI", "AMBIENT", "CAMPFIRE"};
@@ -237,7 +283,7 @@ static const uint8_t PERFORM_ACT[11] = {PF_TAPESTOP, PF_REWIND, PF_VINYLSTOP, PF
 /* the biomes (the garden's scenes): DAWN BLOSSOM RAIN EMBER SNOW LAGOON NIGHT AURORA DUSK */
 static const char *const BIOME_NAME[9] = {"DAWN", "BLOSSOM", "RAIN", "EMBER", "SNOW", "LAGOON", "NIGHT", "AURORA", "DUSK"};
 /* name, tempo, mode, style, biome, world preset, dust, space (ROOM HALL CAVE SHIMMER); the tracks' engines, presets */
-static const dk_mood_t MOODS[8] = {
+static const dk_mood_t MOODS[10] = {
     {"PLAINS", 76, 0, ST_C418, 0, 6, 25, 1, {5, 4, 0, 2, 3, 6}, {4, 1, 0, 0, 0, 6}},
     {"RAIN", 72, 2, ST_LOFI, 2, 0, 45, 0, {5, 4, 0, 1, 3, 6}, {0, 0, 9, 0, 2, 0}},
     {"CAVE", 64, 1, ST_AMBIENT, 7, 4, 20, 2, {5, 4, 0, 2, 3, 6}, {4, 6, 7, 5, 7, 4}},
@@ -246,6 +292,9 @@ static const dk_mood_t MOODS[8] = {
     {"NIGHT", 60, 0, ST_C418, 6, 5, 30, 1, {5, 4, 0, 2, 3, 6}, {4, 10, 10, 1, 10, 5}},
     {"CAMPFIRE", 82, 8, ST_CAMPFIRE, 3, 2, 30, 0, {5, 4, 7, 7, 3, 6}, {9, 2, 4, 0, 8, 2}},
     {"STUDY", 84, 2, ST_LOFI, 8, 11, 55, 0, {5, 4, 0, 1, 3, 6}, {3, 8, 9, 5, 4, 11}},
+    /* the lo-fi beats on the new engines: a boom bap, an FM piano worn by tape, a guitar; a sunset's city pop */
+    {"BEATS", 82, 2, ST_LOFI, 8, 11, 40, 0, {8, 4, 9, 10, 3, 6}, {4, 0, 1, 6, 4, 11}},
+    {"SUNSET", 94, 0, ST_LOFI, 1, 7, 20, 1, {8, 9, 9, 10, 7, 6}, {0, 3, 0, 10, 2, 7}},
 };
 
 /* the tracks by default: DRUMS BASS PIANO KEYS BELLS NATURE */
@@ -259,11 +308,12 @@ static void tape_init(void)
 {
     trng = 0x2545F491u;                         /* the same noise each time (the tests' WAVs repeat) */
     pad_tables();
+    beat_tables();
     finger_build();
 }
 
 const dk_tape_t TAPE = {
-    "OVERWORLD", tape_init, ENGINES, 8, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
-    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FINGER_DRUM, FINGER_MEL, PERFORM, PERFORM_ACT, MOODS, 8,
+    "OVERWORLD", tape_init, ENGINES, NENG, PRESETS, TAPE_FX, 9, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
+    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FINGER_DRUM, FINGER_MEL, PERFORM, PERFORM_ACT, MOODS, 10,
     BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE,
 };

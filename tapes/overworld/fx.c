@@ -191,6 +191,24 @@ static void fx_spring(dk_fxst_t *s, float *l, float *r, int n, float amt, float 
     }
 }
 
+/* PUNCH: a drum bus squeezed: a compressor slow enough to let each hit's attack through (SNAP a), its saturation
+ * (DRIVE b); AMOUNT how hard (and as much made up) */
+static void fx_punch(dk_fxst_t *s, float *l, float *r, int n, float amt, float a, float b)
+{
+    float *f = s->f, ka = dk_lpk(1.0f / (0.0004f + 0.025f * a * a) * 0.16f), kr = dk_lpk(1.0f / 0.12f * 0.16f);
+    float thr = 0.16f, k = amt * 14.0f, mk = 1.0f + amt * 1.6f, drive = 1.0f + 3.0f * b,
+          dmk = (1.0f + 0.15f * (drive - 1.0f)) / drive;
+    int j;
+    for (j = 0; j < n; j++) {
+        float x = (fm_fabsf(l[j]) + fm_fabsf(r[j])) * 0.5f, g;
+        f[0] += (x > f[0] ? ka : kr) * (x - f[0]);         /* the level, its attack late by SNAP */
+        g = f[0] > thr ? mk / (1.0f + k * (f[0] - thr)) : mk;
+        f[1] += 0.01f * (g - f[1]);                        /* the gain, smoothed: no zipper */
+        l[j] = fm_tanhf(l[j] * f[1] * drive) * dmk;
+        r[j] = fm_tanhf(r[j] * f[1] * drive) * dmk;
+    }
+}
+
 static const dk_fx_t FX_NONE = {"NONE", "", "", 0};
 static const dk_fx_t FX_VINYL = {"VINYL", "CRACKLE", "HISS", fx_vinyl};
 static const dk_fx_t FX_TAPE = {"TAPE", "WOW", "SATURATE", fx_tape};
@@ -199,9 +217,10 @@ static const dk_fx_t FX_CHORUS = {"CHORUS", "RATE", "DEPTH", fx_chorus};
 static const dk_fx_t FX_FILTER = {"FILTER", "RES", "MODE", fx_filter};
 static const dk_fx_t FX_TREM = {"TREMOLO", "RATE", "STEREO", fx_tremolo};
 static const dk_fx_t FX_SPRING = {"SPRING", "DECAY", "TONE", fx_spring};
+static const dk_fx_t FX_PUNCH = {"PUNCH", "SNAP", "DRIVE", fx_punch};
 static const dk_fx_t *const TAPE_FX[] = {&FX_NONE, &FX_VINYL, &FX_TAPE, &FX_LOFI, &FX_CHORUS, &FX_FILTER, &FX_TREM,
-                                         &FX_SPRING};
-enum { FX_N_NONE, FX_N_VINYL, FX_N_TAPE, FX_N_LOFI, FX_N_CHORUS, FX_N_FILTER, FX_N_TREM, FX_N_SPRING };
+                                         &FX_SPRING, &FX_PUNCH};
+enum { FX_N_NONE, FX_N_VINYL, FX_N_TAPE, FX_N_LOFI, FX_N_CHORUS, FX_N_FILTER, FX_N_TREM, FX_N_SPRING, FX_N_PUNCH };
 
 /* the master: DUST (0 clean, 1 a cassette from childhood: a worn top, its saturation, a hiss that follows the music,
  * a crackle), SLEEP (darker, softer) */

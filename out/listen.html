@@ -16,8 +16,7 @@ audio { width:100%; }
 </style></head><body><main>
 <h1>DECK · OVERWORLD</h1>
 <div class="dim">Лоу-фай эмбиент в духе C418. Нажми ▶ — звук играет внизу. Все файлы — 44.1 кГц, из симулятора прошивки.</div>
-<h2>Демо-песня</h2><div class="row"><button onclick="play(this,'demo_first_light.wav')">&#9654;</button><span class="nm">FIRST LIGHT</span><span class="sub">INTRO · PRE · VERSE · CHORUS · BRIDGE · BREAK · CHORUS · OUTRO</span><span class="t">281.2 с</span></div>
-<div class="row"><button onclick="play(this,'chords.wav')">&#9654;</button><span class="nm">Аккорды на белых клавишах</span><span class="sub">мажор · минор · лидийский, голосоведение, страм</span><span class="t">22.9 с</span></div>
+<h2>Демо-песня</h2><div class="row"><button onclick="play(this,'chords.wav')">&#9654;</button><span class="nm">Аккорды на белых клавишах</span><span class="sub">мажор · минор · лидийский, голосоведение, страм</span><span class="t">22.9 с</span></div>
 <h2>Движки и пресеты</h2><p class='dim'>Каждый пресет: одна нота, аккорд, короткая фраза.</p><details open><summary><b>FELT</b> <span class="dim">— пианино с войлоком — главный инструмент (FM-пиано OVERWORLD + мягкая атака, срез верха, стук клавиши)</span></summary><div class="row"><button onclick="play(this,'sounds/FELT/01_MEADOW.wav')">&#9654;</button><span class="nm">MEADOW</span><span class="sub">пресет 1</span><span class="t">7.4 с</span></div>
 <div class="row"><button onclick="play(this,'sounds/FELT/02_SWEDEN.wav')">&#9654;</button><span class="nm">SWEDEN</span><span class="sub">пресет 2</span><span class="t">7.3 с</span></div>
 <div class="row"><button onclick="play(this,'sounds/FELT/03_LULLABY.wav')">&#9654;</button><span class="nm">LULLABY</span><span class="sub">пресет 3</span><span class="t">7.5 с</span></div>
@@ -114,26 +113,44 @@ audio { width:100%; }
 <div class="row"><button onclick="play(this,'sounds/WORLD/10_SNOW_STEPS.wav')">&#9654;</button><span class="nm">SNOW STEPS</span><span class="sub">пресет 10</span><span class="t">7.1 с</span></div>
 <div class="row"><button onclick="play(this,'sounds/WORLD/11_STORM.wav')">&#9654;</button><span class="nm">STORM</span><span class="sub">пресет 11</span><span class="t">6.6 с</span></div>
 <div class="row"><button onclick="play(this,'sounds/WORLD/12_DRIZZLE.wav')">&#9654;</button><span class="nm">DRIZZLE</span><span class="sub">пресет 12</span><span class="t">6.6 с</span></div>
-</details><h2>OVERWORLD: было → стало</h2><p class='dim'>Одна и та же фраза: старый звук прошивки OVERWORLD и новый движок DECK.</p><div class='pair'><b>Пианино (FELT)</b><div class="row"><button onclick="play(this,'compare/ow_0.wav')">&#9654;</button><span class="nm">было (OVERWORLD)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-<div class="row"><button onclick="play(this,'compare/deck_0.wav')">&#9654;</button><span class="nm">стало (DECK)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-</div><div class='pair'><b>Пад (AIRPAD SWEDEN)</b><div class="row"><button onclick="play(this,'compare/ow_1.wav')">&#9654;</button><span class="nm">было (OVERWORLD)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-<div class="row"><button onclick="play(this,'compare/deck_1.wav')">&#9654;</button><span class="nm">стало (DECK)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-</div><div class='pair'><b>Колокол (GLASS CELESTA)</b><div class="row"><button onclick="play(this,'compare/ow_2.wav')">&#9654;</button><span class="nm">было (OVERWORLD)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-<div class="row"><button onclick="play(this,'compare/deck_2.wav')">&#9654;</button><span class="nm">стало (DECK)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-</div><div class='pair'><b>Бас (SOFTBASS SUB)</b><div class="row"><button onclick="play(this,'compare/ow_3.wav')">&#9654;</button><span class="nm">было (OVERWORLD)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-<div class="row"><button onclick="play(this,'compare/deck_3.wav')">&#9654;</button><span class="nm">стало (DECK)</span><span class="sub"></span><span class="t">20.0 с</span></div>
-</div><h2>DREAM — автопилот (DRIVE)</h2><p class='dim'>Все шесть дорожек в DRIVE, разные стили.</p><div class="row"><button onclick="play(this,'drive/style_0.wav')">&#9654;</button><span class="nm">C418</span><span class="sub"></span><span class="t">36.0 с</span></div>
-<div class="row"><button onclick="play(this,'drive/style_1.wav')">&#9654;</button><span class="nm">LOFI</span><span class="sub"></span><span class="t">34.7 с</span></div>
-<div class="row"><button onclick="play(this,'drive/style_2.wav')">&#9654;</button><span class="nm">AMBIENT</span><span class="sub"></span><span class="t">39.6 с</span></div>
-<div class="row"><button onclick="play(this,'drive/style_3.wav')">&#9654;</button><span class="nm">CAMPFIRE</span><span class="sub"></span><span class="t">35.1 с</span></div>
-<h2>MOOD-ы (биомы)</h2><div class="row"><button onclick="play(this,'moods/mood_0.wav')">&#9654;</button><span class="nm">PLAINS</span><span class="sub"></span><span class="t">28.2 с</span></div>
-<div class="row"><button onclick="play(this,'moods/mood_1.wav')">&#9654;</button><span class="nm">RAIN</span><span class="sub"></span><span class="t">26.9 с</span></div>
-<div class="row"><button onclick="play(this,'moods/mood_2.wav')">&#9654;</button><span class="nm">CAVE</span><span class="sub"></span><span class="t">36.0 с</span></div>
-<div class="row"><button onclick="play(this,'moods/mood_3.wav')">&#9654;</button><span class="nm">SNOW</span><span class="sub"></span><span class="t">30.9 с</span></div>
-<div class="row"><button onclick="play(this,'moods/mood_4.wav')">&#9654;</button><span class="nm">OCEAN</span><span class="sub"></span><span class="t">33.9 с</span></div>
-<div class="row"><button onclick="play(this,'moods/mood_5.wav')">&#9654;</button><span class="nm">NIGHT</span><span class="sub"></span><span class="t">27.9 с</span></div>
-<div class="row"><button onclick="play(this,'moods/mood_6.wav')">&#9654;</button><span class="nm">CAMPFIRE</span><span class="sub"></span><span class="t">26.6 с</span></div>
-<div class="row"><button onclick="play(this,'moods/mood_7.wav')">&#9654;</button><span class="nm">STUDY</span><span class="sub"></span><span class="t">35.2 с</span></div>
+</details><details open><summary><b>BEATKIT</b> <span class="dim">— сэмпловые барабаны: киты в духе 707, 808, 909, CR-78, пыльный бум-бэп, кассета (TUNE DECAY TONE CRUSH KICK)</span></summary><div class="row"><button onclick="play(this,'sounds/BEATKIT/01_707.wav')">&#9654;</button><span class="nm">707</span><span class="sub">пресет 1</span><span class="t">7.8 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/02_808.wav')">&#9654;</button><span class="nm">808</span><span class="sub">пресет 2</span><span class="t">7.8 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/03_909.wav')">&#9654;</button><span class="nm">909</span><span class="sub">пресет 3</span><span class="t">7.6 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/04_CR78.wav')">&#9654;</button><span class="nm">CR78</span><span class="sub">пресет 4</span><span class="t">8.0 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/05_BOOM_BAP.wav')">&#9654;</button><span class="nm">BOOM BAP</span><span class="sub">пресет 5</span><span class="t">7.8 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/06_LOFI_BEAT.wav')">&#9654;</button><span class="nm">LOFI BEAT</span><span class="sub">пресет 6</span><span class="t">8.2 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/07_CASSETTE.wav')">&#9654;</button><span class="nm">CASSETTE</span><span class="sub">пресет 7</span><span class="t">7.8 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/08_TRAP_808.wav')">&#9654;</button><span class="nm">TRAP 808</span><span class="sub">пресет 8</span><span class="t">8.1 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/09_DREAM_707.wav')">&#9654;</button><span class="nm">DREAM 707</span><span class="sub">пресет 9</span><span class="t">8.6 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/10_TINY.wav')">&#9654;</button><span class="nm">TINY</span><span class="sub">пресет 10</span><span class="t">7.9 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/11_CRUNCH.wav')">&#9654;</button><span class="nm">CRUNCH</span><span class="sub">пресет 11</span><span class="t">7.3 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/BEATKIT/12_SLOW_JAM.wav')">&#9654;</button><span class="nm">SLOW JAM</span><span class="sub">пресет 12</span><span class="t">7.8 с</span></div>
+</details><details open><summary><b>FM</b> <span class="dim">— четыре оператора: DX-пиано, лоу-фай EP, бас, колокола, брасс, орган, клавинет, кото, пэд, лид</span></summary><div class="row"><button onclick="play(this,'sounds/FM/01_DX_PIANO.wav')">&#9654;</button><span class="nm">DX PIANO</span><span class="sub">пресет 1</span><span class="t">7.4 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/02_LOFI_EP.wav')">&#9654;</button><span class="nm">LOFI EP</span><span class="sub">пресет 2</span><span class="t">7.6 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/03_GLASS_EP.wav')">&#9654;</button><span class="nm">GLASS EP</span><span class="sub">пресет 3</span><span class="t">7.3 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/04_FM_BASS.wav')">&#9654;</button><span class="nm">FM BASS</span><span class="sub">пресет 4</span><span class="t">6.1 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/05_TUBULAR.wav')">&#9654;</button><span class="nm">TUBULAR</span><span class="sub">пресет 5</span><span class="t">11.5 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/06_MALLETS.wav')">&#9654;</button><span class="nm">MALLETS</span><span class="sub">пресет 6</span><span class="t">7.0 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/07_BRASS.wav')">&#9654;</button><span class="nm">BRASS</span><span class="sub">пресет 7</span><span class="t">7.0 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/08_ORGAN.wav')">&#9654;</button><span class="nm">ORGAN</span><span class="sub">пресет 8</span><span class="t">6.9 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/09_CLAV.wav')">&#9654;</button><span class="nm">CLAV</span><span class="sub">пресет 9</span><span class="t">6.4 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/10_KOTO.wav')">&#9654;</button><span class="nm">KOTO</span><span class="sub">пресет 10</span><span class="t">7.6 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/11_WARM_PAD.wav')">&#9654;</button><span class="nm">WARM PAD</span><span class="sub">пресет 11</span><span class="t">14.3 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/FM/12_SOFT_LEAD.wav')">&#9654;</button><span class="nm">SOFT LEAD</span><span class="sub">пресет 12</span><span class="t">7.5 с</span></div>
+</details><details open><summary><b>PLUCK</b> <span class="dim">— щипковые струны (Karplus-Strong): нейлон, сталь, арфа, кото, бас, глушёная гитара</span></summary><div class="row"><button onclick="play(this,'sounds/PLUCK/01_NYLON.wav')">&#9654;</button><span class="nm">NYLON</span><span class="sub">пресет 1</span><span class="t">6.6 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/02_STEEL.wav')">&#9654;</button><span class="nm">STEEL</span><span class="sub">пресет 2</span><span class="t">6.5 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/03_HARP.wav')">&#9654;</button><span class="nm">HARP</span><span class="sub">пресет 3</span><span class="t">7.0 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/04_KOTO.wav')">&#9654;</button><span class="nm">KOTO</span><span class="sub">пресет 4</span><span class="t">6.4 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/05_BASS.wav')">&#9654;</button><span class="nm">BASS</span><span class="sub">пресет 5</span><span class="t">5.9 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/06_MUTED.wav')">&#9654;</button><span class="nm">MUTED</span><span class="sub">пресет 6</span><span class="t">6.1 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/07_LOFI_GUITAR.wav')">&#9654;</button><span class="nm">LOFI GUITAR</span><span class="sub">пресет 7</span><span class="t">6.5 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/08_DREAM_HARP.wav')">&#9654;</button><span class="nm">DREAM HARP</span><span class="sub">пресет 8</span><span class="t">7.2 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/09_SPRING_GTR.wav')">&#9654;</button><span class="nm">SPRING GTR</span><span class="sub">пресет 9</span><span class="t">6.1 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/10_TWANG.wav')">&#9654;</button><span class="nm">TWANG</span><span class="sub">пресет 10</span><span class="t">5.9 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/11_CHORUS_GTR.wav')">&#9654;</button><span class="nm">CHORUS GTR</span><span class="sub">пресет 11</span><span class="t">6.7 с</span></div>
+<div class="row"><button onclick="play(this,'sounds/PLUCK/12_SOFT_BASS.wav')">&#9654;</button><span class="nm">SOFT BASS</span><span class="sub">пресет 12</span><span class="t">5.9 с</span></div>
+</details><h2>OVERWORLD: было → стало</h2><p class='dim'>Одна и та же фраза: старый звук прошивки OVERWORLD и новый движок DECK.</p><div class='pair'><b>Пианино (FELT)</b></div><div class='pair'><b>Пад (AIRPAD SWEDEN)</b></div><div class='pair'><b>Колокол (GLASS CELESTA)</b></div><div class='pair'><b>Бас (SOFTBASS SUB)</b></div><h2>DREAM — автопилот (DRIVE)</h2><p class='dim'>Все шесть дорожек в DRIVE, разные стили.</p><h2>MOOD-ы (биомы)</h2><div class="row"><button onclick="play(this,'moods/mood_8.wav')">&#9654;</button><span class="nm">BEATS</span><span class="sub"></span><span class="t">43.2 с</span></div>
+<div class="row"><button onclick="play(this,'moods/mood_9.wav')">&#9654;</button><span class="nm">SUNSET</span><span class="sub"></span><span class="t">43.5 с</span></div>
 
 </main>
 <div id="now"><audio id="au" controls></audio></div>
@@ -146,4 +163,4 @@ function play(b, f) {
   a.src = f; a.play(); b.classList.add('on'); cur = b;
 }
 document.getElementById('au').onended = () => { if (cur) cur.classList.remove('on'); cur = null; };
-</script></body></html>
+</script></body></html>

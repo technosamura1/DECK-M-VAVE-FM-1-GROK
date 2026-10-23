@@ -18,9 +18,12 @@ ABOUT = {
     "DUSTKIT": "пыльные лоу-фай барабаны: бочка, щётка, римшот, шейкер, хет, клэп, дерево",
     "WORLD": "звуки мира: дождь, ветер, костёр, ручей, капли, сверчки, птицы, океан, гроза, снег",
     "KALIMBA": "калимба: язычок, щипок пальцем, деревянный корпус",
+    "BEATKIT": "сэмпловые барабаны: киты в духе 707, 808, 909, CR-78, пыльный бум-бэп, кассета (TUNE DECAY TONE CRUSH KICK)",
+    "FM": "четыре оператора: DX-пиано, лоу-фай EP, бас, колокола, брасс, орган, клавинет, кото, пэд, лид",
+    "PLUCK": "щипковые струны (Karplus-Strong): нейлон, сталь, арфа, кото, бас, глушёная гитара",
 }
-ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "KALIMBA", "SOFTBASS", "DUSTKIT", "WORLD"]
-MOODS = ["PLAINS", "RAIN", "CAVE", "SNOW", "OCEAN", "NIGHT", "CAMPFIRE", "STUDY"]
+ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "KALIMBA", "SOFTBASS", "DUSTKIT", "WORLD", "BEATKIT", "FM", "PLUCK"]
+MOODS = ["PLAINS", "RAIN", "CAVE", "SNOW", "OCEAN", "NIGHT", "CAMPFIRE", "STUDY", "BEATS", "SUNSET"]
 STYLES = ["C418", "LOFI", "AMBIENT", "CAMPFIRE"]
 COMPARE = ["Пианино (FELT)", "Пад (AIRPAD SWEDEN)", "Колокол (GLASS CELESTA)", "Бас (SOFTBASS SUB)"]
 
