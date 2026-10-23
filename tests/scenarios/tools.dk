@@ -1,0 +1,101 @@
+# the clip's tools: COOK (SEQ + black 1) a few times, back step by step (SEQ + OCT-) to where it began, RANDOM; the ARP
+# copied into STEP (SEQ on the ARP's page); a drum sound's own level and crush; ATMO's layers
+wait 300
+demo
+wait 200
+press HOME
+tapkey b0
+release HOME
+wait 50
+expect events >4
+mark
+press SEQ
+tapkey b0
+release SEQ
+wait 50
+expect same 0
+press SEQ
+tapkey b0
+release SEQ
+wait 50
+press SEQ
+tapkey b0
+release SEQ
+wait 50
+press SEQ
+tap OCT-
+release SEQ
+wait 50
+press SEQ
+tap OCT-
+release SEQ
+wait 50
+press SEQ
+tap OCT-
+release SEQ
+wait 50
+expect same 1
+press SEQ
+tap OCT+
+release SEQ
+wait 50
+expect same 0
+press SEQ
+tapkey b1
+release SEQ
+wait 50
+expect same 0
+# the ARP into STEP: on the keys track, notes latched, SEQ
+press HOME
+tapkey b1
+release HOME
+wait 50
+tap ARP
+wait 50
+turn K4 1
+wait 50
+key w0 down 90
+key w2 down 90
+key w4 down 90
+wait 300
+key w0 up
+key w2 up
+key w4 up
+wait 100
+tap SEQ
+wait 100
+expect seq 0
+expect events >8
+expect page 1
+# a drum sound: SEQ's KIT row, the kick down; SOUND's FX for one sound, crushed
+press HOME
+tapkey b4
+release HOME
+wait 50
+tap SEQ
+tap SEQ
+wait 50
+turn K2 -6
+wait 50
+tap PLAY
+wait 2000
+shot kit_row.png
+tap FX
+tap FX
+tap FX
+wait 50
+turn K1 1
+turn K4 8
+wait 1500
+shot kit_fx.png
+tap PLAY
+# ATMO: rain and the fire up, the tape on
+tap SEL
+wait 50
+turn K1 12
+turn K2 10
+tap SEL
+turn K4 12
+wait 2500
+expect voices >=0
+shot atmo.png

@@ -5,8 +5,9 @@
  * recording, undo, saving by itself in the silence, the lights, MIDI in, the export's stream. The pages are drawn in
  * pages.c. Part of the unity build. */
 
-enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, PG_GLOB, NPG };
-static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP", "GLOBAL"};
+enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, PG_GLOB, PG_ATMO, NPG };
+static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP", "GLOBAL",
+                                          "ATMO"};
 
 static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
@@ -29,7 +30,8 @@ static struct {
     uint32_t draw_t, garden_t, notes_until, page_t;   /* page_t: the page or its row changed (the hint shows 3 s) */
     char notes[28];
     uint32_t trk_until;                  /* SEL: the six tracks shown, the one chosen bright */
-    uint8_t mix_key;                     /* MIX: the white key down (its track + 1): a tap mutes, held 1 s clears */
+    uint8_t mix_key;
+    uint8_t notes_k;                     /* a PERFORM key held (+1): its name stays up top until it is let go */                     /* MIX: the white key down (its track + 1): a tap mutes, held 1 s clears */
     uint32_t mix_t;
 } ui;
 
@@ -118,6 +120,97 @@ static void preset_select(int slot)
     track_preset(dk_song.cur_track, slot);
     mark_dirty();
     say(preset_of(cur()->eng, slot, &tmp)->name, slot >= DK_NFACT ? "USER" : cur_eng()->name);
+}
+
+/* ARP -> SEQ: the arpeggio of the notes held (or latched, or the song's chord) as notes in the clip, the length of
+ * the clip, the way the ARP would play them; the track then STEP and the ARP off (one undo step) */
+static void arp_bake(void)
+{
+    static const float GATE[ARPG_N] = {0.55f, 0.25f, 0.85f, 1.02f};
+    dk_track_t *k = cur();
+    int t = dk_song.cur_track, n = dk_held_n[t], srt[8], i, clip = cur_clip(), len = clip_len(clip), s, hits = 0;
+    int div = DK_ARP_DIV[k->arp[1] % DK_ARP_NDIV], octs = k->arp[2] < 1 ? 1 : k->arp[2] > 3 ? 3 : k->arp[2], total;
+    float gate = GATE[k->arp_opt & 3];
+    uint32_t seed = 0x2545F491u;
+    if (!n && ((k->arp_opt >> 2) & 1) && dk_harm_n) {   /* PLAYS CHORD: the song's chord */
+        int prev = -1;
+        n = dk_harm_n > 4 ? 4 : dk_harm_n;
+        for (i = 0; i < n; i++) {
+            int v = 60 + 12 * k->oct + dk_harm_pcs[i] % 12;
+            while (v <= prev)
+                v += 12;
+            srt[i] = prev = v;
+        }
+    } else {
+        if (n > 8)
+            n = 8;
+        for (i = 0; i < n; i++)
+            srt[i] = dk_held[t][i];
+    }
+    if (!n) {
+        say("ARP", "HOLD OR LATCH NOTES");
+        return;
+    }
+    {
+        int order[8];
+        for (i = 0; i < n; i++)
+            order[i] = srt[i];
+        for (i = 1; i < n; i++) {            /* sorted (ORDER keeps the order played) */
+            int v = srt[i], j = i - 1;
+            while (j >= 0 && srt[j] > v) {
+                srt[j + 1] = srt[j];
+                j--;
+            }
+            srt[j + 1] = v;
+        }
+        undo_push(clip);
+        keys_all_up();
+        dk_lock();
+        clip_clear(clip);
+        total = n * octs;
+        for (s = 0; s * div < len; s++) {
+            int hit = DK_ARP_RHY[k->arp_rhy % ARPR_N][s & 15], idx, note;
+            dk_ev_t ev;
+            seed = seed * 1664525u + 1013904223u;
+            if (k->arp_rhy == ARPR_SKIP && (s & 3) && (seed >> 28) == 0)
+                hit = 0;
+            if (!hit)
+                continue;
+            switch (k->arp[0] % 6) {
+            case 1: idx = total - 1 - hits % total; break;
+            case 2: {
+                int per = total > 1 ? 2 * total - 2 : 1, x = hits % per;
+                idx = x < total ? x : per - x;
+                break;
+            }
+            case 3: idx = (int)((seed >> 8) % (uint32_t)total); break;
+            default: idx = hits % total; break;
+            }
+            hits++;
+            ev.pos = (uint16_t)(s * div);
+            ev.dur = (uint16_t)((int)((float)div * gate) > 1 ? (int)((float)div * gate) : 1);
+            ev.vel = (uint8_t)(hit == 2 ? 92 : 74);
+            ev.fl = 0;
+            ev.layer = 0;
+            if (k->arp[0] % 6 == 5) {        /* CHORD: the whole stack each hit */
+                for (i = 0; i < n; i++) {
+                    ev.note = (uint8_t)srt[i];
+                    dk_song_insert(clip, &ev);
+                }
+                continue;
+            }
+            note = (k->arp[0] % 6 == 4 ? order[idx % n] : srt[idx % n]) + 12 * (idx / n);
+            ev.note = (uint8_t)(note > 127 ? 127 : note);
+            dk_song_insert(clip, &ev);
+        }
+        dk_unlock();
+    }
+    k->arp_opt &= (uint8_t)~ARPO_ON;
+    dk_cmd(C_ARPCLR, t, 0, 0);
+    field_set(F_SEQTYPE, 0);                 /* STEP: the notes on its grid, to edit */
+    mark_dirty();
+    page_go(PG_SEQ);
+    say("ARP -> STEP", "COPIED");
 }
 
 static void preset_step(int d)          /* PRESET: the next one (the user's only where saved) */
@@ -242,7 +335,13 @@ static void action(int a, int b)
 {
     switch (a) {
     case A_PAGE_SOUND: page_go(PG_SOUND); break;
-    case A_PAGE_SEQ: page_go(PG_SEQ); break;
+    case A_PAGE_SEQ:
+        if (ui.page == PG_ARP && dk_arp_on(cur())) {   /* on the ARP's page: what it plays, written into SEQ's grid */
+            arp_bake();
+            break;
+        }
+        page_go(PG_SEQ);
+        break;
     case A_PAGE_ROAD: page_go(PG_ROAD); break;
     case A_PAGE_MIX: page_go(PG_MIX); break;
     case A_PAGE_KEYS: page_go(PG_KEYS); break;
@@ -266,6 +365,7 @@ static void action(int a, int b)
         ui_slot_sel = -1;
         break;
     case A_PAGE_GLOBAL: page_go(PG_GLOB); break;
+    case A_PAGE_ATMO: page_go(PG_ATMO); break;
     case A_PAGE_PLAY: page_go(PG_PLAY); break;
     case A_PLAY:
         if (dk_playing || dk_counting) {
@@ -463,9 +563,16 @@ static void notes_show(int k)
             cpy(p, set_[kh[k].notes[0] & 15].name);
         else
             cpy(p, "VARIATION");
-    } else if (kh[k].kind == 1)
+    } else if (kh[k].kind == 1) {          /* PERFORM: the effect's name, up top for as long as it is held */
+        int j;
+        cpy(p, kh[k].notes[0] == 0xFF ? "FILL" : "PERFORM");
+        for (j = 0; TAPE.perform_act && j < 11; j++)
+            if (TAPE.perform_act[j] == kh[k].notes[0])
+                cpy(p, TAPE.perform[j]);
+        ui.notes_until = plat_ms() + 400u;
+        ui.notes_k = (uint8_t)(k + 1);
         return;
-    else if (e->flags & EF_DRUM) {
+    } else if (e->flags & EF_DRUM) {
         int l;
         cpy(p, "DRUM");
         for (l = 0; l < e->nlanes; l++)
@@ -534,9 +641,26 @@ static void key_down(int k, int vel)
         say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
-    if (held(B_SEL) && w >= 0 && w < DK_NTRACK) {   /* SEL held + white 1-6: that track */
-        ui.used[B_SEL] = 1;
-        track_select(w);
+    if (held(B_SEQ) && b >= 0 && b < 2) {   /* SEQ held + black 1: COOK, black 2: RANDOM (each an undo step) */
+        static uint32_t seed = 0x9E3779B9u;
+        static uint8_t cooks;
+        char s[12] = "COOK ";
+        ui.used[B_SEQ] = 1;
+        seed = seed * 2654435761u + plat_ms();
+        if (!dk_song.clip[cur_clip()].n && b == 0) {
+            say("COOK", "THE CLIP IS EMPTY");
+            return;
+        }
+        if (b == 0) {
+            clip_cook(cur_clip(), seed, cur_eng());
+            cooks = (uint8_t)(cooks % 99 + 1);
+            itoa_b(cooks, s + 5);
+            say(s, "SEQ+OCT- = BACK");
+        } else {
+            clip_random(cur_clip(), seed, cur_eng());
+            say("RANDOM", "SEQ+OCT- = BACK");
+        }
+        mark_dirty();
         return;
     }
     if (held(B_SEQ) && w >= 0 && w < NSEQ) {
@@ -928,7 +1052,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
 /* ------------------------------------------------------------------- input --- */
 static void lights(void)
 {
-    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP, B_GLO};
+    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP, B_GLO, B_SEL};
     uint32_t now = plat_ms(), b = 1u << PAGE_BTN[ui.page], keys = ui.keys, dimk = 0, dimb = 0;
     int k;
     const dk_track_t *trk = cur();
@@ -969,7 +1093,7 @@ static void lights(void)
         int root = dk_song.root % 12;
         uint32_t pool = DK_MODE_POOL[dk_song.mode % DK_NMODES] | 1u;
         for (k = 0; k < NKEYS; k++) {
-            int pc = ((53 + k) - root + 120) % 12;
+            int pc = ((dk_song.layout && white_of(k) >= 0 ? key_note_of(k, dk_song.cur_track) : 53 + k) - root + 120) % 12;
             if (dk_song.layout && white_of(k) >= 0)
                 dimk |= 1u << k;
             else if (!dk_song.layout && (pool >> pc & 1u))
@@ -1015,7 +1139,11 @@ static void input(void)
             ui.used[k] = 0;
             ui.held_done[k] = 0;
             ui.btn |= bit;
-            if (k == B_REC && held(B_SEQ)) {   /* SEQ held + REC: the track's clip cleared at once */
+            if ((k == B_OCTDN || k == B_OCTUP) && held(B_SEQ)) {   /* SEQ held + OCT-/OCT+: undo / redo, step by step */
+                ui.used[B_SEQ] = 1;
+                ui.used[k] = 1;
+                action(k == B_OCTDN ? A_UNDO : A_REDO, 1);
+            } else if (k == B_REC && held(B_SEQ)) {   /* SEQ held + REC: the track's clip cleared at once */
                 ui.used[B_SEQ] = 1;
                 ui.used[k] = 1;
                 action(A_CLEAR, 1);
@@ -1045,6 +1173,12 @@ static void input(void)
         }
     }
     ui.btn = btn;
+    if (ui.notes_k) {                    /* a PERFORM key still held: its name kept */
+        if (kh[ui.notes_k - 1].trk >= 0 && kh[ui.notes_k - 1].kind == 1)
+            ui.notes_until = now + 300u;
+        else
+            ui.notes_k = 0;
+    }
     if (ui.mix_key && now - ui.mix_t >= 1000u) {   /* MIX: a white held 1 s, its track's clip in this part cleared */
         int t = ui.mix_key - 1, c = dk_song.cur_part % DK_NPART * DK_NTRACK + t;
         char s[16] = "TRACK 1";

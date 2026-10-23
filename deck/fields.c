@@ -19,6 +19,8 @@ enum {
     /* PROJECT */ F_SLOT, F_TEMPLATE, F_SWING, F_SONGSTYLE, F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL, F_ONNOTE,
     F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION,
     /* REC */ F_RECTRK,
+    /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
+    /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
     F_N
 };
 
@@ -44,7 +46,7 @@ static const char *const ARPSRC_NAME[2] = {"KEYS", "CHORD"};
 static const char *const EDIV_NAME[4] = {"1/4", "1/8", "1/16", "1/8T"};
 static const char *const VOICING_NAME[VC_N] = {"CLOSE", "OPEN", "SPREAD", "DROP2", "POWER"};
 static const char *const WHITE_NAME[2] = {"NOTES", "CHORDS"};
-static const char *const BLACK_NAME[3] = {"CHORDS", "PERFORM", "OCTAVE"};
+static const char *const BLACK_NAME[3] = {"CHORDS", "PERFORM", "NOTES"};
 static const char *const LAYOUT_NAME[2] = {"CHROMA", "SCALE"};
 static const char *const QUAL_NAME[2] = {"DIATONIC", "FIXED"};
 static const char *const ONOFF[2] = {"OFF", "ON"};
@@ -74,6 +76,7 @@ static const char *target_label(int v)
     return TARGET_NAME[v];
 }
 static int ui_tmp_template, ui_slot_sel = -1;
+static uint8_t ui_fx_for;                /* SOUND's FX on a drum track: 0 the kit, 1.. one of its sounds */
 static uint8_t ui_mod_slot, ui_lane, ui_cursor, ui_step_page, ui_slen = 1, ui_svel = 100, ui_road_cur, ui_gpart;
 static int8_t ui_step_ev = -1;          /* the step last touched (its event in the clip), for VEL/PROB */
 
@@ -172,9 +175,26 @@ static void field_range(int f, int *lo, int *hi)
     case F_ECHOTIME: *hi = 3; break;
     case F_RECTRK: *hi = DK_NTRACK - 1; break;
     case F_TSWING: *hi = 60; break;
+    case F_LLEVEL: *lo = -24; *hi = 12; break;
+    case F_LPAN: *lo = -50; *hi = 50; break;
+    case F_LTUNE: *lo = -30; *hi = 30; break;
+    case F_LDECAY: *lo = -50; *hi = 50; break;
+    case F_LREV:
+    case F_LECHO:
+    case F_LCRUSH:
+    case F_ATMO0:
+    case F_ATMO1:
+    case F_ATMO2:
+    case F_ATMO3:
+    case F_ATMO4:
+    case F_ATMO5:
+    case F_ATAPE:
+    case F_ALVL: *hi = 100; break;
+    case F_FXFOR: *hi = cur_eng()->nlanes < 8 ? cur_eng()->nlanes : 8; break;
     default: break;
     }
 }
+static dk_lane_t *cur_lane(void) { return &dk_song.lane[dk_song.cur_track % DK_NTRACK][ui_lane & 7]; }
 
 static int field_get(int f)
 {
@@ -286,6 +306,22 @@ static int field_get(int f)
     case F_ECHOTIME: return dk_song.echo_time & 3;
     case F_CPU: return (int)plat_cpu_pct();
     case F_RECTRK: return dk_rec_trk;
+    case F_LLEVEL: return cur_lane()->level;
+    case F_LPAN: return cur_lane()->pan;
+    case F_LTUNE: return cur_lane()->tune;
+    case F_LDECAY: return cur_lane()->decay;
+    case F_LREV: return cur_lane()->rev;
+    case F_LECHO: return cur_lane()->echo;
+    case F_LCRUSH: return cur_lane()->crush;
+    case F_FXFOR: return ui_fx_for;
+    case F_ATMO0:
+    case F_ATMO1:
+    case F_ATMO2:
+    case F_ATMO3:
+    case F_ATMO4:
+    case F_ATMO5: return dk_song.atmo[f - F_ATMO0];
+    case F_ATAPE: return dk_song.tapesim;
+    case F_ALVL: return dk_song.atmo_lvl ? dk_song.atmo_lvl - 1 : 100;
     default: return 0;
     }
 }
@@ -462,6 +498,26 @@ static void field_set(int f, int v)
     case F_MIDIIN: set.midi_in = (uint8_t)v; settings_save_later(); break;
     case F_ECHOTIME: dk_song.echo_time = (uint8_t)v; break;
     case F_RECTRK: dk_cmd(C_RECTRK, v, 0, 0); break;
+    case F_LLEVEL: cur_lane()->level = (int8_t)v; break;
+    case F_LPAN: cur_lane()->pan = (int8_t)v; break;
+    case F_LTUNE: cur_lane()->tune = (int8_t)v; break;
+    case F_LDECAY: cur_lane()->decay = (int8_t)v; break;
+    case F_LREV: cur_lane()->rev = (uint8_t)v; break;
+    case F_LECHO: cur_lane()->echo = (uint8_t)v; break;
+    case F_LCRUSH: cur_lane()->crush = (uint8_t)v; break;
+    case F_FXFOR:
+        ui_fx_for = (uint8_t)v;
+        if (v)
+            ui_lane = (uint8_t)(v - 1);  /* the same sound on SEQ's KIT row */
+        return;
+    case F_ATMO0:
+    case F_ATMO1:
+    case F_ATMO2:
+    case F_ATMO3:
+    case F_ATMO4:
+    case F_ATMO5: dk_song.atmo[f - F_ATMO0] = (uint8_t)v; break;
+    case F_ATAPE: dk_song.tapesim = (uint8_t)v; break;
+    case F_ALVL: dk_song.atmo_lvl = (uint8_t)(v + 1); break;
     default: return;
     }
     if (f != F_MVOL && f != F_LANE && f != F_CURSOR && f != F_ROADCUR && f != F_GPART && f != F_SLOT &&
@@ -496,7 +552,7 @@ static const char *field_label(int f)
     case F_MODRATE: return cur()->mod[ui_mod_slot][0] == MOD_FOLLOW ? "SOURCE" : "RATE";
     case F_MODTGT: return "TARGET";
     case F_MODSLOT: return "SLOT";
-    case F_LANE: return "LANE";
+    case F_LANE: return "SOUND";
     case F_SVEL: return "VEL";
     case F_SPROB: return "PROB";
     case F_SRATCH: return "RATCHET";
@@ -575,6 +631,22 @@ static const char *field_label(int f)
     case F_CPU: return "CPU";
     case F_VERSION: return "VERSION";
     case F_RECTRK: return "TRACK";
+    case F_LLEVEL: return "LEVEL";
+    case F_LPAN: return "PAN";
+    case F_LTUNE: return "TUNE";
+    case F_LDECAY: return "DECAY";
+    case F_LREV: return "REVERB";
+    case F_LECHO: return "ECHO";
+    case F_LCRUSH: return "CRUSH";
+    case F_FXFOR: return "FOR";
+    case F_ATMO0:
+    case F_ATMO1:
+    case F_ATMO2:
+    case F_ATMO3:
+    case F_ATMO4:
+    case F_ATMO5: return TAPE.atmo && f - F_ATMO0 < TAPE.natmo ? TAPE.atmo[f - F_ATMO0].name : "-";
+    case F_ATAPE: return "TAPE";
+    case F_ALVL: return "AIR LEVEL";
     default: return "";
     }
 }
@@ -705,6 +777,31 @@ static void field_text(int f, char *b)
     case F_ECHOTIME: cpy(b, ECHO_T[v & 3]); break;
     case F_CPU: b = itoa_b(v, b); cpy(b, "%"); break;
     case F_VERSION: cpy(b, DK_VERSION); break;
+    case F_LLEVEL:                           /* half dB: +6, -3.5 ... */
+        if (v > 0)
+            *b++ = '+';
+        if (v < 0)
+            *b++ = '-', v = -v;
+        b = itoa_b(v / 2, b);
+        if (v & 1)
+            b = cpy(b, ".5");
+        cpy(b, " DB");
+        break;
+    case F_LPAN:
+        if (!v)
+            cpy(b, "C");
+        else {
+            *b++ = v < 0 ? 'L' : 'R';
+            itoa_b(v < 0 ? -v : v, b);
+        }
+        break;
+    case F_LTUNE:
+    case F_LDECAY:
+        if (v > 0)
+            *b++ = '+';
+        itoa_b(v, b);
+        break;
+    case F_FXFOR: cpy(b, v ? cur_eng()->lane_name[(v - 1) % (cur_eng()->nlanes ? cur_eng()->nlanes : 1)] : "WHOLE KIT"); break;
     case F_ARPLATCH:
     case F_FLATCH:
     case F_LEAD:

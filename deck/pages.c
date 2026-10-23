@@ -151,7 +151,9 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 /* ---------------------------------------------------------------- the frame --- */
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 4};
+    static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 4, 2};
+    if (p == PG_SEQ && (cur_eng()->flags & EF_DRUM))
+        return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings */
     return ROWS[p];
 }
 /* the knobs of the page (its row): K1..K4 (i 0..3) the four main ones, i 4 ALGO's extra. SELECT is the track and
@@ -195,6 +197,11 @@ static int page_field(int i, int home)
         }
         case 2: {
             static const uint8_t F[5] = {F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_REV};
+            if (e->flags & EF_DRUM) {        /* drums: K1 FOR the whole kit, or one of its sounds */
+                static const uint8_t KIT[5] = {F_FXFOR, F_FXTYPE, F_FXAMT, F_FXA, F_FXB};
+                static const uint8_t ONE[5] = {F_FXFOR, F_LREV, F_LECHO, F_LCRUSH, F_LLEVEL};
+                return ui_fx_for ? ONE[i] : KIT[i];
+            }
             return F[i];
         }
         default: {
@@ -204,7 +211,11 @@ static int page_field(int i, int home)
         }
     case PG_SEQ: {
         int drum = (e->flags & EF_DRUM) != 0;
-        if (row == 1) {
+        if (drum && row == 1) {              /* the kit's sounds, each its own: kick quieter, snare up */
+            static const uint8_t F[5] = {F_LANE, F_LLEVEL, F_LTUNE, F_LDECAY, F_LPAN};
+            return F[i];
+        }
+        if (row == (drum ? 2 : 1)) {
             static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_OCT};
             return F[i];
         }
@@ -250,6 +261,11 @@ static int page_field(int i, int home)
     case PG_KEYS: return KEYS_F[row & 3][i];
     case PG_PROJECT: return PROJ_F[0][i];
     case PG_GLOB: return GLOB_F[row & 3][i];
+    case PG_ATMO: {                          /* ATMO (SEL): the place's layers, then the noise and the tape */
+        static const uint8_t F[2][5] = {{F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ALVL},
+                                        {F_ATMO4, F_ATMO5, F_DUST, F_ATAPE, F_ALVL}};
+        return F[row & 1][i];
+    }
     case PG_REC: {
         static const uint8_t F[5] = {F_QNT, F_RECTRK, F_MVOL, F_METRO, F_NONE};
         return F[i];
@@ -272,7 +288,7 @@ static const char *hint(void)
             return "HOME+SEQ = BAKE TO STEP";
         if (k->seq == SQ_TOMBOLA)
             return "PLAY TO DROP  HOLD REC = EMPTY";
-        return "HOLD SEQ + WHITE = SEQUENCER";
+        return "SEQ+B1 COOK  B2 RANDOM  OCT-/+ UNDO/REDO";
     case PG_SOUND: return "FX = NEXT TAB  HOLD LFO+TURN = MOD";
     case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
     case PG_ROAD:
@@ -280,8 +296,9 @@ static const char *hint(void)
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  SAVE = SAVE NOW";
     case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
+    case PG_ATMO: return "SEL = NEXT ROW  KNOBS = HOW MUCH";
     case PG_REC: return "REC = NEW PASS  HOLD EDIT = UNDO PASS";
-    case PG_ARP: return "HOLD NOTES  ARP = ROW  HOME+ARP = OFF";
+    case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
 }
@@ -330,7 +347,7 @@ static void draw_header(void)
     itoa_b(beat, s + x + 1);
     cv_text(40, 4, &FONT_XS, s, TH_GRAY);
     if (plat_ms() < ui.notes_until)      /* what you play, for a moment: its notes (or the drum) */
-        text_box(70, 4, 92, 0, &FONT_XS, &FONT_T, ui.notes, TH_ENC[1]);
+        text_box(70, 4, 92, 0, &FONT_XS, &FONT_T, ui.notes, ui.notes_k ? RGB(250, 150, 70) : TH_ENC[1]);
     else if (ui.page == PG_PLAY) {       /* PLAY: the part's name and the chord, in the header (not on the meadow) */
         int pcs[4], n = dk_harm_n ? dk_harm_n : 1, i;
         char c[12];
@@ -609,6 +626,18 @@ static void draw_sound(void)                /* a synth module: the preset in its
     }
     case 2: {                            /* FX: the sound before (grey) and after (its colours) */
         int px = 16, py = wy + 40, py2 = wy + 40, mid = wy + 40;
+        if ((e->flags & EF_DRUM) && ui_fx_for && e->nlanes) {   /* one drum sound: its name, its sends, its crush */
+            const dk_lane_t *ln = &dk_song.lane[dk_song.cur_track][(ui_fx_for - 1) & 7];
+            static const char *const NM[3] = {"REV", "ECHO", "CRUSH"};
+            int v3[3] = {ln->rev, ln->echo, ln->crush};
+            text_box(14, wy + 26, 80, 0, &FONT_XS, &FONT_T, e->lane_name[(ui_fx_for - 1) % e->nlanes], TH_ENC[0]);
+            for (i = 0; i < 3; i++) {
+                text_box(100 + i * 42, wy + 26, 40, 0, &FONT_T, &FONT_T, NM[i], TH_GRAY);
+                cv_rect(100 + i * 42, wy + 42, 36, 4, TH_LINE);
+                cv_rect(100 + i * 42, wy + 42, v3[i] * 36 / 100, 4, knob_col(i + 1));
+            }
+            break;
+        }
         float amt = (float)k->fxamt * 0.01f, fa = (float)k->fxa * 0.01f;
         for (i = 0; i <= 208; i += 2) {
             float sv = fm_sinf((float)i * 0.09f), y2;
@@ -704,6 +733,25 @@ static void draw_seq(void)
             s[x] = '/';
             itoa_b(len / DK_TPB, s + x + 1);
             text_box(180, 26, 52, 2, &FONT_XS, &FONT_XS, s, TH_GRAY);
+            if (ui.row[PG_SEQ] % 3 == 1) {     /* KIT: each sound's level (a bar), its tune, decay and pan */
+                for (l = 0; l < lanes && l < 8; l++) {
+                    const dk_lane_t *ln = &dk_song.lane[dk_song.cur_track][l];
+                    int y = 48 + l * 16, on_lane = l == ui_lane % lanes, w = (ln->level + 24) * 110 / 36, any;
+                    text_box(8, y - 5, 40, 0, &FONT_T, &FONT_T, e->lane_name[l], on_lane ? TH_ENC[0] : TH_GRAY);
+                    cv_rect(54, y - 2, 110, 4, TH_LINE);
+                    cv_rect(54, y - 2, w, 4, on_lane ? TH_ENC[1] : TH_GRAY);
+                    vline(54 + 24 * 110 / 36, y - 4, 8, TH_TEXT);   /* 0 dB */
+                    any = ln->tune || ln->decay || ln->pan || ln->rev || ln->echo || ln->crush;
+                    if (ln->tune)
+                        text_box(170, y - 5, 18, 0, &FONT_T, &FONT_T, ln->tune > 0 ? "T+" : "T-", TH_ENC[2]);
+                    if (ln->decay)
+                        text_box(188, y - 5, 18, 0, &FONT_T, &FONT_T, ln->decay > 0 ? "D+" : "D-", RGB(250, 150, 70));
+                    if (ln->rev || ln->echo || ln->crush)
+                        text_box(206, y - 5, 26, 0, &FONT_T, &FONT_T, ln->crush ? "FX8" : "FX", TH_ENC[1]);
+                    (void)any;
+                }
+                break;
+            }
             for (l = 0; l < lanes; l++) {
                 int y = 48 + l * 16, on_lane = l == ui_lane % lanes;
                 text_box(8, y - 5, 40, 0, &FONT_T, &FONT_T, e->lane_name[l], on_lane ? TH_ENC[0] : TH_GRAY);
@@ -1067,10 +1115,11 @@ static void draw_keys(void)
         vline(x, 134, 44, TH_LINE);
         vline(x + 12, 134, 44, TH_LINE);
         if (!drum && dk_song.layout) {       /* SCALE: each key's note (or the chord's degree), the tonic marked */
-            int nt = key_note_of(k, dk_song.cur_track), ton = nt % 12 == dk_song.root % 12 && !dk_song.white;
-            char dg[2] = {(char)('1' + i % 7), 0};
+            int nt = key_note_of(k, dk_song.cur_track), ton = nt % 12 == dk_song.root % 12 && !dk_song.white,
+                dgi = white_degree(i) >= 0 ? white_degree(i) : i % 7;
+            char dg[2] = {(char)('1' + dgi), 0};
             const char *lb = dk_song.white ? dg : DK_NOTE_NAME[nt % 12];
-            if (dk_song.white && i % 7 == 0)
+            if (dk_song.white && dgi == 0)
                 ton = 1;
             text_box(x + 1, 166, 11, 1, &FONT_T, &FONT_T, lb, lit ? TH_BG : ton ? TH_ENC[2] : TH_GRAY);
             if (ton)
@@ -1162,6 +1211,104 @@ static void draw_project(void)
         cv_rect(20, 176, fill > 200 ? 200 : fill, 2, fill > 160 ? TH_REC : dimc(TH_ENC[1], 10));
     }
     (void)s;
+}
+
+/* ATMO: eight tiles, each a little picture of the layer (it moves while it plays), its name, how much of it; the
+ * row the knobs are on framed in their colours */
+static void atmo_icon(int kind, int cx, int cy, int on, uint32_t now)
+{
+    uint16_t c = on ? TH_TEXT : TH_LINE;
+    int i;
+    switch (kind) {
+    case 0:                                  /* RAIN: a cloud, the drops falling */
+        disc(cx - 7, cy - 6, 6, on ? RGB(150, 160, 180) : TH_LINE);
+        disc(cx + 3, cy - 8, 8, on ? RGB(170, 180, 200) : TH_LINE);
+        disc(cx + 10, cy - 5, 5, on ? RGB(150, 160, 180) : TH_LINE);
+        for (i = 0; i < 4; i++) {
+            int y = cy + 2 + (int)((now / 60u + (uint32_t)i * 5u) % 12u);
+            vline(cx - 9 + i * 6, on ? y : cy + 4, 3, on ? RGB(110, 186, 244) : TH_LINE);
+        }
+        break;
+    case 1:                                  /* FIRE: the flame flickering */
+        for (i = 0; i < 5; i++) {
+            int fl = on ? (int)((now / 90u + (uint32_t)i * 7u) % 3u) - 1 : 0;
+            disc(cx + fl, cy + 8 - i * 4, 8 - i, on ? (i < 2 ? RGB(232, 72, 64) : i < 4 ? RGB(250, 150, 70) : RGB(246, 214, 92)) : TH_LINE);
+        }
+        hline(cx - 10, cy + 13, 20, on ? RGB(150, 98, 58) : TH_LINE);
+        break;
+    case 2:                                  /* BIRDS: two of them, wings going */
+        for (i = 0; i < 2; i++) {
+            int bx = cx - 8 + i * 13, by = cy - 4 + i * 6, w = on ? (int)((now / 150u + (uint32_t)i) % 2u) * 2 : 0;
+            cv_line(bx - 6, by - 3 + w, bx, by, c);
+            cv_line(bx, by, bx + 6, by - 3 + w, c);
+        }
+        break;
+    case 3:                                  /* OCEAN: waves rolling */
+        for (i = 0; i < 2; i++) {
+            int x, py = 0;
+            for (x = -14; x <= 14; x++) {
+                int y = cy - 4 + i * 9 + (int)(3.0f * fm_sinf((float)x * 0.35f + (on ? (float)now * 0.004f : 0.0f) + (float)i));
+                if (x > -14)
+                    cv_line(cx + x - 1, py, cx + x, y, on ? (i ? RGB(110, 186, 244) : RGB(150, 214, 170)) : TH_LINE);
+                py = y;
+            }
+        }
+        break;
+    case 4:                                  /* WIND: three gusts */
+        for (i = 0; i < 3; i++) {
+            int off = on ? (int)((now / 80u + (uint32_t)i * 9u) % 8u) - 4 : 0;
+            hline(cx - 12 + off, cy - 8 + i * 7, 18 - i * 3, c);
+            disc(cx + 6 - i * 3 + off, cy - 10 + i * 7, 2, c);
+        }
+        break;
+    case 5:                                  /* CRICKETS: the moon, the stars blinking */
+        disc(cx - 4, cy - 2, 9, on ? RGB(246, 236, 210) : TH_LINE);
+        disc(cx + 1, cy - 5, 8, TH_BG);
+        for (i = 0; i < 4; i++)
+            if (!on || ((now / 300u + (uint32_t)i) % 3u))
+                cv_rect(cx + 6 + (i & 1) * 5, cy - 9 + i * 5, 2, 2, on ? RGB(246, 214, 92) : TH_LINE);
+        break;
+    case 6:                                  /* the DUST: a record turning, its crackle */
+        disc(cx, cy, 13, on ? RGB(30, 30, 30) : TH_BG);
+        circle(cx, cy, 13, c);
+        circle(cx, cy, 9, on ? TH_GRAY : TH_LINE);
+        circle(cx, cy, 6, on ? TH_GRAY : TH_LINE);
+        disc(cx, cy, 3, on ? RGB(232, 72, 64) : TH_LINE);
+        if (on) {
+            float a = (float)now * 0.006f;
+            cv_rect(cx + (int)(11.0f * fm_cosf(a)), cy + (int)(11.0f * fm_sinf(a)), 2, 2, TH_TEXT);
+        }
+        break;
+    default: {                               /* TAPE: a little cassette, its reels turning */
+        int ph = on ? (int)(now / 40u % 24u) : 0;
+        cv_rect(cx - 15, cy - 10, 30, 20, on ? CS_BODY : TH_LINE);
+        cv_rect(cx - 11, cy - 3, 22, 8, on ? CS_WINDOW : TH_BG);
+        mini_reel(cx - 6, cy + 1, ph, on);
+        mini_reel(cx + 6, cy + 1, ph, on);
+        break;
+    }
+    }
+}
+static void draw_atmo(void)
+{
+    static const uint8_t FLD[8] = {F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_DUST, F_ATAPE};
+    int i, row = ui.row[PG_ATMO] & 1;
+    uint32_t now = plat_ms();
+    for (i = 0; i < 8; i++) {
+        int x = 4 + (i & 3) * 59, y = 30 + (i >> 2) * 76, f = FLD[i], v = field_get(f), on = v > 0,
+            mine = (i >> 2) == row;
+        cv_rect(x, y, 55, 72, on ? RGB(14, 14, 16) : TH_BG);
+        if (mine) {                          /* the knobs' row: each tile framed in its knob's colour */
+            uint16_t kc = knob_col(i & 3);
+            hline(x, y, 55, kc);
+            hline(x, y + 71, 55, dimc(kc, 6));
+        } else
+            hline(x, y, 55, TH_LINE);
+        atmo_icon(i, x + 27, y + 24, on, now);
+        text_box(x + 1, y + 45, 53, 1, &FONT_T, &FONT_T, field_label(f), on ? TH_TEXT : TH_GRAY);
+        cv_rect(x + 6, y + 61, 43, 3, TH_LINE);
+        cv_rect(x + 6, y + 61, v * 43 / 100, 3, mine ? knob_col(i & 3) : TH_GRAY);
+    }
 }
 
 /* GLOBAL: a wooden metronome swinging in time, the tempo big, the swing and the dust under it */
@@ -1302,6 +1449,7 @@ static void draw_body(void)
     case PG_REC: draw_tape(); break;
     case PG_ARP: draw_seq(); break;
     case PG_GLOB: draw_global(); break;
+    case PG_ATMO: draw_atmo(); break;
     default: break;
     }
 }

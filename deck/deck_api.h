@@ -12,6 +12,7 @@
  * between dk_lock() and dk_unlock(): the render postpones the sequencer (never the sound) while the song is locked. */
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 /* big zeroed buffers: the device's .pool RAM */
 #if defined DK_HOST || defined PLAT_HOST
@@ -151,6 +152,10 @@ enum { TR_HALF = 1, TR_DOUBLE = 2, TR_REVERSE = 4, TR_UP = 8, TR_DOWN = 16, TR_S
 typedef struct {
     uint8_t part, reps, tricks, drop;   /* drop: tracks silenced on this block (a bit each) */
 } dk_block_t;
+typedef struct {                        /* a drum sound's own settings (0 = as the kit) */
+    int8_t level, pan, tune, decay;     /* level: half dB (-24..+12); pan -50..50; tune, decay: offsets to p[0], p[1] */
+    uint8_t rev, echo, crush, rsv;      /* extra sends 0..100; crush: bits and rate down, 0..100 */
+} dk_lane_t;
 typedef struct {
     uint8_t label, bars, rsv[2];        /* label: INTRO VERSE PRE CHORUS DROP BRIDGE BREAK OUTRO; bars 1..16 */
 } dk_part_t;
@@ -174,7 +179,12 @@ typedef struct {
     uint8_t ball[12], nball, ball_trk;  /* TOMBOLA's balls (their notes) */
     float garden[4];                    /* the screen's world (the tape's): its day, its flower */
     uint8_t rsv[16];
+    /* (added 2026-10: an older project ends here, DK_SONG_V1; the rest loads as zeros, which are the defaults) */
+    dk_lane_t lane[DK_NTRACK][8];       /* a drum track's sounds, each its own */
+    uint8_t atmo[8];                    /* ATMO: the layers' levels 0..100 (the tape's atmo list) */
+    uint8_t tapesim, atmo_lvl, rsv2[6]; /* ATMO: the tape emulation 0..100; the layers' master level (0 = 100) */
 } dk_song_t;
+#define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
 
 extern dk_song_t dk_song;
 extern dk_ev_t dk_ev[DK_NEV];
@@ -220,6 +230,14 @@ typedef struct {
                                          * (0 rest), lanes[1] its length in sixteenths, lanes[2] the octave (+1) */
 } dk_finger_t;
 
+/* an ATMO layer: an engine's voice that keeps going (WORLD's rain, its fire...) at a level of its own */
+typedef struct dk_atmo_s {
+    const char *name;
+    uint8_t eng;
+    int8_t p[3];                        /* its engine's first three parameters */
+    float gain;
+} dk_atmo_t;
+
 typedef struct {
     const char *name;
     void (*init)(void);                 /* once at boot (its tables) */
@@ -251,6 +269,8 @@ typedef struct {
     const uint8_t *def_preset, *def_seq, *def_role;
     const uint8_t (*keys_set)[2];       /* the KEYS track's 12 presets across engines {engine, preset}, or 0 */
     uint8_t keys_role;                  /* the role whose track browses keys_set (R_ARP: "KEYS") */
+    const struct dk_atmo_s *atmo;       /* ATMO: up to six layers of the place's sound, under the music, or 0 */
+    uint8_t natmo;
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 
@@ -267,6 +287,7 @@ typedef struct {
     float trem;                         /* tremolo phase, 4.6 Hz */
     float spb;                          /* samples a beat */
     uint8_t pedal;                      /* the sustain pedal */
+    float tape;                         /* ATMO's TAPE: the master's tape emulation 0..1 (the tape's master reads it) */
 } dk_ctx_t;
 extern dk_ctx_t dk_ctx;
 uint32_t dk_rnd(void);

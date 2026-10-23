@@ -436,6 +436,31 @@ static void phrase(int inst, const char *out)
 #endif
 }
 
+/* ATMO to listen to: the demo's chorus three times: dry; with RAIN and the FIRE under it; with the TAPE as well */
+static void atmo_demo(const char *out)
+{
+    int pass;
+    fresh();
+    dk_lock();
+    TAPE.demo();
+    dk_song.play_mode = 0;
+    dk_song.cur_part = 3;
+    dk_unlock();
+    dk_cmd(C_RETUNE, 0, 0, 0);
+    run(0.1);
+    reset_out();
+    dk_cmd(C_PLAY, 1, 0, 0);
+    for (pass = 0; pass < 3; pass++) {
+        dk_lock();
+        dk_song.atmo[0] = pass ? 45 : 0;     /* RAIN */
+        dk_song.atmo[1] = pass ? 35 : 0;     /* FIRE */
+        dk_song.tapesim = pass == 2 ? 70 : 0;
+        dk_unlock();
+        run(10.0);
+    }
+    wav(out);
+}
+
 static void bench(void)
 {
     int i, t;
@@ -453,6 +478,36 @@ static void bench(void)
     dk_cmd(C_PLAY, 1, 0, 0);
     run(20.0);
     report("bench: the demo's CHORUS");
+    /* the same with ATMO's six layers and the tape all the way up (the worst it can be asked) */
+    dk_lock();
+    for (i = 0; i < 6; i++)
+        dk_song.atmo[i] = 100;
+    dk_song.tapesim = 100;
+    dk_unlock();
+    reset_out();
+    run(5.0);
+    report("bench: + ATMO all six, TAPE 100");
+    dk_lock();
+    dk_song.tapesim = 0;
+    dk_unlock();
+    reset_out();
+    run(3.0);
+    report("bench: + ATMO all six alone");
+    dk_lock();
+    for (i = 0; i < 6; i++)
+        dk_song.atmo[i] = 0;
+    dk_song.tapesim = 100;
+    dk_unlock();
+    run(3.0);
+    reset_out();
+    run(3.0);
+    report("bench: + TAPE 100 alone");
+    dk_lock();
+    for (i = 0; i < 6; i++)
+        dk_song.atmo[i] = 0;
+    dk_song.tapesim = 0;
+    dk_unlock();
+    run(2.0);
 #ifdef DK_PROF
     {
         int k;
@@ -562,6 +617,8 @@ int main(int argc, char **argv)
         phrase(atoi(argv[2]) & 3, argv[3]);
     else if (!strcmp(m, "balance"))
         balance();
+    else if (!strcmp(m, "atmo"))
+        atmo_demo(argc > 2 ? argv[2] : "out/atmo.wav");
     else if (!strcmp(m, "bench"))
         bench();
 #ifdef DK_PROF

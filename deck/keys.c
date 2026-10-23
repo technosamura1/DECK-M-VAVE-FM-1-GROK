@@ -34,6 +34,42 @@ static int black_of(int k)
 }
 static int trk_oct(int t) { return dk_song.trk[t].oct + (int8_t)dk_song.koct; }
 
+/* SCALE as on a piano: a white key keeps its letter (the C key plays the scale's C, C# or Cb; the D key, between the two
+ * black ones, its D). On a seven-note scale each letter is one degree, counted from the root's letter (flat keys
+ * spelled with flats: B flat's E key plays E flat); on the others the scale's note nearest the key */
+static int white_degree(int w)               /* 0..6 the degree, -1 when the scale is not seven notes */
+{
+    static const int8_t LETTER_OF_WHITE[12] = {0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6};   /* C . D . E F . G . A . B */
+    static const int8_t LETTER_OF_ROOT[12] = {0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6};    /* C Db D Eb E F F# G Ab A Bb B */
+    int st[12], m = dk_scale(dk_song.mode, st), pc = (53 + WHITE_K[w & 15]) % 12;
+    if (m != 7)
+        return -1;
+    return ((LETTER_OF_WHITE[pc] - LETTER_OF_ROOT[dk_song.root % 12]) % 7 + 7) % 7;
+}
+static int white_pitch(int w, int t)         /* the note a white key plays in SCALE (near the key's own pitch) */
+{
+    int st[12], m = dk_scale(dk_song.mode, st), root = dk_song.root % 12, phys = 53 + WHITE_K[w & 15] + 12 * trk_oct(t);
+    int d = white_degree(w), pc, p, i, best = 99;
+    if (d >= 0)
+        pc = (root + st[d]) % 12;
+    else {                                   /* five or six notes: the nearest of them (a tie goes up) */
+        pc = root;
+        for (i = 0; i < m; i++) {
+            int q = (root + st[i]) % 12, dd = ((q - phys % 12) % 12 + 12) % 12;
+            if (dd > 6)
+                dd -= 12;
+            if ((dd < 0 ? -dd * 2 + 1 : dd * 2) < best) {
+                best = dd < 0 ? -dd * 2 + 1 : dd * 2;
+                pc = q;
+            }
+        }
+    }
+    p = phys - ((phys - pc) % 12 + 12) % 12;  /* at or below the key, then the nearer of the two */
+    if (phys - p > 6)
+        p += 12;
+    return p;
+}
+
 /* a chord for degree d (0..6, or 10..13 a borrowed one) in the song's key, voiced and led, around base */
 static int chord_build(int d, int base, int *out)
 {
@@ -107,10 +143,7 @@ static int key_note_of(int k, int t)
     }
     if (!dk_song.layout || w < 0)               /* CHROMA (or a black key in it): the key's own pitch */
         return 53 + k + 12 * trk_oct(t);
-    {
-        int base = 48 + dk_song.root % 12 + 12 * trk_oct(t), bi = dk_note_index(dk_song.root % 12, dk_song.mode, base);
-        return dk_scale_note(dk_song.root % 12, dk_song.mode, bi + w);
-    }
+    return white_pitch(w, t);
 }
 
 /* a key down: what it plays (vel 1..127) */
@@ -151,17 +184,9 @@ void keys_down(int k, int vel)
                 kh[k].trk = 0;
             }
             return;
-        case 2:                                  /* OCTAVE: down, up, NOTE REPEAT (later), FILL */
-            if (b == 0 || b == 1) {
-                int o = dk_song.trk[t].oct + (b ? 1 : -1);
-                if (o >= -3 && o <= 3)
-                    dk_song.trk[t].oct = (int8_t)o;
-            } else if (b == 3) {
-                dk_cmd(C_FILL, 1, 0, 0);
-                kh[k].kind = 1;
-                kh[k].notes[0] = 0xFF;
-                kh[k].trk = 0;
-            }
+        case 2:                                  /* NOTES: the black keys play their own pitch (the sharps and flats) */
+            nt[0] = 53 + k + 12 * trk_oct(t);
+            notes_post(k, t, nt, 1, vel, 0);
             return;
         default:                                 /* CHORDS: the degrees, then the borrowed four */
             n = chord_build(b < 7 ? b : 10 + (b - 7), 48 + 12 * trk_oct(harm), nt);
@@ -169,9 +194,9 @@ void keys_down(int k, int vel)
             return;
         }
     }
-    if (w >= 0 && dk_song.layout && dk_song.white) {   /* WHITE = CHORDS: a chord a degree */
-        int deg = w % 7 + (w >= 7 ? 7 : 0);
-        n = chord_build(deg % 7, 48 + 12 * trk_oct(harm) + (deg >= 7 ? 12 : 0), nt);
+    if (w >= 0 && dk_song.layout && dk_song.white) {   /* WHITE = CHORDS: a chord a degree (the key's letter) */
+        int deg = white_degree(w) >= 0 ? white_degree(w) : w % 7;
+        n = chord_build(deg, 48 + 12 * trk_oct(harm) + (53 + WHITE_K[w] >= 65 ? 12 : 0), nt);
         notes_post(k, harm, nt, n, vel, dk_song.strum > 0);
         return;
     }

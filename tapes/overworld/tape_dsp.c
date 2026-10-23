@@ -257,6 +257,13 @@ static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 5, 6}, DEF_PRESET[DK_NTRA
 static const uint8_t KEYS_SET[DK_NFACT][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9},  {3, 0}, {3, 1},
                                               {3, 3}, {3, 4}, {7, 0}, {7, 1}, {7, 7}, {7, 9}};
 
+/* ATMO (the SEL page): the place under the music, each layer a WORLD voice of its own (TYPE, AMOUNT, TONE) */
+static const dk_atmo_t ATMO[6] = {
+    {"RAIN", 6, {W_RAIN, 55, 50}, 0.9f},     {"FIRE", 6, {W_FIRE, 60, 55}, 1.0f},
+    {"BIRDS", 6, {W_BIRDS, 50, 60}, 0.8f},   {"OCEAN", 6, {W_OCEAN, 55, 45}, 0.9f},
+    {"WIND", 6, {W_WIND, 50, 45}, 0.8f},     {"CRICKETS", 6, {W_CRICKETS, 50, 55}, 0.7f},
+};
+
 #include "demo.c"
 
 static void tape_init(void)
@@ -270,4 +277,5 @@ const dk_tape_t TAPE = {
     "OVERWORLD", tape_init, ENGINES, 8, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
     STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FINGER_DRUM, FINGER_MEL, PERFORM, PERFORM_ACT, MOODS, 8,
     BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
+    ATMO, 6,
 };

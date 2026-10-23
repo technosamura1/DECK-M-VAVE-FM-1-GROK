@@ -20,6 +20,11 @@ static uint32_t fnv(uint32_t s, const void *p, uint32_t n)
         s = (s ^ b[i]) * 0x01000193u;
     return s;
 }
+static uint32_t song_sum_n(uint32_t nsong)   /* (an older project: its shorter song) */
+{
+    uint32_t s = fnv(0x811C9DC5u, &dk_song, nsong);
+    return fnv(s, dk_ev, (uint32_t)dk_song.nev * sizeof(dk_ev_t));
+}
 static uint32_t song_sum(void)
 {
     uint32_t s = fnv(0x811C9DC5u, &dk_song, sizeof dk_song);
@@ -29,7 +34,7 @@ static uint32_t song_sum(void)
 static const phead_t *head_of(int slot)
 {
     const phead_t *h = (const phead_t *)plat_data(DK_PROJ_AT + (uint32_t)slot * DK_PROJ_SPAN);
-    if (!h || h->magic != PROJ_HEAD_MAGIC || h->format != DK_FORMAT || h->nsong != sizeof(dk_song_t) ||
+    if (!h || h->magic != PROJ_HEAD_MAGIC || h->format != DK_FORMAT || h->nsong < DK_SONG_V1 || h->nsong > sizeof(dk_song_t) ||
         h->nev > DK_NEV)
         return 0;
     return h;
@@ -69,6 +74,15 @@ static void song_track_order(void)
     }
     if (same)
         return;
+    {
+        static dk_lane_t ln[DK_NTRACK][8];
+        for (t = 0; t < DK_NTRACK; t++)
+            for (j = 0; j < 8; j++)
+                ln[to[t]][j] = dk_song.lane[t][j];
+        for (t = 0; t < DK_NTRACK; t++)
+            for (j = 0; j < 8; j++)
+                dk_song.lane[t][j] = ln[t][j];
+    }
     for (t = 0; t < DK_NTRACK; t++)
         tk[to[t]] = dk_song.trk[t];
     for (p = 0; p < DK_NPART; p++)
@@ -108,14 +122,14 @@ int project_load(int slot)
     if (!src)
         goto empty;
     dst = (uint8_t *)&dk_song;
-    for (i = 0; i < sizeof dk_song; i++)
-        dst[i] = src[i];
+    for (i = 0; i < sizeof dk_song; i++)   /* an older, shorter song: the rest zeros (the defaults) */
+        dst[i] = i < h->nsong ? src[i] : 0;
     n = h->nev * sizeof(dk_ev_t);
-    src = plat_data(at + sizeof(phead_t) + sizeof dk_song);
+    src = plat_data(at + sizeof(phead_t) + h->nsong);
     dst = (uint8_t *)dk_ev;
     for (i = 0; src && i < n; i++)
         dst[i] = src[i];
-    if (!src || dk_song.magic != DK_MAGIC || dk_song.nev != h->nev || song_sum() != h->sum)
+    if (!src || dk_song.magic != DK_MAGIC || dk_song.nev != h->nev || song_sum_n(h->nsong) != h->sum)
         goto empty;
     for (i = 0; i < dk_song.nev; i++)      /* nothing waits for a pass that is long gone */
         dk_ev[i].fl &= (uint8_t)~EV_FRESH;
