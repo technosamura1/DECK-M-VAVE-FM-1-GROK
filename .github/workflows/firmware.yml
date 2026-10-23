@@ -1,0 +1,79 @@
+# Сборка прошивки DECK в облаке GitHub (Linux-тулчейн JieLi).
+# На каждый push и PR: собирает .fwsc для каждой кассеты из tapes/ и кладёт архив «к установке» в Artifacts.
+# На push в main: дополнительно обновляет релиз «latest» — оттуда прошивку удобно скачать с телефона/ПК.
+name: firmware
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firmware-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Кэш тулчейна и SDK JieLi
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.jieli
+          key: jieli-linux-tc-ac79-d179b448-v1
+
+      - name: Скачать тулчейн JieLi
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: sh base/tools/get_toolchain.sh ~/.jieli
+
+      - name: Скачать SDK AC79
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: sh base/bsp/tools/get_sdk.sh ~/.jieli/ac79-sdk
+
+      - name: Собрать прошивку для каждой кассеты
+        env:
+          JIELI_TOOLCHAIN: /home/runner/.jieli/toolchain
+          AC79_SDK: /home/runner/.jieli/ac79-sdk
+        run: |
+          set -e
+          mkdir -p dist
+          for t in $(ls tapes); do
+            echo "::group::$t"
+            sh build.sh "$t"
+            d="dist/deck-$t"
+            mkdir -p "$d"
+            cp "out/deck-$t.fwsc" out/fm1_install.py "$d/"
+            sed "s/deck-overworld.fwsc/deck-$t.fwsc/; s/DECK + OVERWORLD/DECK + $(echo $t | tr a-z A-Z)/" out/install-deck.bat > "$d/install-deck.bat"
+            [ -f "out/DECK_инструкция.pdf" ] && cp "out/DECK_инструкция.pdf" "$d/" || true
+            (cd dist && zip -qr "deck-$t.zip" "deck-$t")
+            echo "::endgroup::"
+          done
+          ls -la dist
+
+      - name: Архив в Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deck-firmware-${{ github.sha }}
+          path: dist/*.zip
+          retention-days: 30
+
+      - name: Релиз «latest» (только main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest dist/*.zip \
+            --title "Свежая прошивка (${GITHUB_SHA::7})" \
+            --notes "Собрано автоматически из main. Скачай deck-<кассета>.zip, распакуй на ПК, подключи FM-1 по USB и запусти install-deck.bat. Лучше на второй FM-1." \
+            --latest

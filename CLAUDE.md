@@ -4,10 +4,13 @@ DECK — «свой OP-1» на FM-1: 6 дорожек, 8 частей A–H, т
 секвенсора, микшер, экспорт в .mid. Звук и картинка — из сменной кассеты; первая собранная кассета — **OVERWORLD**
 (лоу-фай эмбиент в духе C418: пианино с войлоком, пады, колокольчики, пыльные барабаны, звуки мира, сад на экране).
 ТЗ: `docs/DECK_SPEC.md`, `docs/OVERWORLD_TAPE.md`, порядок работы — `docs/CLAUDE_TASK.md` (копии из `..`; макеты `docs/ui_concepts`).
-Репозиторий на GitHub: из облака (телефон) собирается только симулятор и тесты; прошивку `.fwsc` собирают дома (тулчейн JieLi).
+Репозиторий на GitHub. Прошивку `.fwsc` собирает **GitHub Actions** (`.github/workflows/firmware.yml`, Linux-тулчейн JieLi) на каждый push/PR → Artifacts; push в `main` → релиз `latest` с `deck-<кассета>.zip` (fwsc + install-deck.bat + fm1_install.py + инструкция). Сборка под Linux побайтно совпадает с домашней. Облачная сессия (телефон) может править код, гонять симулятор/тесты и ждать зелёную сборку в PR.
 Пользователь — Даниил, по-русски, коротко; показывать звук и картинки, не код.
 
-## Сборка и тесты (на этом ПК)
+## Сборка и тесты
+- Linux/облако: `JIELI_TOOLCHAIN=~/.jieli/toolchain AC79_SDK=~/.jieli/ac79-sdk sh build.sh overworld` (тулчейн: `sh base/tools/get_toolchain.sh`, SDK: `sh base/bsp/tools/get_sdk.sh ~/.jieli/ac79-sdk`).
+
+### На домашнем ПК
 - `./build.sh overworld` → `out/deck-overworld.fwsc` (тулчейн JieLi из `../../jlwin`, SDK `../../jieli/sdk`).
 - `./build.sh overworld --host` → симулятор `deck/build/host/deck_host` (w64devkit gcc).
 - `sh tests/run_tests.sh` → звук (все пресеты в `out/sounds`, проверка `tools/sound_check.py`), метроном, CPU,
