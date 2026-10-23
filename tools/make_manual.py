@@ -24,12 +24,15 @@ os.makedirs(TMP, exist_ok=True)
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "out", "DECK_инструкция.pdf")
 
 FONTS = r"C:\Windows\Fonts"
-pdfmetrics.registerFont(TTFont("Light", os.path.join(FONTS, "segoeuil.ttf")))
-pdfmetrics.registerFont(TTFont("Body", os.path.join(FONTS, "segoeui.ttf")))
-pdfmetrics.registerFont(TTFont("Semi", os.path.join(FONTS, "seguisb.ttf") if os.path.exists(os.path.join(FONTS, "seguisb.ttf")) else os.path.join(FONTS, "segoeuib.ttf")))
-pdfmetrics.registerFont(TTFont("Bold", os.path.join(FONTS, "segoeuib.ttf")))
-pdfmetrics.registerFont(TTFont("Mono", os.path.join(FONTS, "consola.ttf")))
-pdfmetrics.registerFont(TTFont("MonoB", os.path.join(FONTS, "consolab.ttf")))
+if os.path.exists(os.path.join(FONTS, "segoeui.ttf")):      # Windows: Segoe UI + Consolas
+    FF = {"Light": "segoeuil.ttf", "Body": "segoeui.ttf", "Bold": "segoeuib.ttf", "Mono": "consola.ttf", "MonoB": "consolab.ttf",
+          "Semi": "seguisb.ttf" if os.path.exists(os.path.join(FONTS, "seguisb.ttf")) else "segoeuib.ttf"}
+else:                                                        # Linux (the cloud): DejaVu
+    FONTS = "/usr/share/fonts/truetype/dejavu"
+    FF = {"Light": "DejaVuSans-ExtraLight.ttf", "Body": "DejaVuSans.ttf", "Semi": "DejaVuSans-Bold.ttf",
+          "Bold": "DejaVuSans-Bold.ttf", "Mono": "DejaVuSansMono.ttf", "MonoB": "DejaVuSansMono-Bold.ttf"}
+for _n, _f in FF.items():
+    pdfmetrics.registerFont(TTFont(_n, os.path.join(FONTS, _f)))
 registerFontFamily("Body", normal="Body", bold="Semi", italic="Body", boldItalic="Semi")
 
 # the tape's colours: black, a warm white, the three encoders (green, blue, yellow), the greys, the record's red
@@ -171,8 +174,8 @@ def keyboard_png(name, white, black, title_w="", title_b=""):
     Wd, Hd = 1700, 500
     im = Image.new("RGB", (Wd, Hd), (0, 0, 0))
     d = ImageDraw.Draw(im)
-    fm = ImageFont.truetype(os.path.join(FONTS, "consolab.ttf"), 30)
-    fs = ImageFont.truetype(os.path.join(FONTS, "consola.ttf"), 22)
+    fm = ImageFont.truetype(os.path.join(FONTS, FF["MonoB"]), 30)
+    fs = ImageFont.truetype(os.path.join(FONTS, FF["Mono"]), 22)
     kw, x0, y0, kh = 100, 50, 80, 300
     blacks_after = [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14]          # the white key a black one sits after (F3..G5)
     for i in range(16):
@@ -208,8 +211,8 @@ def encoders_png():
     """the three coloured knobs and what each turns"""
     im = Image.new("RGB", (1500, 330), (0, 0, 0))
     d = ImageDraw.Draw(im)
-    fb = ImageFont.truetype(os.path.join(FONTS, "segoeuil.ttf"), 44)
-    fs = ImageFont.truetype(os.path.join(FONTS, "consola.ttf"), 28)
+    fb = ImageFont.truetype(os.path.join(FONTS, FF["Light"]), 44)
+    fs = ImageFont.truetype(os.path.join(FONTS, FF["Mono"]), 28)
     items = [((124, 204, 96), "SELECT", "поле 1 · на PLAY — темп"), ((110, 186, 244), "ALGO", "поле 2 · на PLAY — MACRO"),
              ((246, 214, 92), "PRESET", "поле 3 · на PLAY — MOOD")]
     for i, (col, nm, what) in enumerate(items):
@@ -270,7 +273,7 @@ def build():
     story += section("01", "Установка", "Пять минут и один двойной клик. Лучше ставить на второй, экспериментальный FM-1.")
     steps = [("1", "Подготовка", "Зарядить FM-1 полностью. Закрыть Reaper и всё, что работает с MIDI. Не дать компьютеру уснуть."),
              ("2", "Кабель", "FM-1 — к компьютеру напрямую, без хаба, кабелем с передачей данных (не только зарядным)."),
-             ("3", "Запуск", f"Открыть папку {k('deck\\src\\out')} и дважды кликнуть {k('install-deck.bat')}. "
+             ("3", "Запуск", f"Скачать {k('deck-overworld.zip')} (GitHub → Releases → latest), распаковать и дважды кликнуть {k('install-deck.bat')}. "
                              "Он сам поставит нужное и запишет прошивку."),
              ("4", "Ждать", "Не трогать кабель, пока окно не скажет, что готово. Если связь оборвалась — FM-1 не выключать, "
                             "просто запустить установщик ещё раз."),
@@ -304,14 +307,14 @@ def build():
                            "параметры (тип пада, баса, кита…).", S_SM))
     story.append(Spacer(1, 6))
     btn = [[k("FX"), "страница SOUND · ещё раз — следующая вкладка", "—", "—"],
-           [k("SEL"), "страница SEQ · ещё раз — второй ряд", "+ белая 1–8: тип секвенсора", "—"],
+           [k("SEQ"), "страница SEQ · ещё раз — второй ряд", "+ белая 1–8: тип секвенсора", "BAKE: DRIVE → STEP"],
            [k("ENV"), "страница ROAD (трасса)", "гараж частей", "—"],
            [k("LFO"), "страница MIX · ещё раз — второй ряд", "+ ручка на SOUND: модулятор на неё", "—"],
            [k("PLAY"), "старт / стоп", "PART ↔ SONG", "тапы: TAP TEMPO"],
            [k("REC"), "запись (со счётом)", "1 с: очистить клип", "метроном вкл/выкл"],
-           [k("GLO"), "следующая дорожка", "мьют дорожки", "—"],
-           [k("ARP"), "следующая часть (с конца такта)", "+ белая A–H: часть", "—"],
-           [k("SEQ"), "FILL, пока держишь", "—", "BAKE: DRIVE → STEP"],
+           [k("SEL"), "следующая дорожка", "мьют дорожки", "—"],
+           [k("ARP"), "арпеджио на дорожке · ещё раз — LATCH", "+ белая A–H: часть", "ARP выкл"],
+           [k("GLO"), "FILL (сбивка всех дорожек), пока держишь", "—", "—"],
            [k("EDIT"), "страница KEYS · ещё раз — ряд", "UNDO", "REDO"],
            [k("SAVE"), "страница PROJECT · ещё раз — ряд", "+ белая 13–16: сохранить пресет", "—"],
            [k("HOME"), "страница PLAY (сад)", "SHIFT", "белая 1–16 пресет · чёрная 1–6 дорожка"],
@@ -328,7 +331,7 @@ def build():
                       f"{k('HOME')} + чёрная 1–6 — выбрать дорожку: 1 барабаны, 2 бас, 3 пианино, 4 клавиши, 5 колокола, 6 природа.",
                       f"{k('HOME')} + чёрная 7–11 — клип: копировать, вставить, удвоить, «варьировать» (чуть меняет ноты в ладу), "
                       "«очеловечить» (чуть сдвигает время и силу).",
-                      f"Держи {k('ARP')} + белая 1–8 — перейти к части A–H. Держи {k('SEL')} + белая 1–8 — тип секвенсора."])
+                      f"Держи {k('ARP')} + белая 1–8 — перейти к части A–H. Держи {k('SEQ')} + белая 1–8 — тип секвенсора."])
     story.append(Spacer(1, 8))
     story.append(kb("kb_play.png", ["I", "II", "III", "IV", "V", "VI", "VII", "I'", "II'", "III'", "IV'", "V'", "VI'",
                                     "VII'", "I''", "II''"],
@@ -349,7 +352,7 @@ def build():
           ("4", "Записать петлю", f"{k('REC')}: метроном отсчитает такт (4-3-2-1 на кассете), дальше играй. "
                                   f"Петля крутится и дописывается проходами. {k('REC')} ещё раз — стоп. "
                                   f"Не понравился проход — держи {k('EDIT')}: он исчезнет."),
-          ("5", "Включить автопилот", f"{k('HOME')} + чёрная 1 (барабаны), держи {k('SEL')} + белая 5 — секвенсор DRIVE. "
+          ("5", "Включить автопилот", f"{k('HOME')} + чёрная 1 (барабаны), держи {k('SEQ')} + белая 5 — секвенсор DRIVE. "
                                       f"{k('PLAY')}: барабаны играют сами по стилю. Ручкой {c('ALGO', 'b')} на странице SEQ "
                                       "выбери стиль LOFI.")]
     rows = [[Paragraph(n, ParagraphStyle("st2", parent=S_STEP, textColor=Y)), [Paragraph(h, S_H2), Paragraph(t, S_P)]] for n, h, t in qs]
@@ -375,13 +378,13 @@ def build():
           "ENGINE: три главных параметра движка, каждый — картинкой своего цвета. HOME + ручка — скрытые (тип, ширина…).",
           "ENV: атака, затухание, отпускание. FX: эффект дорожки и его ручки. MOD: модулятор и куда он идёт.",
           f"Быстрый модулятор: держи {k('LFO')} и крути ручку на ENGINE — модуляция садится прямо на неё."]),
-        ("SEQ", "p07_seq_step_drums.png", Y, f"{k('SEL')}",
+        ("SEQ", "p07_seq_step_drums.png", Y, f"{k('SEQ')}",
          ["Вид зависит от секвенсора дорожки: сетка шагов, мини-ролл, ARP, DRIVE, FINGER, HOLD, TOMBOLA.",
           "Барабаны в STEP: белые клавиши — 16 шагов, чёрные — дорожки кита (бочка, щётка, шейкер…).",
           "Держишь шаг и крутишь ручку 1 — p-lock: этот шаг звучит со своим значением.",
-          f"Второй ряд ({k('SEL')} ещё раз): тип секвенсора, свинг, длина клипа."]),
+          f"Второй ряд ({k('SEQ')} ещё раз): тип секвенсора, свинг, длина клипа (у ARP — ритм, гейт, источник)."]),
         ("MIX", "p08_mix.png", G, f"{k('LFO')}",
-         ["Шесть фейдеров с индикаторами. Выбранная дорожка — как обычно (HOME + чёрная).",
+         ["Шесть фейдеров с индикаторами. Под каждым — номер дорожки в её цвете, имя выбранной — сверху. Выбрать: SEL или HOME + чёрная.",
           "Белые 1–6 — мьют, чёрные 1–6 — соло. Живое сведение прямо с клавиш.",
           f"Ручки: громкость, панорама, реверб. Второй ряд ({k('LFO')} ещё раз): эхо, сайдчейн, тип пространства."]),
         ("ROAD", "p09_road.png", B, f"{k('ENV')}",
@@ -417,12 +420,15 @@ def build():
         story.append(PageBreak())
 
     # ---- 05 sequencers
-    story += section("05", "Восемь секвенсоров", "У каждой дорожки свой. Держи SEL и нажми белую 1–8.")
+    story += section("05", "Восемь секвенсоров", "У каждой дорожки свой. Держи SEQ и нажми белую 1–8.")
     seqs = [["1 STEP", "Шаги шестнадцатыми. Курсор ручкой, клавиша ставит ноту или аккорд; та же нота ещё раз — стирает. "
                        "У шага: сила, вероятность, рэтчет, p-lock."],
             ["2 LIVE", "Играешь — пишется петля, с квантованием 0–100 %. Каждый проход отменяется отдельно."],
             ["3 ENDLESS", "Играешь ноты без ритма — они крутятся по кругу в темпе (как Endless у OP-1)."],
-            ["4 ARP", "Арпеджио из зажатых нот: UP, DOWN, UPDN, RAND, ORDER, CHORD; 1/8…1/32; до 3 октав; LATCH."],
+            ["4 ARP", "Своя кнопка ARP: тап — включить, ещё тап — LATCH (ноты держатся сами), HOME+ARP — выключить. "
+                      "Режимы UP, DOWN, UPDN, RAND, ORDER, CHORD; 1/4…1/32 с триолями; до 3 октав. Второй ряд: RHYTHM "
+                      "(STRAIGHT, PULSE, OFFBEAT, DOTTED, GALLOP, RISE, SKIP), GATE (SHORT…TIE), PLAYS: KEYS — зажатые ноты, "
+                      "CHORD — аккорд песни, клавиши можно не держать."],
             ["5 DRIVE", "Автопилот DREAM: играет сам по стилю (C418, LOFI, AMBIENT, CAMPFIRE) и по текущей гармонии. "
                         "ENERGY — плотность, VARIATION — фантазия. Сыграл фразу — он ответит. HOME+SEQ — «запечь» в STEP."],
             ["6 FINGER", "Каждая белая — готовый рисунок на такт (грув или фигура). Держишь — играет, две — складываются. "
@@ -432,8 +438,8 @@ def build():
                           "Держи REC — вытряхнуть. Бесконечная, никогда не повторяющаяся мелодия."]]
     story.append(table(seqs, [30, CW - 30], pad=6))
     story.append(Spacer(1, 6 * mm))
-    story.append(two(shot("p15_seq_tombola.png", 78), shot("p18_seq_drive.png", 78), 78, 86, 8))
-    story.append(Paragraph("TOMBOLA и DRIVE на странице SEQ", S_CAP))
+    story.append(two(shot("p16_seq_arp.png", 78), shot("p15_seq_tombola.png", 78), 78, 86, 8))
+    story.append(Paragraph("ARP (ритм и ноты на своей высоте) и TOMBOLA на странице SEQ", S_CAP))
     story.append(PageBreak())
 
     # ---- 06 keyboard
@@ -467,8 +473,8 @@ def build():
            ["DUSTKIT", "лоу-фай барабаны: бочка, щётка, рим, шейкер, хет, клэп, дерево", "TUNE · DECAY · DUST", "TAPE"],
            ["WORLD", "дождь, ветер, костёр, ручей, капли, сверчки, птицы, океан, гроза, снег", "TYPE · AMOUNT · TONE",
             "WEATHER"]]
-    story.append(table(eng, [24, 74, 46, CW - 144], head=["ДВИЖОК", "ЧТО ЭТО", "РУЧКИ", "MACRO"], pad=5))
-    story.append(Spacer(1, 6 * mm))
+    story.append(table(eng, [24, 74, 46, CW - 144], head=["ДВИЖОК", "ЧТО ЭТО", "РУЧКИ", "MACRO"], pad=3))
+    story.append(Spacer(1, 2 * mm))
     story.append(Paragraph("Эффекты дорожки", S_H2))
     story.append(Paragraph("VINYL (треск, шип) · TAPE (вау, сатурация) · LOFI (биты, частота) · CHORUS · FILTER · TREMOLO · "
                            "SPRING (пружинный ревер). Посылы: ECHO — плёночное эхо, REVERB — ROOM, HALL, CAVE, SHIMMER. "
@@ -478,7 +484,7 @@ def build():
              ["CAVE", "64", "минор · AMBIENT", "капли, гул"], ["SNOW", "68", "лидийский · AMBIENT", "ветер, шаги"],
              ["OCEAN", "70", "миксолидийский · C418", "океан"], ["NIGHT", "60", "мажор · C418", "сверчки"],
              ["CAMPFIRE", "82", "пентатоника · CAMPFIRE", "костёр"], ["STUDY", "84", "дорийский · LOFI", "дождь, винил"]]
-    story.append(table(moods, [30, 16, 62, CW - 108], head=["MOOD", "BPM", "ЛАД · СТИЛЬ", "МИР"], pad=4))
+    story.append(table(moods, [30, 16, 62, CW - 108], head=["MOOD", "BPM", "ЛАД · СТИЛЬ", "МИР"], pad=2))
     story.append(PageBreak())
 
     # ---- 08 recording
@@ -504,7 +510,7 @@ def build():
     story += bullets([
         "Восемь частей A–H. У каждой — метка (INTRO, VERSE, PRE, CHORUS, DROP, BRIDGE, BREAK, OUTRO) и длина 1–16 тактов. "
         "Внутри части у каждой дорожки свой клип; клип короче части крутится по кругу.",
-        f"{k('ARP')} — следующая часть (переключится с конца такта), держи {k('ARP')} + белая — любая часть.",
+        f"Держи {k('ARP')} + белая A–H — перейти к части (переключится с конца такта).",
         "PART — крутится текущая часть. SONG — едем по трассе. Переключение: держи PLAY.",
         "Трасса (страница ROAD): цепочка до 64 блоков «часть × повторы + трюки». Трюки: HALF (полтемпа нот), DOUBLE, "
         "REVERSE (ноты задом наперёд), +12/−12, DROP (выключить дорожку на этом блоке), TAPESTOP в конце блока.",
@@ -519,7 +525,7 @@ def build():
     story += section("10", "В компьютер", "Reaper, MIDI и дорожки по отдельности.", G)
     story.append(Paragraph(c("EXPORT в .mid — главное", "g"), S_H2))
     story += bullets([
-        "Самый простой путь: открыть в Chrome файл deck\\src\\web\\export.html, выбрать FM-1, нажать Listen.",
+        "Самый простой путь: открыть в Chrome файл web\\export.html из репозитория, выбрать FM-1, нажать Listen.",
         f"На FM-1: {k('SAVE')} (страница PROJECT), потом чёрная 1 — EXPORT. Страница соберёт файл — кнопка «Save the .mid».",
         "Или из командной строки: python tools\\deck_export.py --port \"FM-1\" song.mid.",
         "В Reaper: перетащить .mid — шесть MIDI-дорожек с именами (движок + пресет), маркеры частей на таймлайне, "
@@ -537,11 +543,11 @@ def build():
     story += section("11", "Шпаргалка", "Одна страница — всё под рукой.", Y)
     cheat = [[k("HOME"), "сад · SHIFT"], [k("HOME") + " + белая", "пресет (13–16 — свои)"],
              [k("HOME") + " + чёрная 1–6", "дорожка"], [k("HOME") + " + чёрная 7–11", "копир. · вставить · удвоить · вариация · гуманизация"],
-             [k("FX"), "SOUND · вкладки"], [k("SEL"), "SEQ · держать + белая: секвенсор"], [k("ENV"), "ROAD · держать: гараж"],
+             [k("FX"), "SOUND · вкладки"], [k("SEQ"), "SEQ · держать + белая: секвенсор · HOME+: BAKE"], [k("ENV"), "ROAD · держать: гараж"],
              [k("LFO"), "MIX · держать + ручка: модулятор"], [k("EDIT"), "KEYS · держать: UNDO · HOME+: REDO"],
              [k("SAVE"), "PROJECT · держать + белая 13–16: свой пресет"], [k("PLAY"), "старт/стоп · держать: PART/SONG · HOME+: тап-темп"],
-             [k("REC"), "запись · держать: очистить · HOME+: метроном"], [k("GLO"), "дорожка → · держать: мьют"],
-             [k("ARP"), "часть → · держать + белая: часть"], [k("SEQ"), "FILL · HOME+: BAKE"], [k("OCT− / +"), "октава · HOME+: транспонировать клип"],
+             [k("REC"), "запись · держать: очистить · HOME+: метроном"], [k("SEL"), "дорожка → · держать: мьют"],
+             [k("ARP"), "ARP вкл · ещё раз: LATCH · HOME+: выкл · держать + белая: часть"], [k("GLO"), "FILL, пока держишь"], [k("OCT− / +"), "октава · HOME+: транспонировать клип"],
              ["Ручки", f"{c('зелёная', 'g')} · {c('голубая', 'b')} · {c('жёлтая', 'y')} — поля страницы"],
              ["K1–K4", "DUST · SIDECHAIN · SLEEP · SWING"]]
     story.append(table(cheat, [54, CW - 54], pad=5))
