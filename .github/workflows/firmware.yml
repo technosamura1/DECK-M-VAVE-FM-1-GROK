@@ -25,6 +25,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Python-пакеты сборки
+        run: pip install --quiet pillow
+
       - name: Кэш тулчейна JieLi
         id: cache
         uses: actions/cache@v4
