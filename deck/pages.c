@@ -582,7 +582,7 @@ static void draw_sound(void)                /* a synth module: the preset in its
         x += text_w(&FONT_XS, TAB[i]) + 10;
     }
     plate(4, 42, 232, 186);
-    text_box(12, 46, 150, 0, &FONT_T, &FONT_T, e->name, CS_INK);   /* the engine's name, as if printed on it */
+    text_box(18, 47, 150, 0, &FONT_T, &FONT_T, e->name, CS_INK);   /* the engine's name, as if printed on it */
     cv_rect(10, wy, 220, wh, CS_WINDOW);     /* the window */
     text_box(14, wy + 4, 212, 1, &FONT_B, &FONT_XS, preset_of(k->eng, k->preset, &tmp)->name, TH_TEXT);
     switch (tab) {
@@ -959,14 +959,14 @@ static void draw_road(void)
         wound = total ? (float)pos / (float)total : 0.0f;
         /* the reels, up in the corners, the tape coming down from them */
         plate(10, 28, 220, 62);                /* the cassette: SONG or PART, the blocks, the reels winding */
-        text_box(18, 32, 90, 0, &FONT_T, &FONT_T, dk_song.play_mode ? "SONG" : "PART", CS_INK);
+        text_box(24, 34, 90, 0, &FONT_T, &FONT_T, dk_song.play_mode ? "SONG" : "PART", CS_INK);
         {
             char *p = itoa_b(dk_song.nroad, s);
             cpy(p, dk_song.nroad == 1 ? " BLOCK" : " BLOCKS");
-            text_box(120, 32, 102, 2, &FONT_T, &FONT_T, s, CS_INK);
+            text_box(114, 34, 102, 2, &FONT_T, &FONT_T, s, CS_INK);
         }
         if (ui.road_rec)
-            text_box(18, 32, 90, 0, &FONT_T, &FONT_T, "REC", TH_REC);
+            text_box(24, 34, 90, 0, &FONT_T, &FONT_T, "REC", TH_REC);
         cv_rect(54, 46, 132, 36, CS_WINDOW);
         reel(74, 64, 1.0f - wound, phase);
         reel(166, 64, wound, phase);
