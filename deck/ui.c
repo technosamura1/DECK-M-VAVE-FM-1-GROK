@@ -999,7 +999,7 @@ static void turn(int i, int e)
         mark_dirty();
         return;
     }
-    if (f == F_SENOTE || f == F_SETIE || f == F_SEPITCH || f == F_SHIFT || (f == F_CURSOR && held(B_HOME))) {
+    if (f == F_SENOTE || f == F_SETIE || f == F_SEPITCH || f == F_SHIFT || f == F_MOVE || (f == F_CURSOR && held(B_HOME))) {
         int d = e > 0 ? 1 : -1;             /* the step editor: each turn an edit (a fast one counts once) */
         if (f == F_SENOTE)
             se_note(d);
@@ -1009,6 +1009,8 @@ static void turn(int i, int e)
             se_move(d, held(B_HOME));
         else if (f == F_SHIFT)
             se_rotate(d);
+        else if (f == F_MOVE)
+            se_transpose(d);
         else                                 /* HOME + K1: a bar at a time */
             field_set(F_CURSOR, (ui_cursor / 16 + d) * 16 + ui_cursor % 16 < 0 ? ui_cursor : (ui_cursor / 16 + d) * 16 + ui_cursor % 16);
         ui.touched = (int8_t)i;

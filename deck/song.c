@@ -344,12 +344,17 @@ void clip_double(int clip)
     dk_song.clip[clip].len = (uint16_t)(len * 2);
     dk_unlock();
 }
-/* by scale steps (or semitones for a chromatic keyboard) */
+/* by scale steps (or semitones for a chromatic keyboard); _nu: without its undo step (the caller's) */
+static void clip_transpose_nu(int clip, int steps);
 void clip_transpose(int clip, int steps)
+{
+    undo_push(clip);
+    clip_transpose_nu(clip, steps);
+}
+static void clip_transpose_nu(int clip, int steps)
 {
     const dk_clip_t *c = &dk_song.clip[clip];
     int i;
-    undo_push(clip);
     dk_lock();
     for (i = 0; i < c->n; i++) {
         dk_ev_t *e = &dk_ev[c->at + i];

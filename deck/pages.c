@@ -218,7 +218,7 @@ static int page_field(int i, int home)
             return F[i];
         }
         if (row == (drum ? 2 : 1)) {
-            static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_VOL};   /* (octaves: OCT-/OCT+) */
+            static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_NONE};   /* every sequencer's: here only */
             return F[i];
         }
         if (!drum && row == 2) {             /* the step editor: walk, a note in/out, longer/cut, its pitch */
@@ -235,11 +235,11 @@ static int page_field(int i, int home)
                 return F[i];
             }
         case SQ_DRIVE: {
-            static const uint8_t F[5] = {F_ENERGY, F_STYLE, F_VAR, F_TSWING, F_CLIPLEN};
+            static const uint8_t F[5] = {F_ENERGY, F_STYLE, F_VAR, F_VOL, F_NONE};
             return F[i];
         }
         case SQ_FINGER: {
-            static const uint8_t F[5] = {F_FLATCH, F_TSWING, F_CLIPLEN, F_VOL, F_NONE};
+            static const uint8_t F[5] = {F_FLATCH, F_VOL, F_REV, F_ECHO, F_NONE};
             return F[i];
         }
         case SQ_TOMBOLA: {
@@ -247,7 +247,7 @@ static int page_field(int i, int home)
             return F[i];
         }
         default: {
-            static const uint8_t F[5] = {F_QNT, F_CLIPLEN, F_TSWING, F_SHIFT, F_NONE};   /* SHIFT: the clip a step on */
+            static const uint8_t F[5] = {F_SHIFT, F_MOVE, F_VOL, F_REV, F_NONE};   /* the clip a step on, a scale step up */
             return F[i];
         }
         }

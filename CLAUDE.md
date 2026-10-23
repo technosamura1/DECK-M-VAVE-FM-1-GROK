@@ -174,6 +174,8 @@ out/                  прошивка, установщик, WAV, listen.html, 
   тактов, REC или PLAY закрывает петлю на ближайшей черте (`auto_end`/`auto_apply` в ui.c: ноты за концом
   перекладываются в начало). BARS руками в SEQ/гараже выключает AUTO. Тест `tests/scenarios/looper.dk`.
 - DIM SKIP: аккорд другой ступени, но в басу нота самой клавиши (Си в до мажоре: G7/B) — `skip_pc` в `chord_build`.
+- SEQ без повторов: ряд 2 (тип, BARS, SWING, QUANT) общий; ряд 1 у LIVE — SHIFT, MOVE (клип на ступень, `se_transpose`), VOL,
+  REV; DREAM — ENERGY STYLE VAR VOL; FINGER — LATCH VOL REV ECHO; TOMBOLA K4 — GRID.
 
 ## Проверено на железе частично
 Прошивка запущена на FM-1 (2026-10-23): работает, лаги найдены и исправлены по замеру. Под вопросом: реальная нагрузка CPU, отклик клавиш/энкодеров, скорость

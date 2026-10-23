@@ -23,6 +23,7 @@ enum {
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
     /* the step editor (SEQ's third row) */ F_SENOTE, F_SETIE, F_SEPITCH, F_SHIFT,
     /* the tape: how many bars a take (AUTO: the first take sets it) */ F_RECBARS,
+    /* the clip a scale step up or down (LIVE) */ F_MOVE,
     F_N
 };
 
@@ -99,7 +100,7 @@ static void say(const char *a, const char *b);
 static void mark_dirty(void);
 static char *cpy(char *d, const char *s);
 static uint8_t se_pitch;                 /* the note K2 puts in: the last one written or moved (0: the tonic) */
-static int8_t se_f = -1, se_shift;       /* the knob of the last edit (one undo step a run); SHIFT's count */
+static int8_t se_f = -1, se_shift, se_moved;   /* (se_moved: MOVE's count, scale steps) */       /* the knob of the last edit (one undo step a run); SHIFT's count */
 static uint32_t se_t, se_off;            /* when; the heard note's end */
 static uint8_t se_heard, se_htrk;
 #define SE_MAX 8
@@ -344,6 +345,13 @@ static void se_rotate(int dir)           /* SHIFT: the whole clip a step later o
     ui_step_ev = -1;
     mark_dirty();
 }
+static void se_transpose(int dir)        /* MOVE: the whole clip a scale step (a run of turns one undo step) */
+{
+    se_undo(F_MOVE);
+    clip_transpose_nu(cur_clip(), dir);
+    se_moved = (int8_t)(se_moved + dir);
+    mark_dirty();
+}
 static int se_len_of(void)               /* K3's value: the length in steps of the note at the step (0 none) */
 {
     int clip = cur_clip(), cs = ui_cursor * DK_T16, idx[SE_MAX], n = se_at(clip, cs, idx);
@@ -413,6 +421,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_SETIE: *hi = 16; break;
     case F_SEPITCH: *lo = 24; *hi = 108; break;
     case F_SHIFT: *lo = -16; *hi = 16; break;
+    case F_MOVE: *lo = -14; *hi = 14; break;
     case F_SLEN: *lo = 1; *hi = 16; break;
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_RECBARS: *hi = 16; break;
@@ -537,6 +546,7 @@ static int field_get(int f)
         return n ? se_ev(clip, idx[0])->note : se_default();
     }
     case F_SHIFT: return se_shift;
+    case F_MOVE: return se_moved;
     case F_CLIPLEN: return clip_len(cur_clip()) / DK_TPB;
     case F_RECBARS: return ui_auto_on || (ui_rec_auto && part_empty(dk_song.cur_part)) ? 0 : dk_song.part[dk_song.cur_part & 7].bars;
     case F_QNT: return k->qnt;
@@ -881,6 +891,7 @@ static const char *field_label(int f)
     case F_SETIE: return "LENGTH";
     case F_SEPITCH: return "PITCH";
     case F_SHIFT: return "SHIFT";
+    case F_MOVE: return "MOVE";
     case F_SLEN: return "LENGTH";
     case F_CLIPLEN: return "BARS";
     case F_RECBARS: return "BARS";
@@ -902,7 +913,7 @@ static const char *field_label(int f)
     case F_SPIN: return "SPIN";
     case F_GRAV: return "GRAVITY";
     case F_BOUNCE: return "BOUNCE";
-    case F_TQUANT: return "QUANT";
+    case F_TQUANT: return "GRID";
     case F_SEQTYPE: return "SEQUENCER";
     case F_OCT: return "OCTAVE";
     case F_DRIFT: return "DRIFT";
@@ -1070,6 +1081,7 @@ static void field_text(int f, char *b)
         }
         break;
     case F_SEPITCH: se_name(v, b); break;
+    case F_MOVE:
     case F_SHIFT:
         if (v > 0)
             b[0] = '+', itoa_b(v, b + 1);
