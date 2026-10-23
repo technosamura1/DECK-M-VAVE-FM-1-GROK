@@ -681,6 +681,7 @@ static void block_enter(void)
     dk_part_len = (uint16_t)part_len_of(cur_part);
     stop_to = 1.0f;
 }
+static uint8_t road_from;                  /* SONG: the block PLAY starts from (the one chosen on ROAD) */
 static void play_start(void)
 {
     int t, i;
@@ -689,7 +690,8 @@ static void play_start(void)
     bar_n = 0;
     part_loops = 0;
     if (dk_song.play_mode) {
-        dk_road_i = 0;
+        dk_road_i = road_from < dk_song.nroad ? road_from : 0;
+        road_from = 0;
         dk_road_rep = 0;
     } else
         cur_part = dk_song.cur_part & 7;
@@ -1017,9 +1019,10 @@ static void drain(void)
         switch (c.c) {
         case C_NOTE: live_note(a, b & 0x7F, (b >> 8) & 0x7F, c.d); break;
         case C_PLAY:
-            if (a && !dk_playing && !count_left)
+            if (a && !dk_playing && !count_left) {
+                road_from = (uint8_t)b;
                 play_start();
-            else if (!a)
+            } else if (!a)
                 play_stop();
             break;
         case C_REC:

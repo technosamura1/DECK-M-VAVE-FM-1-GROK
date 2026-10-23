@@ -34,6 +34,7 @@ void clip_humanize(int clip, uint32_t seed);
 void clip_cook(int clip, uint32_t seed, const dk_engine_t *e);     /* a little different, in the key (undoable) */
 void clip_random(int clip, uint32_t seed, const dk_engine_t *e);   /* the same rhythm (or as many hits), new notes */
 void undo_push(int clip);
+void undo_group(int on);                 /* undo_push-es until undo_group(0): one undo step */
 void undo_push_road(void);
 int undo_count(void);
 int song_undo(int *what);

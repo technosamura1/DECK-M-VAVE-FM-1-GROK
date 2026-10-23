@@ -184,7 +184,7 @@ static int page_field(int i, int home)
     }
     case PG_ARP: {                           /* the arpeggiator's own page */
         static const uint8_t F[2][5] = {{F_ARPMODE, F_ARPDIV, F_ARPRHY, F_ARPLATCH, F_ARPOCT},
-                                        {F_ARPOCT, F_ARPGATE, F_ARPSRC, F_ARPON, F_OCT}};
+                                        {F_ARPOCT, F_ARPGATE, F_ARPSRC, F_ARPON, F_NONE}};
         return F[row & 1][i];
     }
     case PG_SOUND:
@@ -218,7 +218,7 @@ static int page_field(int i, int home)
             return F[i];
         }
         if (row == (drum ? 2 : 1)) {
-            static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_OCT};
+            static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_VOL};   /* (octaves: OCT-/OCT+) */
             return F[i];
         }
         if (!drum && row == 2) {             /* the step editor: walk, a note in/out, longer/cut, its pitch */
@@ -239,7 +239,7 @@ static int page_field(int i, int home)
             return F[i];
         }
         case SQ_FINGER: {
-            static const uint8_t F[5] = {F_FLATCH, F_TSWING, F_OCT, F_CLIPLEN, F_NONE};
+            static const uint8_t F[5] = {F_FLATCH, F_TSWING, F_CLIPLEN, F_VOL, F_NONE};
             return F[i];
         }
         case SQ_TOMBOLA: {
@@ -247,7 +247,7 @@ static int page_field(int i, int home)
             return F[i];
         }
         default: {
-            static const uint8_t F[5] = {F_QNT, F_CLIPLEN, F_TSWING, F_OCT, F_NONE};
+            static const uint8_t F[5] = {F_QNT, F_CLIPLEN, F_TSWING, F_SHIFT, F_NONE};   /* SHIFT: the clip a step on */
             return F[i];
         }
         }
@@ -293,7 +293,7 @@ static const char *hint(void)
         if (k->seq == SQ_FINGER)
             return "WHITE PATTERNS  BLACK VARIATIONS";
         if (k->seq == SQ_DRIVE)
-            return "HOME+SEQ = BAKE TO STEP";
+            return "PLAY = IT PLAYS  HOME+SEQ = TO STEP";
         if (k->seq == SQ_TOMBOLA)
             return "PLAY TO DROP  HOLD REC = EMPTY";
         return "SEQ+B1 COOK  B2 RANDOM  OCT-/+ UNDO/REDO";
@@ -446,6 +446,49 @@ static void draw_toast(void)
         text_box(x + 12 + w0 + 12, y + 7, w - 36 - w0 > 0 ? w - 36 - w0 : 1, 0, &FONT_S, &FONT_XS, ui.msg[1], TH_ENC[0]);
     } else
         text_box(x + 12, y + 7, w - 24, 1, &FONT_B, &FONT_XS, ui.msg[0], TH_TEXT);
+}
+
+/* ERASE (REC held): what goes, a bar each that fills as you hold, what is gone in red */
+static void draw_erase(void)
+{
+    int x = 14, y = 64, w = 212, h = 100, i, rows = ui.erase_kind == 0 ? 2 : 1;
+    uint32_t dt = plat_ms() - ui.down_t[B_REC];
+    char who[24], row[2][24];
+    if (!ui.erase_on)
+        return;
+    cv_rect(x, y, w, h, TH_BG);
+    hline(x, y, w, TH_REC);
+    hline(x, y + h - 1, w, TH_REC);
+    vline(x, y, h, TH_REC);
+    vline(x + w - 1, y, h, TH_REC);
+    text_box(x + 10, y + 7, 90, 0, &FONT_B, &FONT_T, "ERASE", TH_REC);
+    if (ui.erase_kind == 2) {
+        cpy(who, "THE ROAD");
+        cpy(row[0], "ALL ITS BLOCKS");
+    } else if (ui.erase_kind == 1) {
+        char *p = cpy(who, "PART ");
+        *p++ = (char)('A' + ui_gpart % DK_NPART);
+        *p = 0;
+        cpy(row[0], "ALL SIX TRACKS");
+    } else {
+        char *p;
+        cpy(who, track_label(dk_song.cur_track));
+        p = cpy(row[0], "IN PART ");
+        *p++ = (char)('A' + dk_song.cur_part % DK_NPART);
+        *p = 0;
+        cpy(row[1], "IN ALL 8 PARTS");
+    }
+    text_box(x + 100, y + 9, w - 110, 2, &FONT_S, &FONT_T, who, TH_TEXT);
+    for (i = 0; i < rows; i++) {
+        int ry = y + 34 + i * 24, bw = w - 20, from = i ? (int)ERASE_1 : (int)ERASE_SHOW, to = i ? (int)ERASE_2 : (int)ERASE_1,
+            f = (int)dt <= from ? 0 : (int)dt >= to ? bw : ((int)dt - from) * bw / (to - from), done = ui.erase_stage > i;
+        text_box(x + 10, ry, 120, 0, &FONT_T, &FONT_T, row[i], done ? TH_REC : TH_TEXT);
+        text_box(x + 130, ry, w - 140, 2, &FONT_T, &FONT_T, done ? "GONE" : i ? "HOLD ON" : "HOLD", done ? TH_REC : TH_GRAY);
+        cv_rect(x + 10, ry + 12, bw, 4, TH_LINE);
+        cv_rect(x + 10, ry + 12, done ? bw : f, 4, done ? TH_REC : TH_TEXT);
+    }
+    text_box(x + 6, y + h - 16, w - 12, 1, &FONT_T, &FONT_XS,
+             ui.erase_stage ? "LET GO = DONE   UNDO: HOLD EDIT" : "LET GO = CANCEL", TH_GRAY);
 }
 
 /* ------------------------------------------------------------------- SOUND --- */
@@ -992,6 +1035,10 @@ static void draw_seq(void)
         break;
     case SQ_DRIVE: {
         text_box(WX, WY + 4, WW, 1, &FONT_B, &FONT_XS, TAPE.style_name[k->drv[1] % TAPE.nstyle], TH_TEXT);
+        if (dk_dream_off())                  /* why it is quiet, said */
+            text_box(WX, WY + 26, WW, 1, &FONT_T, &FONT_T, "PAUSED: PERFORM KEY 6", TH_REC);
+        else if (!dk_playing)
+            text_box(WX, WY + 26, WW, 1, &FONT_T, &FONT_T, "PRESS PLAY: IT PLAYS BY ITSELF", TH_ENC[1]);
         for (i = 0; i < 24; i++) {           /* how busy: bars of the energy, wandering with VARIATION */
             uint32_t hh = (uint32_t)i * 2654435761u + (dk_ticks / DK_TPB) * 40503u;
             int h = 3 + (int)((float)k->drv[0] * 0.38f * (0.4f + 0.6f * (float)((hh >> 24) & 255u) / 255.0f * (0.3f + (float)k->drv[2] * 0.007f)));
@@ -1575,13 +1622,14 @@ static void draw_trackbar(void)
 
 static void garden_overlay(int32_t y0, int32_t h)
 {
-    if (plat_ms() >= ui.msg_until && plat_ms() >= ui.trk_until)
+    if (plat_ms() >= ui.msg_until && plat_ms() >= ui.trk_until && !ui.erase_on)
         return;
     cv_oy = -y0;
     cv_y0 = 0;
     cv_y1 = h;
     draw_toast();
     draw_trackbar();
+    draw_erase();
     cv_oy = 0;
 }
 
@@ -1593,6 +1641,7 @@ static void draw_page_band(int band)
     draw_footer(186);
     draw_toast();
     draw_trackbar();
+    draw_erase();
     band_end();
 }
 

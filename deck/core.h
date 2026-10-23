@@ -48,6 +48,7 @@ extern volatile float dk_level[DK_NTRACK], dk_master_level;
 /* the flash's erase stops the sound ~17 ms: before one the UI asks for a hush (the output faded to nothing in ~6 ms),
  * waits for silent blocks, erases, lets go; the cut is then silence, not a click (dust, tape hiss, a tail) */
 extern volatile uint8_t dk_hush, dk_hushed;
+int dk_dream_off(void);
 extern volatile uint8_t dk_finger_on[DK_NTRACK];        /* FINGER: the pattern held (+1), 0 none */
 extern volatile uint32_t dk_finger_latch[DK_NTRACK];
 extern volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;

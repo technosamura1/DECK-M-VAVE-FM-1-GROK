@@ -200,7 +200,7 @@ void keys_down(int k, int vel)
     }
     if (w >= 0 && dk_song.layout && dk_song.white) {   /* WHITE = CHORDS: a chord a degree (the key's letter) */
         int deg = white_degree(w) >= 0 ? white_degree(w) : w % 7;
-        n = chord_build(deg, 48 + 12 * trk_oct(harm) + (53 + WHITE_K[w] >= 65 ? 12 : 0), nt);
+        n = chord_build(deg, white_pitch(w, harm), nt);   /* the chord's root on the key's own note (as NOTES plays it) */
         notes_post(k, harm, nt, n, vel, dk_song.strum > 0);
         return;
     }

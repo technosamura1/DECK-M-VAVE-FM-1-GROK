@@ -15,8 +15,10 @@ typedef struct {
     uint8_t kind, clip;                  /* 0 a clip, 1 the road */
     uint16_t n, len, at;                 /* events, the clip's length; where in the buffer */
     uint8_t layers, nroad;
+    uint8_t grp;                         /* snapshots of one edit over several clips: undone together (0 alone) */
     dk_block_t road[DK_NROAD];
 } snap_t;
+static uint8_t grp_now, grp_seq;
 #define NSNAP 24
 static snap_t usnap[NSNAP], rsnap[8];
 static int un, rn;                       /* entries */
@@ -184,21 +186,40 @@ static void snap_restore(const snap_t *s, const dk_ev_t *buf)
     }
     song_edits++;
 }
-void undo_push(int clip) { snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0), rn = 0; }
+void undo_push(int clip)
+{
+    if (snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0) == 0)
+        usnap[un - 1].grp = grp_now;
+    rn = 0;
+}
+void undo_group(int on)                  /* the pushes until undo_group(0) are one undo step */
+{
+    if (on) {
+        if (!++grp_seq)
+            grp_seq = 1;
+        grp_now = grp_seq;
+    } else
+        grp_now = 0;
+}
 void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, 1024, 0, 1), rn = 0; }
 int undo_count(void) { return un; }
 /* 1 = done; what: the clip (or -1 the road) */
 int song_undo(int *what)
 {
     snap_t s;
+    uint8_t g;
     if (!un)
         return 0;
-    s = usnap[un - 1];
-    dk_lock();
-    snap_take(rsnap, &rn, 8, rbuf, 512, s.clip, s.kind);
-    snap_restore(&s, ubuf);
-    dk_unlock();
-    un--;
+    do {                                 /* (a group: all of it) */
+        s = usnap[un - 1];
+        g = s.grp;
+        dk_lock();
+        if (snap_take(rsnap, &rn, 8, rbuf, 512, s.clip, s.kind) == 0)
+            rsnap[rn - 1].grp = g;
+        snap_restore(&s, ubuf);
+        dk_unlock();
+        un--;
+    } while (g && un && usnap[un - 1].grp == g);
     *what = s.kind ? -1 : s.clip;
     return 1;
 }
@@ -206,16 +227,21 @@ int song_redo(int *what)
 {
     snap_t s;
     int keep;
+    uint8_t g;
     if (!rn)
         return 0;
-    s = rsnap[rn - 1];
-    dk_lock();
-    keep = rn;
-    snap_take(usnap, &un, NSNAP, ubuf, 1024, s.clip, s.kind);
-    rn = keep;
-    snap_restore(&s, rbuf);
-    dk_unlock();
-    rn--;
+    do {
+        s = rsnap[rn - 1];
+        g = s.grp;
+        dk_lock();
+        keep = rn;
+        if (snap_take(usnap, &un, NSNAP, ubuf, 1024, s.clip, s.kind) == 0)
+            usnap[un - 1].grp = g;
+        rn = keep;
+        snap_restore(&s, rbuf);
+        dk_unlock();
+        rn--;
+    } while (g && rn && rsnap[rn - 1].grp == g);
     *what = s.kind ? -1 : s.clip;
     return 1;
 }

@@ -650,6 +650,7 @@ static float bus_st[DK_NTRACK][16];
 static float g_cur[DK_NTRACK][2];             /* the gain now (left, right): glides to the knob */
 static int32_t tail[DK_NTRACK];               /* samples the effect still rings after the last voice */
 static uint8_t t_soloed, drop_mask, stems_solo = 0xFF, perf_mute_drums, perf_echo, dream_off;
+int dk_dream_off(void) { return dream_off; }   /* PERFORM's DREAM key: the DREAM tracks silenced */
 static float master_lp_k = 1.0f, master_lp_l, master_lp_r, master_lp_l2, master_lp_r2;
 static float mixl[DK_BLK], mixr[DK_BLK], rsend[DK_BLK], esend[DK_BLK], tl[DK_BLK], tr[DK_BLK];
 static float lvl_acc[DK_NTRACK];

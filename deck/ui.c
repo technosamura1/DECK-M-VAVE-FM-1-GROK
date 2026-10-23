@@ -27,14 +27,20 @@ static struct {
     dk_block_t road_clip;
     uint8_t road_clip_ok;
     uint8_t screen_dirty;
-    uint32_t draw_t, garden_t, notes_until, page_t, save_t;   /* save_t: the last save by itself */   /* page_t: the page or its row changed (the hint shows 3 s) */
+    uint32_t draw_t, garden_t, notes_until, page_t, save_t;   /* page_t: the page or its row changed (the hint shows
+                                                                * 3 s); save_t: the last save by itself */
     char notes[28];
     uint32_t trk_until;                  /* SEL: the six tracks shown, the one chosen bright */
     uint8_t mix_key;
-    uint8_t notes_k;                     /* a PERFORM key held (+1): its name stays up top until it is let go */                     /* MIX: the white key down (its track + 1): a tap mutes, held 1 s clears */
-    uint32_t mix_t;
+    uint8_t notes_k;                     /* a PERFORM key held (+1): its name stays up top until it is let go */
+    uint32_t mix_t;                      /* MIX: the white key down (mix_key: its track + 1): a tap mutes, 1 s clears */
+    uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
+                                                            * 1 a part (the garage), 2 the road */
 } ui;
 
+#define ERASE_SHOW 350u                    /* REC held: ERASE shown; at ERASE_1 the clip goes, at ERASE_2 the track */
+#define ERASE_1 1000u
+#define ERASE_2 2500u
 #define AUTOSAVE_MS 90000u                 /* the autosave: no more often than this */
 static void say(const char *a, const char *b)
 {
@@ -403,8 +409,8 @@ static void action(int a, int b)
             dk_cmd(C_PLAY, 0, 0, 0);
             ui.change_t = plat_ms() - 3000u;   /* saved soon after the stop */
             ui.road_rec = 0;
-        } else
-            dk_cmd(C_PLAY, 1, 0, 0);
+        } else                               /* on ROAD: from the block chosen there */
+            dk_cmd(C_PLAY, 1, ui.page == PG_ROAD && !ui.garage ? ui_road_cur : 0, 0);
         break;
     case A_PLAYMODE:
         dk_song.play_mode ^= 1u;
@@ -532,9 +538,9 @@ static void action(int a, int b)
             rec_reset();
             dk_cmd(C_REC, 1, 0, dk_song.cur_track | (bars ? bars : 1) << 8 | 0xFF << 16);
             ui.baking = 1;
-            say("BAKE", "DRIVE TO STEP");
+            say("BAKE", "DREAM TO STEP");
         } else
-            say("BAKE", "ONLY DRIVE");
+            say("BAKE", "ONLY DREAM");
         break;
     case A_UNDO:
     case A_REDO: {
@@ -1155,6 +1161,73 @@ static void lights(void)
     plat_lights(b, keys, dimb | ((1u << NB) - 1u), dimk, 2);
 }
 
+/* ERASE: REC held (not recording). On the screen from 0.35 s with what goes: at 1 s the track's clip in this part,
+ * held on to 2.5 s the track in all eight parts. In the garage the part (all six tracks), on ROAD the road. Let go
+ * before 1 s: nothing. One undo step (HOLD EDIT) brings all of it back */
+static void erase_do(int stage)
+{
+    int t = dk_song.cur_track, p, c;
+    if (stage == 1)
+        undo_group(1);
+    if (ui.erase_kind == 2) {                /* the road */
+        undo_push_road();
+        dk_lock();
+        dk_song.nroad = 0;
+        dk_unlock();
+    } else if (ui.erase_kind == 1) {         /* the garage's part: its six */
+        for (t = 0; t < DK_NTRACK; t++) {
+            c = ui_gpart % DK_NPART * DK_NTRACK + t;
+            if (!dk_song.clip[c].n)
+                continue;
+            undo_push(c);
+            dk_lock();
+            clip_clear(c);
+            dk_unlock();
+        }
+    } else {
+        if (stage == 1 && cur()->seq == SQ_TOMBOLA) {
+            dk_cmd(C_TOMBOLA, 0, 0, 0);
+            dk_song.nball = 0;
+        }
+        for (p = 0; p < DK_NPART; p++) {     /* stage 1 this part, 2 the others */
+            c = p * DK_NTRACK + t;
+            if ((stage == 1) != (p == dk_song.cur_part % DK_NPART) || !dk_song.clip[c].n)
+                continue;
+            undo_push(c);
+            dk_lock();
+            clip_clear(c);
+            dk_unlock();
+        }
+    }
+    mark_dirty();
+}
+static void erase_hold(uint32_t dt)
+{
+    if (dt < ERASE_SHOW)
+        return;
+    ui.used[B_REC] = 1;                      /* (let go now: no recording) */
+    if (!ui.erase_on) {
+        ui.erase_on = 1;
+        ui.erase_stage = 0;
+        ui.erase_kind = (uint8_t)(ui.page == PG_ROAD ? (ui.garage ? 1 : 2) : 0);
+    }
+    if (ui.erase_stage == 0 && dt >= ERASE_1) {
+        erase_do(1);
+        ui.erase_stage = 1;
+    } else if (ui.erase_stage == 1 && ui.erase_kind == 0 && dt >= ERASE_2) {
+        erase_do(2);
+        ui.erase_stage = 2;
+    }
+}
+static void erase_end(void)
+{
+    undo_group(0);
+    if (ui.erase_on && ui.erase_stage)
+        say("ERASED", "UNDO: HOLD EDIT");
+    ui.erase_on = 0;
+    ui.erase_stage = 0;
+}
+
 static void input(void)
 {
     uint32_t keys, btn = plat_buttons(), k, now = plat_ms();
@@ -1185,6 +1258,8 @@ static void input(void)
             ui.used[k] = 0;
             ui.held_done[k] = 0;
             ui.btn |= bit;
+            if (k == B_REC)                  /* ERASE by holding it, when not recording (nor with SEQ / HOME) */
+                ui.erase_ok = (uint8_t)(!dk_recording && !dk_counting && !held(B_SEQ) && !held(B_HOME) && !ui.road_rec);
             if ((k == B_OCTDN || k == B_OCTUP) && held(B_SEQ)) {   /* SEQ held + OCT-/OCT+: undo / redo, step by step */
                 ui.used[B_SEQ] = 1;
                 ui.used[k] = 1;
@@ -1203,6 +1278,8 @@ static void input(void)
                 action(A_PLAY, 1);
             else if (!m->hold_ms)
                 action(m->tap, 1), ui.used[k] = 1;
+        } else if (k == B_REC && (btn & bit) && ui.erase_ok && (ui.erase_on || !ui.used[k])) {   /* REC held: ERASE */
+            erase_hold(now - ui.down_t[k]);
         } else if ((btn & bit) && !ui.used[k] && m->hold_ms && m->hold_ms != HOLD_MOD) {   /* held */
             if (now - ui.down_t[k] >= m->hold_ms) {
                 ui.used[k] = 1;
@@ -1210,6 +1287,8 @@ static void input(void)
             }
         } else if (!(btn & bit) && (ui.btn & bit)) {             /* up */
             ui.btn &= ~bit;
+            if (k == B_REC && ui.erase_on)
+                erase_end();
             if (m->tap == A_FILL)
                 action(A_FILL, 0);
             else if (m->hold == A_FILL && ui.used[k])   /* GLO held: the FILL ends with it */

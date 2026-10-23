@@ -1,0 +1,74 @@
+# ERASE by holding REC: shown on the screen; at 1 s the clip of this part, held on the track in all parts; one undo
+# brings it all back. PLAY on ROAD from the chosen block; the block chosen picks the part. DREAM's drums play
+wait 300
+demo
+wait 100
+press HOME
+tapkey b0
+release HOME
+wait 50
+mark
+press REC
+wait 600
+shot erase_show.png
+wait 600
+release REC
+wait 50
+expect events 0
+expect recording 0
+expect counting 0
+press EDIT
+wait 800
+release EDIT
+wait 50
+expect same 1
+press REC
+wait 2700
+shot erase_all.png
+release REC
+wait 50
+expect events 0
+expect eventsB1 0
+expect eventsC1 0
+press EDIT
+wait 800
+release EDIT
+wait 50
+expect same 1
+expect eventsB1 >0
+# a tap is still a recording
+tap REC
+wait 100
+expect counting >0
+tap REC
+wait 100
+# ROAD: the third block chosen, PLAY in SONG plays from it
+tap ENV
+wait 50
+turn K1 2
+wait 50
+expect part 2
+turn K4 1
+wait 50
+expect playmode 1
+tap PLAY
+wait 300
+expect part 2
+tap PLAY
+wait 100
+# DREAM on the drums (C418, energy 45): it plays something
+tap HOME
+press HOME
+tapkey b4
+release HOME
+tap SEQ
+press SEQ
+tapkey w2
+release SEQ
+wait 50
+expect seq 4
+mark
+tap PLAY
+wait 4000
+tap PLAY
+expect textfit 0

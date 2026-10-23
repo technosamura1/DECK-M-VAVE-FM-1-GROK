@@ -25,7 +25,7 @@ enum {
     F_N
 };
 
-static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DRIVE", "FINGER", "HOLD", "TOMBOLA"};
+static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DREAM", "FINGER", "HOLD", "TOMBOLA"};
 /* the sequencers offered (ARP is a layer over them now; ENDLESS and HOLD folded into LIVE and the ARP's LATCH) */
 #define NSEQ 5
 static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_LIVE, SQ_DRIVE, SQ_FINGER, SQ_TOMBOLA};
@@ -719,7 +719,11 @@ static void field_set(int f, int v)
     case F_SPACE: dk_song.space = (uint8_t)v; break;
     case F_DUST: dk_song.dust = (uint8_t)v; break;
     case F_SLEEP: dk_song.sleep = (uint8_t)v; break;
-    case F_ROADCUR: ui_road_cur = (uint8_t)v; break;
+    case F_ROADCUR:                      /* the block chosen: its part is the one PART plays (at the bar's end if on) */
+        ui_road_cur = (uint8_t)v;
+        if (dk_song.nroad && !(dk_playing && dk_song.play_mode))
+            dk_cmd(C_PART, dk_song.road[v].part & 7, 0, 0);
+        break;
     case F_ROADPART:
         if (dk_song.nroad) {
             undo_push_road();
