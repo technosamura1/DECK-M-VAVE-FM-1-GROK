@@ -329,15 +329,15 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
  * OVERWORLD's busiest moment cost: over it, the quietest tails go first (faded), then a quiet held voice; never a
  * loud note */
 /* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
-#define DK_BUDGET_MAX 130
+#define DK_BUDGET_MAX 110
 #define DK_BUDGET_MIN 50
-static volatile int dk_budget = 100;
+static volatile int dk_budget = 85;      /* (lower than the host said: the device crackled) */
 void dk_set_load(int pct)
 {
     int b = dk_budget;
-    if (pct > 62)
-        b -= pct > 80 ? 14 : 5;
-    else if (pct < 45)
+    if (pct > 55)
+        b -= pct > 72 ? 14 : 5;
+    else if (pct < 40)
         b += 2;
     dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
 }

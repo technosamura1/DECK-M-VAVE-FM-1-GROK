@@ -1025,10 +1025,11 @@ static void draw_project(void)
     } else if (dk_stems) {
         cv_text(20, 162, &FONT_T, "STEMS: RECORD THE OUTPUT", TH_ENC[2]);
     } else {
-        p = cpy(s, "CPU ");                  /* the load; HOME held: the dropouts, the voices, the raw battery */
+        p = cpy(s, "CPU ");                  /* the load and the dropouts; HOME held: the voices, the raw battery */
         p = itoa_b((int)plat_cpu_pct(), p);
         if (!held(B_HOME)) {
-            cpy(p, "%");
+            p = cpy(p, "%  XRUN ");
+            itoa_b((int)plat_xruns(), p);
             text_box(8, 162, 224, 1, &FONT_T, &FONT_T, s, dimc(TH_GRAY, 12));
             return;
         }

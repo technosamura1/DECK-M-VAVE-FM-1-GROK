@@ -821,6 +821,10 @@ static void lights(void)
         b |= LED_PLAY_GREEN;
     if (dk_fill)
         b |= 1u << B_GLO;
+    if (trk->oct > 0)                    /* the octave away from home: its button lit */
+        b |= 1u << B_OCTUP;
+    else if (trk->oct < 0)
+        b |= 1u << B_OCTDN;
     if (ui.dirty)
         dimb |= 1u << B_SAVE;
     if (ui.page == PG_SEQ && trk->seq == SQ_STEP && (e->flags & EF_DRUM)) {   /* the steps on, the step running */
@@ -856,7 +860,9 @@ static void lights(void)
     }
     dk_beat_flash = 0;
     plat_play_red(dk_recording ? 1 : 0);
-    plat_lights(b, keys, dimb | ((1u << NB) - 1u), dimk, 1);
+    /* the glow at DIM HI (as OVERWORLD's): DIM LO's pulse is ~1.6 us, and a busy render (flash cache misses in the
+     * scan's shift) made the glowing keys flicker on the device */
+    plat_lights(b, keys, dimb | ((1u << NB) - 1u), dimk, 2);
 }
 
 static void input(void)
