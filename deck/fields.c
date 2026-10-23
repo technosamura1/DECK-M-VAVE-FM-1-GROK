@@ -10,7 +10,7 @@ enum {
     /* SOUND */ F_P0, F_P1, F_P2, F_P3, F_P4, F_P5, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
     F_MODTGT, F_MODSLOT,
     /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING, F_DIV,
-    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
+    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
     F_SEQTYPE, F_OCT, F_DRIFT, F_MIDICH, F_ROLE,
     /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP,
     /* ROAD */ F_ROADCUR, F_ROADPART, F_ROADREPS, F_GPART, F_GLABEL, F_GBARS, F_PLAYMODE,
@@ -123,6 +123,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_ARPRHY: *hi = ARPR_N - 1; break;
     case F_ARPGATE: *hi = ARPG_N - 1; break;
     case F_ARPSRC: *hi = 1; break;
+    case F_ARPON: *hi = 1; break;
     case F_ARPOCT: *lo = 1; *hi = 3; break;
     case F_ARPLATCH:
     case F_FLATCH:
@@ -223,6 +224,7 @@ static int field_get(int f)
         return 1;
     }
     case F_ARPSRC: return (k->arp_opt >> 2) & 1;
+    case F_ARPON: return dk_arp_on(k);
     case F_ARPOCT: return k->arp[2] ? k->arp[2] : 1;
     case F_ARPLATCH:
     case F_FLATCH: return k->arp[3] ? 1 : 0;
@@ -362,7 +364,12 @@ static void field_set(int f, int v)
     case F_ARPDIV: k->arp[1] = (uint8_t)v; break;
     case F_ARPRHY: k->arp_rhy = (uint8_t)v; break;
     case F_ARPGATE: k->arp_opt = (uint8_t)((k->arp_opt & ~3u) | ARPG_ORDER[v % ARPG_N]); break;
-    case F_ARPSRC: k->arp_opt = (uint8_t)((k->arp_opt & 3u) | (v ? 4u : 0u)); break;
+    case F_ARPSRC: k->arp_opt = (uint8_t)((k->arp_opt & ~4u) | (v ? 4u : 0u)); break;
+    case F_ARPON:
+        k->arp_opt = (uint8_t)(v ? k->arp_opt | ARPO_ON : k->arp_opt & ~ARPO_ON);
+        if (!v)
+            dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
+        break;
     case F_ARPOCT: k->arp[2] = (uint8_t)v; break;
     case F_ARPLATCH:
     case F_FLATCH:
@@ -505,6 +512,7 @@ static const char *field_label(int f)
     case F_ARPRHY: return "RHYTHM";
     case F_ARPGATE: return "GATE";
     case F_ARPSRC: return "PLAYS";
+    case F_ARPON: return "ARP";
     case F_ARPOCT: return "OCTAVES";
     case F_ARPLATCH:
     case F_FLATCH: return "LATCH";
@@ -642,6 +650,7 @@ static void field_text(int f, char *b)
     case F_ARPRHY: cpy(b, ARPR_NAME[v % ARPR_N]); break;
     case F_ARPGATE: cpy(b, ARPG_NAME[v % ARPG_N]); break;
     case F_ARPSRC: cpy(b, ARPSRC_NAME[v & 1]); break;
+    case F_ARPON: cpy(b, v ? "ON" : "OFF"); break;
     case F_STYLE:
     case F_SONGSTYLE: cpy(b, TAPE.style_name[v % TAPE.nstyle]); break;
     case F_TQUANT: cpy(b, QUANT3[v % 3]); break;

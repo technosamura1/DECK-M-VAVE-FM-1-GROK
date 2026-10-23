@@ -151,9 +151,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 /* ---------------------------------------------------------------- the frame --- */
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 4, 2, 1, 4, 4, 1};
-    if (p == PG_SEQ && dk_arp_on(cur()) && !(cur_eng()->flags & EF_DRUM))
-        return 4;                            /* the ARP's two rows first, then the sequencer's */
+    static const uint8_t ROWS[NPG] = {1, 2, 4, 2, 1, 4, 4, 1, 2};
     return ROWS[p];
 }
 /* the knobs of the page (its row): K1..K4 (i 0..3) the four main ones, i 4 ALGO's extra. SELECT is the track and
@@ -174,9 +172,14 @@ static int page_field(int i, int home)
                                          {F_ECHOTIME, F_CPU, F_VERSION, F_NONE, F_NONE}};
     (void)home;
     switch (ui.page) {
-    case PG_PLAY: {
-        static const uint8_t F[5] = {F_DUST, F_SIDECHAIN, F_SLEEP, F_SWING, F_MACRO};
+    case PG_PLAY: {                          /* the garden: the track you play, its sound and its space; ALGO the mood */
+        static const uint8_t F[5] = {F_MACRO, F_REV, F_ECHO, F_VOL, F_MOOD};
         return F[i];
+    }
+    case PG_ARP: {                           /* the arpeggiator's own page */
+        static const uint8_t F[2][5] = {{F_ARPMODE, F_ARPDIV, F_ARPRHY, F_ARPLATCH, F_ARPOCT},
+                                        {F_ARPOCT, F_ARPGATE, F_ARPSRC, F_ARPON, F_OCT}};
+        return F[row & 1][i];
     }
     case PG_SOUND:
         switch (row & 3) {
@@ -199,17 +202,6 @@ static int page_field(int i, int home)
         }
     case PG_SEQ: {
         int drum = (e->flags & EF_DRUM) != 0;
-        if (page_rows(PG_SEQ) == 4) {        /* ARP on: its rows first */
-            if (row == 0) {
-                static const uint8_t F[5] = {F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPRHY, F_ARPLATCH};
-                return F[i];
-            }
-            if (row == 1) {
-                static const uint8_t F[5] = {F_ARPGATE, F_ARPSRC, F_ARPLATCH, F_OCT, F_NONE};
-                return F[i];
-            }
-            row -= 2;
-        }
         if (row == 1) {
             static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_OCT};
             return F[i];
@@ -278,8 +270,6 @@ static const char *hint(void)
             return "HOME+SEQ = BAKE TO STEP";
         if (k->seq == SQ_TOMBOLA)
             return "PLAY TO DROP  HOLD REC = EMPTY";
-        if (page_rows(PG_SEQ) == 4)
-            return "ARP = LATCH  HOME+ARP = OFF  SEQ = ROW";
         return "HOLD SEQ + WHITE = SEQUENCER";
     case PG_SOUND: return "FX = NEXT TAB  HOLD LFO+TURN = MOD";
     case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
@@ -288,6 +278,7 @@ static const char *hint(void)
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  W6 DEMO  B1 EXPORT";
     case PG_REC: return "REC = NEW PASS  HOLD EDIT = UNDO PASS";
+    case PG_ARP: return "HOLD NOTES  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
 }
@@ -350,7 +341,7 @@ static void draw_header(void)
         int k = (int)(itoa_b(dk_song.cur_track + 1, tl) - tl);
         tl[k] = ' ';
         cpy(tl + k + 1, track_label(dk_song.cur_track));
-        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC ? tl : PAGE_NAME[ui.page], TH_GRAY);
+        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC || ui.page == PG_ARP ? tl : PAGE_NAME[ui.page], TH_GRAY);
     }
     {                                    /* the battery: shown only when low or HOME held (a quiet header) */
         int pct = batt_pct(), w;
@@ -628,11 +619,12 @@ static void draw_seq(void)
     int len = clip_len(cur_clip()), i, x;
     uint32_t now = plat_ms();
     char s[24];
-    int view = k->seq;
-    if (page_rows(PG_SEQ) == 4 && (ui.row[PG_SEQ] % 4) < 2)
-        view = SQ_ARP;                       /* the ARP's rows: its picture */
-    cv_text(8, 26, &FONT_XS, view == SQ_ARP ? "ARP" : SEQ_NAME[k->seq % SQ_N], TH_GRAY);
-    if (view != SQ_ARP && page_rows(PG_SEQ) == 4)
+    int view = ui.page == PG_ARP ? SQ_ARP : k->seq;   /* the ARP's page draws its picture here too */
+    if (view == SQ_ARP && !dk_arp_on(k))
+        cv_text(8, 26, &FONT_XS, "ARP OFF", TH_REC);
+    else
+        cv_text(8, 26, &FONT_XS, view == SQ_ARP ? "ARP" : SEQ_NAME[k->seq % SQ_N], TH_GRAY);
+    if (view != SQ_ARP && dk_arp_on(k))
         text_box(150, 26, 82, 2, &FONT_XS, &FONT_T, "+ ARP", TH_ENC[1]);
     switch (view) {
     case SQ_STEP:
@@ -1166,6 +1158,7 @@ static void draw_body(void)
     case PG_KEYS: draw_keys(); break;
     case PG_PROJECT: draw_project(); break;
     case PG_REC: draw_tape(); break;
+    case PG_ARP: draw_seq(); break;
     default: break;
     }
 }

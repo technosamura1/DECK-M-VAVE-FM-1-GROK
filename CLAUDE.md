@@ -112,7 +112,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
 | PLAY | старт/стоп (сразу по нажатию) | 0,8 с: PART/SONG | тапы: TAP TEMPO |
 | REC | запись (со счётом); на ROAD — запись трассы | 1 с: очистить клип (TOMBOLA — вытряхнуть) | метроном вкл/выкл |
 | SEL | следующая дорожка | 0,7 с: мьют | — |
-| ARP | ARP вкл (поверх секвенсора); ещё раз — LATCH | + белая A–H: часть (с конца такта) | ARP выкл |
+| ARP | страница ARP (PG_ARP) + ARP вкл; ещё раз — ряд | + белая A–H: часть (с конца такта) | ARP выкл |
 | GLO | FILL пока держишь (все дорожки) | — | — |
 | EDIT | KEYS; ещё раз — следующий ряд | 0,7 с: UNDO | REDO |
 | SAVE | PROJECT; ещё раз — ряд | + белая 13–16: сохранить пресет | — |
@@ -121,8 +121,9 @@ out/                  прошивка, установщик, WAV, listen.html, 
 
 Ручки (как у OP-1): K1–K4 — четыре поля текущей страницы/ряда (цвета зелёный/голубой/жёлтый/белый; таблица
 `page_field` в pages.c, i 0..3; i 4 — доп. поле для ALGO, показывается тостом). SELECT — дорожка, PRESET — пресет
-(у дорожки KEYS — 12 из TINE/GLASS/KALIMBA, `TAPE.keys_set`), ALGO — доп. поле. На PLAY: K1–K4 = DUST SIDECHAIN
-SLEEP SWING, SELECT/ALGO/PRESET = TEMPO/MACRO/MOOD. MIX ряд 2 = MASTER (те же DUST…SWING).
+(у дорожки KEYS — 12 из TINE/GLASS/KALIMBA, `TAPE.keys_set`), ALGO — доп. поле. На PLAY: K1–K4 = MACRO REVERB
+ECHO VOLUME текущей дорожки, ALGO = MOOD, HOME + SELECT = темп. MIX ряд 2 = MASTER (DUST SIDECHAIN SLEEP SWING).
+ARP — своя страница PG_ARP (ряды: MODE RATE RHYTHM LATCH / OCT GATE PLAYS ON), на SEQ его рядов нет.
 Страницы: PROJECT — белые 1–4 открыть проект, 5 новый (шаблон), 6 демо; чёрные 1 EXPORT, 2 STEMS, 3 сохранить.
 MIX — белые 1–6 мьют (держать 1 с — стереть клип дорожки в части), чёрные 1–6 соло. ROAD — белые A–H добавить блок, чёрные: HALF DOUBLE REVERSE +12 −12 TAPESTOP
 DROP(дорожка) DELETE DUP CUT PASTE. KEYS — выделил ROOT (энкодер 1) и нажал клавишу = тоника.

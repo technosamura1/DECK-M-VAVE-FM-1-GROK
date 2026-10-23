@@ -5,8 +5,8 @@
  * recording, undo, saving by itself in the silence, the lights, MIDI in, the export's stream. The pages are drawn in
  * pages.c. Part of the unity build. */
 
-enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, NPG };
-static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC"};
+enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, NPG };
+static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP"};
 
 static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
@@ -330,7 +330,7 @@ static void action(int a, int b)
             say(s, cur()->mute ? "MUTED" : "ON");
         }
         break;
-    case A_ARP: {                         /* ARP over the track's playing: on; pressed again, LATCH */
+    case A_ARP: {                         /* the ARP's page (and the ARP on); again there: its next row */
         dk_track_t *k = cur();
         if (cur_eng()->flags & EF_DRUM) {
             say("ARP", "NOT ON DRUMS");
@@ -339,15 +339,13 @@ static void action(int a, int b)
         if (!dk_arp_on(k)) {
             keys_all_up();
             k->arp_opt |= ARPO_ON;
-            ui.row[PG_SEQ] = 0;
-            if (ui.page != PG_SEQ)           /* (page_go on its own page would flip its row) */
-                page_go(PG_SEQ);
+            mark_dirty();
+            ui.row[PG_ARP] = 0;
+            if (ui.page != PG_ARP)
+                page_go(PG_ARP);
             say("ARP", "ON");
-        } else {
-            field_set(F_ARPLATCH, k->arp[3] ? 0 : 1);
-            say("ARP", k->arp[3] ? "LATCH" : "FREE");
-        }
-        mark_dirty();
+        } else
+            page_go(PG_ARP);
         break;
     }
     case A_ARP_OFF: {
@@ -355,7 +353,6 @@ static void action(int a, int b)
         keys_all_up();
         k->arp_opt &= (uint8_t)~ARPO_ON;
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
-        ui.row[PG_SEQ] = 0;
         mark_dirty();
         say("ARP", "OFF");
         break;
@@ -820,18 +817,17 @@ static void turn(int i, int e)
 }
 
 /* SELECT and PRESET: on PLAY the tempo and the mood; elsewhere the track and its preset */
-static void enc_side(int play_f, int e)
+static void enc_side(int sel, int e)     /* SELECT (sel 1): the track; PRESET: the preset; HOME + SELECT the tempo */
 {
-    if (ui.page == PG_PLAY) {
+    if (sel && held(B_HOME)) {
         char t[16];
-        field_set(play_f, field_get(play_f) + e);
-        if (play_f == F_MOOD)
-            tape_mood(dk_song.mood);
-        field_text(play_f, t);
-        say(field_label(play_f), t);
+        ui.used[B_HOME] = 1;
+        field_set(F_TEMPO, field_get(F_TEMPO) + e);
+        itoa_b(dk_song.tempo, t);
+        say("TEMPO", t);
         return;
     }
-    if (play_f == F_TEMPO)
+    if (sel)
         track_select((dk_song.cur_track + DK_NTRACK + (e > 0 ? 1 : -1)) % DK_NTRACK);
     else
         preset_step(e > 0 ? 1 : -1);
@@ -879,7 +875,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
 /* ------------------------------------------------------------------- input --- */
 static void lights(void)
 {
-    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC};
+    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP};
     uint32_t now = plat_ms(), b = 1u << PAGE_BTN[ui.page], keys = ui.keys, dimk = 0, dimb = 0;
     int k;
     const dk_track_t *trk = cur();
@@ -890,6 +886,8 @@ static void lights(void)
         b |= LED_PLAY_GREEN;
     if (dk_fill)
         b |= 1u << B_GLO;
+    if (dk_arp_on(trk))                  /* the ARP on this track: its button lit */
+        b |= 1u << B_ARP;
     if (trk->oct > 0)                    /* the octave away from home: its button lit */
         b |= 1u << B_OCTUP;
     else if (trk->oct < 0)
@@ -1005,16 +1003,16 @@ static void input(void)
         say(s, "CLEARED");
     }
     midi_in();
-    /* K1..K4: the page's four; ALGO its extra; SELECT the track, PRESET the preset (PLAY: TEMPO, MOOD) */
+    /* K1..K4: the page's four; ALGO its extra (PLAY: the MOOD); SELECT the track, PRESET the preset */
     for (k = 0; k < 4; k++)
         if ((e = plat_enc(EN_K1 + (int)k)) != 0)
             turn((int)k, e);
     if ((e = plat_enc(EN_ALGO)) != 0)
         turn(4, e);
     if ((e = plat_enc(EN_SELECT)) != 0)
-        enc_side(F_TEMPO, e);
+        enc_side(1, e);
     if ((e = plat_enc(EN_PRESET)) != 0)
-        enc_side(F_MOOD, e);
+        enc_side(0, e);
     lights();
 }
 
