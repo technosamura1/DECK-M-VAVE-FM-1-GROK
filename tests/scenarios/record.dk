@@ -60,8 +60,8 @@ tap PLAY
 wait 2000
 tap PLAY
 wait 300
-# saved by itself in the silence; a reboot brings it back
-wait 6000
+# saved by itself in the silence (once in 90 s at most); a reboot brings it back
+wait 92000
 expect dirty 0
 reboot
 wait 300
@@ -72,6 +72,8 @@ press HOME
 tapkey w3
 release HOME
 wait 8000
+expect dirty 1
+wait 84000
 expect dirty 0
 reboot
 wait 300

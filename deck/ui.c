@@ -27,7 +27,7 @@ static struct {
     dk_block_t road_clip;
     uint8_t road_clip_ok;
     uint8_t screen_dirty;
-    uint32_t draw_t, garden_t, notes_until, page_t;   /* page_t: the page or its row changed (the hint shows 3 s) */
+    uint32_t draw_t, garden_t, notes_until, page_t, save_t;   /* save_t: the last save by itself */   /* page_t: the page or its row changed (the hint shows 3 s) */
     char notes[28];
     uint32_t trk_until;                  /* SEL: the six tracks shown, the one chosen bright */
     uint8_t mix_key;
@@ -35,6 +35,7 @@ static struct {
     uint32_t mix_t;
 } ui;
 
+#define AUTOSAVE_MS 90000u                 /* the autosave: no more often than this */
 static void say(const char *a, const char *b)
 {
     uint32_t i;
@@ -1326,9 +1327,11 @@ static void housekeeping(uint32_t now)
             plat_sysex_send(f, (uint32_t)n);
         }
     }
-    /* saving by itself: a few seconds after a change, while all rests and is quiet (an erase stops the sound) */
+    /* saving by itself: once in 90 s at most (SAVE on PROJECT saves at once), a few seconds after the last change,
+     * while all rests and is quiet (an erase stops the sound; it is faded out first) */
     if ((ui.dirty || settings_due) && !dk_playing && !dk_recording && !dk_counting && now - ui.change_t > 6000u &&
-        dk_master_level < 0.004f && !ui.keys && !ui.btn) {
+        now - ui.save_t >= AUTOSAVE_MS && dk_master_level < 0.004f && !ui.keys && !ui.btn) {
+        ui.save_t = now;
         if (settings_due)
             settings_save();
         tape_ui_keep();
