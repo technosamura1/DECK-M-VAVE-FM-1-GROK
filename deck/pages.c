@@ -941,7 +941,7 @@ static void draw_road(void)
         return;
     }
     {   /* the song as a tape: the blocks are pieces of coloured label stuck on it, running under the head */
-        int cur_b = dk_playing && dk_song.play_mode ? dk_road_i : ui_road_cur, bi, head = 84, ty = 104, th = 34;
+        int cur_b = dk_playing && dk_song.play_mode ? dk_road_i : ui_road_cur, bi, head = 84, ty = 108, th = 32;
         int start[DK_NROAD + 1], total = 0, pos, phase = dk_playing ? (int)(dk_ticks * 8u / DK_TPB) % 48 : 0;
         float prog = 0.0f, wound;
         for (bi = 0; bi < dk_song.nroad; bi++) {
@@ -956,11 +956,18 @@ static void draw_road(void)
         pos = cur_b < dk_song.nroad ? start[cur_b] + (int)(prog * (float)(start[cur_b + 1] - start[cur_b])) : total;
         wound = total ? (float)pos / (float)total : 0.0f;
         /* the reels, up in the corners, the tape coming down from them */
-        plate(10, 42, 220, 56);
-        text_box(16, 46, 80, 0, &FONT_T, &FONT_T, dk_song.play_mode ? "SONG" : "PART", CS_INK);
-        cv_rect(54, 58, 132, 34, CS_WINDOW);
-        reel(74, 75, 1.0f - wound, phase);
-        reel(166, 75, wound, phase);
+        plate(10, 28, 220, 62);                /* the cassette: SONG or PART, the blocks, the reels winding */
+        text_box(18, 32, 90, 0, &FONT_T, &FONT_T, dk_song.play_mode ? "SONG" : "PART", CS_INK);
+        {
+            char *p = itoa_b(dk_song.nroad, s);
+            cpy(p, dk_song.nroad == 1 ? " BLOCK" : " BLOCKS");
+            text_box(120, 32, 102, 2, &FONT_T, &FONT_T, s, CS_INK);
+        }
+        if (ui.road_rec)
+            text_box(18, 32, 90, 0, &FONT_T, &FONT_T, "REC", TH_REC);
+        cv_rect(54, 46, 132, 36, CS_WINDOW);
+        reel(74, 64, 1.0f - wound, phase);
+        reel(166, 64, wound, phase);
         cv_rect(0, ty - 2, 240, th + 4, CS_TAPE);
         for (bi = 0; bi < dk_song.nroad; bi++) {
             const dk_block_t *b = &dk_song.road[bi];
@@ -971,42 +978,51 @@ static void draw_road(void)
             if (bi < cur_b || (bi == cur_b && 0))
                 c = dimc(c, 9);              /* played: a little faded */
             cv_rect(x, ty, w, th, c);
+            if (on) {                        /* the block you are on: a frame inside it */
+                int j;
+                for (j = 0; j < 2; j++) {
+                    hline(x + j, ty + j, w - 2 * j, TH_TEXT);
+                    hline(x + j, ty + th - 1 - j, w - 2 * j, TH_TEXT);
+                    vline(x + j, ty + j, th - 2 * j, TH_TEXT);
+                    vline(x + w - 1 - j, ty + j, th - 2 * j, TH_TEXT);
+                }
+            }
             s[0] = (char)('A' + (b->part & 7));
             s[1] = 0;
-            text_box(x + 3, ty + 2, 14, 0, &FONT_XS, &FONT_T, s, TH_BG);
-            text_box(x + 3, ty + 20, w - 4 > 4 ? w - 4 : 4, 0, &FONT_T, &FONT_T,
+            text_box(x + 5, ty + 3, 14, 0, &FONT_XS, &FONT_T, s, TH_BG);
+            text_box(x + 5, ty + 19, w - 8 > 4 ? w - 8 : 4, 0, &FONT_T, &FONT_T,
                      LABEL_NAME[dk_song.part[b->part & 7].label & 7], TH_BG);
             if (b->reps > 1) {
                 s[0] = 'X';
                 itoa_b(b->reps, s + 1);
-                text_box(x + w - 24, ty + 3, 22, 2, &FONT_T, &FONT_T, s, TH_BG);
+                text_box(x + w - 26, ty + 4, 22, 2, &FONT_T, &FONT_T, s, TH_BG);
             }
             if (b->tricks || b->drop) {      /* its tricks: a row of dots under it */
                 int d = 0, j;
                 for (j = 0; j < 7; j++)
                     if ((j < 6 ? b->tricks >> j : b->drop) & 1u)
-                        disc(x + 6 + 6 * d++, ty + th + 6, 2, TH_ENC[2]);
-            }
-            if (on) {
-                hline(x - 1, ty - 4, w + 2, TH_ENC[0]);
-                hline(x - 1, ty + th + 2, w + 2, TH_ENC[0]);
+                        disc(x + 6 + 6 * d++, ty + th + 7, 2, TH_ENC[2]);
             }
         }
         /* the head: where the song is */
-        cv_rect(head - 2, ty - 10, 5, th + 20, dk_playing ? TH_REC : TH_TEXT);
+        {                                    /* the head: a marker above and under the tape, a hairline across */
+            uint16_t hc = dk_playing ? TH_REC : TH_TEXT;
+            int j;
+            for (j = 0; j < 5; j++) {
+                hline(head - 4 + j, ty - 9 + j, 9 - 2 * j, hc);
+                hline(head - 4 + j, ty + th + 8 - j, 9 - 2 * j, hc);
+            }
+            vline(head, ty - 4, th + 8, hc);
+        }
         if (!dk_song.nroad)
             text_box(8, 112, 224, 1, &FONT_XS, &FONT_T, "WHITE A-H: ADD A BLOCK", TH_TEXT);
         /* the whole song, small: each block's colour, where you are */
         for (bi = 0; bi < dk_song.nroad && total; bi++) {
             int x0 = 10 + start[bi] * 220 / total, x1 = 10 + start[bi + 1] * 220 / total;
-            cv_rect(x0, 164, x1 - x0 - 1 > 1 ? x1 - x0 - 1 : 1, 6, TH_PART[dk_song.road[bi].part & 7]);
+            cv_rect(x0, 166, x1 - x0 - 1 > 1 ? x1 - x0 - 1 : 1, 5, TH_PART[dk_song.road[bi].part & 7]);
         }
         if (total)
-            cv_rect(10 + pos * 220 / total - 1, 160, 3, 14, TH_TEXT);
-        if (ui.road_rec)
-            cv_text(8, 26, &FONT_XS, "REC", TH_REC);
-        itoa_b(dk_song.nroad, s);
-        text_box(180, 26, 52, 2, &FONT_XS, &FONT_XS, s, TH_GRAY);
+            cv_rect(10 + pos * 220 / total - 1, 162, 3, 13, TH_TEXT);
     }
 }
 
