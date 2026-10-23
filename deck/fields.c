@@ -22,6 +22,7 @@ enum {
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
     /* the step editor (SEQ's third row) */ F_SENOTE, F_SETIE, F_SEPITCH, F_SHIFT,
+    /* the tape: how many bars a take (AUTO: the first take sets it) */ F_RECBARS,
     F_N
 };
 
@@ -54,7 +55,7 @@ static const char *const ONOFF[2] = {"OFF", "ON"};
 static const char *const SPACE_NAME[4] = {"ROOM", "HALL", "CAVE", "SHIMMER"};
 static const char *const LABEL_NAME[8] = {"INTRO", "VERSE", "PRE", "CHORUS", "DROP", "BRIDGE", "BREAK", "OUTRO"};
 static const char *const TEMPLATE_NAME[5] = {"EMPTY", "POP", "CLUB", "AMBIENT", "DEMO"};
-static const char *const METRO_MODE[3] = {"OFF", "REC", "ALWAYS"};
+static const char *const METRO_MODE[3] = {"OFF", "ON REC", "ALWAYS"};
 static const char *const METRO_SND[METRO_N] = {"CLICK", "WOOD", "HAT", "COWBELL", "RIM"};
 static const char *const MDIV_NAME[3] = {"1/4", "1/8", "1/16"};
 static const char *const QUANT3[3] = {"OFF", "1/16", "1/8"};
@@ -353,6 +354,30 @@ static int se_len_of(void)               /* K3's value: the length in steps of t
     return (se_reach(se_ev(clip, idx[0])) - se_ev(clip, idx[0])->pos) / DK_T16;
 }
 
+/* ---------------------------------------------------------------- the bars --- */
+/* ONE length: the part's bars (1..16; a bar = 16 steps = one screen of the step grid). SEQ's BARS, the garage's and
+ * the tape's set it, the part's clips follow it (their own lengths dropped; notes past the end kept, back when longer) */
+static char *itoa_b(int v, char *b);
+static uint8_t ui_rec_auto = 1, ui_auto_on;   /* ui_auto_on: an AUTO take running (its length open) */          /* the tape's BARS on AUTO: an empty part's first take sets its length */
+static int part_empty(int p)
+{
+    int t;
+    for (t = 0; t < DK_NTRACK; t++)
+        if (dk_song.clip[(p & 7) * DK_NTRACK + t].n)
+            return 0;
+    return 1;
+}
+static void part_bars_set(int p, int v)
+{
+    int t;
+    dk_lock();
+    dk_song.part[p & 7].bars = (uint8_t)(v < 1 ? 1 : v > 16 ? 16 : v);
+    for (t = 0; t < DK_NTRACK; t++)
+        dk_song.clip[(p & 7) * DK_NTRACK + t].len = 0;
+    dk_unlock();
+}
+static void bars_text(int v, char *b) { cpy(itoa_b(v, b), v == 1 ? " BAR" : " BARS"); }
+
 static void field_range(int f, int *lo, int *hi)
 {
     *lo = 0;
@@ -390,6 +415,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_SHIFT: *lo = -16; *hi = 16; break;
     case F_SLEN: *lo = 1; *hi = 16; break;
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
+    case F_RECBARS: *hi = 16; break;
     case F_DIV: *hi = 3; break;
     case F_ARPMODE: *hi = 5; break;
     case F_ARPDIV: *hi = DK_ARP_NDIV - 1; break;
@@ -512,6 +538,7 @@ static int field_get(int f)
     }
     case F_SHIFT: return se_shift;
     case F_CLIPLEN: return clip_len(cur_clip()) / DK_TPB;
+    case F_RECBARS: return ui_auto_on || (ui_rec_auto && part_empty(dk_song.cur_part)) ? 0 : dk_song.part[dk_song.cur_part & 7].bars;
     case F_QNT: return k->qnt;
     case F_TSWING: return k->swing;
     case F_DIV: return k->div & 3;
@@ -669,11 +696,14 @@ static void field_set(int f, int v)
     case F_STEPPAGE: ui_step_page = (uint8_t)(v % (clip_len(cur_clip()) / DK_TPB > 0 ? clip_len(cur_clip()) / DK_TPB : 1)); break;
     case F_CURSOR: ui_cursor = (uint8_t)(v % (clip_len(cur_clip()) / DK_T16)); break;
     case F_SLEN: ui_slen = (uint8_t)v; break;
-    case F_CLIPLEN:
-        undo_push(cur_clip());
-        dk_lock();
-        dk_song.clip[cur_clip()].len = (uint16_t)(v * DK_TPB);
-        dk_unlock();
+    case F_CLIPLEN:                      /* the part's length (all its tracks); set by hand: the tape's AUTO off */
+        part_bars_set(dk_song.cur_part, v);
+        ui_rec_auto = 0;
+        break;
+    case F_RECBARS:
+        ui_rec_auto = (uint8_t)(v == 0);
+        if (v)
+            part_bars_set(dk_song.cur_part, v);
         break;
     case F_QNT: k->qnt = (uint8_t)v; break;
     case F_TSWING: k->swing = (uint8_t)v; break;
@@ -738,7 +768,10 @@ static void field_set(int f, int v)
         break;
     case F_GPART: ui_gpart = (uint8_t)v; break;
     case F_GLABEL: dk_song.part[ui_gpart].label = (uint8_t)v; break;
-    case F_GBARS: dk_song.part[ui_gpart].bars = (uint8_t)v; break;
+    case F_GBARS:
+        part_bars_set(ui_gpart, v);
+        ui_rec_auto = 0;
+        break;
     case F_PLAYMODE: dk_song.play_mode = (uint8_t)v; break;
     case F_ROOT:
     case F_MODE:
@@ -850,6 +883,7 @@ static const char *field_label(int f)
     case F_SHIFT: return "SHIFT";
     case F_SLEN: return "LENGTH";
     case F_CLIPLEN: return "BARS";
+    case F_RECBARS: return "BARS";
     case F_QNT: return "QUANT";
     case F_TSWING: return "SWING";
     case F_DIV: return "DIVISION";
@@ -1098,6 +1132,14 @@ static void field_text(int f, char *b)
     }
     case F_TEMPLATE: cpy(b, TEMPLATE_NAME[v % 5]); break;
     case F_METRO: cpy(b, METRO_MODE[v % 3]); break;
+    case F_CLIPLEN:
+    case F_GBARS: bars_text(v, b); break;
+    case F_RECBARS:                      /* (the tape's foot is narrow: the number, BARS its name) */
+        if (v)
+            itoa_b(v, b);
+        else
+            cpy(b, "AUTO");
+        break;
     case F_CLICK: cpy(b, METRO_SND[v % METRO_N]); break;
     case F_MDIV: cpy(b, MDIV_NAME[v % 3]); break;
     case F_ECHOTIME: cpy(b, ECHO_T[v & 3]); break;

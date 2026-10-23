@@ -60,6 +60,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "eng")) g = cur()->eng;
     else if (!strcmp(what, "mute")) g = cur()->mute;
     else if (!strcmp(what, "proj")) g = set.proj;
+    else if (!strcmp(what, "bars")) g = dk_song.part[dk_song.cur_part & 7].bars;   /* the part's */
     else if (!strcmp(what, "cursor")) g = ui_cursor;                 /* the step editor's */
     else if (!strcmp(what, "senotes")) g = field_get(F_SENOTE);
     else if (!strcmp(what, "selen")) g = se_len_of();

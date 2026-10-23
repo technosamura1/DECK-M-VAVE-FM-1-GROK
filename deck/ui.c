@@ -34,6 +34,8 @@ static struct {
     uint8_t mix_key;
     uint8_t notes_k;                     /* a PERFORM key held (+1): its name stays up top until it is let go */
     uint32_t mix_t;                      /* MIX: the white key down (mix_key: its track + 1): a tap mutes, 1 s clears */
+    uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
+    uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
     uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
                                                             * 1 a part (the garage), 2 the road */
 } ui;
@@ -312,6 +314,13 @@ static void rec_start(void)
         dk_song.clip[clip].len = 0;
         dk_unlock();
     }
+    ui_auto_on = 0;
+    if (!dk_playing && ui_rec_auto && part_empty(dk_song.cur_part)) {   /* AUTO: open, up to 16 bars, REC ends it */
+        ui.auto_prev = dk_song.part[dk_song.cur_part & 7].bars;
+        part_bars_set(dk_song.cur_part, 16);
+        ui_auto_on = 1;
+        ui.auto_max = 0;
+    }
     dk_cmd(C_REC, 1, 0, t | t2 << 16);
     ui.rec_end = 0;
     if (ui.page != PG_REC) {
@@ -321,10 +330,48 @@ static void rec_start(void)
     say("REC", dk_playing ? "NEW PASS" : dk_metro.on_note ? "PLAY A NOTE" : "COUNT IN");
 }
 
+static void auto_end(void)               /* AUTO's take ends (REC or PLAY): the loop at the nearest bar line */
+{
+    if (ui_auto_on && dk_playing && !dk_counting) {
+        int b = (dk_part_tick + DK_TPB / 4) / DK_TPB;
+        ui.auto_fix = (uint8_t)(b < 1 ? 1 : b > 16 ? 16 : b);
+    } else if (ui_auto_on)                 /* stopped in the count-in: the part as it was */
+        part_bars_set(dk_song.cur_part, ui.auto_prev);
+    ui_auto_on = 0;
+}
 static void rec_stop_ui(void)
 {
     dk_cmd(C_REC, 0, 0, 0);
+    auto_end();
     say("REC", "OFF");
+}
+/* AUTO's end: the take's notes past the new end wrapped round to its start, the part that long */
+static void auto_apply(void)
+{
+    int p = dk_song.cur_part & 7, len = ui.auto_fix * DK_TPB, t, i;
+    char s[16];
+    rec_flush();
+    dk_lock();
+    for (t = 0; t < DK_NTRACK; t++) {
+        int c = p * DK_NTRACK + t;
+        dk_clip_t *cl = &dk_song.clip[c];
+        for (i = cl->n - 1; i >= 0; i--) {
+            dk_ev_t *e = &dk_ev[cl->at + i];
+            if (e->pos < len)
+                continue;
+            if (e->pos < 2 * len)
+                e->pos = (uint16_t)(e->pos - len);
+            else
+                ev_delete(c, i);
+        }
+        clip_sort(c);
+    }
+    dk_unlock();
+    part_bars_set(p, ui.auto_fix);
+    bars_text(ui.auto_fix, s);
+    say("LOOP", s);
+    ui.auto_fix = 0;
+    mark_dirty();
 }
 
 static int bar_ms(void) { return (int)(240000u / (dk_song.tempo ? dk_song.tempo : 120)); }
@@ -406,6 +453,7 @@ static void action(int a, int b)
     case A_PAGE_PLAY: page_go(PG_PLAY); break;
     case A_PLAY:
         if (dk_playing || dk_counting) {
+            auto_end();
             dk_cmd(C_PLAY, 0, 0, 0);
             ui.change_t = plat_ms() - 3000u;   /* saved soon after the stop */
             ui.road_rec = 0;
@@ -1299,6 +1347,14 @@ static void input(void)
     }
     ui.btn = btn;
     se_hear_step(now);                   /* the step editor's note heard for a moment: off */
+    if (ui_auto_on && dk_playing && !dk_counting) {   /* AUTO's take: past 16 bars it wraps, 16 it is */
+        if (dk_part_tick >= ui.auto_max)
+            ui.auto_max = dk_part_tick;
+        else if (ui.auto_max > DK_TPB && dk_part_tick + DK_TPB < ui.auto_max)
+            ui_auto_on = 0;
+    }
+    if (ui.auto_fix && !dk_recording)
+        auto_apply();
     if (ui.notes_k) {                    /* a PERFORM key still held: its name kept */
         if (kh[ui.notes_k - 1].trk >= 0 && kh[ui.notes_k - 1].kind == 1)
             ui.notes_until = now + 300u;

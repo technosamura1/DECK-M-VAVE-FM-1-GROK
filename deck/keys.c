@@ -77,7 +77,7 @@ static int white_pitch(int w, int t)         /* the note a white key plays in SC
 /* a chord for degree d (0..6, or 10..13 a borrowed one) in the song's key, voiced and led, around base */
 static int chord_build(int d, int base, int *out)
 {
-    int nt[8], n, i;
+    int nt[8], n, i, skip_pc = -1;
     int root = dk_song.root % 12;
     if (d >= 10) {
         int minorish = dk_song.mode == 1 || dk_song.mode == 2 || dk_song.mode == 3 || dk_song.mode == 6 ||
@@ -94,9 +94,12 @@ static int chord_build(int d, int base, int *out)
             }
             nt[j + 1] = v;
         }
-    } else if (dk_song.quality == 0)
+    } else if (dk_song.quality == 0) {
         n = dk_chord(root, dk_song.mode, d, dk_song.chord, 1, dk_song.dim, nt, base);
-    else {
+        skip_pc = dk_scale_note(root, dk_song.mode, d) % 12;   /* DIM SKIP took another degree: the key's own note */
+        if (n && nt[0] % 12 == skip_pc)                         /* stays the bass (vii: V7 over the vii, G7/B) */
+            skip_pc = -1;
+    } else {
         int pc = dk_scale_note(root, dk_song.mode, d) % 12;
         n = dk_chord(root, dk_song.mode, pc, dk_song.chord, 0, 0, nt, base);
     }
@@ -107,6 +110,34 @@ static int chord_build(int d, int base, int *out)
         for (i = 0; i < 8; i++)
             prev[i] = last_chord[i < 8 ? i : 7];
         n = dk_voice(nt, n, dk_song.voicing, dk_song.bass, dk_song.lead && have_chord ? prev : 0, out);
+    }
+    if (skip_pc >= 0 && n > 0) {             /* the key's note under it: the lowest of it, or added below */
+        int lo = 0, has = -1, j;
+        for (i = 0; i < n; i++) {
+            if (out[i] < out[lo])
+                lo = i;
+            if (out[i] % 12 == skip_pc && (has < 0 || out[i] < out[has]))
+                has = i;
+        }
+        if (has >= 0 && has != lo) {         /* it, down by octaves under the lowest: the bass */
+            int low = out[lo];
+            while (out[has] > low)
+                out[has] -= 12;
+        } else if (has < 0 && n < 7) {
+            int b = out[lo] - ((out[lo] - skip_pc) % 12 + 12) % 12;
+            if (b == out[lo])
+                b -= 12;
+            out[n++] = b;
+        }
+        for (i = 1; i < n; i++) {            /* low to high again */
+            int v = out[i];
+            j = i - 1;
+            while (j >= 0 && out[j] > v) {
+                out[j + 1] = out[j];
+                j--;
+            }
+            out[j + 1] = v;
+        }
     }
     for (i = 0; i < n && i < 8; i++)
         last_chord[i] = out[i];

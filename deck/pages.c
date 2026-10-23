@@ -273,7 +273,7 @@ static int page_field(int i, int home)
         return F[row & 1][i];
     }
     case PG_REC: {
-        static const uint8_t F[5] = {F_QNT, F_RECTRK, F_MVOL, F_METRO, F_NONE};
+        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECTRK, F_METRO, F_MVOL};   /* BARS first: how long a take */
         return F[i];
     }
     default: return F_NONE;
@@ -305,7 +305,10 @@ static const char *hint(void)
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  SAVE = SAVE NOW";
     case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
     case PG_ATMO: return "SEL = NEXT ROW  KNOBS = HOW MUCH";
-    case PG_REC: return "REC = NEW PASS  HOLD EDIT = UNDO PASS";
+    case PG_REC:
+        if (ui_auto_on)
+            return "REC AGAIN = THE LOOP ENDS HERE";
+        return "K1 BARS  K4 METRONOME  HOLD EDIT = UNDO";
     case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
@@ -1515,7 +1518,9 @@ static void draw_tape(void)
     for (i = 0; i < 3; i++)
         cv_rect(24, 102 + i * 2, 192, 2, CS_STRIPE[i]);
     text_box(30, 52, 120, 0, &FONT_XS, &FONT_T, dk_song.name, CS_INK);
-    text_box(150, 52, 60, 2, &FONT_XS, &FONT_T, side_b ? "SIDE B" : "SIDE A", CS_INK);
+    text_box(130, 52, 80, 2, &FONT_XS, &FONT_T, dk_metro.mode ? "CLICK ON" : "CLICK OFF",
+             dk_metro.mode ? CS_INK : RGB(170, 60, 50));   /* the metronome: K4 */
+    (void)side_b;
     cv_rect(54, 66, 132, 32, CS_WINDOW);      /* the window, the reels */
     reel(80, 82, 1.0f - pos, phase);
     reel(160, 82, pos, phase);
@@ -1526,8 +1531,15 @@ static void draw_tape(void)
         text_box(108, 70, 24, 1, &FONT_L, &FONT_B, s, TH_REC);
     }
     text_box(24, 113, 100, 0, &FONT_T, &FONT_T, TAPE_TITLE, CS_INK);
-    itoa_b(dk_song.tempo, s);
-    text_box(150, 113, 60, 2, &FONT_T, &FONT_T, s, CS_INK);
+    {                                         /* the bars: where it is of how many (AUTO: counting up) */
+        int bars = dk_song.part[dk_cur_part & 7].bars, at = dk_playing ? (int)(dk_part_tick / DK_TPB) + 1 : 1;
+        char *p = itoa_b(at, cpy(s, "BAR "));
+        if (ui_auto_on)
+            cpy(p, " AUTO");
+        else
+            itoa_b(bars, cpy(p, "/"));
+        text_box(120, 113, 90, 2, &FONT_T, &FONT_T, s, ui_auto_on ? TH_REC : CS_INK);
+    }
     /* the head: red, a flash on each note recorded */
     {
         static uint32_t hits, flash;
