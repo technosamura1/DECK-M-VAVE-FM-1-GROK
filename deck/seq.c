@@ -494,8 +494,11 @@ static void arp_tick(int t)
     case 3: idx = irand(total); break;                                       /* RAND */
     case 4: idx = s % total; break;                                          /* ORDER (as played) */
     case 5:                                                                  /* CHORD */
-        for (i = 0; i < n; i++)
+        for (i = 0; i < n; i++) {
             note_play(t, srt[i], hit == 2 ? 0.7f : 0.58f, (int32_t)((float)div * tick_len * gate), swing_delay(t, (int)(gt % DK_TPB)), 2);
+            if (rec_track_of(t))
+                rec_done(t, srt[i], hit == 2 ? 89 : 74, (int)((float)div * gate) > 1 ? (int)((float)div * gate) : 1);
+        }
         return;
     default: idx = s % total; break;                                         /* UP */
     }
@@ -755,8 +758,7 @@ static void live_note(int t, int note, int vel, int delay)
                 harm.heard_at = dk_ticks ? dk_ticks : 1u;
             }
         }
-        switch (k->seq) {
-        case SQ_ARP:
+        if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {   /* ARP over the sequencer: the keys feed it */
             if (!arp_keys[t] && !k->arp[3])
                 arp_n[t] = 0;
             if (k->arp[3] && !arp_keys[t])     /* latched: a new hand replaces the old */
@@ -766,6 +768,8 @@ static void live_note(int t, int note, int vel, int delay)
                 arp_order[t][arp_n[t]++] = (uint8_t)note;
             arp_publish(t);
             return;
+        }
+        switch (k->seq) {
         case SQ_HOLD:
             if (!hold_keys[t]) {               /* a new hand: the old drone lets go */
                 int i;
@@ -794,8 +798,7 @@ static void live_note(int t, int note, int vel, int delay)
             rec_open(t, note, vel);
     } else {
         held_pcs[t] &= ~(1u << (note % 12));
-        switch (k->seq) {
-        case SQ_ARP:
+        if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {
             if (arp_keys[t])
                 arp_keys[t]--;
             if (!k->arp[3]) {
@@ -807,6 +810,8 @@ static void live_note(int t, int note, int vel, int delay)
             }
             arp_publish(t);
             return;
+        }
+        switch (k->seq) {
         case SQ_HOLD:
             if (hold_keys[t])
                 hold_keys[t]--;
@@ -904,7 +909,7 @@ static void seq_tick(void)
     if (!dk_playing) {                         /* stopped: the hands' generators still run, on the free clock */
         for (t = 0; t < DK_NTRACK; t++) {
             const dk_track_t *k = &dk_song.trk[t];
-            if (k->seq == SQ_ARP)
+            if (dk_arp_on(k))
                 arp_tick(t);
             else if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
                 finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
@@ -946,9 +951,9 @@ static void seq_tick(void)
                 drive_tick(t);
         } else
             clip_tick(t, t == dk_song.harm_track ? &hp : 0);
-        if (k->seq == SQ_ARP)
+        if (dk_arp_on(k))
             arp_tick(t);
-        else if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
+        if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
             finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
         else if (k->seq == SQ_TOMBOLA)
             tmb_tick(t);
@@ -1147,6 +1152,7 @@ static void drain(void)
             break;
         case C_ARPCLR:
             arp_n[a % DK_NTRACK] = 0;
+            arp_keys[a % DK_NTRACK] = 0;
             arp_publish(a % DK_NTRACK);
             break;
         case C_HOLDCLR: voices_release_track(a % DK_NTRACK, 3); dk_held_n[a % DK_NTRACK] = 0; break;

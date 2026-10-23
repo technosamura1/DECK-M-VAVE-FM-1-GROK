@@ -151,101 +151,113 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 /* ---------------------------------------------------------------- the frame --- */
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 4, 2, 1, 5, 6, 1};
+    static const uint8_t ROWS[NPG] = {1, 2, 4, 2, 1, 4, 4, 1};
+    if (p == PG_SEQ && dk_arp_on(cur()) && !(cur_eng()->flags & EF_DRUM))
+        return 4;                            /* the ARP's two rows first, then the sequencer's */
     return ROWS[p];
 }
-/* the three fields of the page (its row): HOME held, another three where a page has them */
+/* the knobs of the page (its row): K1..K4 (i 0..3) the four main ones, i 4 ALGO's extra. SELECT is the track and
+ * PRESET the preset everywhere but PLAY (TEMPO, MACRO, MOOD there) */
 static int page_field(int i, int home)
 {
     const dk_track_t *k = cur();
+    const dk_engine_t *e = cur_eng();
     int row = ui.row[ui.page] % page_rows(ui.page);
-    static const uint8_t KEYS_F[5][3] = {{F_ROOT, F_MODE, F_CHORD},     {F_WHITE, F_BLACK, F_QUALITY},
-                                         {F_VOICING, F_STRUM, F_LEAD},  {F_LAYOUT, F_SPLIT, F_BASS},
-                                         {F_KOCT, F_DIM, F_HARMTRK}};
-    static const uint8_t PROJ_F[6][3] = {{F_SLOT, F_TEMPLATE, F_TEMPO}, {F_SWING, F_SONGSTYLE, F_DUST},
-                                         {F_METRO, F_COUNT, F_CLICK},   {F_MDIV, F_MVOL, F_ONNOTE},
-                                         {F_MIDIOUT, F_CLOCK, F_MIDIIN}, {F_ECHOTIME, F_SLEEP, F_CPU}};
-    static const uint8_t SOUND_F[4][3] = {{F_P0, F_P1, F_P2}, {F_ATT, F_DEC, F_REL}, {F_FXTYPE, F_FXAMT, F_FXA},
-                                          {F_MODTYPE, F_MODDEPTH, F_MODRATE}};
+    /* KEYS: the key and notes/chords first (K1 ROOT, K2 MODE, K3 WHITE = NOTES/CHORDS, K4 the chord) */
+    static const uint8_t KEYS_F[4][5] = {{F_ROOT, F_MODE, F_WHITE, F_CHORD, F_VOICING},
+                                         {F_BLACK, F_QUALITY, F_VOICING, F_STRUM, F_LEAD},
+                                         {F_SPLIT, F_BASS, F_HARMTRK, F_KOCT, F_DIM},
+                                         {F_LAYOUT, F_LEAD, F_DIM, F_NONE, F_NONE}};
+    static const uint8_t PROJ_F[4][5] = {{F_SLOT, F_TEMPLATE, F_TEMPO, F_SONGSTYLE, F_NONE},
+                                         {F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL},
+                                         {F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ONNOTE, F_NONE},
+                                         {F_ECHOTIME, F_CPU, F_VERSION, F_NONE, F_NONE}};
+    (void)home;
     switch (ui.page) {
     case PG_PLAY: {
-        static const uint8_t F[3] = {F_TEMPO, F_MACRO, F_MOOD};
+        static const uint8_t F[5] = {F_DUST, F_SIDECHAIN, F_SLEEP, F_SWING, F_MACRO};
         return F[i];
     }
     case PG_SOUND:
-        if (home && row == 2 && i == 2)
-            return F_FXB;
-        if (home && row == 3)
-            return i == 0 ? F_MODSLOT : i == 1 ? F_MODTGT : F_MODRATE;
-        if (home && row == 0)                /* the engine's others (its TYPE, ...): HOME held */
-            return F_P3 + i < F_P3 + cur_eng()->nparams - 3 ? F_P3 + i : i == 2 ? F_DRIFT : F_NONE;
-        return SOUND_F[row & 3][i];
+        switch (row & 3) {
+        case 0:                              /* the engine: its first four, ALGO the fifth (or the drift) */
+            if (i < 4)
+                return i < e->nparams ? F_P0 + i : i == 3 ? F_DRIFT : F_NONE;
+            return e->nparams > 4 ? F_P4 : e->nparams < 4 ? F_NONE : F_DRIFT;
+        case 1: {
+            static const uint8_t F[5] = {F_ATT, F_DEC, F_REL, F_VOL, F_MACRO};
+            return F[i];
+        }
+        case 2: {
+            static const uint8_t F[5] = {F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_REV};
+            return F[i];
+        }
+        default: {
+            static const uint8_t F[5] = {F_MODTYPE, F_MODDEPTH, F_MODRATE, F_MODTGT, F_MODSLOT};
+            return F[i];
+        }
+        }
     case PG_SEQ: {
-        int drum = (cur_eng()->flags & EF_DRUM) != 0;
+        int drum = (e->flags & EF_DRUM) != 0;
+        if (page_rows(PG_SEQ) == 4) {        /* ARP on: its rows first */
+            if (row == 0) {
+                static const uint8_t F[5] = {F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPRHY, F_ARPLATCH};
+                return F[i];
+            }
+            if (row == 1) {
+                static const uint8_t F[5] = {F_ARPGATE, F_ARPSRC, F_ARPLATCH, F_OCT, F_NONE};
+                return F[i];
+            }
+            row -= 2;
+        }
         if (row == 1) {
-            static const uint8_t R2[3] = {F_SEQTYPE, F_TSWING, F_CLIPLEN};
-            static const uint8_t ARP2[3] = {F_ARPRHY, F_ARPGATE, F_ARPSRC};
-            if (k->seq == SQ_ARP && !home)
-                return ARP2[i];
-            if (k->seq == SQ_STEP && i < 2)
-                return i == 0 ? F_SRATCH : F_SPROB;
-            return R2[i];
+            static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_OCT};
+            return F[i];
         }
         switch (k->seq) {
         case SQ_STEP:
             if (drum) {
-                static const uint8_t F[3] = {F_LANE, F_SVEL, F_STEPPAGE};
+                static const uint8_t F[5] = {F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE};
                 return F[i];
             } else {
-                static const uint8_t F[3] = {F_CURSOR, F_SLEN, F_SVEL};
+                static const uint8_t F[5] = {F_CURSOR, F_SLEN, F_SVEL, F_SPROB, F_SRATCH};
                 return F[i];
             }
-        case SQ_ENDLESS: {
-            static const uint8_t F[3] = {F_DIV, F_QNT, F_TSWING};
-            return F[i];
-        }
-        case SQ_ARP: {
-            static const uint8_t F[3] = {F_ARPMODE, F_ARPDIV, F_ARPOCT};
-            return home && i == 0 ? F_ARPLATCH : F[i];
-        }
         case SQ_DRIVE: {
-            static const uint8_t F[3] = {F_ENERGY, F_STYLE, F_VAR};
+            static const uint8_t F[5] = {F_ENERGY, F_STYLE, F_VAR, F_TSWING, F_CLIPLEN};
             return F[i];
         }
         case SQ_FINGER: {
-            static const uint8_t F[3] = {F_FLATCH, F_TSWING, F_OCT};
-            return F[i];
-        }
-        case SQ_HOLD: {
-            static const uint8_t F[3] = {F_OCT, F_DRIFT, F_TSWING};
+            static const uint8_t F[5] = {F_FLATCH, F_TSWING, F_OCT, F_CLIPLEN, F_NONE};
             return F[i];
         }
         case SQ_TOMBOLA: {
-            static const uint8_t F[3] = {F_SPIN, F_GRAV, F_BOUNCE};
-            return home && i == 0 ? F_TQUANT : F[i];
+            static const uint8_t F[5] = {F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_NONE};
+            return F[i];
         }
         default: {
-            static const uint8_t F[3] = {F_QNT, F_CLIPLEN, F_TSWING};
+            static const uint8_t F[5] = {F_QNT, F_CLIPLEN, F_TSWING, F_OCT, F_NONE};
             return F[i];
         }
         }
     }
     case PG_MIX: {
-        static const uint8_t F[2][3] = {{F_VOL, F_PAN, F_REV}, {F_ECHO, F_SIDECHAIN, F_SPACE}};
+        static const uint8_t F[2][5] = {{F_VOL, F_PAN, F_REV, F_ECHO, F_SPACE},
+                                        {F_DUST, F_SIDECHAIN, F_SLEEP, F_SWING, F_ECHOTIME}};
         return F[row & 1][i];
     }
     case PG_ROAD:
         if (ui.garage) {
-            static const uint8_t F[3] = {F_GPART, F_GLABEL, F_GBARS};
+            static const uint8_t F[5] = {F_GPART, F_GLABEL, F_GBARS, F_NONE, F_NONE};
             return F[i];
         } else {
-            static const uint8_t F[3] = {F_ROADCUR, F_ROADPART, F_ROADREPS};
-            return home && i == 0 ? F_PLAYMODE : F[i];
+            static const uint8_t F[5] = {F_ROADCUR, F_ROADPART, F_ROADREPS, F_PLAYMODE, F_NONE};
+            return F[i];
         }
-    case PG_KEYS: return KEYS_F[row % 5][i];
-    case PG_PROJECT: return PROJ_F[row % 6][i];
+    case PG_KEYS: return KEYS_F[row & 3][i];
+    case PG_PROJECT: return PROJ_F[row & 3][i];
     case PG_REC: {
-        static const uint8_t F[3] = {F_QNT, F_RECTRK, F_MVOL};
+        static const uint8_t F[5] = {F_QNT, F_RECTRK, F_MVOL, F_METRO, F_NONE};
         return F[i];
     }
     default: return F_NONE;
@@ -266,11 +278,11 @@ static const char *hint(void)
             return "HOME+SEQ = BAKE TO STEP";
         if (k->seq == SQ_TOMBOLA)
             return "PLAY TO DROP  HOLD REC = EMPTY";
-        if (k->seq == SQ_ARP)
-            return "ARP = LATCH  HOME+ARP = OFF  SEQ = RHYTHM";
+        if (page_rows(PG_SEQ) == 4)
+            return "ARP = LATCH  HOME+ARP = OFF  SEQ = ROW";
         return "HOLD SEQ + WHITE = SEQUENCER";
     case PG_SOUND: return "FX = NEXT TAB  HOLD LFO+TURN = MOD";
-    case PG_MIX: return "WHITE MUTE  BLACK SOLO  LFO = ROW";
+    case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
     case PG_ROAD:
         return ui.garage ? "HOLD ENV = BACK TO ROAD" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
@@ -369,13 +381,14 @@ no_batt:
         cv_rect(200, 9, 2, 2, TH_ENC[2]);
 }
 
-/* the foot: the three fields (a ring for a number, a dot for a choice), the hint */
+/* the foot: the four knobs K1..K4 (a ring for a number, a dot for a choice; their colours), the hint */
+static uint16_t knob_col(int i) { return i < 3 ? TH_ENC[i] : TH_TEXT; }
 static void draw_footer(int y)
 {
     int i;
     uint32_t now = plat_ms();
-    for (i = 0; i < 3; i++) {
-        int f = page_field(i, held(B_HOME)), x = 8 + i * 78, lo, hi, v, lit = ui.touched == i && now < ui.touch_until;
+    for (i = 0; i < 4; i++) {
+        int f = page_field(i, 0), x = 4 + i * 59, lo, hi, v, lit = ui.touched == i && now < ui.touch_until;
         char s[24];
         if (f == F_NONE)
             continue;
@@ -383,11 +396,11 @@ static void draw_footer(int y)
         v = field_get(f);
         field_text(f, s);
         if (hi - lo > 8)
-            ring(x + 6, y + 6, 5, (float)(v - lo) / (float)(hi - lo), TH_ENC[i]);
+            ring(x + 5, y + 6, 4, (float)(v - lo) / (float)(hi - lo), knob_col(i));
         else
-            disc(x + 6, y + 6, 3, TH_ENC[i]);
-        text_box(x + 16, y + 1, 56, 0, &FONT_T, &FONT_T, field_label(f), lit ? TH_ENC[i] : TH_GRAY);
-        text_box(x, y + 15, 68, 0, &FONT_M, &FONT_XS, s, TH_TEXT);
+            disc(x + 5, y + 6, 3, knob_col(i));
+        text_box(x + 13, y + 1, 43, 0, &FONT_T, &FONT_T, field_label(f), lit ? knob_col(i) : TH_GRAY);
+        text_box(x, y + 15, 56, 0, &FONT_S, &FONT_XS, s, TH_TEXT);
     }
     if (now - ui.page_t < 3000u || held(B_HOME))
         text_box(4, y + 43, 232, 1, &FONT_T, &FONT_T, hint(), dimc(TH_GRAY, 12));
@@ -615,8 +628,13 @@ static void draw_seq(void)
     int len = clip_len(cur_clip()), i, x;
     uint32_t now = plat_ms();
     char s[24];
-    cv_text(8, 26, &FONT_XS, SEQ_NAME[k->seq % SQ_N], TH_GRAY);
-    switch (k->seq) {
+    int view = k->seq;
+    if (page_rows(PG_SEQ) == 4 && (ui.row[PG_SEQ] % 4) < 2)
+        view = SQ_ARP;                       /* the ARP's rows: its picture */
+    cv_text(8, 26, &FONT_XS, view == SQ_ARP ? "ARP" : SEQ_NAME[k->seq % SQ_N], TH_GRAY);
+    if (view != SQ_ARP && page_rows(PG_SEQ) == 4)
+        text_box(150, 26, 82, 2, &FONT_XS, &FONT_T, "+ ARP", TH_ENC[1]);
+    switch (view) {
     case SQ_STEP:
         if (e->flags & EF_DRUM) {            /* the lanes, the steps: on a big dot, off a small grey one */
             int lanes = e->nlanes ? e->nlanes : 8, l, ph = (int)(dk_part_tick % (uint16_t)len) / DK_T16 - ui_step_page * 16;

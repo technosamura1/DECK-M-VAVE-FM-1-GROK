@@ -459,7 +459,7 @@ static void track_defaults(int t)
     for (i = 0; i < (int)sizeof *k; i++)
         ((uint8_t *)k)[i] = 0;
     k->vol = 72;
-    k->pan = (int8_t)(t == 3 ? -12 : t == 4 ? 14 : 0);
+    k->pan = (int8_t)(t == 1 ? -12 : t == 2 ? 14 : 0);   /* the pad a little left, the keys right */
     k->midi_ch = (uint8_t)(t + 1);
     k->drift = 35;
     k->drv[0] = 45;
@@ -563,10 +563,8 @@ void song_mood(int m)
     dk_song.dust = md->dust;
     dk_song.space = md->space;
     for (t = 0; t < DK_NTRACK; t++) {
-        if (md->eng[t] >= 0 && md->eng[t] != dk_song.trk[t].eng) {
+        if (md->eng[t] >= 0 && md->eng[t] != dk_song.trk[t].eng)   /* (the track keeps its role: PIANO, KEYS ...) */
             dk_song.trk[t].eng = (uint8_t)md->eng[t];
-            dk_song.trk[t].role = TAPE.eng[md->eng[t]]->role;
-        }
         if (md->preset[t] >= 0)
             track_preset(t, md->preset[t]);
         dk_song.trk[t].drv[1] = md->style;

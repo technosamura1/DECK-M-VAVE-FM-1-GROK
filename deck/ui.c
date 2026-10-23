@@ -28,6 +28,8 @@ static struct {
     uint8_t screen_dirty;
     uint32_t draw_t, garden_t, notes_until, page_t;   /* page_t: the page or its row changed (the hint shows 3 s) */
     char notes[28];
+    uint8_t mix_key;                     /* MIX: the white key down (its track + 1): a tap mutes, held 1 s clears */
+    uint32_t mix_t;
 } ui;
 
 static void say(const char *a, const char *b)
@@ -90,12 +92,46 @@ static void track_select(int t)
     say(track_label(t), cur_eng()->name);
 }
 
+/* the KEYS track (TAPE.keys_set): its twelve presets are on three engines */
+static int keys_group(void)
+{
+    return TAPE.keys_set && (cur()->role == TAPE.keys_role || cur()->role == R_BELL);
+}
+static int keys_group_at(void)           /* where the track is in it, -1 off it */
+{
+    int i;
+    for (i = 0; i < DK_NFACT; i++)
+        if (TAPE.keys_set[i][0] == cur()->eng && TAPE.keys_set[i][1] == cur()->preset)
+            return i;
+    return -1;
+}
 static void preset_select(int slot)
 {
     dk_preset_t tmp;
+    if (slot < DK_NFACT && keys_group()) {
+        keys_all_up();
+        cur()->eng = TAPE.keys_set[slot][0];
+        slot = TAPE.keys_set[slot][1];
+    }
     track_preset(dk_song.cur_track, slot);
     mark_dirty();
     say(preset_of(cur()->eng, slot, &tmp)->name, slot >= DK_NFACT ? "USER" : cur_eng()->name);
+}
+
+static void preset_step(int d)          /* PRESET: the next one (the user's only where saved) */
+{
+    int s = cur()->preset, n;
+    if (keys_group()) {                  /* KEYS: along its twelve */
+        int g = keys_group_at();
+        preset_select(((g < 0 ? 0 : g) + d + DK_NFACT) % DK_NFACT);
+        return;
+    }
+    for (n = 0; n < DK_NFACT + 4; n++) {
+        s = (s + d + DK_NFACT + 4) % (DK_NFACT + 4);
+        if (s < DK_NFACT || dk_user.p[cur()->eng & 7][(s - DK_NFACT) & 3].used)
+            break;
+    }
+    preset_select(s);
 }
 
 static void preset_save(int slot)        /* SAVE held + white 13..16 */
@@ -294,15 +330,16 @@ static void action(int a, int b)
             say(s, cur()->mute ? "MUTED" : "ON");
         }
         break;
-    case A_ARP: {                         /* one button: ARP on this track; pressed again, LATCH */
+    case A_ARP: {                         /* ARP over the track's playing: on; pressed again, LATCH */
         dk_track_t *k = cur();
         if (cur_eng()->flags & EF_DRUM) {
             say("ARP", "NOT ON DRUMS");
             break;
         }
-        if (k->seq != SQ_ARP) {
-            k->prev_seq = (uint8_t)(k->seq + 1);
-            field_set(F_SEQTYPE, SQ_ARP);
+        if (!dk_arp_on(k)) {
+            keys_all_up();
+            k->arp_opt |= ARPO_ON;
+            ui.row[PG_SEQ] = 0;
             if (ui.page != PG_SEQ)           /* (page_go on its own page would flip its row) */
                 page_go(PG_SEQ);
             say("ARP", "ON");
@@ -315,12 +352,11 @@ static void action(int a, int b)
     }
     case A_ARP_OFF: {
         dk_track_t *k = cur();
-        if (k->seq == SQ_ARP) {
-            int pv = k->prev_seq ? (k->prev_seq - 1) % SQ_N : SQ_LIVE;
-            field_set(F_SEQTYPE, pv == SQ_ARP ? SQ_LIVE : pv);
-            k->prev_seq = 0;
-            mark_dirty();
-        }
+        keys_all_up();
+        k->arp_opt &= (uint8_t)~ARPO_ON;
+        dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
+        ui.row[PG_SEQ] = 0;
+        mark_dirty();
         say("ARP", "OFF");
         break;
     }
@@ -483,11 +519,10 @@ static void key_down(int k, int vel)
         say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
-    if (held(B_SEQ) && w >= 0 && w < SQ_N) {
+    if (held(B_SEQ) && w >= 0 && w < NSEQ) {
         ui.used[B_SEQ] = 1;
-        cur()->prev_seq = 0;             /* chosen by hand: HOME+ARP then goes to LIVE */
         field_set(F_SEQTYPE, w);
-        say("SEQUENCER", SEQ_NAME[w]);
+        say("SEQUENCER", SEQ_NAME[SQ_LIST[w]]);
         return;
     }
     switch (ui.page) {
@@ -594,10 +629,9 @@ static void key_down(int k, int vel)
         }
         break;
     case PG_MIX:
-        if (w >= 0 && w < DK_NTRACK) {
-            dk_song.trk[w].mute ^= 1u;
-            mark_dirty();
-            say(track_label(w), dk_song.trk[w].mute ? "MUTED" : "ON");
+        if (w >= 0 && w < DK_NTRACK) {       /* the mute on the release; held 1 s: the track's clip cleared */
+            ui.mix_key = (uint8_t)(w + 1);
+            ui.mix_t = plat_ms();
             return;
         }
         if (b >= 0 && b < DK_NTRACK) {
@@ -690,6 +724,14 @@ static void key_down(int k, int vel)
 
 static void key_up(int k)
 {
+    if (ui.mix_key && white_of(k) == ui.mix_key - 1) {
+        int w = ui.mix_key - 1;
+        ui.mix_key = 0;
+        dk_song.trk[w].mute ^= 1u;
+        mark_dirty();
+        say(track_label(w), dk_song.trk[w].mute ? "MUTED" : "ON");
+        return;
+    }
     if (ui.page == PG_SEQ && ui.step_key == k + 1) {
         ui.step_key = 0;
         ui_cursor = (uint8_t)((ui_cursor + ui_slen) % (clip_len(cur_clip()) / DK_T16));
@@ -704,7 +746,7 @@ static void turn(int i, int e)
 {
     int f, lo, hi, step = 1;
     uint32_t now = plat_ms();
-    if (ui.page == PG_SOUND && held(B_LFO) && ui.row[PG_SOUND] == 0) {   /* LFO held: MOD 1 onto this knob */
+    if (ui.page == PG_SOUND && held(B_LFO) && ui.row[PG_SOUND] == 0 && i < 4) {   /* LFO held: MOD 1 onto this knob */
         dk_track_t *k = cur();
         ui.used[B_LFO] = 1;
         if (k->mod[0][0] == MOD_OFF)
@@ -748,8 +790,14 @@ static void turn(int i, int e)
         ui.root_until = now + 3000u;
     if (f == F_MOOD)
         tape_mood(dk_song.mood);
-    ui.touched = (int8_t)i;
-    ui.touch_until = now + 800u;
+    if (i < 4) {
+        ui.touched = (int8_t)i;
+        ui.touch_until = now + 800u;
+    } else {                             /* ALGO's extra: not on the screen, so a message */
+        char t[24];
+        field_text(f, t);
+        say(field_label(f), t);
+    }
     /* recording LIVE: the knob's move into the clip */
     if (dk_recording && dk_rec_trk == dk_song.cur_track && ui.page == PG_SOUND) {
         int tgt = f >= F_P0 && f <= F_P5 ? T_P0 + (f - F_P0) : f == F_ATT ? T_ATT : f == F_DEC ? T_DEC :
@@ -769,6 +817,24 @@ static void turn(int i, int e)
             dk_unlock();
         }
     }
+}
+
+/* SELECT and PRESET: on PLAY the tempo and the mood; elsewhere the track and its preset */
+static void enc_side(int play_f, int e)
+{
+    if (ui.page == PG_PLAY) {
+        char t[16];
+        field_set(play_f, field_get(play_f) + e);
+        if (play_f == F_MOOD)
+            tape_mood(dk_song.mood);
+        field_text(play_f, t);
+        say(field_label(play_f), t);
+        return;
+    }
+    if (play_f == F_TEMPO)
+        track_select((dk_song.cur_track + DK_NTRACK + (e > 0 ? 1 : -1)) % DK_NTRACK);
+    else
+        preset_step(e > 0 ? 1 : -1);
 }
 
 /* ----------------------------------------------------------------- MIDI in --- */
@@ -922,21 +988,33 @@ static void input(void)
         }
     }
     ui.btn = btn;
-    midi_in();
-    if ((e = plat_enc(EN_SELECT)) != 0)
-        turn(0, e);
-    if ((e = plat_enc(EN_ALGO)) != 0)
-        turn(1, e);
-    if ((e = plat_enc(EN_PRESET)) != 0)
-        turn(2, e);
-    for (k = 0; k < 4; k++)
-        if ((e = plat_enc(EN_K1 + (int)k)) != 0) {
-            int f = KNOB_FIELD[k];
-            char s[12];
-            field_set(f, field_get(f) + e * 2);
-            field_text(f, s);
-            say(field_label(f), s);
+    if (ui.mix_key && now - ui.mix_t >= 1000u) {   /* MIX: a white held 1 s, its track's clip in this part cleared */
+        int t = ui.mix_key - 1, c = dk_song.cur_part % DK_NPART * DK_NTRACK + t;
+        char s[16] = "TRACK 1";
+        ui.mix_key = 0;
+        undo_push(c);
+        dk_lock();
+        clip_clear(c);
+        dk_unlock();
+        if (dk_song.trk[t].seq == SQ_TOMBOLA && t == dk_song.cur_track) {
+            dk_cmd(C_TOMBOLA, 0, 0, 0);
+            dk_song.nball = 0;
         }
+        mark_dirty();
+        s[6] = (char)('1' + t);
+        say(s, "CLEARED");
+    }
+    midi_in();
+    /* K1..K4: the page's four; ALGO its extra; SELECT the track, PRESET the preset (PLAY: TEMPO, MOOD) */
+    for (k = 0; k < 4; k++)
+        if ((e = plat_enc(EN_K1 + (int)k)) != 0)
+            turn((int)k, e);
+    if ((e = plat_enc(EN_ALGO)) != 0)
+        turn(4, e);
+    if ((e = plat_enc(EN_SELECT)) != 0)
+        enc_side(F_TEMPO, e);
+    if ((e = plat_enc(EN_PRESET)) != 0)
+        enc_side(F_MOOD, e);
     lights();
 }
 

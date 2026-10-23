@@ -143,6 +143,8 @@ typedef struct {
 
 enum { ARPR_STRAIGHT, ARPR_PULSE, ARPR_OFFBEAT, ARPR_DOTTED, ARPR_GALLOP, ARPR_RISE, ARPR_SKIP, ARPR_N };
 enum { ARPG_NORMAL, ARPG_SHORT, ARPG_LONG, ARPG_TIE, ARPG_N };
+#define ARPO_ON 8u                      /* arp_opt: the ARP on, over the track's sequencer (keys -> the arpeggio) */
+#define dk_arp_on(k) (((k)->arp_opt & ARPO_ON) != 0)
 #define DK_ARP_NDIV 6
 enum { MOD_OFF, MOD_SWING, MOD_DICE, MOD_PEDAL, MOD_FOLLOW, MOD_TREMOLO, MOD_N };
 enum { TR_HALF = 1, TR_DOUBLE = 2, TR_REVERSE = 4, TR_UP = 8, TR_DOWN = 16, TR_STOP = 32 };
@@ -247,6 +249,8 @@ typedef struct {
     uint8_t human;                      /* timing and velocity looseness, % */
     const uint8_t *def_eng;             /* the tracks' engines, presets, sequencers, effects, roles by default */
     const uint8_t *def_preset, *def_seq, *def_role;
+    const uint8_t (*keys_set)[2];       /* the KEYS track's 12 presets across engines {engine, preset}, or 0 */
+    uint8_t keys_role;                  /* the role whose track browses keys_set (R_ARP: "KEYS") */
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 

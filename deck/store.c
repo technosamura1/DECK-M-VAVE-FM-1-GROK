@@ -76,6 +76,13 @@ int project_load(int slot)
         goto empty;
     for (i = 0; i < dk_song.nev; i++)      /* nothing waits for a pass that is long gone */
         dk_ev[i].fl &= (uint8_t)~EV_FRESH;
+    for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS and HOLD too */
+        dk_track_t *k = &dk_song.trk[i];
+        if (k->seq == SQ_ARP)
+            k->arp_opt |= ARPO_ON;
+        if (k->seq == SQ_ARP || k->seq == SQ_ENDLESS || k->seq == SQ_HOLD)
+            k->seq = SQ_LIVE;
+    }
     dk_unlock();
     return 0;
 empty:

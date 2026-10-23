@@ -23,6 +23,17 @@ enum {
 };
 
 static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DRIVE", "FINGER", "HOLD", "TOMBOLA"};
+/* the sequencers offered (ARP is a layer over them now; ENDLESS and HOLD folded into LIVE and the ARP's LATCH) */
+#define NSEQ 5
+static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_LIVE, SQ_DRIVE, SQ_FINGER, SQ_TOMBOLA};
+static int seq_index(int sq)
+{
+    int i;
+    for (i = 0; i < NSEQ; i++)
+        if (SQ_LIST[i] == sq)
+            return i;
+    return 1;
+}
 static const char *const MOD_NAME[MOD_N] = {"OFF", "SWING", "DICE", "PEDAL", "FOLLOW", "TREMOLO"};
 static const char *const ARP_NAME[6] = {"UP", "DOWN", "UPDN", "RAND", "ORDER", "CHORD"};
 static const char *const DIV_NAME[DK_ARP_NDIV] = {"1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32"};
@@ -130,7 +141,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_STYLE:
     case F_SONGSTYLE: *hi = TAPE.nstyle - 1; break;
     case F_TQUANT: *hi = 2; break;
-    case F_SEQTYPE: *hi = SQ_N - 1; break;
+    case F_SEQTYPE: *hi = NSEQ - 1; break;
     case F_OCT:
     case F_KOCT: *lo = -3; *hi = 3; break;
     case F_MIDICH: *lo = 1; *hi = 16; break;
@@ -222,7 +233,7 @@ static int field_get(int f)
     case F_GRAV: return k->tmb[1];
     case F_BOUNCE: return k->tmb[2];
     case F_TQUANT: return k->tmb[3] % 3;
-    case F_SEQTYPE: return k->seq;
+    case F_SEQTYPE: return seq_index(k->seq);
     case F_OCT: return k->oct;
     case F_DRIFT: return k->drift;
     case F_MIDICH: return k->midi_ch ? k->midi_ch : 1;
@@ -367,7 +378,7 @@ static void field_set(int f, int v)
     case F_BOUNCE: k->tmb[2] = (uint8_t)v; break;
     case F_TQUANT: k->tmb[3] = (uint8_t)v; break;
     case F_SEQTYPE:
-        k->seq = (uint8_t)v;
+        k->seq = SQ_LIST[v % NSEQ];
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
         dk_cmd(C_HOLDCLR, dk_song.cur_track, 0, 0);
         break;
@@ -585,7 +596,7 @@ static char *cpy(char *d, const char *s)
 /* a track's name: its role's (the tape's layout: DRUMS BASS PIANO KEYS BELLS NATURE) */
 static const char *track_label(int t)
 {
-    static const char *const RN[R_N] = {"DRUMS", "BASS", "PIANO", "KEYS", "PAD", "LEAD", "BELLS", "NATURE"};
+    static const char *const RN[R_N] = {"DRUMS", "BASS", "PIANO", "KEYS", "PAD", "LEAD", "KEYS", "NATURE"};
     return RN[dk_song.trk[t % DK_NTRACK].role % R_N];
 }
 
@@ -634,7 +645,7 @@ static void field_text(int f, char *b)
     case F_STYLE:
     case F_SONGSTYLE: cpy(b, TAPE.style_name[v % TAPE.nstyle]); break;
     case F_TQUANT: cpy(b, QUANT3[v % 3]); break;
-    case F_SEQTYPE: cpy(b, SEQ_NAME[v % SQ_N]); break;
+    case F_SEQTYPE: cpy(b, SEQ_NAME[SQ_LIST[v % NSEQ]]); break;
     case F_ROLE: cpy(b, ROLE_NAME[v % R_N]); break;
     case F_OCT:
     case F_KOCT:

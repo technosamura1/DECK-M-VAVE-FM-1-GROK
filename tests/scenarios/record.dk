@@ -7,11 +7,11 @@ tapkey w4
 wait 200
 expect nev 0
 press HOME
-tapkey b2
+tapkey b0
 release HOME
 wait 50
 wait 100
-expect track 2
+expect track 0
 expect seq 1
 expect clicks 0
 tap REC
@@ -66,7 +66,7 @@ expect dirty 0
 reboot
 wait 300
 expect nev >8
-expect track 2
+expect track 0
 # the road: two blocks, SONG
 tap ENV
 wait 100
@@ -84,7 +84,7 @@ expect metro 0
 tap HOME
 wait 50
 press HOME
-tapkey b2
+tapkey b0
 release HOME
 wait 50
 press HOME

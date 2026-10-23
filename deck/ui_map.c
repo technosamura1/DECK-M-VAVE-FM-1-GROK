@@ -16,13 +16,13 @@ typedef struct {
 } ui_map_t;
 static const ui_map_t UI_MAP[] = {
     {B_FX, A_PAGE_SOUND, A_NONE, A_NONE, 0, "SOUND; again: ENGINE ENV FX MOD"},
-    {B_SEQ, A_PAGE_SEQ, A_NONE, A_BAKE, HOLD_MOD, "SEQ; again: its next row | hold + white 1-8: the sequencer | HOME+: BAKE (DRIVE to STEP)"},
+    {B_SEQ, A_PAGE_SEQ, A_NONE, A_BAKE, HOLD_MOD, "SEQ; again: its next row | hold + white 1-5: the sequencer | HOME+: BAKE (DRIVE to STEP)"},
     {B_ENV, A_PAGE_ROAD, A_GARAGE, A_NONE, 600, "ROAD | hold: the garage of parts"},
-    {B_LFO, A_PAGE_MIX, A_NONE, A_NONE, HOLD_MOD, "MIX; again: reverb/echo | hold + turn a SOUND knob: MOD 1 on it"},
+    {B_LFO, A_PAGE_MIX, A_NONE, A_NONE, HOLD_MOD, "MIX; again: MASTER | hold + turn a SOUND knob: MOD 1 on it"},
     {B_PLAY, A_PLAY, A_PLAYMODE, A_TAP_TEMPO, 800, "play/stop | hold: PART/SONG | HOME+: tap tempo"},
     {B_REC, A_REC, A_CLEAR, A_METRO, 1000, "record (count-in) | hold 1 s: clear the clip | HOME+: metronome"},
     {B_SEL, A_NEXT_TRACK, A_MUTE, A_NONE, 700, "next track | hold: mute | HOME + black 1-6: a track"},
-    {B_ARP, A_ARP, A_NONE, A_ARP_OFF, HOLD_MOD, "ARP on the track; again: LATCH on/off | HOME+: ARP off | hold + white A-H: a part"},
+    {B_ARP, A_ARP, A_NONE, A_ARP_OFF, HOLD_MOD, "ARP on (over the sequencer); again: LATCH on/off | HOME+: ARP off | hold + white A-H: a part"},
     {B_GLO, A_FILL, A_NONE, A_NONE, 0, "FILL while held (all tracks)"},
     {B_EDIT, A_PAGE_KEYS, A_UNDO, A_REDO, 700, "KEYS; again: its next row | hold: UNDO | HOME+: REDO"},
     {B_SAVE, A_PAGE_PROJECT, A_NONE, A_NONE, HOLD_MOD, "PROJECT; again: next row | hold + white 13-16: save preset"},
@@ -31,8 +31,6 @@ static const ui_map_t UI_MAP[] = {
     {B_OCTUP, A_OCT_UP, A_NONE, A_TRANS_UP, 0, "the track's octave up | HOME+: the clip a scale step up"},
 };
 #define UI_NMAP (sizeof UI_MAP / sizeof UI_MAP[0])
-/* the free knobs (OVERWORLD's VHS, SIDECHAIN, FILL: here DUST, SIDECHAIN, SLEEP, and the swing) */
-static const uint8_t KNOB_FIELD[4] = {F_DUST, F_SIDECHAIN, F_SLEEP, F_SWING};
 
 static const ui_map_t *map_of(int b)
 {

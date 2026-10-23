@@ -237,21 +237,25 @@ static const uint8_t PERFORM_ACT[11] = {PF_TAPESTOP, PF_REWIND, PF_VINYLSTOP, PF
 /* the biomes (the garden's scenes): DAWN BLOSSOM RAIN EMBER SNOW LAGOON NIGHT AURORA DUSK */
 static const char *const BIOME_NAME[9] = {"DAWN", "BLOSSOM", "RAIN", "EMBER", "SNOW", "LAGOON", "NIGHT", "AURORA", "DUSK"};
 /* name, tempo, mode, style, biome, world preset, dust, space (ROOM HALL CAVE SHIMMER); the tracks' engines, presets */
+/* the tracks: PIANO (FELT) PAD (AIRPAD) KEYS (TINE / GLASS / KALIMBA) BASS DRUMS NATURE */
 static const dk_mood_t MOODS[8] = {
-    {"PLAINS", 76, 0, ST_C418, 0, 6, 25, 1, {5, 4, 0, 2, 3, 6}, {4, 1, 0, 0, 0, 6}},
-    {"RAIN", 72, 2, ST_LOFI, 2, 0, 45, 0, {5, 4, 0, 1, 3, 6}, {0, 0, 9, 0, 2, 0}},
-    {"CAVE", 64, 1, ST_AMBIENT, 7, 4, 20, 2, {5, 4, 0, 2, 3, 6}, {4, 6, 7, 5, 7, 4}},
-    {"SNOW", 68, 4, ST_AMBIENT, 4, 9, 20, 3, {5, 4, 0, 2, 3, 6}, {4, 1, 4, 3, 3, 9}},
-    {"OCEAN", 70, 5, ST_C418, 5, 7, 25, 1, {5, 4, 0, 7, 3, 6}, {4, 0, 1, 0, 0, 7}},
-    {"NIGHT", 60, 0, ST_C418, 6, 5, 30, 1, {5, 4, 0, 2, 3, 6}, {4, 10, 10, 1, 10, 5}},
-    {"CAMPFIRE", 82, 8, ST_CAMPFIRE, 3, 2, 30, 0, {5, 4, 7, 7, 3, 6}, {9, 2, 4, 0, 8, 2}},
-    {"STUDY", 84, 2, ST_LOFI, 8, 11, 55, 0, {5, 4, 0, 1, 3, 6}, {3, 8, 9, 5, 4, 11}},
+    {"PLAINS", 76, 0, ST_C418, 0, 6, 25, 1, {0, 2, 3, 4, 5, 6}, {0, 0, 0, 1, 4, 6}},
+    {"RAIN", 72, 2, ST_LOFI, 2, 0, 45, 0, {0, 2, 1, 4, 5, 6}, {9, 7, 0, 0, 0, 0}},
+    {"CAVE", 64, 1, ST_AMBIENT, 7, 4, 20, 2, {0, 2, 3, 4, 5, 6}, {7, 5, 7, 6, 4, 4}},
+    {"SNOW", 68, 4, ST_AMBIENT, 4, 9, 20, 3, {0, 2, 3, 4, 5, 6}, {4, 3, 3, 1, 4, 9}},
+    {"OCEAN", 70, 5, ST_C418, 5, 7, 25, 1, {0, 2, 7, 4, 5, 6}, {1, 9, 0, 0, 4, 7}},
+    {"NIGHT", 60, 0, ST_C418, 6, 5, 30, 1, {0, 2, 3, 4, 5, 6}, {10, 1, 10, 10, 4, 5}},
+    {"CAMPFIRE", 82, 8, ST_CAMPFIRE, 3, 2, 30, 0, {0, 2, 7, 4, 5, 6}, {2, 2, 4, 2, 9, 2}},
+    {"STUDY", 84, 2, ST_LOFI, 8, 11, 55, 0, {0, 2, 1, 4, 5, 6}, {9, 8, 5, 8, 3, 11}},
 };
 
-/* the tracks by default: DRUMS BASS PIANO KEYS BELLS NATURE */
-static const uint8_t DEF_ENG[DK_NTRACK] = {5, 4, 0, 1, 3, 6}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 6},
-                     DEF_SEQ[DK_NTRACK] = {SQ_FINGER, SQ_STEP, SQ_LIVE, SQ_ARP, SQ_TOMBOLA, SQ_HOLD},
-                     DEF_ROLE[DK_NTRACK] = {R_DRUM, R_BASS, R_KEYS, R_ARP, R_BELL, R_NATURE};
+/* the tracks by default: PIANO PAD KEYS BASS DRUMS NATURE (the piano first: it is played the most) */
+static const uint8_t DEF_ENG[DK_NTRACK] = {0, 2, 1, 4, 5, 6}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 6},
+                     DEF_SEQ[DK_NTRACK] = {SQ_LIVE, SQ_LIVE, SQ_LIVE, SQ_STEP, SQ_FINGER, SQ_LIVE},
+                     DEF_ROLE[DK_NTRACK] = {R_KEYS, R_PAD, R_ARP, R_BASS, R_DRUM, R_NATURE};
+/* the KEYS track's twelve: electric pianos, bells, kalimbas (HOME + white 1-12, the PRESET knob) */
+static const uint8_t KEYS_SET[DK_NFACT][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9},  {3, 0}, {3, 1},
+                                              {3, 3}, {3, 4}, {7, 0}, {7, 1}, {7, 7}, {7, 9}};
 
 #include "demo.c"
 
@@ -265,5 +269,5 @@ static void tape_init(void)
 const dk_tape_t TAPE = {
     "OVERWORLD", tape_init, ENGINES, 8, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
     STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FINGER_DRUM, FINGER_MEL, PERFORM, PERFORM_ACT, MOODS, 8,
-    BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE,
+    BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
 };
