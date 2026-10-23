@@ -303,7 +303,8 @@ static void action(int a, int b)
         if (k->seq != SQ_ARP) {
             k->prev_seq = (uint8_t)(k->seq + 1);
             field_set(F_SEQTYPE, SQ_ARP);
-            page_go(PG_SEQ);
+            if (ui.page != PG_SEQ)           /* (page_go on its own page would flip its row) */
+                page_go(PG_SEQ);
             say("ARP", "ON");
         } else {
             field_set(F_ARPLATCH, k->arp[3] ? 0 : 1);
@@ -315,7 +316,8 @@ static void action(int a, int b)
     case A_ARP_OFF: {
         dk_track_t *k = cur();
         if (k->seq == SQ_ARP) {
-            field_set(F_SEQTYPE, k->prev_seq ? (k->prev_seq - 1) % SQ_N : SQ_LIVE);
+            int pv = k->prev_seq ? (k->prev_seq - 1) % SQ_N : SQ_LIVE;
+            field_set(F_SEQTYPE, pv == SQ_ARP ? SQ_LIVE : pv);
             k->prev_seq = 0;
             mark_dirty();
         }
@@ -483,6 +485,7 @@ static void key_down(int k, int vel)
     }
     if (held(B_SEQ) && w >= 0 && w < SQ_N) {
         ui.used[B_SEQ] = 1;
+        cur()->prev_seq = 0;             /* chosen by hand: HOME+ARP then goes to LIVE */
         field_set(F_SEQTYPE, w);
         say("SEQUENCER", SEQ_NAME[w]);
         return;
@@ -901,6 +904,8 @@ static void input(void)
                 action(m->home, 1);
             } else if (m->tap == A_FILL)
                 action(A_FILL, 1);
+            else if (m->tap == A_PLAY)             /* PLAY starts on the press (in time); held on: PART/SONG */
+                action(A_PLAY, 1);
             else if (!m->hold_ms)
                 action(m->tap, 1), ui.used[k] = 1;
         } else if ((btn & bit) && !ui.used[k] && m->hold_ms && m->hold_ms != HOLD_MOD) {   /* held */
@@ -912,7 +917,7 @@ static void input(void)
             ui.btn &= ~bit;
             if (m->tap == A_FILL)
                 action(A_FILL, 0);
-            else if (!ui.used[k])
+            else if (!ui.used[k] && m->tap != A_PLAY)
                 action(m->tap, 1);
         }
     }
