@@ -5,7 +5,7 @@
  * (no drums, the snow, a music box) - BREAK (the campfire: wood, a marimba) - CHORUS - OUTRO (the piano alone).
  * Written into the clips as notes (the UI thread, the song locked). Part of tape_dsp.c. */
 
-enum { DT_PIANO, DT_PAD, DT_BELLS, DT_BASS, DT_DRUMS, DT_NATURE };   /* (the KEYS track plays the bells) */
+enum { DT_PIANO, DT_BELLS, DT_PAD, DT_BASS, DT_DRUMS, DT_NATURE };   /* (the KEYS track plays the bells) */
 enum { P_INTRO, P_PRE, P_VERSE, P_CHORUS, P_BRIDGE, P_BREAK, P_OUTRO };
 #define E8 (DK_PPQ / 2)
 

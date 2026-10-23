@@ -84,7 +84,7 @@ wait 200
 tap HOME
 wait 100
 press HOME
-tapkey b2
+tapkey b1
 release HOME
 wait 50
 press SEQ
@@ -131,11 +131,9 @@ wait 50
 turn K2 1
 wait 1500
 shot p18_seq_drive.png
-tap LFO
-wait 50
-tap LFO
+tap GLO
 wait 1000
-shot p19_mix_master.png
+shot p19_global.png
 tap PLAY
 wait 300
 # the garden: the moods' biomes, by day and by night

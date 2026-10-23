@@ -51,6 +51,49 @@ const char *project_name(int slot, char *name)
     return name;
 }
 
+/* older projects: the tracks in the order of today's (PIANO KEYS PAD BASS DRUMS NATURE), by their roles, when the
+ * six roles are six different places; the clips, the road's drops, SPLIT's track and FOLLOW's sources go with them */
+static void song_track_order(void)
+{
+    static const uint8_t RANK[R_N] = {4, 3, 0, 1, 2, 1, 1, 5};   /* DRUM BASS KEYS(piano) ARP PAD LEAD BELL NATURE */
+    static dk_track_t tk[DK_NTRACK];
+    static dk_clip_t cl[DK_NCLIP];
+    uint8_t to[DK_NTRACK], seen = 0, same = 1;
+    int t, p, j;
+    for (t = 0; t < DK_NTRACK; t++) {
+        to[t] = RANK[dk_song.trk[t].role % R_N];
+        if (seen >> to[t] & 1u)
+            return;                          /* two of a kind: left as it is */
+        seen |= (uint8_t)(1u << to[t]);
+        same &= to[t] == t;
+    }
+    if (same)
+        return;
+    for (t = 0; t < DK_NTRACK; t++)
+        tk[to[t]] = dk_song.trk[t];
+    for (p = 0; p < DK_NPART; p++)
+        for (t = 0; t < DK_NTRACK; t++)
+            cl[p * DK_NTRACK + to[t]] = dk_song.clip[p * DK_NTRACK + t];
+    for (t = 0; t < DK_NTRACK; t++) {
+        dk_song.trk[t] = tk[t];
+        for (j = 0; j < 2; j++)
+            if (dk_song.trk[t].mod[j][0] == MOD_FOLLOW)
+                dk_song.trk[t].mod[j][2] = to[dk_song.trk[t].mod[j][2] % DK_NTRACK];
+    }
+    for (p = 0; p < DK_NCLIP; p++)
+        dk_song.clip[p] = cl[p];
+    for (j = 0; j < DK_NROAD; j++) {
+        uint8_t d = dk_song.road[j].drop, n = 0;
+        for (t = 0; t < DK_NTRACK; t++)
+            if (d >> t & 1u)
+                n |= (uint8_t)(1u << to[t]);
+        dk_song.road[j].drop = n;
+    }
+    dk_song.harm_track = to[dk_song.harm_track % DK_NTRACK];
+    dk_song.cur_track = to[dk_song.cur_track % DK_NTRACK];
+    dk_song.ball_trk = to[dk_song.ball_trk % DK_NTRACK];
+}
+
 int project_load(int slot)
 {
     const phead_t *h = head_of(slot);
@@ -76,6 +119,7 @@ int project_load(int slot)
         goto empty;
     for (i = 0; i < dk_song.nev; i++)      /* nothing waits for a pass that is long gone */
         dk_ev[i].fl &= (uint8_t)~EV_FRESH;
+    song_track_order();
     for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS and HOLD too */
         dk_track_t *k = &dk_song.trk[i];
         if (k->seq == SQ_ARP)

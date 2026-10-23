@@ -8,10 +8,10 @@ wait 200
 tap HOME
 wait 100
 press HOME
-tapkey b2
+tapkey b1
 release HOME
 wait 50
-expect track 2
+expect track 1
 expect seq 1
 # ARP over LIVE on the keys
 tap ARP
@@ -82,7 +82,7 @@ wait 200
 tap PLAY
 wait 500
 press GLO
-wait 200
+wait 450
 expect fill 1
 release GLO
 wait 100

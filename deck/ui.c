@@ -5,8 +5,8 @@
  * recording, undo, saving by itself in the silence, the lights, MIDI in, the export's stream. The pages are drawn in
  * pages.c. Part of the unity build. */
 
-enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, NPG };
-static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP"};
+enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, PG_GLOB, NPG };
+static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP", "GLOBAL"};
 
 static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
@@ -28,6 +28,7 @@ static struct {
     uint8_t screen_dirty;
     uint32_t draw_t, garden_t, notes_until, page_t;   /* page_t: the page or its row changed (the hint shows 3 s) */
     char notes[28];
+    uint32_t trk_until;                  /* SEL: the six tracks shown, the one chosen bright */
     uint8_t mix_key;                     /* MIX: the white key down (its track + 1): a tap mutes, held 1 s clears */
     uint32_t mix_t;
 } ui;
@@ -89,7 +90,8 @@ static void track_select(int t)
     keys_all_up();
     dk_song.cur_track = (uint8_t)(t % DK_NTRACK);
     ui_step_ev = -1;
-    say(track_label(t), cur_eng()->name);
+    ui.trk_until = plat_ms() + 1400u;    /* the track bar instead of a message */
+    ui.msg_until = 0;
 }
 
 /* the KEYS track (TAPE.keys_set): its twelve presets are on three engines */
@@ -245,9 +247,25 @@ static void action(int a, int b)
     case A_PAGE_MIX: page_go(PG_MIX); break;
     case A_PAGE_KEYS: page_go(PG_KEYS); break;
     case A_PAGE_PROJECT:
+        if (ui.page == PG_PROJECT) {         /* SAVE again on its page: saved now */
+            if (dk_playing || dk_recording || dk_counting)
+                say("SAVE", "STOP FIRST");
+            else {
+                if (settings_due)
+                    settings_save();
+                tape_ui_keep();
+                if (project_save(set.proj) == 0) {
+                    ui.dirty = 0;
+                    say("SAVED", "");
+                } else
+                    say("SAVE", "FAILED");
+            }
+            break;
+        }
         page_go(PG_PROJECT);
         ui_slot_sel = -1;
         break;
+    case A_PAGE_GLOBAL: page_go(PG_GLOB); break;
     case A_PAGE_PLAY: page_go(PG_PLAY); break;
     case A_PLAY:
         if (dk_playing || dk_counting) {
@@ -516,6 +534,11 @@ static void key_down(int k, int vel)
         say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
+    if (held(B_SEL) && w >= 0 && w < DK_NTRACK) {   /* SEL held + white 1-6: that track */
+        ui.used[B_SEL] = 1;
+        track_select(w);
+        return;
+    }
     if (held(B_SEQ) && w >= 0 && w < NSEQ) {
         ui.used[B_SEQ] = 1;
         field_set(F_SEQTYPE, w);
@@ -699,15 +722,6 @@ static void key_down(int k, int vel)
             dk_unlock();
             ui.step_key = (uint8_t)(k + 1);
             mark_dirty();
-            return;
-        }
-        break;
-    case PG_KEYS:
-        if (plat_ms() < ui.root_until) {     /* ROOT chosen: the key's note is the root */
-            int pc = (53 + k) % 12;
-            field_set(F_ROOT, pc);
-            say("ROOT", DK_NOTE_NAME[pc]);
-            ui.root_until = 0;
             return;
         }
         break;
@@ -914,7 +928,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
 /* ------------------------------------------------------------------- input --- */
 static void lights(void)
 {
-    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP};
+    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP, B_GLO};
     uint32_t now = plat_ms(), b = 1u << PAGE_BTN[ui.page], keys = ui.keys, dimk = 0, dimb = 0;
     int k;
     const dk_track_t *trk = cur();
@@ -1001,7 +1015,11 @@ static void input(void)
             ui.used[k] = 0;
             ui.held_done[k] = 0;
             ui.btn |= bit;
-            if (k != B_HOME && (btn >> B_HOME & 1u) && m->home != A_NONE) {
+            if (k == B_REC && held(B_SEQ)) {   /* SEQ held + REC: the track's clip cleared at once */
+                ui.used[B_SEQ] = 1;
+                ui.used[k] = 1;
+                action(A_CLEAR, 1);
+            } else if (k != B_HOME && (btn >> B_HOME & 1u) && m->home != A_NONE) {
                 ui.used[B_HOME] = 1;
                 ui.used[k] = 1;
                 action(m->home, 1);
@@ -1019,6 +1037,8 @@ static void input(void)
         } else if (!(btn & bit) && (ui.btn & bit)) {             /* up */
             ui.btn &= ~bit;
             if (m->tap == A_FILL)
+                action(A_FILL, 0);
+            else if (m->hold == A_FILL && ui.used[k])   /* GLO held: the FILL ends with it */
                 action(A_FILL, 0);
             else if (!ui.used[k] && m->tap != A_PLAY)
                 action(m->tap, 1);
@@ -1093,15 +1113,7 @@ static void housekeeping(uint32_t now)
         mark_dirty();
     }
     /* the tape page goes back a bar after the recording */
-    if (ui.page == PG_REC && !dk_recording && !dk_counting) {
-        if (!ui.rec_end)
-            ui.rec_end = now + (uint32_t)bar_ms();
-        else if (now >= ui.rec_end) {
-            ui.page = ui.prev;
-            ui.rec_end = 0;
-        }
-    } else
-        ui.rec_end = 0;
+    ui.rec_end = 0;                      /* (the tape page stays after a take: its settings to look at) */
     /* the road recorded live: each part's loops become a block when the next one starts */
     if (ui.road_rec && dk_playing) {
         if (dk_part_tick < ui.road_last_tick && dk_cur_part == ui.road_part)
