@@ -22,6 +22,9 @@ static void band_end(void)
     cv_oy = 0;
     cv_blit(0, (uint32_t)band_y0);
 }
+/* screen rows y .. y+h-1 land in the band being drawn, at least in part (what lands in another is skipped: each of a
+ * page's three bands used to draw all of it, two thirds thrown away) */
+static int in_band(int y, int h) { return y + h > cv_y0 - cv_oy && y < cv_y1 - cv_oy; }
 
 /* --------------------------------------------------------------- drawing --- */
 static void hline(int x, int y, int w, uint16_t c) { cv_rect(x, y, w, 1, c); }
@@ -116,6 +119,8 @@ static void text_box(int x, int y, int w, int align, const felucca_font_t *pref,
     char b[32];
     int i, tw, r0 = font_rank(pref), r1 = font_rank(min);
     const char *t = s;
+    if (!in_band(y - 4, pref->h + 8))      /* (a margin: a smaller font sits a little lower) */
+        return;
     for (i = r0; i <= r1; i++) {
         f = FONTS[i];
         if (text_w(f, s) <= w)
@@ -1082,10 +1087,13 @@ static void garden_overlay(int32_t y0, int32_t h)
 static void draw_page_band(int band)
 {
     band_begin(band * BAND_H, BAND_H);
-    draw_header();
+    if (in_band(0, 28))
+        draw_header();
     draw_body();
-    draw_footer(186);
-    draw_toast();
+    if (in_band(186, 54))
+        draw_footer(186);
+    if (in_band(96, 30))
+        draw_toast();
     band_end();
 }
 

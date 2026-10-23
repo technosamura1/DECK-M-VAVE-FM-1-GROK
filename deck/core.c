@@ -248,6 +248,15 @@ static void voice_fade(const voice_t *v)
     fv_g[k] = 1.0f;
 }
 static float sc_env;                           /* the kick's envelope (the sidechain, FOLLOW) */
+/* states that have decayed below hearing set to 0, once a block: a one-pole fed silence ends on the smallest denormal
+ * and stays there (0.65 of it rounds back to it), every sample after on the FPU's slow path (on the host the master
+ * and the track effects cost 5 to 10 times as much so) */
+static void flush_states(float *s, int n)
+{
+    int i;
+    for (i = 0; i < n; i++)
+        s[i] = fm_flush(s[i]);
+}
 
 static void midi(uint32_t st, uint32_t d1, uint32_t d2)
 {
@@ -427,91 +436,84 @@ static void voices_release_track(int t, int src_min)
 #define DS(n) (((n) * 7409 + 5000) / 10000)
 #define PRE_N 550
 #define EXC DS(16)
-enum { L_PRE, L_IN1, L_IN2, L_IN3, L_IN4, L_APL, L_D1L, L_AP2L, L_D2L, L_APR, L_D1R, L_AP2R, L_D2R, L_N };
-static const int DL_LEN[L_N] = {PRE_N, DS(142), DS(107), DS(379), DS(277), DS(672) + EXC + 2, DS(4453), DS(1800),
-                                DS(3720), DS(908) + EXC + 2, DS(4217), DS(2656), DS(3163)};
-#define DL_TOTAL (PRE_N + DS(142) + DS(107) + DS(379) + DS(277) + DS(672) + DS(4453) + DS(1800) + DS(3720) + DS(908) + \
-                  DS(4217) + DS(2656) + DS(3163) + 2 * (EXC + 2))
+/* the lines, each a power of two at least its length, at fixed places in one buffer; one count of the steps for all of
+ * them (each line takes one sample a step): a line's sample k steps back is at its place + ((t - k) & (size - 1)), and
+ * this step's goes in at t. No wrap tests, no pointers: the same samples as lines of their own lengths. */
+enum {
+    PRE_AT = 0, PRE_SZ = 1024, IN1_AT = 1024, IN1_SZ = 128, IN2_AT = 1152, IN2_SZ = 128, IN3_AT = 1280, IN3_SZ = 512,
+    IN4_AT = 1792, IN4_SZ = 256, APL_AT = 2048, APL_SZ = 512, D1L_AT = 2560, D1L_SZ = 4096, AP2L_AT = 6656,
+    AP2L_SZ = 2048, D2L_AT = 8704, D2L_SZ = 4096, APR_AT = 12800, APR_SZ = 1024, D1R_AT = 13824, D1R_SZ = 4096,
+    AP2R_AT = 17920, AP2R_SZ = 2048, D2R_AT = 19968, D2R_SZ = 4096, DL_TOTAL = 24064
+};
+typedef char dl_fits_[(PRE_N <= PRE_SZ && DS(142) <= IN1_SZ && DS(107) <= IN2_SZ && DS(379) <= IN3_SZ &&
+                       DS(277) <= IN4_SZ && DS(672) + EXC + 2 <= APL_SZ && DS(4453) <= D1L_SZ && DS(1800) <= AP2L_SZ &&
+                       DS(3720) <= D2L_SZ && DS(908) + EXC + 2 <= APR_SZ && DS(4217) <= D1R_SZ &&
+                       DS(2656) <= AP2R_SZ && DS(3163) <= D2R_SZ && D2R_AT + D2R_SZ == DL_TOTAL) ? 1 : -1];
 static float pl_buf[DL_TOTAL] DK_POOL;
-typedef struct {
-    float *b;
-    int n, i;
-} dl_t;
-static dl_t dl[L_N];
+static uint32_t pl_t;                           /* the plate's steps */
+/* k back before this step's sample goes in (TAP), or after it (TAPN: this step's is 1 back) */
+#define TAP(L, k) pl_buf[L##_AT + ((t - (uint32_t)(k)) & (L##_SZ - 1u))]
+#define TAPN(L, k) pl_buf[L##_AT + ((t + 1u - (uint32_t)(k)) & (L##_SZ - 1u))]
+#define PUT(L, x) (pl_buf[L##_AT + (t & (L##_SZ - 1u))] = (x))
 static float pl_bw, pl_bwk = 0.55f, pl_damp_l, pl_damp_r, pl_decay = 0.6f, pl_damp = 0.4f, lfo_s, lfo_c = 1.0f;
 static int pl_pre = PRE_N, pl_early;
 static float pl_rin, pl_wl0, pl_wl1, pl_wr0, pl_wr1, pl_ol, pl_ol2, pl_ol3, pl_or, pl_or2, pl_or3;
 static uint8_t pl_odd;
-static inline float tap(const dl_t *d, int k)
+static inline float allpass(float *b, uint32_t m, uint32_t t, int len, float x, float g)
 {
-    int j = d->i - k;
-    return d->b[j < 0 ? j + d->n : j];
-}
-static inline void push(dl_t *d, float x)
-{
-    d->b[d->i] = x;
-    if (++d->i >= d->n)
-        d->i = 0;
-}
-static inline float allpass(dl_t *d, int len, float x, float g)
-{
-    float z = tap(d, len), v = x - g * z;
-    push(d, fm_flush(v));
+    float z = b[(t - (uint32_t)len) & m], v = x - g * z;
+    b[t & m] = fm_flush(v);
     return z + g * v;
 }
-static inline float allpass_mod(dl_t *d, float len, float x, float g)
+static inline float allpass_mod(float *b, uint32_t m, uint32_t t, float len, float x, float g)
 {
     int k = (int)len;
-    float f = len - (float)k, z = tap(d, k) + (tap(d, k + 1) - tap(d, k)) * f, v = x - g * z;
-    push(d, fm_flush(v));
+    float f = len - (float)k, z0 = b[(t - (uint32_t)k) & m], z = z0 + (b[(t - (uint32_t)k - 1u) & m] - z0) * f, v = x - g * z;
+    b[t & m] = fm_flush(v);
     return z + g * v;
 }
+#define AP(L, len, x, g) allpass(pl_buf + L##_AT, L##_SZ - 1u, t, len, x, g)
+#define AP_MOD(L, len, x, g) allpass_mod(pl_buf + L##_AT, L##_SZ - 1u, t, len, x, g)
 static inline void reverb(float in, float *ol, float *or_)
 {
-    float x, a, b, fb_l = tap(&dl[L_D2R], DS(3163)), fb_r = tap(&dl[L_D2L], DS(3720)), er = 0.0f;
-    push(&dl[L_PRE], in);
-    x = tap(&dl[L_PRE], pl_pre);
+    const uint32_t t = pl_t;
+    float x, a, b, fb_l = TAP(D2R, DS(3163)), fb_r = TAP(D2L, DS(3720)), er = 0.0f;
+    PUT(PRE, in);
+    x = TAPN(PRE, pl_pre);
     if (pl_early)                               /* CAVE: the walls' first answers */
-        er = tap(&dl[L_PRE], 105) * 0.5f + tap(&dl[L_PRE], 243) * 0.35f + tap(&dl[L_PRE], 366) * 0.25f;
+        er = TAPN(PRE, 105) * 0.5f + TAPN(PRE, 243) * 0.35f + TAPN(PRE, 366) * 0.25f;
     pl_bw += pl_bwk * (x - pl_bw);
-    x = allpass(&dl[L_IN1], DS(142), pl_bw, 0.75f);
-    x = allpass(&dl[L_IN2], DS(107), x, 0.75f);
-    x = allpass(&dl[L_IN3], DS(379), x, 0.625f);
-    x = allpass(&dl[L_IN4], DS(277), x, 0.625f);
+    x = AP(IN1, DS(142), pl_bw, 0.75f);
+    x = AP(IN2, DS(107), x, 0.75f);
+    x = AP(IN3, DS(379), x, 0.625f);
+    x = AP(IN4, DS(277), x, 0.625f);
     {
         float s = lfo_s + 0.0002f * lfo_c, c = lfo_c - 0.0002f * s;
         lfo_s = s;
         lfo_c = c;
     }
-    a = allpass_mod(&dl[L_APL], (float)DS(672) + (float)EXC * lfo_s, x + pl_decay * fb_l, -0.7f);
-    push(&dl[L_D1L], a);
-    b = tap(&dl[L_D1L], DS(4453));
+    a = AP_MOD(APL, (float)DS(672) + (float)EXC * lfo_s, x + pl_decay * fb_l, -0.7f);
+    PUT(D1L, a);
+    b = TAPN(D1L, DS(4453));
     pl_damp_l += pl_damp * (b - pl_damp_l);
-    b = allpass(&dl[L_AP2L], DS(1800), pl_damp_l * pl_decay, 0.5f);
-    push(&dl[L_D2L], b);
-    a = allpass_mod(&dl[L_APR], (float)DS(908) + (float)EXC * lfo_c, x + pl_decay * fb_r, -0.7f);
-    push(&dl[L_D1R], a);
-    b = tap(&dl[L_D1R], DS(4217));
+    b = AP(AP2L, DS(1800), pl_damp_l * pl_decay, 0.5f);
+    PUT(D2L, b);
+    a = AP_MOD(APR, (float)DS(908) + (float)EXC * lfo_c, x + pl_decay * fb_r, -0.7f);
+    PUT(D1R, a);
+    b = TAPN(D1R, DS(4217));
     pl_damp_r += pl_damp * (b - pl_damp_r);
-    b = allpass(&dl[L_AP2R], DS(2656), pl_damp_r * pl_decay, 0.5f);
-    push(&dl[L_D2R], b);
-    *ol = 0.6f * (tap(&dl[L_D1R], DS(266)) + tap(&dl[L_D1R], DS(2974)) - tap(&dl[L_AP2R], DS(1913)) +
-                  tap(&dl[L_D2R], DS(1996)) - tap(&dl[L_D1L], DS(1990)) - tap(&dl[L_AP2L], DS(187)) -
-                  tap(&dl[L_D2L], DS(1066))) + er;
-    *or_ = 0.6f * (tap(&dl[L_D1L], DS(353)) + tap(&dl[L_D1L], DS(3627)) - tap(&dl[L_AP2L], DS(1228)) +
-                   tap(&dl[L_D2L], DS(2673)) - tap(&dl[L_D1R], DS(2111)) - tap(&dl[L_AP2R], DS(335)) -
-                   tap(&dl[L_D2R], DS(121))) + er * 0.9f;
+    b = AP(AP2R, DS(2656), pl_damp_r * pl_decay, 0.5f);
+    PUT(D2R, b);
+    *ol = 0.6f * (TAPN(D1R, DS(266)) + TAPN(D1R, DS(2974)) - TAPN(AP2R, DS(1913)) + TAPN(D2R, DS(1996)) -
+                  TAPN(D1L, DS(1990)) - TAPN(AP2L, DS(187)) - TAPN(D2L, DS(1066))) + er;
+    *or_ = 0.6f * (TAPN(D1L, DS(353)) + TAPN(D1L, DS(3627)) - TAPN(AP2L, DS(1228)) + TAPN(D2L, DS(2673)) -
+                   TAPN(D1R, DS(2111)) - TAPN(AP2R, DS(335)) - TAPN(D2R, DS(121))) + er * 0.9f;
+    pl_t = t + 1u;
 }
 static void plate_init(void)
 {
-    float *p = pl_buf;
-    int k, i;
-    for (k = 0; k < L_N; k++) {
-        dl[k].b = p;
-        dl[k].n = DL_LEN[k];
-        dl[k].i = 0;
-        p += DL_LEN[k];
-    }
+    int i;
+    pl_t = 0;
     for (i = 0; i < DL_TOTAL; i++)
         pl_buf[i] = 0.0f;
 }
@@ -722,11 +724,15 @@ static void render_tracks(uint32_t n)
             fv_g[i] = g;
         }
         PROF_T(1);
-        if (e->bus)
+        if (e->bus) {
             e->bus(bus_st[t], tl, tr, (int)n, tp[t]);
+            flush_states(bus_st[t], 16);
+        }
         PROF_T(2);
-        if (fx > 0 && fx < TAPE.nfx && TAPE.fx[fx]->process)
+        if (fx > 0 && fx < TAPE.nfx && TAPE.fx[fx]->process) {
             TAPE.fx[fx]->process(&fxs[t], tl, tr, (int)n, t_fxamt[t], t_fxa[t], t_fxb[t]);
+            flush_states(fxs[t].f, (int)(sizeof fxs[t].f / sizeof fxs[t].f[0]));
+        }
         PROF_T(3);
         /* the gain: VOL's square, its trim, the modulators' tremolo, the sidechain on the pads */
         gt = track_audible(t) ? t_vol[t] * t_vol[t] * 2.0f * fm_db2lin((float)k->trim * 0.5f) : 0.0f;
@@ -826,12 +832,26 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     if (TAPE.master)
         TAPE.master(mixl, mixr, (int)n, dust, slp);
     PROF_T(6);
-    for (j = 0; j < n; j++) {
-        float m = metro_step() * gain * 1.6f, l = fm_tanhf(mixl[j] + m), r = fm_tanhf(mixr[j] + m);
-        out[2 * j] = (int32_t)(l * 8300000.0f);
-        out[2 * j + 1] = (int32_t)(r * 8300000.0f);
+    if (clk.env < 1e-4f)                       /* the metronome quiet (nearly always): no call a sample */
+        for (j = 0; j < n; j++) {
+            float l = fm_tanhf(mixl[j]), r = fm_tanhf(mixr[j]);
+            out[2 * j] = (int32_t)(l * 8300000.0f);
+            out[2 * j + 1] = (int32_t)(r * 8300000.0f);
+        }
+    else
+        for (j = 0; j < n; j++) {
+            float m = metro_step() * gain * 1.6f, l = fm_tanhf(mixl[j] + m), r = fm_tanhf(mixr[j] + m);
+            out[2 * j] = (int32_t)(l * 8300000.0f);
+            out[2 * j + 1] = (int32_t)(r * 8300000.0f);
+        }
+    sc_env = fm_flush(sc_env * fm_expf(-(float)n / (0.16f * DK_SR)));
+    {   /* the sends' and the master's filters: no denormal kept (flush_states) */
+        float *const ST[] = {&pl_bw, &pl_damp_l, &pl_damp_r, &pl_rin, &pl_wl0, &pl_wl1, &pl_wr0, &pl_wr1, &pl_ol, &pl_ol2,
+                             &pl_ol3, &pl_or, &pl_or2, &pl_or3, &echo_lp, &echo_half, &echo_out, &master_lp_l,
+                             &master_lp_l2, &master_lp_r, &master_lp_r2};
+        for (j = 0; j < sizeof ST / sizeof ST[0]; j++)
+            *ST[j] = fm_flush(*ST[j]);
     }
-    sc_env *= fm_expf(-(float)n / (0.16f * DK_SR));
     master_acc = fm_maxf(pk, master_acc * 0.97f);
     dk_master_level = master_acc;
 }

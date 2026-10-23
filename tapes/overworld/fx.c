@@ -10,7 +10,9 @@ static inline void fxbuf_put(dk_fxst_t *s, float x)
 }
 static inline float fxbuf_get(const dk_fxst_t *s, float d)   /* d samples back (fractional) */
 {
-    float rp = (float)(s->w - 1u) - d, fr;
+    /* the write count within the line, not the whole count: past 2^23 samples (3 minutes) a float of the whole count
+     * had no fraction left, and the delay stepped by 1, 2, 4... samples (a zipper in the chorus and the wow) */
+    float rp = (float)((s->w - 1u) & (DK_FXBUF - 1)) - d, fr;
     int i0;
     uint32_t a, b;
     i0 = (int)fm_floorf(rp);
@@ -234,5 +236,10 @@ static void tape_master(float *l, float *r, int n, float dust, float sleep)
         l[j] = fm_tanhf(ms_l2 * drive) * mk + hiss + ms_cf * 0.05f;
         r[j] = fm_tanhf(ms_r2 * drive) * mk - hiss * 0.8f + ms_cf * 0.045f;
     }
-    ms_lvl = fm_maxf(pk, ms_lvl * 0.97f);
+    ms_lvl = fm_flush(fm_maxf(pk, ms_lvl * 0.97f));
+    ms_cf = fm_flush(ms_cf);                               /* no denormal kept: the crackle's filter fed silence ends */
+    ms_l1 = fm_flush(ms_l1);                               /* on the smallest one and stays (a slow path a sample) */
+    ms_l2 = fm_flush(ms_l2);
+    ms_r1 = fm_flush(ms_r1);
+    ms_r2 = fm_flush(ms_r2);
 }

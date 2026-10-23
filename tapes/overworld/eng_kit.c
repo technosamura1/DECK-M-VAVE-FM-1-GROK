@@ -225,68 +225,89 @@ static void drum_off(float *st, const float *p)       /* a hit again, or a hat c
 static int drum_render(float *st, float *l, float *r, int n, const float *p)
 {
     drum_v *d = (drum_v *)st;
-    int j, k = (int)d->kind;
+    int j, m, k = (int)d->kind;
     float a = d->vel * 0.44f;
+    /* the state in registers for the loop (the outputs might alias it otherwise) */
+    float t = d->t, gl = d->gl, gr = d->gr, ph = d->ph, f = d->f, fend = d->fend, fmul = d->fmul, ph2 = d->ph2;
+    float inc2 = d->inc2, at = d->at, atm = d->atm, an = d->an, anm = d->anm, lo = d->lo, bp = d->bp, sf = d->sf;
+    float sq = d->sq, tone_l = d->tone_l, tone2_l = d->tone2_l, noise_l = d->noise_l, metal_l = d->metal_l;
+    float sqr_l = d->sqr_l, filt = d->filt, rise = d->rise;
+    uint32_t mph[6], minc[6];
     (void)p;
+    for (m = 0; m < 6; m++) {
+        mph[m] = d->mph[m];
+        minc[m] = d->minc[m];
+    }
     for (j = 0; j < n; j++) {
         float x = 0.0f, y = 0.0f, hp;
-        if (d->at > 1e-4f) {
-            d->f = d->fend + (d->f - d->fend) * d->fmul;
-            d->ph = dk_wrap1(d->ph + d->f);
-            x = dk_sinx(d->ph) * d->tone_l;
-            if (d->inc2 > 0.0f) {
-                d->ph2 = dk_wrap1(d->ph2 + d->inc2);
-                x += dk_sinx(d->ph2) * d->tone2_l;
+        if (at > 1e-4f) {
+            f = fend + (f - fend) * fmul;
+            ph = dk_wrap1(ph + f);
+            x = dk_sinx(ph) * tone_l;
+            if (inc2 > 0.0f) {
+                ph2 = dk_wrap1(ph2 + inc2);
+                x += dk_sinx(ph2) * tone2_l;
             }
-            x *= d->at;
-            d->at *= d->atm;
+            x *= at;
+            at *= atm;
         }
-        if (d->an > 1e-4f) {
+        if (an > 1e-4f) {
             float s = 0.0f;
-            if (d->noise_l > 0.0f)
-                s = wnoise() * d->noise_l;
-            if (d->metal_l > 0.0f) {
-                int m;
+            if (noise_l > 0.0f)
+                s = wnoise() * noise_l;
+            if (metal_l > 0.0f) {
                 float mm = 0.0f;
                 for (m = 0; m < 6; m++) {
-                    d->mph[m] += d->minc[m];
-                    mm += (d->mph[m] & 0x80000000u) ? 1.0f : -1.0f;
+                    mph[m] += minc[m];
+                    mm += (mph[m] & 0x80000000u) ? 1.0f : -1.0f;
                 }
-                s += mm * (1.0f / 6.0f) * d->metal_l;
+                s += mm * (1.0f / 6.0f) * metal_l;
             }
-            if (d->sqr_l > 0.0f) {
-                d->ph = dk_wrap1(d->ph + d->f);
-                d->ph2 = dk_wrap1(d->ph2 + d->inc2);
-                s += ((d->ph < 0.5f ? 1.0f : -1.0f) + (d->ph2 < 0.5f ? 0.8f : -0.8f)) * d->sqr_l;
+            if (sqr_l > 0.0f) {
+                ph = dk_wrap1(ph + f);
+                ph2 = dk_wrap1(ph2 + inc2);
+                s += ((ph < 0.5f ? 1.0f : -1.0f) + (ph2 < 0.5f ? 0.8f : -0.8f)) * sqr_l;
             }
-            d->lo += d->sf * d->bp;
-            hp = s - d->lo - d->sq * d->bp;
-            d->bp = fm_flush(d->bp + d->sf * hp);
-            d->lo = fm_flush(d->lo);
-            s = d->filt != 0.0f ? hp : d->bp;
+            lo += sf * bp;
+            hp = s - lo - sq * bp;
+            bp = fm_flush(bp + sf * hp);
+            lo = fm_flush(lo);
+            s = filt != 0.0f ? hp : bp;
             if (k == D_TAMB)
-                s *= 0.55f + 0.45f * dk_sinx(d->t * (31.0f / DK_SR));
-            if (d->rise < 1.0f) {                          /* the shaker's beads gather */
-                d->rise = fm_minf(1.0f, d->rise + 1.0f / (0.012f * DK_SR));
-                s *= d->rise;
+                s *= 0.55f + 0.45f * dk_sinx(t * (31.0f / DK_SR));
+            if (rise < 1.0f) {                             /* the shaker's beads gather */
+                rise = fm_minf(1.0f, rise + 1.0f / (0.012f * DK_SR));
+                s *= rise;
             } else
-                d->an *= d->anm;
-            y = s * d->an;
+                an *= anm;
+            y = s * an;
         }
         if (k == D_CLAP) {
-            uint32_t t = (uint32_t)d->t;
-            if (t == (uint32_t)(0.010f * DK_SR) || t == (uint32_t)(0.020f * DK_SR))
-                d->an = 0.85f;
-            else if (t == (uint32_t)(0.030f * DK_SR)) {
-                d->an = 0.7f;
-                d->anm = dk_decay(0.13f);
+            uint32_t ti = (uint32_t)t;
+            if (ti == (uint32_t)(0.010f * DK_SR) || ti == (uint32_t)(0.020f * DK_SR))
+                an = 0.85f;
+            else if (ti == (uint32_t)(0.030f * DK_SR)) {
+                an = 0.7f;
+                anm = dk_decay(0.13f);
             }
         }
-        d->t += 1.0f;
+        t += 1.0f;
         x = (x + y) * a;
-        l[j] += x * d->gl;
-        r[j] += x * d->gr;
+        l[j] += x * gl;
+        r[j] += x * gr;
     }
+    for (m = 0; m < 6; m++)
+        d->mph[m] = mph[m];
+    d->t = t;
+    d->ph = ph;
+    d->f = f;
+    d->ph2 = ph2;
+    d->at = at;
+    d->an = an;
+    d->anm = anm;
+    d->lo = lo;
+    d->bp = bp;
+    d->rise = rise;
     return !(d->at <= 1e-4f && d->an <= 1e-4f && d->t > 0.04f * DK_SR);
 }
 static float drum_level(const float *st)

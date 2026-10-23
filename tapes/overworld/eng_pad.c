@@ -86,34 +86,44 @@ static int pad_render(float *st, float *l, float *r, int n, const float *p)
         d2 *= vb;
     }
     kk = fm_minf(k == 4 ? 0.7f : 0.6f, v->lpk * (1.0f + (k == 4 ? 0.15f : 0.35f + 0.3f * air) * drift));
-    for (j = 0; j < n; j++) {
-        float s, a;
-        if (v->es < t)
-            v->es = fm_minf(t, v->es + v->att_inc);
-        else
-            v->es = fm_maxf(0.0f, v->es - v->mr);
-        v->ph2 += d1;
-        if (v->ph2 >= 1.0f)
-            v->ph2 -= 1.0f;
-        v->ph3 += d2;
-        if (v->ph3 >= 1.0f)
-            v->ph3 -= 1.0f;
-        if (k == 1)
-            s = ptab(padtab[0], v->ph2) + ptab(padtab[0], v->ph3) * 0.7f + wnoise() * breath;
-        else if (k == 2)
-            s = (ptab(padtab[1], v->ph2) + ptab(padtab[1], v->ph3)) * 0.8f + wnoise() * breath * 0.25f;
-        else if (k == 3) {
-            v->ph1 += d1 * 2.0f;
-            if (v->ph1 >= 1.0f)
-                v->ph1 -= 1.0f;
-            s = (ptab(padtab[2], v->ph2) + ptab(padtab[2], v->ph3) * 0.8f + ptab(padtab[2], v->ph1) * shim) * 0.6f;
-        } else
-            s = dk_blep(v->ph2, d1) + dk_blep(v->ph3, d2) + wnoise() * breath * 0.3f;
-        v->lp += kk * (s - v->lp);
-        v->lp2 += kk * (v->lp - v->lp2);
-        a = v->lp2 * v->es * v->es * v->vel * lvl;
-        l[j] += a * v->gl;
-        r[j] += a * v->gr;
+    {   /* the state in registers for the loop (the outputs might alias it otherwise) */
+        float es = v->es, att_inc = v->att_inc, mr = v->mr, ph1 = v->ph1, ph2 = v->ph2, ph3 = v->ph3, lp = v->lp;
+        float lp2 = v->lp2, vel = v->vel, gl = v->gl, gr = v->gr;
+        for (j = 0; j < n; j++) {
+            float s, a;
+            if (es < t)
+                es = fm_minf(t, es + att_inc);
+            else
+                es = fm_maxf(0.0f, es - mr);
+            ph2 += d1;
+            if (ph2 >= 1.0f)
+                ph2 -= 1.0f;
+            ph3 += d2;
+            if (ph3 >= 1.0f)
+                ph3 -= 1.0f;
+            if (k == 1)
+                s = ptab(padtab[0], ph2) + ptab(padtab[0], ph3) * 0.7f + wnoise() * breath;
+            else if (k == 2)
+                s = (ptab(padtab[1], ph2) + ptab(padtab[1], ph3)) * 0.8f + wnoise() * breath * 0.25f;
+            else if (k == 3) {
+                ph1 += d1 * 2.0f;
+                if (ph1 >= 1.0f)
+                    ph1 -= 1.0f;
+                s = (ptab(padtab[2], ph2) + ptab(padtab[2], ph3) * 0.8f + ptab(padtab[2], ph1) * shim) * 0.6f;
+            } else
+                s = dk_blep(ph2, d1) + dk_blep(ph3, d2) + wnoise() * breath * 0.3f;
+            lp += kk * (s - lp);
+            lp2 += kk * (lp - lp2);
+            a = lp2 * es * es * vel * lvl;
+            l[j] += a * gl;
+            r[j] += a * gr;
+        }
+        v->es = es;
+        v->ph1 = ph1;
+        v->ph2 = ph2;
+        v->ph3 = ph3;
+        v->lp = lp;
+        v->lp2 = lp2;
     }
     return !(v->held == 0.0f && v->es <= 0.0f);
 }
@@ -183,20 +193,28 @@ static int bell_render(float *st, float *l, float *r, int n, const float *p)
     float inc = v->inc * dk_ctx.wow, incm = inc * v->ratio, lvl = 0.20f;
     float trem = v->kind == 4.0f ? 0.72f + 0.28f * dk_sinx(dk_ctx.lfo_fast * 1.06f + 4.0f) : 1.0f;
     float m = v->held != 0.0f ? v->ms : v->mr;
+    /* the state in registers for the loop (the outputs might alias it otherwise) */
+    float att = v->att, att_inc = v->att_inc, es = v->es, idx = v->idx, idx_mul = v->idx_mul, ph1 = v->ph1, ph2 = v->ph2;
+    float vel = v->vel, gl = v->gl, gr = v->gr;
     int j;
     (void)p;
     for (j = 0; j < n; j++) {
         float a;
-        if (v->att < 1.0f)
-            v->att = fm_minf(1.0f, v->att + v->att_inc);
-        v->es *= m;
-        v->idx *= v->idx_mul;
-        v->ph1 = dk_wrap1(v->ph1 + incm);
-        v->ph2 = dk_wrap1(v->ph2 + inc);
-        a = dk_sinx(v->ph2 + dk_sinx(v->ph1) * v->idx + 4.0f) * v->es * v->att * v->vel * lvl * trem;
-        l[j] += a * v->gl;
-        r[j] += a * v->gr;
+        if (att < 1.0f)
+            att = fm_minf(1.0f, att + att_inc);
+        es *= m;
+        idx *= idx_mul;
+        ph1 = dk_wrap1(ph1 + incm);
+        ph2 = dk_wrap1(ph2 + inc);
+        a = dk_sinx(ph2 + dk_sinx(ph1) * idx + 4.0f) * es * att * vel * lvl * trem;
+        l[j] += a * gl;
+        r[j] += a * gr;
     }
+    v->att = att;
+    v->es = es;
+    v->idx = idx;
+    v->ph1 = ph1;
+    v->ph2 = ph2;
     return v->es >= 8e-4f;
 }
 static float bell_level(const float *st)
@@ -266,45 +284,60 @@ static void bass_off(float *st, const float *p)
 static int bass_render(float *st, float *l, float *r, int n, const float *p)
 {
     bass_v *v = (bass_v *)st;
-    int k = (int)v->kind, j;
+    int k = (int)v->kind, j, held = v->held != 0.0f;
     float lvl = 0.26f, w = dk_ctx.wow;
+    /* the state in registers for the loop (the outputs might alias it otherwise) */
+    float vinc = v->inc, inc_to = v->inc_to, glide = v->glide, att = v->att, att_inc = v->att_inc, es = v->es;
+    float ms = v->ms, mr = v->mr, ph1 = v->ph1, ph2 = v->ph2, idx = v->idx, idx_floor = v->idx_floor;
+    float idx_mul = v->idx_mul, lpk = v->lpk, lpk_floor = v->lpk_floor, lpk_mul = v->lpk_mul, lp = v->lp, lp2 = v->lp2;
+    float dc = v->dc, vel = v->vel, gl = v->gl, gr = v->gr;
     (void)p;
     for (j = 0; j < n; j++) {
         float a, s, inc;
-        v->inc += (v->inc_to - v->inc) * v->glide;
-        inc = v->inc * w;
-        if (v->att < 1.0f) {
-            v->att = fm_minf(1.0f, v->att + v->att_inc);
-            v->es = fm_maxf(v->es, v->att);
+        vinc += (inc_to - vinc) * glide;
+        inc = vinc * w;
+        if (att < 1.0f) {
+            att = fm_minf(1.0f, att + att_inc);
+            es = fm_maxf(es, att);
         } else if (k == 2)
-            v->es *= v->held != 0.0f ? v->ms : v->mr;
-        else if (v->held != 0.0f)
-            v->es = 0.7f + (v->es - 0.7f) * v->ms;
+            es *= held ? ms : mr;
+        else if (held)
+            es = 0.7f + (es - 0.7f) * ms;
         else
-            v->es *= v->mr;
-        v->ph2 = dk_wrap1(v->ph2 + inc);
+            es *= mr;
+        ph2 = dk_wrap1(ph2 + inc);
         if (k == 2) {
-            v->idx = v->idx_floor + (v->idx - v->idx_floor) * v->idx_mul;
-            s = dk_sinx(v->ph2 + dk_sinx(v->ph2) * v->idx + 4.0f) * 1.1f;
+            idx = idx_floor + (idx - idx_floor) * idx_mul;
+            s = dk_sinx(ph2 + dk_sinx(ph2) * idx + 4.0f) * 1.1f;
         } else if (k == 1) {
             float hp;
-            v->lpk = v->lpk_floor + (v->lpk - v->lpk_floor) * v->lpk_mul;
-            s = dk_blep(v->ph2, inc) * 0.8f;
-            v->lp += v->lpk * v->lp2;
-            hp = s - v->lp - 0.55f * v->lp2;
-            v->lp2 = fm_flush(v->lp2 + v->lpk * hp);
-            s = fm_tanhf(v->lp * 1.4f) * 0.9f;
-            v->dc += 0.0006f * (s - v->dc);            /* no offset left by the filter */
-            s -= v->dc;
+            lpk = lpk_floor + (lpk - lpk_floor) * lpk_mul;
+            s = dk_blep(ph2, inc) * 0.8f;
+            lp += lpk * lp2;
+            hp = s - lp - 0.55f * lp2;
+            lp2 = fm_flush(lp2 + lpk * hp);
+            s = fm_tanhf(lp * 1.4f) * 0.9f;
+            dc += 0.0006f * (s - dc);                  /* no offset left by the filter */
+            s -= dc;
         } else {
-            v->idx = v->idx_floor + (v->idx - v->idx_floor) * v->idx_mul;
-            v->ph1 = dk_wrap1(v->ph1 + inc);
-            s = dk_sinx(v->ph2 + dk_sinx(v->ph1) * v->idx + 4.0f);
+            idx = idx_floor + (idx - idx_floor) * idx_mul;
+            ph1 = dk_wrap1(ph1 + inc);
+            s = dk_sinx(ph2 + dk_sinx(ph1) * idx + 4.0f);
         }
-        a = s * v->es * v->vel * lvl;
-        l[j] += a * v->gl;
-        r[j] += a * v->gr;
+        a = s * es * vel * lvl;
+        l[j] += a * gl;
+        r[j] += a * gr;
     }
+    v->inc = vinc;
+    v->att = att;
+    v->es = es;
+    v->ph1 = ph1;
+    v->ph2 = ph2;
+    v->idx = idx;
+    v->lpk = lpk;
+    v->lp = lp;
+    v->lp2 = lp2;
+    v->dc = dc;
     return !(v->held == 0.0f && v->att >= 1.0f && v->es < 1e-3f);
 }
 static float bass_level(const float *st)

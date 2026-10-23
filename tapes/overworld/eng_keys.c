@@ -308,37 +308,55 @@ static int kal_render(float *st, float *l, float *r, int n, const float *p)
     kal_v *v = (kal_v *)st;
     float inc = v->inc * dk_ctx.wow, i2 = inc * v->r2, i3 = inc * v->r3, damp = v->held == 0.0f ? v->mr : 1.0f;
     float lvl = 0.30f, wood = v->wood;
+    /* the state in registers for the loop (the outputs might alias it otherwise) */
+    float ph1 = v->ph1, ph2 = v->ph2, ph3 = v->ph3, a1 = v->a1, a2 = v->a2, a3 = v->a3, m1 = v->m1, m2 = v->m2, m3 = v->m3;
+    float att = v->att, click = v->click, click_mul = v->click_mul, wex = v->wex, wex_mul = v->wex_mul, wlo = v->wlo;
+    float wbp = v->wbp, wf = v->wf, vel = v->vel, gl = v->gl, gr = v->gr;
     int j;
     (void)p;
     for (j = 0; j < n; j++) {
         float s, x, hp;
-        v->ph1 = dk_wrap1(v->ph1 + inc);
-        v->ph2 = dk_wrap1(v->ph2 + i2);
-        v->ph3 = dk_wrap1(v->ph3 + i3);
-        v->a1 *= v->m1 * damp;
-        v->a2 *= v->m2;
-        v->a3 *= v->m3;
-        s = dk_sinx(v->ph1) * v->a1 + dk_sinx(v->ph2) * v->a2 + dk_sinx(v->ph3) * v->a3;
-        if (v->att < 1.0f) {                   /* a millisecond's rise: no click but the thumb's */
-            v->att = fm_minf(1.0f, v->att + 1.0f / (0.0008f * DK_SR));
-            s *= v->att;
+        ph1 = dk_wrap1(ph1 + inc);
+        ph2 = dk_wrap1(ph2 + i2);
+        ph3 = dk_wrap1(ph3 + i3);
+        a1 *= m1 * damp;
+        a2 = fm_flush(a2 * m2);                /* the upper modes die fast: no denormals (a slow path on an FPU) */
+        a3 = fm_flush(a3 * m3);
+        s = dk_sinx(ph1) * a1 + dk_sinx(ph2) * a2 + dk_sinx(ph3) * a3;
+        if (att < 1.0f) {                      /* a millisecond's rise: no click but the thumb's */
+            att = fm_minf(1.0f, att + 1.0f / (0.0008f * DK_SR));
+            s *= att;
         }
-        if (v->click > 1e-4f) {
-            s += wnoise() * v->click * 0.5f;
-            v->click *= v->click_mul;
+        if (click > 1e-4f) {
+            s += wnoise() * click * 0.5f;
+            click *= click_mul;
         }
         /* the box: a resonance at its pitch, struck by the pluck and fed a little by the tine */
-        x = (v->wex > 1e-4f ? wnoise() * v->wex : 0.0f) + s * 0.05f;
-        v->wex *= v->wex_mul;
-        v->wlo += v->wf * v->wbp;
-        hp = x - v->wlo - 0.12f * v->wbp;
-        v->wbp = fm_flush(v->wbp + v->wf * hp);
-        v->wlo = fm_flush(v->wlo);
-        s = s * (1.0f - 0.35f * wood) + v->wbp * wood * 0.9f;
-        s *= v->vel * lvl;
-        l[j] += s * v->gl;
-        r[j] += s * v->gr;
+        x = s * 0.05f;
+        if (wex > 1e-4f) {                     /* (only while it is heard: no denormals) */
+            x = wnoise() * wex + x;
+            wex *= wex_mul;
+        }
+        wlo += wf * wbp;
+        hp = x - wlo - 0.12f * wbp;
+        wbp = fm_flush(wbp + wf * hp);
+        wlo = fm_flush(wlo);
+        s = s * (1.0f - 0.35f * wood) + wbp * wood * 0.9f;
+        s *= vel * lvl;
+        l[j] += s * gl;
+        r[j] += s * gr;
     }
+    v->ph1 = ph1;
+    v->ph2 = ph2;
+    v->ph3 = ph3;
+    v->a1 = a1;
+    v->a2 = a2;
+    v->a3 = a3;
+    v->att = att;
+    v->click = click;
+    v->wex = wex;
+    v->wlo = wlo;
+    v->wbp = wbp;
     return v->a1 > 1e-3f || v->wex > 1e-4f || fm_fabsf(v->wbp) > 3e-4f;
 }
 static float kal_level(const float *st)
