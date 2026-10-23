@@ -149,11 +149,13 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 }
 
 /* ---------------------------------------------------------------- the frame --- */
+static int seq_edit_row(void);
 static int page_rows(int p)
 {
     static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 4, 2};
-    if (p == PG_SEQ && (cur_eng()->flags & EF_DRUM))
-        return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings */
+    if (p == PG_SEQ && ((cur_eng()->flags & EF_DRUM) || cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE))
+        return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings;
+                                              * STEP and LIVE: their own, the settings, the step editor */
     return ROWS[p];
 }
 /* the knobs of the page (its row): K1..K4 (i 0..3) the four main ones, i 4 ALGO's extra. SELECT is the track and
@@ -219,13 +221,17 @@ static int page_field(int i, int home)
             static const uint8_t F[5] = {F_SEQTYPE, F_CLIPLEN, F_TSWING, F_QNT, F_OCT};
             return F[i];
         }
+        if (!drum && row == 2) {             /* the step editor: walk, a note in/out, longer/cut, its pitch */
+            static const uint8_t F[5] = {F_CURSOR, F_SENOTE, F_SETIE, F_SEPITCH, F_SVEL};
+            return F[i];
+        }
         switch (k->seq) {
         case SQ_STEP:
             if (drum) {
                 static const uint8_t F[5] = {F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE};
                 return F[i];
             } else {
-                static const uint8_t F[5] = {F_CURSOR, F_SLEN, F_SVEL, F_SPROB, F_SRATCH};
+                static const uint8_t F[5] = {F_SHIFT, F_SLEN, F_SVEL, F_SPROB, F_SRATCH};
                 return F[i];
             }
         case SQ_DRIVE: {
@@ -280,8 +286,10 @@ static const char *hint(void)
     switch (ui.page) {
     case PG_PLAY: return "HOME+WHITE PRESET  HOME+BLACK TRACK";
     case PG_SEQ:
+        if (seq_edit_row())
+            return "K2 NOTE +/-  K3 TIE/CUT  K4 PITCH";
         if (k->seq == SQ_STEP)
-            return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "KEYS AT CURSOR  SAME NOTE = ERASE";
+            return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "SEQ AGAIN x2 = STEP EDIT";
         if (k->seq == SQ_FINGER)
             return "WHITE PATTERNS  BLACK VARIATIONS";
         if (k->seq == SQ_DRIVE)
@@ -788,6 +796,88 @@ static void draw_arp_view(const dk_track_t *k)   /* the rhythm across, each note
     }
 }
 
+/* the step editor's grid (SEQ's third row; STEP's own view on a melodic track): the cursor's bar, 16 steps across, the
+ * notes at their pitch as bars (a tie one long bar), the step you are on lit, an empty one showing what K2 puts in */
+static void draw_step_grid(const dk_clip_t *c, int len)
+{
+    int bar = ui_cursor / 16, cw = 13, x0 = WX + 6, gy = WY + 6, gh = WH - 18, lo = 127, hi = 0, i, b0 = bar * DK_TPB,
+        cur = ui_cursor % 16, ghost = se_default();
+    for (i = 0; i < c->n; i++) {             /* the pitch range: the clip's notes and the next one */
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (e->fl & EV_MOTION)
+            continue;
+        if (e->note < lo)
+            lo = e->note;
+        if (e->note > hi)
+            hi = e->note;
+    }
+    if (ghost < lo)
+        lo = ghost;
+    if (ghost > hi)
+        hi = ghost;
+    if (hi - lo < 12) {
+        lo -= (12 - (hi - lo)) / 2;
+        hi = lo + 12;
+    }
+    for (i = 0; i < 16; i++) {               /* the steps: a beat's four together, the cursor's lit */
+        int x = x0 + i * cw;
+        if (b0 + i * DK_T16 >= len)
+            break;
+        if (i == cur)
+            cv_rect(x, gy - 3, cw - 1, gh + 6, dimc(TH_ENC[0], 4));
+        else if ((i / 4) & 1)
+            cv_rect(x, gy - 3, cw - 1, gh + 6, RGB(38, 35, 31));
+        if (i) {                             /* the cells' edges: dotted, a beat's solid */
+            int yy;
+            for (yy = gy - 3; yy < gy + gh + 3; yy += i % 4 ? 3 : 1)
+                cv_rect(x - 1, yy, 1, 1, i % 4 ? RGB(52, 48, 42) : RGB(70, 64, 56));
+        }
+        cv_rect(x + cw / 2 - 1, WY + WH - 7, 2, i % 4 ? 2 : 4, i == cur ? TH_ENC[0] : i % 4 ? TH_LINE : TH_GRAY);
+    }
+    for (i = 0; i < c->n; i++) {             /* the notes: a bar each, from its step to where it reaches */
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        int a, z, y, at_cur;
+        if (e->fl & EV_MOTION)
+            continue;
+        a = e->pos - b0;
+        z = a + e->dur + 2;
+        if (z <= 0 || a >= DK_TPB)
+            continue;
+        y = gy + gh - 4 - (e->note - lo) * (gh - 4) / (hi - lo);
+        at_cur = e->pos < (int)(ui_cursor + 1) * DK_T16 && e->pos + e->dur > (int)ui_cursor * DK_T16;
+        a = a < 0 ? x0 : x0 + a * cw / DK_T16;
+        z = z > DK_TPB ? x0 + 16 * cw : x0 + z * cw / DK_T16 - 2;
+        if (z < a + 3)
+            z = a + 3;
+        cv_rect(a, y, z - a, 4, at_cur ? TH_TEXT : TH_TRACK[dk_song.cur_track]);
+        if (e->pos >= b0)                    /* its start: a notch */
+            cv_rect(a, y - 1, 2, 6, at_cur ? TH_TEXT : TH_TRACK[dk_song.cur_track]);
+    }
+    {                                        /* an empty step: the note K2 would put in, an outline */
+        int idx[SE_MAX], clip = cur_clip();
+        if (!se_at(clip, ui_cursor * DK_T16, idx) && !se_over(clip, ui_cursor * DK_T16, idx)) {
+            int y = gy + gh - 4 - (ghost - lo) * (gh - 4) / (hi - lo), x = x0 + cur * cw;
+            hline(x + 1, y, cw - 3, TH_ENC[0]);
+            hline(x + 1, y + 3, cw - 3, TH_ENC[0]);
+            vline(x + 1, y, 4, TH_ENC[0]);
+            vline(x + cw - 3, y, 4, TH_ENC[0]);
+        }
+    }
+    if (dk_playing) {
+        int ph = (int)(dk_part_tick % (uint16_t)len);
+        if (ph / DK_TPB == bar)
+            vline(x0 + (ph % DK_TPB) * cw / DK_T16, WY + 1, WH - 2, TH_TEXT);
+    }
+}
+static int seq_editable(void)            /* a melodic clip the step editor walks (STEP, LIVE) */
+{
+    return !(cur_eng()->flags & EF_DRUM) && (cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE);
+}
+static int seq_edit_row(void)            /* SEQ's third row on one: the step editor */
+{
+    return ui.page == PG_SEQ && seq_editable() && ui.row[PG_SEQ] % 3 == 2;
+}
+
 static void draw_seq(void)
 {
     const dk_track_t *k = cur();
@@ -804,6 +894,11 @@ static void draw_seq(void)
         return;
     }
     r[0] = 0;
+    if (seq_edit_row() || (!drum && k->seq == SQ_STEP)) {   /* the step editor: which bar */
+        x = (int)(itoa_b(ui_cursor / 16 + 1, cpy(r, "BAR ")) - r);
+        r[x] = '/';
+        itoa_b(len / DK_TPB, r + x + 1);
+    }
     if (drum && k->seq == SQ_STEP) {
         x = (int)(itoa_b(ui_step_page + 1, r) - r);
         r[x] = '/';
@@ -819,12 +914,16 @@ static void draw_seq(void)
     }
     {
         char lt[24];
-        const char *nm = drum && ui.row[PG_SEQ] % 3 == 1 ? "KIT" : SEQ_NAME[k->seq % SQ_N];
+        const char *nm = drum && ui.row[PG_SEQ] % 3 == 1 ? "KIT" : seq_edit_row() ? "STEP EDIT" : SEQ_NAME[k->seq % SQ_N];
         if (drum && e->nlanes)               /* drums: the sound you are on, by its name */
             cpy(cpy(cpy(lt, nm), "  "), e->lane_name[ui_lane % e->nlanes]);
         else
             cpy(lt, nm);
         module(lt, r);
+    }
+    if (seq_edit_row()) {
+        draw_step_grid(c, len);
+        return;
     }
     switch (view) {
     case SQ_STEP:
@@ -871,19 +970,8 @@ static void draw_seq(void)
             }
             if (dk_playing && ph >= 0 && ph < 16)
                 vline(WX + 34 + ph * 11 + ph / 4 * 2, WY + 1, WH - 2, TH_TEXT);
-        } else {                             /* melodic: the bar's sixteenths, the notes by pitch, the cursor */
-            int bar = ui_cursor / 16, x0 = WX + 4, w = WW - 8;
-            dk_clip_t sub = *c;
-            cv_rect(x0 + (ui_cursor % 16) * w / 16, WY + 2, w / 16 - 1, WH - 4, dimc(TH_ENC[0], 4));
-            for (i = 0; i <= 16; i++)
-                vline(x0 + i * w / 16, WY + 2, i % 4 ? 2 : 5, TH_LINE);
-            roll(&sub, x0 - bar * w, WY + 8, w * (len / DK_TPB), WH - 14, len, TH_TEXT, 0);
-            if (dk_playing) {
-                int ph2 = (int)(dk_part_tick % (uint16_t)len);
-                if (ph2 / DK_TPB == bar)
-                    vline(x0 + (ph2 % DK_TPB) * w / DK_TPB, WY + 1, WH - 2, TH_TEXT);
-            }
-        }
+        } else                               /* melodic: the step editor's grid */
+            draw_step_grid(c, len);
         break;
     case SQ_LIVE:
     case SQ_ENDLESS:

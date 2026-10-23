@@ -34,34 +34,38 @@ static int black_of(int k)
 }
 static int trk_oct(int t) { return dk_song.trk[t].oct + (int8_t)dk_song.koct; }
 
-/* SCALE as on a piano: a white key keeps its letter (the C key plays the scale's C, C# or Cb; the D key, between the two
- * black ones, its D). On a seven-note scale each letter is one degree, counted from the root's letter (flat keys
- * spelled with flats: B flat's E key plays E flat); on the others the scale's note nearest the key */
+/* SCALE transposed, as a keyboard's TRANSPOSE: the C key plays the key's tonic, the D key its second, ... the B key its
+ * seventh (F minor: the C key F, the D key G, the E key A flat). On five- and six-note scales the scale's note nearest
+ * the transposed key. CHROMA moves the same way: every key up by the tonic (F: the C key plays F) */
+static int key_shift(void)               /* how far the keys move: the tonic above C, the nearer way (up to F#, then down) */
+{
+    int r = dk_song.root % 12;
+    return r > 6 ? r - 12 : r;
+}
 static int white_degree(int w)               /* 0..6 the degree, -1 when the scale is not seven notes */
 {
     static const int8_t LETTER_OF_WHITE[12] = {0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6};   /* C . D . E F . G . A . B */
-    static const int8_t LETTER_OF_ROOT[12] = {0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6};    /* C Db D Eb E F F# G Ab A Bb B */
     int st[12], m = dk_scale(dk_song.mode, st), pc = (53 + WHITE_K[w & 15]) % 12;
     if (m != 7)
         return -1;
-    return ((LETTER_OF_WHITE[pc] - LETTER_OF_ROOT[dk_song.root % 12]) % 7 + 7) % 7;
+    return LETTER_OF_WHITE[pc];
 }
-static int white_pitch(int w, int t)         /* the note a white key plays in SCALE (near the key's own pitch) */
+static int white_pitch(int w, int t)         /* the note a white key plays in SCALE */
 {
+    static const int8_t C_MAJOR[7] = {0, 2, 4, 5, 7, 9, 11};
     int st[12], m = dk_scale(dk_song.mode, st), root = dk_song.root % 12, phys = 53 + WHITE_K[w & 15] + 12 * trk_oct(t);
-    int d = white_degree(w), pc, p, i, best = 99;
-    if (d >= 0)
-        pc = (root + st[d]) % 12;
-    else {                                   /* five or six notes: the nearest of them (a tie goes up) */
-        pc = root;
-        for (i = 0; i < m; i++) {
-            int q = (root + st[i]) % 12, dd = ((q - phys % 12) % 12 + 12) % 12;
-            if (dd > 6)
-                dd -= 12;
-            if ((dd < 0 ? -dd * 2 + 1 : dd * 2) < best) {
-                best = dd < 0 ? -dd * 2 + 1 : dd * 2;
-                pc = q;
-            }
+    int d = white_degree(w), pc, p, i, best = 99, sh = key_shift();
+    if (d >= 0)                              /* the key's C plus the tonic's shift plus the degree */
+        return phys - C_MAJOR[d] + sh + st[d];
+    phys += sh;                              /* five or six notes: the nearest of them (a tie goes up) */
+    pc = root;
+    for (i = 0; i < m; i++) {
+        int q = (root + st[i]) % 12, dd = ((q - phys % 12) % 12 + 12) % 12;
+        if (dd > 6)
+            dd -= 12;
+        if ((dd < 0 ? -dd * 2 + 1 : dd * 2) < best) {
+            best = dd < 0 ? -dd * 2 + 1 : dd * 2;
+            pc = q;
         }
     }
     p = phys - ((phys - pc) % 12 + 12) % 12;  /* at or below the key, then the nearer of the two */
@@ -142,7 +146,7 @@ static int key_note_of(int k, int t)
         return EXTRA_B[b];
     }
     if (!dk_song.layout || w < 0)               /* CHROMA (or a black key in it): the key's own pitch */
-        return 53 + k + 12 * trk_oct(t);
+        return 53 + k + 12 * trk_oct(t) + key_shift();
     return white_pitch(w, t);
 }
 
@@ -185,7 +189,7 @@ void keys_down(int k, int vel)
             }
             return;
         case 2:                                  /* NOTES: the black keys play their own pitch (the sharps and flats) */
-            nt[0] = 53 + k + 12 * trk_oct(t);
+            nt[0] = 53 + k + 12 * trk_oct(t) + key_shift();
             notes_post(k, t, nt, 1, vel, 0);
             return;
         default:                                 /* CHORDS: the degrees, then the borrowed four */

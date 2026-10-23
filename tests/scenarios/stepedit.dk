@@ -1,0 +1,122 @@
+# the keys transposed: F minor puts F on the C key; the step editor (SEQ's third row on the piano): K1 walks, K2 a note
+# in / a third on it / out, K3 a tie up to the cursor and a cut, K4 the pitch, a key at the cursor, the undo
+wait 300
+expect keyw4 60
+tap EDIT
+wait 50
+turn K1 5
+turn K2 1
+wait 50
+expect root 5
+expect keyw4 65
+expect keyw5 67
+expect keyw6 68
+turn K2 -1
+turn K1 -5
+wait 50
+expect keyw4 60
+# the piano's clip emptied, the step editor
+press HOME
+tapkey b0
+release HOME
+tap SEQ
+wait 50
+press SEQ
+tap REC
+release SEQ
+wait 50
+expect events 0
+tap SEQ
+tap SEQ
+wait 50
+expect cursor 0
+turn K2 1
+wait 50
+expect events 1
+expect senotes 1
+expect selen 1
+turn K2 1
+wait 50
+expect senotes 2
+turn K2 -1
+wait 50
+expect senotes 1
+expect events 1
+turn K1 3
+wait 50
+expect cursor 3
+expect senotes 0
+turn K3 1
+wait 50
+turn K1 -3
+wait 50
+expect selen 4
+turn K1 5
+turn K3 1
+wait 50
+turn K1 -5
+expect selen 6
+turn K1 2
+wait 50
+turn K3 -1
+wait 50
+turn K1 -2
+wait 50
+expect selen 2
+turn K1 6
+wait 50
+turn K4 2
+wait 50
+mark
+turn K2 1
+wait 50
+expect events 2
+turn K4 1
+wait 50
+expect same 0
+turn K1 1
+key w4 down 100
+wait 50
+key w4 up
+wait 50
+expect events 6
+expect cursor 8
+tap PLAY
+wait 1200
+shot stepedit.png
+tap PLAY
+press EDIT
+wait 800
+release EDIT
+wait 50
+expect events 2
+expect textfit 0
+# a melody by the knobs only (the manual's picture)
+press SEQ
+tap REC
+release SEQ
+wait 50
+turn K1 -16
+turn K2 1
+turn K3 3
+turn K1 4
+turn K4 2
+turn K2 1
+turn K3 1
+turn K1 2
+turn K4 2
+turn K2 1
+turn K1 2
+turn K4 -1
+turn K2 1
+turn K2 1
+turn K2 1
+turn K3 3
+turn K1 4
+turn K4 -3
+turn K2 1
+turn K3 2
+turn K1 -1
+wait 1500
+expect events 7
+shot p26_step_edit.png

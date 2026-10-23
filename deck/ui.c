@@ -819,7 +819,7 @@ static void key_down(int k, int vel)
                 say("LANE", e->lane_name[b]);
                 return;
             }
-        } else if (trk->seq == SQ_STEP) {   /* melodic: the key's note (or chord) at the cursor, then on */
+        } else if (trk->seq == SQ_STEP || seq_edit_row()) {   /* melodic: the key's note (or chord) at the cursor, then on */
             int clip = cur_clip(), nt[10], n, i, pos = ui_cursor * DK_T16;
             keys_down(k, vel);
             notes_show(k);
@@ -832,18 +832,12 @@ static void key_down(int k, int vel)
                 int at = clip_find(clip, pos, nt[i], 0);
                 if (at >= 0)
                     ev_delete(clip, at);       /* the same note again: gone */
-                else {
-                    dk_ev_t ev;
-                    ev.pos = (uint16_t)pos;
-                    ev.dur = (uint16_t)(ui_slen * DK_T16 - 2);
-                    ev.note = (uint8_t)nt[i];
-                    ev.vel = (uint8_t)vel;
-                    ev.fl = 0;
-                    ev.layer = 1;
-                    ui_step_ev = (int8_t)dk_song_insert(clip, &ev);
-                }
+                else
+                    ui_step_ev = (int8_t)se_put(clip, pos, nt[i], vel, ui_slen * DK_T16 - 2);
             }
             dk_unlock();
+            se_pitch = (uint8_t)nt[0];
+            se_f = -1;
             ui.step_key = (uint8_t)(k + 1);
             mark_dirty();
             return;
@@ -918,6 +912,22 @@ static void turn(int i, int e)
         dk_unlock();
         say("P-LOCK", field_label(F_P0));
         mark_dirty();
+        return;
+    }
+    if (f == F_SENOTE || f == F_SETIE || f == F_SEPITCH || f == F_SHIFT || (f == F_CURSOR && held(B_HOME))) {
+        int d = e > 0 ? 1 : -1;             /* the step editor: each turn an edit (a fast one counts once) */
+        if (f == F_SENOTE)
+            se_note(d);
+        else if (f == F_SETIE)
+            se_tie(d);
+        else if (f == F_SEPITCH)
+            se_move(d, held(B_HOME));
+        else if (f == F_SHIFT)
+            se_rotate(d);
+        else                                 /* HOME + K1: a bar at a time */
+            field_set(F_CURSOR, (ui_cursor / 16 + d) * 16 + ui_cursor % 16 < 0 ? ui_cursor : (ui_cursor / 16 + d) * 16 + ui_cursor % 16);
+        ui.touched = (int8_t)i;
+        ui.touch_until = now + 800u;
         return;
     }
     field_set(f, field_get(f) + e * step);
@@ -1093,7 +1103,7 @@ static void lights(void)
         int root = dk_song.root % 12;
         uint32_t pool = DK_MODE_POOL[dk_song.mode % DK_NMODES] | 1u;
         for (k = 0; k < NKEYS; k++) {
-            int pc = ((dk_song.layout && white_of(k) >= 0 ? key_note_of(k, dk_song.cur_track) : 53 + k) - root + 120) % 12;
+            int pc = ((dk_song.layout && white_of(k) >= 0 ? key_note_of(k, dk_song.cur_track) : 53 + k + key_shift()) - root + 120) % 12;
             if (dk_song.layout && white_of(k) >= 0)
                 dimk |= 1u << k;
             else if (!dk_song.layout && (pool >> pc & 1u))
@@ -1173,6 +1183,7 @@ static void input(void)
         }
     }
     ui.btn = btn;
+    se_hear_step(now);                   /* the step editor's note heard for a moment: off */
     if (ui.notes_k) {                    /* a PERFORM key still held: its name kept */
         if (kh[ui.notes_k - 1].trk >= 0 && kh[ui.notes_k - 1].kind == 1)
             ui.notes_until = now + 300u;

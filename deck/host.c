@@ -3,7 +3,8 @@
 /* DECK in fm1-base's host simulator: its checks for "expect" and its commands.
  *   expect: playing recording counting page track part next tempo root mode seq nev events(of the clip now) eventsAB
  *   (part A..H, track 1..6: events of that clip) nroad pass rectrk dirty voices clicks metro fill perform harmroot
- *   textfit (texts cut short: 0) undo playmode tmb
+ *   textfit (texts cut short: 0) undo playmode tmb; the step editor's cursor senotes selen sepitch; keywN (white key N's
+ *   note)
  *   commands: demo (the tape's demo song), export FILE (the song's SysEx stream to a .syx file), textaudit (every page,
  *   row, track and engine drawn: the texts that did not fit counted), page N, track N, wavsolo T */
 static int host_events(int part, int trk) { return dk_song.clip[(part & 7) * DK_NTRACK + (trk % DK_NTRACK)].n; }
@@ -59,6 +60,11 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "eng")) g = cur()->eng;
     else if (!strcmp(what, "mute")) g = cur()->mute;
     else if (!strcmp(what, "proj")) g = set.proj;
+    else if (!strcmp(what, "cursor")) g = ui_cursor;                 /* the step editor's */
+    else if (!strcmp(what, "senotes")) g = field_get(F_SENOTE);
+    else if (!strcmp(what, "selen")) g = se_len_of();
+    else if (!strcmp(what, "sepitch")) g = field_get(F_SEPITCH);
+    else if (!strncmp(what, "keyw", 4)) g = key_note_of(WHITE_K[atoi(what + 4) & 15], dk_song.cur_track);   /* a white key's note */
     else
         return 0;
     *got = g;

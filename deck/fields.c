@@ -21,6 +21,7 @@ enum {
     /* REC */ F_RECTRK,
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
+    /* the step editor (SEQ's third row) */ F_SENOTE, F_SETIE, F_SEPITCH, F_SHIFT,
     F_N
 };
 
@@ -87,6 +88,271 @@ static dk_ev_t *step_ev(void)
     return ui_step_ev >= 0 && ui_step_ev < c->n ? &dk_ev[c->at + ui_step_ev] : 0;
 }
 
+/* ---------------------------------------------------------------- the step editor --- */
+/* SEQ's third row on a melodic track (STEP or LIVE), as a grid you walk: K1 the step; K2 right a note in (on a step that
+ * has one: a scale third above it, a chord growing), left the top one out; K3 right the note longer (it ties up to the
+ * step you are on, then on), left cut (a note sounding into this step stops here; one begun here a step shorter, then
+ * short); K4 the pitch by the scale (HOME: an octave). The keys write their note at the step too. A run of turns on one
+ * knob is one undo step; the knobs' values say what changed (no messages over the grid) */
+static void say(const char *a, const char *b);
+static void mark_dirty(void);
+static char *cpy(char *d, const char *s);
+static uint8_t se_pitch;                 /* the note K2 puts in: the last one written or moved (0: the tonic) */
+static int8_t se_f = -1, se_shift;       /* the knob of the last edit (one undo step a run); SHIFT's count */
+static uint32_t se_t, se_off;            /* when; the heard note's end */
+static uint8_t se_heard, se_htrk;
+#define SE_MAX 8
+static void se_hear(int note, int vel)   /* the edit heard: the note for a moment */
+{
+    int t = dk_song.cur_track;
+    if (dk_recording)
+        return;
+    if (se_off)
+        dk_note(se_htrk, se_heard, 0, 0);
+    dk_note(t, note, vel, 0);
+    se_heard = (uint8_t)note;
+    se_htrk = (uint8_t)t;
+    se_off = plat_ms() + 280u;
+    if (!se_off)
+        se_off = 1;
+}
+static void se_hear_step(uint32_t now)   /* the UI's step: the heard note off */
+{
+    if (se_off && (int32_t)(now - se_off) >= 0) {
+        dk_note(se_htrk, se_heard, 0, 0);
+        se_off = 0;
+    }
+}
+static void se_undo(int f)
+{
+    uint32_t now = plat_ms();
+    if (f != se_f || now - se_t > 1500u)
+        undo_push(cur_clip());
+    se_f = (int8_t)f;
+    se_t = now;
+}
+static int se_at(int clip, int cs, int *idx)    /* the notes begun on the step */
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, n = 0;
+    for (i = 0; i < c->n && n < SE_MAX; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && e->pos >= cs && e->pos < cs + DK_T16)
+            idx[n++] = i;
+    }
+    return n;
+}
+static int se_over(int clip, int cs, int *idx)  /* the notes begun before the step, still sounding into it */
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, n = 0;
+    for (i = 0; i < c->n && n < SE_MAX; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && e->pos < cs && e->pos + e->dur > cs)
+            idx[n++] = i;
+    }
+    return n;
+}
+static int se_before(int clip, int cs, int *idx) /* the last notes begun before the step (one chord) */
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, n = 0, last = -1;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && e->pos < cs && e->pos > last)
+            last = e->pos;
+    }
+    for (i = 0; i < c->n && n < SE_MAX && last >= 0; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && e->pos == last)
+            idx[n++] = i;
+    }
+    return n;
+}
+static dk_ev_t *se_ev(int clip, int i) { return &dk_ev[dk_song.clip[clip].at + i]; }
+static int se_reach(const dk_ev_t *e)    /* the step boundary a note reaches (its end, a step's 2 ticks of air in) */
+{
+    return (e->pos + e->dur + 2 + DK_T16 - 1) / DK_T16 * DK_T16;
+}
+static int se_default(void)              /* the first note: the one before the cursor, else the tonic */
+{
+    int idx[SE_MAX], clip = cur_clip(), n = se_before(clip, ui_cursor * DK_T16, idx), r = dk_song.root % 12;
+    if (se_pitch)
+        return se_pitch;
+    if (n)
+        return se_ev(clip, idx[0])->note;
+    return 60 + (r > 6 ? r - 12 : r) + 12 * trk_oct(dk_song.cur_track);
+}
+static void se_name(int note, char *b)   /* C4, F#3 */
+{
+    b = cpy(b, DK_NOTE_NAME[note % 12]);
+    *b++ = (char)('0' + (note / 12 - 1 < 0 ? 0 : note / 12 - 1 > 9 ? 9 : note / 12 - 1));
+    *b = 0;
+}
+/* an event written at the step (the keys or K2): a note sounding into it from before stops here (a new note, a new
+ * attack) */
+static int se_put(int clip, int pos, int note, int vel, int dur)
+{
+    int idx[SE_MAX], n = se_over(clip, pos, idx), i;
+    dk_ev_t ev;
+    if (dk_song.nev >= DK_NEV)
+        return -1;
+    for (i = 0; i < n; i++) {
+        dk_ev_t *e = se_ev(clip, idx[i]);
+        int d = pos - e->pos - 2;
+        e->dur = (uint16_t)(d < 6 ? 6 : d);
+    }
+    ev.pos = (uint16_t)pos;
+    ev.dur = (uint16_t)dur;
+    ev.note = (uint8_t)note;
+    ev.vel = (uint8_t)vel;
+    ev.fl = 0;
+    ev.layer = 1;
+    return dk_song_insert(clip, &ev);
+}
+static void se_note(int dir)             /* K2: a note in (a third above the step's top one), the top one out */
+{
+    int clip = cur_clip(), cs = ui_cursor * DK_T16, idx[SE_MAX], n = se_at(clip, cs, idx), i, top = -1;
+    for (i = 0; i < n; i++)
+        if (top < 0 || se_ev(clip, idx[i])->note > se_ev(clip, idx[top])->note)
+            top = i;
+    if (dir > 0) {
+        int note, vel = n ? se_ev(clip, idx[0])->vel : ui_svel, dur = n ? se_ev(clip, idx[0])->dur : ui_slen * DK_T16 - 2;
+        if (n >= 4)
+            return;
+        note = n ? scale_move(se_ev(clip, idx[top])->note, 2) : se_default();
+        se_undo(F_SENOTE);
+        dk_lock();
+        ui_step_ev = (int8_t)se_put(clip, cs, note, vel, dur);
+        dk_unlock();
+        if (!n)
+            se_pitch = (uint8_t)note;
+        se_hear(note, vel);
+    } else {
+        if (!n)
+            return;
+        se_undo(F_SENOTE);
+        dk_lock();
+        ev_delete(clip, idx[top]);
+        dk_unlock();
+        ui_step_ev = -1;
+    }
+    mark_dirty();
+}
+static void se_tie(int dir)              /* K3: right longer (tied up to the cursor, then on), left cut */
+{
+    int clip = cur_clip(), cs = ui_cursor * DK_T16, len = clip_len(clip), idx[SE_MAX], n, i, ch = 0;
+    if (dir > 0) {
+        int here = 1, reach, to, cap = len, p;
+        const dk_clip_t *c = &dk_song.clip[clip];
+        n = se_at(clip, cs, idx);
+        if (!n)
+            n = se_before(clip, cs, idx), here = 0;
+        if (!n)
+            return;
+        p = se_ev(clip, idx[0])->pos;
+        reach = se_reach(se_ev(clip, idx[0]));
+        to = !here && reach < cs + DK_T16 ? cs + DK_T16 : reach + DK_T16;
+        for (i = 0; i < c->n; i++) {     /* not into the next note */
+            const dk_ev_t *e = &dk_ev[c->at + i];
+            if (!(e->fl & EV_MOTION) && e->pos > p && e->pos < cap)
+                cap = e->pos;
+        }
+        if (to > cap)
+            to = cap;
+        if (to <= reach)
+            return;
+        se_undo(F_SETIE);
+        dk_lock();
+        for (i = 0; i < n; i++)
+            se_ev(clip, idx[i])->dur = (uint16_t)(to - p - 2);
+        dk_unlock();
+        ui_step_ev = (int8_t)idx[0];
+        mark_dirty();
+        return;
+    }
+    n = se_over(clip, cs, idx);
+    if (n) {                             /* sounding into this step: it stops here */
+        se_undo(F_SETIE);
+        dk_lock();
+        for (i = 0; i < n; i++) {
+            dk_ev_t *e = se_ev(clip, idx[i]);
+            int d = cs - e->pos - 2;
+            e->dur = (uint16_t)(d < 6 ? 6 : d);
+        }
+        dk_unlock();
+        mark_dirty();
+        return;
+    }
+    n = se_at(clip, cs, idx);
+    for (i = 0; i < n; i++) {            /* begun here: a step shorter, then short */
+        dk_ev_t *e = se_ev(clip, idx[i]);
+        int k = (se_reach(e) - e->pos) / DK_T16, d = k > 1 ? (k - 1) * DK_T16 - 2 : DK_T16 / 2;
+        if (d < e->dur) {
+            if (!ch)
+                se_undo(F_SETIE), dk_lock();
+            e->dur = (uint16_t)d;
+            ch = 1;
+        }
+    }
+    if (ch) {
+        dk_unlock();
+        mark_dirty();
+    }
+}
+static void se_move(int dir, int oct)    /* K4: the step's notes (or the one sounding into it) a scale step, an octave */
+{
+    int clip = cur_clip(), cs = ui_cursor * DK_T16, idx[SE_MAX], n = se_at(clip, cs, idx), i, lo = 127;
+    if (!n)
+        n = se_over(clip, cs, idx);
+    if (!n) {                            /* an empty step: the note K2 will put in */
+        int v = oct ? se_default() + 12 * dir : scale_move(se_default(), dir);
+        se_pitch = (uint8_t)(v < 24 ? 24 : v > 108 ? 108 : v);
+        se_hear(se_pitch, ui_svel);
+        return;
+    }
+    se_undo(F_SEPITCH);
+    dk_lock();
+    for (i = 0; i < n; i++) {
+        dk_ev_t *e = se_ev(clip, idx[i]);
+        int v = oct ? e->note + 12 * dir : scale_move(e->note, dir);
+        if (v >= 24 && v <= 108)
+            e->note = (uint8_t)v;
+        if (e->note < lo)
+            lo = e->note;
+    }
+    dk_unlock();
+    se_pitch = (uint8_t)lo;
+    ui_step_ev = (int8_t)idx[0];
+    se_hear(lo, se_ev(clip, idx[0])->vel);
+    mark_dirty();
+}
+static void se_rotate(int dir)           /* SHIFT: the whole clip a step later or earlier, round */
+{
+    int clip = cur_clip(), len = clip_len(clip), i;
+    const dk_clip_t *c = &dk_song.clip[clip];
+    se_undo(F_SHIFT);
+    dk_lock();
+    for (i = 0; i < c->n; i++) {
+        dk_ev_t *e = &dk_ev[c->at + i];
+        e->pos = (uint16_t)(((int)e->pos + dir * DK_T16 % len + len) % len);
+    }
+    clip_sort(clip);
+    dk_unlock();
+    se_shift = (int8_t)(se_shift + dir);
+    ui_step_ev = -1;
+    mark_dirty();
+}
+static int se_len_of(void)               /* K3's value: the length in steps of the note at the step (0 none) */
+{
+    int clip = cur_clip(), cs = ui_cursor * DK_T16, idx[SE_MAX], n = se_at(clip, cs, idx);
+    if (!n)
+        n = se_over(clip, cs, idx);
+    if (!n)
+        return 0;
+    return (se_reach(se_ev(clip, idx[0])) - se_ev(clip, idx[0])->pos) / DK_T16;
+}
+
 static void field_range(int f, int *lo, int *hi)
 {
     *lo = 0;
@@ -117,7 +383,11 @@ static void field_range(int f, int *lo, int *hi)
     case F_SPROB: *hi = 3; break;
     case F_SRATCH: *hi = 3; break;
     case F_STEPPAGE: *hi = 15; break;
-    case F_CURSOR: *hi = 255; break;
+    case F_CURSOR: *hi = clip_len(cur_clip()) / DK_T16 - 1; break;
+    case F_SENOTE: *hi = 4; break;
+    case F_SETIE: *hi = 16; break;
+    case F_SEPITCH: *lo = 24; *hi = 108; break;
+    case F_SHIFT: *lo = -16; *hi = 16; break;
     case F_SLEN: *lo = 1; *hi = 16; break;
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_DIV: *hi = 3; break;
@@ -229,6 +499,18 @@ static int field_get(int f)
     case F_STEPPAGE: return ui_step_page;
     case F_CURSOR: return ui_cursor;
     case F_SLEN: return ui_slen;
+    case F_SENOTE: {
+        int idx[SE_MAX];
+        return se_at(cur_clip(), ui_cursor * DK_T16, idx);
+    }
+    case F_SETIE: return se_len_of();
+    case F_SEPITCH: {
+        int idx[SE_MAX], clip = cur_clip(), n = se_at(clip, ui_cursor * DK_T16, idx);
+        if (!n)
+            n = se_over(clip, ui_cursor * DK_T16, idx);
+        return n ? se_ev(clip, idx[0])->note : se_default();
+    }
+    case F_SHIFT: return se_shift;
     case F_CLIPLEN: return clip_len(cur_clip()) / DK_TPB;
     case F_QNT: return k->qnt;
     case F_TSWING: return k->swing;
@@ -558,6 +840,10 @@ static const char *field_label(int f)
     case F_SRATCH: return "RATCHET";
     case F_STEPPAGE: return "BAR";
     case F_CURSOR: return "STEP";
+    case F_SENOTE: return "NOTE";
+    case F_SETIE: return "LENGTH";
+    case F_SEPITCH: return "PITCH";
+    case F_SHIFT: return "SHIFT";
     case F_SLEN: return "LENGTH";
     case F_CLIPLEN: return "BARS";
     case F_QNT: return "QUANT";
@@ -715,7 +1001,43 @@ static void field_text(int f, char *b)
     case F_SPROB: itoa_b(100 - 25 * v, b); break;
     case F_SRATCH: b[0] = 'X'; itoa_b(v + 1, b + 1); break;
     case F_STEPPAGE: itoa_b(v + 1, b); break;
-    case F_CURSOR: itoa_b(v + 1, b); break;
+    case F_CURSOR: itoa_b(v % 16 + 1, cpy(itoa_b(v / 16 + 1, b), ".")); break;   /* bar.step */
+    case F_SENOTE: {
+        int idx[SE_MAX], clip = cur_clip(), n = se_at(clip, ui_cursor * DK_T16, idx), i, lo = 127;
+        for (i = 0; i < n; i++)
+            if (se_ev(clip, idx[i])->note < lo)
+                lo = se_ev(clip, idx[i])->note;
+        if (!n)
+            cpy(b, se_over(clip, ui_cursor * DK_T16, idx) ? "TIED" : "EMPTY");
+        else {
+            se_name(lo, b);
+            if (n > 1) {                 /* a chord: its lowest, and how many more */
+                char *q = b;
+                while (*q)
+                    q++;
+                itoa_b(n - 1, cpy(q, " +"));
+            }
+        }
+        break;
+    }
+    case F_SETIE:
+        if (!v)
+            cpy(b, "-");
+        else {
+            int idx[SE_MAX], clip = cur_clip(), n = se_at(clip, ui_cursor * DK_T16, idx);
+            if (n && se_ev(clip, idx[0])->dur <= DK_T16 / 2)
+                cpy(b, "SHORT");
+            else
+                cpy(itoa_b(v, b), v == 1 ? " STEP" : " STEPS");
+        }
+        break;
+    case F_SEPITCH: se_name(v, b); break;
+    case F_SHIFT:
+        if (v > 0)
+            b[0] = '+', itoa_b(v, b + 1);
+        else
+            itoa_b(v, b);
+        break;
     case F_DIV: cpy(b, EDIV_NAME[v & 3]); break;
     case F_ARPMODE: cpy(b, ARP_NAME[v % 6]); break;
     case F_ARPDIV: cpy(b, DIV_NAME[v % DK_ARP_NDIV]); break;
