@@ -72,6 +72,9 @@ static void page_go(int p)
         if (p == PG_SOUND) {
             static const char *const TAB[4] = {"ENGINE", "ENV", "FX", "MOD"};
             say("SOUND", TAB[ui.row[p] & 3]);
+        } else if (p == PG_MIX) {
+            static const char *const ROW[3] = {"LEVELS", "SENDS", "MASTER EQ"};
+            say("MIX", ROW[ui.row[p] % 3]);
         }
     } else {
         if (p != PG_REC)

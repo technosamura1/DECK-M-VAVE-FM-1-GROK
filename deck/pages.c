@@ -156,7 +156,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 /* ---------------------------------------------------------------- the frame --- */
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 4, 2, 1, 5, 6, 1};
+    static const uint8_t ROWS[NPG] = {1, 2, 4, 3, 1, 5, 6, 1};
     return ROWS[p];
 }
 /* the three fields of the page (its row): HOME held, another three where a page has them */
@@ -233,8 +233,9 @@ static int page_field(int i, int home)
         }
     }
     case PG_MIX: {
-        static const uint8_t F[2][3] = {{F_VOL, F_PAN, F_REV}, {F_ECHO, F_SIDECHAIN, F_SPACE}};
-        return F[row & 1][i];
+        static const uint8_t F[4][3] = {{F_VOL, F_PAN, F_REV}, {F_ECHO, F_SIDECHAIN, F_SPACE}, {F_EQLO, F_EQMID, F_EQHI},
+                                        {F_EQLOF, F_EQMIDF, F_EQHIF}};
+        return F[row == 2 && home ? 3 : row % 3][i];
     }
     case PG_ROAD:
         if (ui.garage) {
@@ -270,7 +271,7 @@ static const char *hint(void)
             return "PLAY TO DROP  HOLD REC = EMPTY";
         return "HOLD SEL + WHITE = SEQUENCER";
     case PG_SOUND: return "FX = TAB  HOLD FX+WHITE = ENGINE";
-    case PG_MIX: return "WHITE MUTE  BLACK SOLO  LFO = ROW";
+    case PG_MIX: return ui.row[PG_MIX] % 3 == 2 ? "HOME+TURN = FREQUENCY  LFO = ROW" : "WHITE MUTE  BLACK SOLO  LFO = ROW";
     case PG_ROAD:
         return ui.garage ? "HOLD ENV = BACK TO ROAD" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
@@ -757,10 +758,104 @@ static void draw_seq(void)
 }
 
 /* -------------------------------------------------------------------- MIX --- */
+/* the master EQ: its curve across 20 Hz .. 20 kHz (+-12 dB), the three bands as dots on it in their knobs' colours */
+#define EQ_X0 18
+#define EQ_W 204
+#define EQ_Y0 44
+#define EQ_H 110
+static float eq_ui_px(float hz) { return (float)EQ_W * fm_log2f(hz * (1.0f / 20.0f)) * (1.0f / 9.9658f); }   /* log2(1000) */
+static int eq_ui_y(float db) { return EQ_Y0 + EQ_H / 2 - (int)(db * (float)(EQ_H / 2) / 13.0f + (db >= 0.0f ? 0.5f : -0.5f)); }
+static void draw_eq(void)
+{
+    static int8_t seen[6] = {99};
+    static float curve[EQ_W];
+    int b, x, y0 = eq_ui_y(0.0f), py = y0, flat = 1;
+    static const float GRID[] = {50, 100, 200, 500, 1000, 2000, 5000, 10000};
+    for (b = 0; b < 3; b++)
+        flat &= dk_song.eq[b] == 0;
+    if (seen[0] != dk_song.eq[0] || seen[1] != dk_song.eq[1] || seen[2] != dk_song.eq[2] || seen[3] != dk_song.eqf[0] ||
+        seen[4] != dk_song.eqf[1] || seen[5] != dk_song.eqf[2]) {   /* the curve again only when a knob moved */
+        float A[3], t0[3];
+        for (b = 0; b < 3; b++) {
+            seen[b] = dk_song.eq[b];
+            seen[3 + b] = dk_song.eqf[b];
+            A[b] = fm_exp2f((float)dk_song.eq[b] * 0.0830482f);
+            t0[b] = fm_tanf(3.1415927f * dk_eq_hz(b, dk_song.eqf[b]) / DK_SR);
+        }
+        /* the filters' own curves, from their analogue shapes at the bilinear's warped frequency: sums of squares only
+         * (the biquads' polynomials lose their digits down low in floats) */
+        for (x = 0; x < EQ_W; x++) {
+            float hz = 20.0f * fm_exp2f((float)x * 9.9658f / (float)EQ_W), tw = fm_tanf(3.1415927f * hz / DK_SR), db = 0.0f;
+            for (b = 0; b < 3; b++) {
+                float o = tw / t0[b], o2 = o * o, a = A[b], g2;
+                if (b == 1) {                              /* the bell, Q 0.8 */
+                    float d = (1.0f - o2) * (1.0f - o2), q = o / 0.8f;
+                    g2 = (d + a * a * q * q) / (d + q * q / (a * a));
+                } else {                                   /* the shelves, slope 1 (1/Q = sqrt 2) */
+                    float m = 2.0f * a * o2, lo = (a - o2) * (a - o2) + m, hi = (1.0f - a * o2) * (1.0f - a * o2) + m;
+                    g2 = a * a * (b == 0 ? lo / hi : hi / lo);
+                }
+                db += 3.0103f * fm_log2f(g2);              /* 10 log10 */
+            }
+            curve[x] = fm_clampf(db, -13.0f, 13.0f);
+        }
+    }
+    cv_text(8, 26, &FONT_XS, "MASTER EQ", TH_GRAY);
+    if (flat)
+        cv_text(232 - text_w(&FONT_XS, "FLAT"), 26, &FONT_XS, "FLAT", TH_LINE + 0x2104u);
+    for (b = 0; b < (int)(sizeof GRID / sizeof GRID[0]); b++) {   /* the decades and their halves */
+        int gx = EQ_X0 + (int)eq_ui_px(GRID[b]), dec = GRID[b] == 100 || GRID[b] == 1000 || GRID[b] == 10000;
+        for (x = EQ_Y0; x < EQ_Y0 + EQ_H; x += dec ? 2 : 4)
+            cv_pset(gx, x, dec ? TH_LINE + 0x1082u : TH_LINE);
+        if (dec)
+            text_box(gx - 14, EQ_Y0 + EQ_H + 3, 28, 1, &FONT_T, &FONT_T, GRID[b] == 100 ? "100" : GRID[b] == 1000 ? "1K" : "10K", TH_GRAY);
+    }
+    for (x = EQ_X0; x < EQ_X0 + EQ_W; x += 3) {              /* 0 dB, and +-6 */
+        cv_pset(x, y0, TH_GRAY);
+        cv_pset(x, eq_ui_y(6.0f), TH_LINE);
+        cv_pset(x, eq_ui_y(-6.0f), TH_LINE);
+    }
+    text_box(0, eq_ui_y(6.0f) - 4, EQ_X0 - 3, 2, &FONT_T, &FONT_T, "+6", TH_LINE + 0x2104u);
+    text_box(0, eq_ui_y(-6.0f) - 4, EQ_X0 - 3, 2, &FONT_T, &FONT_T, "-6", TH_LINE + 0x2104u);
+    for (x = 0; x < EQ_W; x++) {                             /* the curve: lifted or cut from 0 dB, filled, then drawn */
+        int y = eq_ui_y(curve[x]), cx = EQ_X0 + x;
+        float hz = 20.0f * fm_exp2f((float)x * 9.9658f / (float)EQ_W);
+        int band = hz < 400.0f ? 0 : hz < 4000.0f ? 1 : 2;
+        if (y != y0)
+            vline(cx, y < y0 ? y : y0 + 1, y < y0 ? y0 - y : y - y0, dimc(TH_ENC[band], 4));
+        if (x)
+            cv_line(cx - 1, py, cx, y, TH_TEXT);
+        cv_pset(cx, y - 1, TH_TEXT);
+        py = y;
+    }
+    for (b = 0; b < 3; b++) {                                /* the bands: a dot at their frequency, on the curve */
+        float hz = dk_eq_hz(b, dk_song.eqf[b]);
+        int bx = EQ_X0 + (int)eq_ui_px(hz), by, lit = ui.touched == b && plat_ms() < ui.touch_until;
+        if (bx < EQ_X0)
+            bx = EQ_X0;
+        if (bx > EQ_X0 + EQ_W - 1)
+            bx = EQ_X0 + EQ_W - 1;
+        by = eq_ui_y(curve[bx - EQ_X0]);
+        if (lit) {                                         /* the one being turned: its frequency over it */
+            char t[12];
+            int tx = bx - 24 < EQ_X0 ? EQ_X0 : bx + 24 > EQ_X0 + EQ_W ? EQ_X0 + EQ_W - 48 : bx - 24;
+            eq_hz_text(dk_eq_hz(b, dk_song.eqf[b]), t);
+            text_box(tx, by < EQ_Y0 + 24 ? by + 10 : by - 22, 48, 1, &FONT_T, &FONT_T, t, TH_ENC[b]);
+            circle(bx, by, 7, TH_ENC[b]);
+        }
+        disc(bx, by, 4, TH_ENC[b]);
+        disc(bx, by, 1, TH_BG);
+    }
+}
+
 static void draw_mix(void)
 {
     int t;
     char s[16];
+    if (ui.row[PG_MIX] % 3 == 2) {
+        draw_eq();
+        return;
+    }
     cv_text(8, 26, &FONT_XS, "MASTER", TH_GRAY);
     itoa_b((int)(dk_master_level * 100.0f), s);
     cv_text(60, 26, &FONT_XS, s, TH_TEXT);

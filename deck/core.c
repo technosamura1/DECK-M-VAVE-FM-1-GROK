@@ -762,6 +762,108 @@ static void render_tracks(uint32_t n)
     }
 }
 
+/* ------------------------------------------------------------- the master EQ --- */
+/* three bands, as the OP-1's mixer: a low shelf, a bell, a high shelf, +-12 dB (R. Bristow-Johnson's cookbook). Flat,
+ * it does not run (the sound as it was, to the bit); its knobs glide (no zipper), and it starts primed (no click) */
+static const float EQ_FLO[3] = {40.0f, 200.0f, 2500.0f}, EQ_FHI[3] = {320.0f, 5000.0f, 16000.0f};
+float dk_eq_hz(int band, int v)
+{
+    band = band < 0 ? 0 : band > 2 ? 2 : band;
+    return EQ_FLO[band] * fm_exp2f(fm_log2f(EQ_FHI[band] / EQ_FLO[band]) * (float)(v + 50) * 0.01f);
+}
+void dk_eq_design(int band, float db, float hz, float *c)
+{
+    float A = fm_exp2f(db * 0.0830482f), w = 6.2831853f * fm_minf(hz, 0.45f * DK_SR) / DK_SR, cw = fm_cosf(w),
+          sw = fm_sinf(w), b0, b1, b2, a0, a1, a2;
+    if (band == 1) {                                       /* the bell, Q 0.8 */
+        float al = sw / 1.6f;
+        b0 = 1.0f + al * A;
+        b1 = -2.0f * cw;
+        b2 = 1.0f - al * A;
+        a0 = 1.0f + al / A;
+        a1 = -2.0f * cw;
+        a2 = 1.0f - al / A;
+    } else {                                               /* the shelves, slope 1 */
+        float al = sw * 0.70710678f, sa = 2.0f * fm_sqrtf(A) * al, s = band == 0 ? 1.0f : -1.0f;
+        b0 = A * ((A + 1.0f) - s * (A - 1.0f) * cw + sa);
+        b1 = s * 2.0f * A * ((A - 1.0f) - s * (A + 1.0f) * cw);
+        b2 = A * ((A + 1.0f) - s * (A - 1.0f) * cw - sa);
+        a0 = (A + 1.0f) + s * (A - 1.0f) * cw + sa;
+        a1 = -s * 2.0f * ((A - 1.0f) + s * (A + 1.0f) * cw);
+        a2 = (A + 1.0f) + s * (A - 1.0f) * cw - sa;
+    }
+    c[0] = b0 / a0;
+    c[1] = b1 / a0;
+    c[2] = b2 / a0;
+    c[3] = a1 / a0;
+    c[4] = a2 / a0;
+}
+static float eq_db[3], eq_hz[3], eq_c[3][5], eq_s[2][3][4], eq_last[2][2];
+static uint8_t eq_on;
+static void eq_chunk(float *l, float *r, uint32_t n)
+{
+    int b, ch, moved = 0, on = 0;
+    uint32_t j;
+    for (b = 0; b < 3; b++) {                              /* the knobs, gliding: 0.35 dB, a third of the way a block */
+        float db = (float)(dk_song.eq[b] < -12 ? -12 : dk_song.eq[b] > 12 ? 12 : dk_song.eq[b]), d = db - eq_db[b];
+        float hz = dk_eq_hz(b, dk_song.eqf[b] < -50 ? -50 : dk_song.eqf[b] > 50 ? 50 : dk_song.eqf[b]);
+        if (eq_hz[b] <= 0.0f)
+            eq_hz[b] = hz;
+        if (d != 0.0f) {
+            eq_db[b] = fm_fabsf(d) < 0.35f ? db : eq_db[b] + (d > 0.0f ? 0.35f : -0.35f);
+            moved = 1;
+        }
+        if (eq_hz[b] != hz) {
+            eq_hz[b] = fm_fabsf(hz - eq_hz[b]) < 0.5f ? hz : eq_hz[b] + (hz - eq_hz[b]) * 0.3f;
+            moved = 1;
+        }
+        on |= eq_db[b] != 0.0f;
+    }
+    if (!on) {                                             /* flat: only its last input kept (to start primed) */
+        eq_on = 0;
+        if (n >= 2) {
+            eq_last[0][1] = l[n - 2];
+            eq_last[1][1] = r[n - 2];
+        } else {
+            eq_last[0][1] = eq_last[0][0];
+            eq_last[1][1] = eq_last[1][0];
+        }
+        eq_last[0][0] = l[n - 1];
+        eq_last[1][0] = r[n - 1];
+        return;
+    }
+    if (!eq_on || moved)
+        for (b = 0; b < 3; b++)
+            dk_eq_design(b, eq_db[b], eq_hz[b], eq_c[b]);
+    if (!eq_on) {                                          /* as if it had been running, flat */
+        for (ch = 0; ch < 2; ch++)
+            for (b = 0; b < 3; b++) {
+                eq_s[ch][b][0] = eq_s[ch][b][2] = eq_last[ch][0];
+                eq_s[ch][b][1] = eq_s[ch][b][3] = eq_last[ch][1];
+            }
+        eq_on = 1;
+    }
+    for (ch = 0; ch < 2; ch++) {
+        float *x = ch ? r : l;
+        for (b = 0; b < 3; b++) {
+            const float *c = eq_c[b];
+            float x1 = eq_s[ch][b][0], x2 = eq_s[ch][b][1], y1 = eq_s[ch][b][2], y2 = eq_s[ch][b][3];
+            for (j = 0; j < n; j++) {                      /* (direct form I) */
+                float y = c[0] * x[j] + c[1] * x1 + c[2] * x2 - c[3] * y1 - c[4] * y2;
+                x2 = x1;
+                x1 = x[j];
+                y2 = y1;
+                y1 = y;
+                x[j] = y;
+            }
+            eq_s[ch][b][0] = fm_flush(x1);
+            eq_s[ch][b][1] = fm_flush(x2);
+            eq_s[ch][b][2] = fm_flush(y1);
+            eq_s[ch][b][3] = fm_flush(y2);
+        }
+    }
+}
+
 /* ----------------------------------------------------------------- the sequencer --- */
 static float tick_len = 1000.0f, tick_left;
 static float wow_ph, flutter_ph, stop_f = 1.0f, stop_to = 1.0f;
@@ -828,6 +930,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mixr[j] = r;
         pk = fm_maxf(pk, fm_fabsf(l));
     }
+    eq_chunk(mixl, mixr, n);
     PROF_T(5);
     if (TAPE.master)
         TAPE.master(mixl, mixr, (int)n, dust, slp);

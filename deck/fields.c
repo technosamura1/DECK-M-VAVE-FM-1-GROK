@@ -12,7 +12,8 @@ enum {
     /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING, F_DIV,
     F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
     F_SEQTYPE, F_OCT, F_DRIFT, F_MIDICH, F_ROLE,
-    /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP,
+    /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP, F_EQLO, F_EQMID, F_EQHI, F_EQLOF,
+    F_EQMIDF, F_EQHIF,
     /* ROAD */ F_ROADCUR, F_ROADPART, F_ROADREPS, F_GPART, F_GLABEL, F_GBARS, F_PLAYMODE,
     /* KEYS */ F_ROOT, F_MODE, F_CHORD, F_WHITE, F_BLACK, F_QUALITY, F_VOICING, F_STRUM, F_LEAD, F_LAYOUT, F_SPLIT,
     F_BASS, F_KOCT, F_DIM, F_HARMTRK,
@@ -120,6 +121,12 @@ static void field_range(int f, int *lo, int *hi)
     case F_MIDICH: *lo = 1; *hi = 16; break;
     case F_ROLE: *hi = R_N - 1; break;
     case F_PAN: *lo = -50; *hi = 50; break;
+    case F_EQLO:
+    case F_EQMID:
+    case F_EQHI: *lo = -12; *hi = 12; break;
+    case F_EQLOF:
+    case F_EQMIDF:
+    case F_EQHIF: *lo = -50; *hi = 50; break;
     case F_SPACE: *hi = 3; break;
     case F_ROADCUR: *hi = dk_song.nroad ? dk_song.nroad - 1 : 0; break;
     case F_ROADPART:
@@ -210,6 +217,12 @@ static int field_get(int f)
     case F_SPACE: return dk_song.space & 3;
     case F_DUST: return dk_song.dust;
     case F_SLEEP: return dk_song.sleep;
+    case F_EQLO:
+    case F_EQMID:
+    case F_EQHI: return dk_song.eq[f - F_EQLO];
+    case F_EQLOF:
+    case F_EQMIDF:
+    case F_EQHIF: return dk_song.eqf[f - F_EQLOF];
     case F_ROADCUR: return ui_road_cur;
     case F_ROADPART: return dk_song.nroad ? dk_song.road[ui_road_cur].part : 0;
     case F_ROADREPS: return dk_song.nroad ? dk_song.road[ui_road_cur].reps : 1;
@@ -355,6 +368,12 @@ static void field_set(int f, int v)
     case F_SPACE: dk_song.space = (uint8_t)v; break;
     case F_DUST: dk_song.dust = (uint8_t)v; break;
     case F_SLEEP: dk_song.sleep = (uint8_t)v; break;
+    case F_EQLO:
+    case F_EQMID:
+    case F_EQHI: dk_song.eq[f - F_EQLO] = (int8_t)v; break;
+    case F_EQLOF:
+    case F_EQMIDF:
+    case F_EQHIF: dk_song.eqf[f - F_EQLOF] = (int8_t)v; break;
     case F_ROADCUR: ui_road_cur = (uint8_t)v; break;
     case F_ROADPART:
         if (dk_song.nroad) {
@@ -486,6 +505,12 @@ static const char *field_label(int f)
     case F_SPACE: return "SPACE";
     case F_DUST: return "DUST";
     case F_SLEEP: return "SLEEP";
+    case F_EQLO: return "LOW";
+    case F_EQMID: return "MID";
+    case F_EQHI: return "HIGH";
+    case F_EQLOF: return "LOW HZ";
+    case F_EQMIDF: return "MID HZ";
+    case F_EQHIF: return "HIGH HZ";
     case F_ROADCUR: return "BLOCK";
     case F_ROADPART: return "PART";
     case F_ROADREPS: return "REPEATS";
@@ -558,6 +583,24 @@ static const char *track_label(int t)
     return RN[dk_song.trk[t % DK_NTRACK].role % R_N];
 }
 
+/* a frequency as the EQ shows it: 110 HZ, 1.2K, 12K */
+static void eq_hz_text(float hz, char *b)
+{
+    int h = (int)(hz + 0.5f);
+    if (h < 1000) {
+        b = itoa_b(h, b);
+        cpy(b, " HZ");
+    } else if (h < 10000) {
+        b = itoa_b(h / 1000, b);
+        *b++ = '.';
+        *b++ = (char)('0' + (h % 1000 + 50) / 100 % 10);
+        cpy(b, "K");
+    } else {
+        b = itoa_b((h + 500) / 1000, b);
+        cpy(b, "K");
+    }
+}
+
 static void field_text(int f, char *b)
 {
     int v = field_get(f);
@@ -617,6 +660,17 @@ static void field_text(int f, char *b)
         }
         break;
     case F_SPACE: cpy(b, SPACE_NAME[v & 3]); break;
+    case F_EQLO:
+    case F_EQMID:
+    case F_EQHI:
+        if (v > 0)
+            *b++ = '+';
+        b = itoa_b(v, b);
+        cpy(b, " DB");
+        break;
+    case F_EQLOF:
+    case F_EQMIDF:
+    case F_EQHIF: eq_hz_text(dk_eq_hz(f - F_EQLOF, v), b); break;
     case F_ROADCUR: itoa_b(v + 1, b); break;
     case F_ROADPART:
     case F_GPART: b[0] = (char)('A' + v); b[1] = 0; break;

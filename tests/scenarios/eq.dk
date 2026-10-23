@@ -1,0 +1,32 @@
+# the master EQ: MIX's third row (LFO, LFO), the gains on the three knobs, HOME + knobs their frequencies
+wait 300
+tap LFO
+wait 100
+tap LFO
+wait 100
+tap LFO
+wait 600
+expect page 3
+shot eq_flat.png
+tap PLAY
+spin SELECT 4
+spin ALGO -3
+spin PRESET 5
+wait 900
+shot eq_set.png
+press HOME
+spin SELECT -20
+spin ALGO 15
+wait 100
+spin PRESET 30
+wait 300
+shot eq_freq.png
+release HOME
+wait 2000
+expect voices >0
+spin SELECT -4
+spin ALGO 3
+spin PRESET -5
+wait 600
+shot eq_flat_again.png
+tap PLAY

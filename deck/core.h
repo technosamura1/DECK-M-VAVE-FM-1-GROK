@@ -9,6 +9,9 @@
 void dk_init(void);
 void dk_render(int32_t *out_lr, uint32_t n, uint32_t gain_q12);
 void dk_shed(void);
+/* the master EQ (dk_song.eq, eqf): a band's frequency for its knob, and its biquad (b0 b1 b2 a1 a2, a0 = 1) */
+float dk_eq_hz(int band, int v);
+void dk_eq_design(int band, float db, float hz, float *c);
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (from the render) */
 
 /* commands (main loop -> render) */

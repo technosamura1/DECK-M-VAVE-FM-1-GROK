@@ -166,7 +166,9 @@ typedef struct {
     dk_block_t road[DK_NROAD];
     uint8_t ball[12], nball, ball_trk;  /* TOMBOLA's balls (their notes) */
     float garden[4];                    /* the screen's world (the tape's): its day, its flower */
-    uint8_t rsv[16];
+    int8_t eq[3];                       /* the master EQ: LOW (a shelf), MID (a bell), HIGH (a shelf), -12..+12 dB */
+    int8_t eqf[3];                      /* their frequencies, -50..+50 across each band's range (0 its middle) */
+    uint8_t rsv[10];
 } dk_song_t;
 
 extern dk_song_t dk_song;
