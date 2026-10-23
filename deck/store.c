@@ -190,6 +190,28 @@ static int img_write(uint32_t at, uint32_t a, uint32_t b)
     return 0;
 }
 
+/* around the flash's erases: the sound faded out first (core.c, dk_hush), so the ~17 ms stop is silent; nested */
+static int hush_depth;
+static void hush_begin(void)
+{
+    uint32_t t0;
+    if (hush_depth++)
+        return;
+    dk_hush = 1;
+#ifndef PLAT_HOST                                /* (the simulator renders between its steps: no waiting there) */
+    t0 = plat_ms();
+    while (dk_hushed < 3 && plat_ms() - t0 < 80u)   /* three silent blocks: the DMA's both halves are quiet */
+        ;
+#else
+    (void)t0;
+#endif
+}
+static void hush_end(void)
+{
+    if (hush_depth && !--hush_depth)
+        dk_hush = 0;
+}
+
 int project_save(int slot)
 {
     static phead_t h;
@@ -206,18 +228,24 @@ int project_save(int slot)
         return 0;                          /* unchanged: spare the flash */
     /* only the sectors that changed: an erase holds the interrupts ~17 ms (the sound, the keys' scan and the lights
      * stop: the device blinked and stuttered when all nine went at once), and a preset or a knob changes one */
+    hush_begin();
     {
         uint32_t len = (uint32_t)sizeof h + sizeof dk_song + (uint32_t)dk_song.nev * sizeof(dk_ev_t);
         for (s = 0; s < len && s < DK_PROJ_SPAN; s += 0x1000u) {
             uint32_t end = s + 0x1000u < len ? s + 0x1000u : len, from = s ? s : (uint32_t)sizeof h;
             if (s && img_same(at, s, end))
                 continue;
-            if (plat_data_erase(at + s) || img_write(at, from, end))
+            if (plat_data_erase(at + s) || img_write(at, from, end)) {
+                hush_end();
                 return -1;
+            }
         }
     }
-    if (plat_data_write(at, &h, sizeof h))  /* the head last (its sector was erased: it always changes) */
+    if (plat_data_write(at, &h, sizeof h)) {  /* the head last (its sector was erased: it always changes) */
+        hush_end();
         return -1;
+    }
+    hush_end();
     return head_of(slot) && head_of(slot)->sum == h.sum ? 0 : -1;
 }
 
@@ -235,7 +263,22 @@ void settings_save(void)
     set.metro[5] = dk_metro.on_note;
     set.midi_notes = dk_midi_notes;
     set.midi_clock = dk_midi_clock;
-    plat_store_save(OBJ_SET, &set, sizeof set);
+    {                                    /* as it was last written: no erase */
+        static uint8_t last[sizeof set];
+        static int have;
+        const uint8_t *b = (const uint8_t *)&set;
+        uint32_t i, same = have;
+        for (i = 0; i < sizeof set && same; i++)
+            same = b[i] == last[i];
+        if (same)
+            return;
+        hush_begin();
+        plat_store_save(OBJ_SET, &set, sizeof set);
+        hush_end();
+        for (i = 0; i < sizeof set; i++)
+            last[i] = b[i];
+        have = 1;
+    }
 }
 static void settings_load(void)
 {
@@ -266,7 +309,9 @@ static void settings_load(void)
 void user_save(void)
 {
     dk_user.magic = USER_MAGIC;
+    hush_begin();
     plat_store_save(OBJ_USER, &dk_user, sizeof dk_user);
+    hush_end();
 }
 static void user_load(void)
 {

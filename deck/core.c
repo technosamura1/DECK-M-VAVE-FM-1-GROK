@@ -103,6 +103,8 @@ volatile uint16_t dk_part_tick, dk_part_len = DK_TPB * 4;
 volatile uint32_t dk_ticks, dk_clock;
 volatile uint8_t dk_beat_flash;
 volatile float dk_level[DK_NTRACK], dk_master_level;
+volatile uint8_t dk_hush, dk_hushed;
+static float hush_g = 1.0f;
 volatile uint8_t dk_finger_on[DK_NTRACK];
 volatile uint32_t dk_finger_latch[DK_NTRACK];
 volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;
@@ -960,9 +962,20 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     PROF_T(6);
     for (j = 0; j < n; j++) {
         float m = metro_step() * gain * 1.6f, l = fm_tanhf(mixl[j] + m), r = fm_tanhf(mixr[j] + m);
+        if (dk_hush)                           /* a save coming: down to nothing in ~6 ms, back the same */
+            hush_g = fm_maxf(0.0f, hush_g - (1.0f / 256.0f));
+        else if (hush_g < 1.0f)
+            hush_g = fm_minf(1.0f, hush_g + (1.0f / 256.0f));
+        l *= hush_g;
+        r *= hush_g;
         out[2 * j] = (int32_t)(l * 8300000.0f);
         out[2 * j + 1] = (int32_t)(r * 8300000.0f);
     }
+    if (dk_hush && hush_g <= 0.0f) {
+        if (dk_hushed < 255)
+            dk_hushed++;
+    } else
+        dk_hushed = 0;
     sc_env *= fm_expf(-(float)n / (0.16f * DK_SR));
     master_acc = fm_maxf(pk, master_acc * 0.97f);
     dk_master_level = master_acc;
