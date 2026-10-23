@@ -1,4 +1,4 @@
-# Сборка прошивки DECK в облаке GitHub (Linux-тулчейн JieLi).
+# Сборка прошивки DECK в облаке GitHub (Linux-тулчейн JieLi; из SDK нужны 3 файла — лежат в ci/ac79-sdk).
 # На каждый push и PR: собирает .fwsc для каждой кассеты из tapes/ и кладёт архив «к установке» в Artifacts.
 # На push в main: дополнительно обновляет релиз «latest» — оттуда прошивку удобно скачать с телефона/ПК.
 name: firmware
@@ -25,30 +25,30 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Кэш тулчейна и SDK JieLi
+      - name: Кэш тулчейна JieLi
         id: cache
         uses: actions/cache@v4
         with:
           path: ~/.jieli
-          key: jieli-linux-tc-ac79-d179b448-v1
+          key: jieli-linux-tc-v1
 
       - name: Скачать тулчейн JieLi
         if: steps.cache.outputs.cache-hit != 'true'
         run: sh base/tools/get_toolchain.sh ~/.jieli
 
-      - name: Скачать SDK AC79
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Файлы SDK для упаковки (из ci/ac79-sdk, со сверкой SHA-256)
         run: |
-          if ! sh -x base/bsp/tools/get_sdk.sh ~/.jieli/ac79-sdk > sdk.log 2>&1; then
-            tail -n 25 sdk.log | while IFS= read -r l; do echo "::error::$l"; done
-            exit 1
-          fi
-          tail -n 3 sdk.log
+          cd ci/ac79-sdk
+          sha256sum -c - <<'SUMS'
+          4e3b4c220dc96641cb5a723f41e68ce41d5261ae9434bb33fbd7f2c59976ded4  cpu/wl82/tools/uboot.boot
+          276579954f076886a6a7694f65dc71c034a63a2c204b76749065c0ac7b010d1b  cpu/wl82/tools/cfg_tool.bin
+          41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d  cpu/wl82/tools/cfg/eq_cfg_hw.bin
+          SUMS
 
       - name: Собрать прошивку для каждой кассеты
         env:
           JIELI_TOOLCHAIN: /home/runner/.jieli/toolchain
-          AC79_SDK: /home/runner/.jieli/ac79-sdk
+          AC79_SDK: ${{ github.workspace }}/ci/ac79-sdk
         run: |
           set -e
           mkdir -p dist
