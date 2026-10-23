@@ -865,11 +865,50 @@ static void midi_in(void)
     }
 }
 
+/* the device's own diagnostics (tools/deck_diag.py): F0 7D 44 4B 53 F7 asks, the answer is one line of text in
+ * F0 7D 44 4B 53 <ASCII> F7; the maxima are cleared by each ask. Filled by app.c (the render's and the frame's times) */
+static volatile uint32_t dg_rmax, dg_rsum, dg_rn, dg_fmax, dg_fn, dg_vmax;
+static char *dg_kv(char *p, const char *k, uint32_t v)
+{
+    p = cpy(p, k);
+    p = itoa_b((int)v, p);
+    *p++ = ' ';
+    *p = 0;
+    return p;
+}
 int app_sysex(const uint8_t *p, uint32_t n)
 {
-    (void)p;
-    (void)n;
-    return 0;                            /* (the export goes out; nothing comes in yet) */
+    static uint8_t f[200];
+    char *q;
+    uint32_t i, k = 0;
+    if (n < 4 || p[0] != 0x7D || p[1] != 0x44 || p[2] != 0x4B || p[3] != 0x53)
+        return 0;
+    f[k++] = 0xF0, f[k++] = 0x7D, f[k++] = 0x44, f[k++] = 0x4B, f[k++] = 0x53;
+    q = (char *)&f[k];
+    q = dg_kv(q, "t=", plat_ms());
+    q = dg_kv(q, "cpu=", plat_cpu_pct());
+    q = dg_kv(q, "rmax=", dg_rmax);
+    q = dg_kv(q, "ravg=", dg_rn ? dg_rsum / dg_rn : 0);
+    q = dg_kv(q, "xrun=", plat_xruns());
+    q = dg_kv(q, "ui_max_ms=", dg_fmax);
+    q = dg_kv(q, "frames=", dg_fn);
+    q = dg_kv(q, "voices_max=", dg_vmax);
+    q = dg_kv(q, "budget=", (uint32_t)dk_get_budget());
+    q = dg_kv(q, "play=", dk_playing);
+    q = dg_kv(q, "page=", ui.page);
+#ifndef PLAT_HOST
+    q = dg_kv(q, "irqoff_max_us=", lock_max);
+    q = dg_kv(q, "scan_gap_max_us=", fm1_in_stat.gap_max / FM1_TICKS_PER_US);
+    lock_max = 0;
+    fm1_in_stat.gap_max = 0;
+#endif
+    dg_rmax = dg_rsum = dg_rn = dg_fmax = dg_fn = dg_vmax = 0;
+    for (i = k; f[i]; i++)
+        f[i] &= 0x7Fu;
+    k = i;
+    f[k++] = 0xF7;
+    plat_sysex_send(f, k);
+    return 1;
 }
 
 /* ------------------------------------------------------------------- input --- */
