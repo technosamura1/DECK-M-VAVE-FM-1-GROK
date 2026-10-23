@@ -6,6 +6,9 @@ shot g_plains_day.png
 tap PLAY
 wait 9000
 shot p01_play.png
+tap SEL
+wait 300
+shot p20_trackbar.png
 press HOME
 tapkey b0
 release HOME
