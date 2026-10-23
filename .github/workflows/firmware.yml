@@ -38,7 +38,12 @@ jobs:
 
       - name: Скачать SDK AC79
         if: steps.cache.outputs.cache-hit != 'true'
-        run: sh base/bsp/tools/get_sdk.sh ~/.jieli/ac79-sdk
+        run: |
+          if ! sh -x base/bsp/tools/get_sdk.sh ~/.jieli/ac79-sdk > sdk.log 2>&1; then
+            tail -n 25 sdk.log | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          fi
+          tail -n 3 sdk.log
 
       - name: Собрать прошивку для каждой кассеты
         env:
