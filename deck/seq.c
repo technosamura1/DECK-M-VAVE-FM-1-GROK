@@ -17,7 +17,7 @@ static uint8_t open_vel[128], open_trk[128];
  * early). Held on: they start at 0 when the take does; let go already: a note at 0 as long as it was */
 static uint8_t pre_vel[128], pre_trk[128];
 static int16_t pre_dur[128];                   /* -1 still held; else its length in ticks */
-static int32_t pre_at[128];                    /* count_left when pressed */
+static int16_t pre_at[128];                    /* count_left when pressed (two bars at most) */
 #define PRE_WIN DK_PPQ
 static uint8_t arp_step[DK_NTRACK], arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
 volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
@@ -835,7 +835,7 @@ static void live_note(int t, int note, int vel, int delay)
             pre_vel[note] = (uint8_t)vel;
             pre_trk[note] = (uint8_t)t;
             pre_dur[note] = -1;
-            pre_at[note] = count_left;
+            pre_at[note] = (int16_t)count_left;
         }
     } else {
         held_pcs[t] &= ~(1u << (note % 12));
