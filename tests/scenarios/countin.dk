@@ -1,0 +1,35 @@
+# (white keys play chords: four notes each) notes played a touch early, after the count-in's last click, are the take's first beat: one held over the start
+# (a pad), one short let go before it (a stab); a note before the last beat is not taken
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+press HOME
+tapkey b0
+release HOME
+tap SEQ
+tap SEQ
+turn K2 1
+turn K2 -1
+wait 50
+tap REC
+wait 1500
+key w0 down 90
+wait 100
+key w0 up
+wait 1300
+key w2 down 100
+wait 100
+key w2 up
+wait 50
+key w4 down 100
+wait 600
+expect recording 1
+key w4 up
+wait 1000
+tap REC
+wait 200
+expect events 8
+expect firstpos 0
+tap PLAY
