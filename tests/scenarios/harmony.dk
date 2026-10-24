@@ -1,0 +1,57 @@
+# the tape: HOME held shows the recorded track's harmony bar by bar (let go: still the tape); K2 PART steps along the
+# parts in use and then one NEW (no letter skipped); ROAD's white keys add a block at the end
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+press HOME
+tapkey b0
+release HOME
+tap SEQ
+tap SEQ
+turn K2 1
+turn K2 -1
+wait 50
+expect bars 4
+tap REC
+wait 3200
+key w4 down 100
+wait 3000
+key w4 up
+key w7 down 100
+wait 3000
+key w7 up
+key w5 down 100
+wait 3000
+key w5 up
+key w3 down 100
+wait 3000
+key w3 up
+tap REC
+wait 300
+press HOME
+wait 700
+shot harmony.png
+release HOME
+wait 50
+expect page 7
+tap PLAY
+wait 100
+turn K2 1
+wait 50
+expect part 1
+turn K2 1
+turn K2 1
+wait 50
+expect part 1
+turn K2 -1
+wait 50
+expect part 0
+tap ENV
+wait 50
+turn K1 -5
+tapkey w3
+wait 50
+expect road1 3
+expect textfit 0

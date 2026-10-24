@@ -38,7 +38,8 @@ static struct {
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
     uint8_t erase_ok, erase_on, erase_stage, erase_kind;
     uint8_t rec_parts[8], rec_np;        /* the looper: the parts a take went into (their blocks come after it) */
-    uint8_t copy_part;                   /* ROAD's COPY: the block's part (+1) whose notes PASTE puts in another */   /* REC held: ERASE on the screen, how far; 0 the track,
+    uint8_t copy_part;                   /* ROAD's COPY: the block's part (+1) whose notes PASTE puts in another */
+    uint8_t harm_on;                     /* the tape: HOME held - the track's harmony, bar by bar */   /* REC held: ERASE on the screen, how far; 0 the track,
                                                             * 1 a part (the garage), 2 the road */
 } ui;
 
@@ -443,6 +444,25 @@ static int part_free(void)               /* an empty part no block plays (-1 non
             return p;
     return -1;
 }
+/* the tape's K2 PART: along the parts in use, then one NEW - the first empty one (no jumping over letters) */
+static void part_step(int d)
+{
+    int cur = field_get(F_RECPART), list[DK_NPART + 1], n = 0, p, i, at = -1, fresh = -1;
+    for (p = 0; p < DK_NPART; p++) {
+        int used = !part_empty(p) || road_has(p);
+        if (!used && fresh < 0)
+            fresh = p;
+        if (used || p == fresh || p == cur)
+            list[n++] = p;
+    }
+    for (i = 0; i < n; i++)
+        if (list[i] == cur)
+            at = i;
+    at = at < 0 ? 0 : at + d;
+    if (at < 0 || at >= n)
+        return;
+    field_set(F_RECPART, list[at]);
+}
 static void road_move(int d)             /* HOME + K1 on ROAD: the block a place left or right */
 {
     int to = ui_road_cur + d;
@@ -806,7 +826,8 @@ static void key_down(int k, int vel)
     case PG_ROAD:
         if (ui.garage)
             break;
-        if (w >= 0 && w < 8) {
+        if (w >= 0 && w < 8) {               /* a block at the road's end (in the order you add them; HOME + K1 moves) */
+            ui_road_cur = (uint8_t)(dk_song.nroad ? dk_song.nroad - 1 : 0);
             road_insert(w, 0);
             say("ROAD", "BLOCK ADDED");
             return;
@@ -1067,6 +1088,12 @@ static void turn(int i, int e)
         dk_unlock();
         say("P-LOCK", field_label(F_P0));
         mark_dirty();
+        return;
+    }
+    if (f == F_RECPART) {                /* the tape: the parts in use, then the next new one */
+        part_step(e > 0 ? 1 : -1);
+        ui.touched = (int8_t)i;
+        ui.touch_until = now + 800u;
         return;
     }
     if (f == F_ROADCUR && held(B_HOME)) {   /* ROAD: HOME + K1 moves the block */
@@ -1417,6 +1444,10 @@ static void input(void)
                 action(A_PLAY, 1);
             else if (!m->hold_ms)
                 action(m->tap, 1), ui.used[k] = 1;
+        } else if (k == B_HOME && (btn & bit) && ui.page == PG_REC && !ui.used[k] && !ui.keys &&
+                   now - ui.down_t[k] >= 400u) {   /* the tape: HOME held alone - the track's harmony */
+            ui.harm_on = 1;
+            ui.used[k] = 1;
         } else if (k == B_REC && (btn & bit) && ui.erase_ok && (ui.erase_on || !ui.used[k])) {   /* REC held: ERASE */
             erase_hold(now - ui.down_t[k]);
         } else if ((btn & bit) && !ui.used[k] && m->hold_ms && m->hold_ms != HOLD_MOD) {   /* held */
@@ -1428,6 +1459,8 @@ static void input(void)
             ui.btn &= ~bit;
             if (k == B_REC && ui.erase_on)
                 erase_end();
+            if (k == B_HOME)
+                ui.harm_on = 0;
             if (m->tap == A_FILL)
                 action(A_FILL, 0);
             else if (m->hold == A_FILL && ui.used[k])   /* GLO held: the FILL ends with it */
