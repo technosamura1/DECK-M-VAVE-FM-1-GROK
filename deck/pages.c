@@ -273,7 +273,7 @@ static int page_field(int i, int home)
         return F[row & 1][i];
     }
     case PG_REC: {
-        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECTRK, F_METRO, F_MVOL};   /* BARS first: how long a take */
+        static const uint8_t F[5] = {F_RECBARS, F_RECPART, F_RECTRK, F_METRO, F_RECCOUNT};   /* the looper's */
         return F[i];
     }
     default: return F_NONE;
@@ -300,7 +300,7 @@ static const char *hint(void)
     case PG_SOUND: return "FX = TAB  HOME+PRESET = INSTRUMENT";
     case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
     case PG_ROAD:
-        return ui.garage ? "HOLD ENV = BACK TO ROAD" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
+        return ui.garage ? "HOLD ENV = BACK TO ROAD" : "HOME+K1 MOVE · B9-11 CLONE/COPY/PASTE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  SAVE = SAVE NOW";
     case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
@@ -308,7 +308,7 @@ static const char *hint(void)
     case PG_REC:
         if (ui_auto_on)
             return "REC AGAIN = THE LOOP ENDS HERE";
-        return "K1 BARS  K4 METRONOME  HOLD EDIT = UNDO";
+        return "K2 PART  K4 METRONOME  ALGO COUNT IN";
     case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
@@ -1176,7 +1176,7 @@ static void draw_road(void)
         pos = cur_b < dk_song.nroad ? start[cur_b] + (int)(prog * (float)(start[cur_b + 1] - start[cur_b])) : total;
         wound = total ? (float)pos / (float)total : 0.0f;
         cpy(itoa_b(dk_song.nroad, r), dk_song.nroad == 1 ? " BLOCK" : " BLOCKS");
-        module(ui.road_rec ? "REC" : dk_song.play_mode ? "SONG" : "PART", r);
+        module(dk_song.play_mode ? "SONG" : "PART", r);
         reel(WX + 20, WY + 18, 1.0f - wound, phase);    /* the reels, the tape between them */
         reel(WX + WW - 20, WY + 18, wound, phase);
         hline(WX + 20, WY + 3, WW - 40, CS_TAPE);
@@ -1204,8 +1204,12 @@ static void draw_road(void)
                 s[0] = (char)('A' + (b->part & 7));
                 s[1] = 0;
                 text_box(x + 3, ty + 3, 12, 0, &FONT_T, &FONT_T, s, TH_BG);
-                text_box(x + 3, ty + 13, w - 6 > 4 ? (x1 - x - 6 > 4 ? x1 - x - 6 : 4) : 4, 0, &FONT_T, &FONT_T,
-                         LABEL_NAME[dk_song.part[b->part & 7].label & 7], TH_BG);
+                {                            /* its label where it fits (a short block: the letter only) */
+                    const char *lb = LABEL_NAME[dk_song.part[b->part & 7].label & 7];
+                    int room = (x1 < x + w ? x1 : x + w) - x - 6;
+                    if (text_w(&FONT_T, lb) <= room)
+                        text_box(x + 3, ty + 13, room, 0, &FONT_T, &FONT_T, lb, TH_BG);
+                }
                 if (b->reps > 1 && x + w <= WX + WW) {
                     s[0] = 'X';
                     itoa_b(b->reps, s + 1);
@@ -1507,10 +1511,17 @@ static void draw_tape(void)
     s[1] = 0;
     cv_text(53, 26, &FONT_XS, s, TH_BG);
     cv_text(68, 26, &FONT_XS, LABEL_NAME[dk_song.part[dk_cur_part & 7].label & 7], TH_TEXT);
-    {
-        char *p = cpy(s, "PASS ");
-        itoa_b(dk_pass, p);
-        text_box(160, 26, 72, 2, &FONT_XS, &FONT_XS, s, TH_GRAY);
+    {                                         /* the road so far, its blocks in their parts' colours: the
+                                               * looper's parts as they line up (the one recorded framed) */
+        int n = dk_song.nroad, bw = n > 12 ? 108 / n : 9, x0 = 232 - (n > 12 ? 108 : n * 9), b2;
+        for (b2 = 0; b2 < n && b2 < 24; b2++) {
+            int pp = dk_song.road[b2].part & 7, x = x0 + b2 * bw;
+            cv_rect(x, 29, bw - 1, 9, TH_PART[pp]);
+            if (pp == (dk_cur_part & 7))
+                cv_rect(x, 39, bw - 1, 2, TH_TEXT);
+        }
+        if (!n)
+            text_box(130, 26, 102, 2, &FONT_XS, &FONT_XS, "NO BLOCKS YET", TH_GRAY);
     }
     /* the cassette */
     cv_rect(14, 44, 212, 100, CS_BODY);
@@ -1534,7 +1545,11 @@ static void draw_tape(void)
         cv_rect(108, 68, 24, 28, CS_LABEL);
         text_box(108, 70, 24, 1, &FONT_L, &FONT_B, s, TH_REC);
     }
-    text_box(24, 113, 100, 0, &FONT_T, &FONT_T, TAPE_TITLE, CS_INK);
+    {
+        char *p = cpy(s, "PASS ");
+        itoa_b(dk_pass, p);
+        text_box(24, 113, 90, 0, &FONT_T, &FONT_T, s, CS_INK);
+    }
     {                                         /* the bars: where it is of how many (AUTO: counting up) */
         int bars = dk_song.part[dk_cur_part & 7].bars, at = dk_playing ? (int)(dk_part_tick / DK_TPB) + 1 : 1;
         char *p = itoa_b(at, cpy(s, "BAR "));

@@ -24,6 +24,7 @@ enum {
     /* the step editor (SEQ's third row) */ F_SENOTE, F_SETIE, F_SEPITCH, F_SHIFT,
     /* the tape: how many bars a take (AUTO: the first take sets it) */ F_RECBARS,
     /* the clip a scale step up or down (LIVE) */ F_MOVE,
+    /* the tape: which part a take goes into; the count-in (first note / 4 / 8 clicks) */ F_RECPART, F_RECCOUNT,
     F_N
 };
 
@@ -422,6 +423,8 @@ static void field_range(int f, int *lo, int *hi)
     case F_SEPITCH: *lo = 24; *hi = 108; break;
     case F_SHIFT: *lo = -16; *hi = 16; break;
     case F_MOVE: *lo = -14; *hi = 14; break;
+    case F_RECPART: *hi = DK_NPART - 1; break;
+    case F_RECCOUNT: *hi = 2; break;
     case F_SLEN: *lo = 1; *hi = 16; break;
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_RECBARS: *hi = 16; break;
@@ -547,6 +550,8 @@ static int field_get(int f)
     }
     case F_SHIFT: return se_shift;
     case F_MOVE: return se_moved;
+    case F_RECPART: return dk_next_part != 0xFF ? dk_next_part : dk_playing ? dk_cur_part : dk_song.cur_part;
+    case F_RECCOUNT: return dk_metro.on_note ? 0 : dk_metro.count < 2 ? 1 : 2;
     case F_CLIPLEN: return clip_len(cur_clip()) / DK_TPB;
     case F_RECBARS: return ui_auto_on || (ui_rec_auto && part_empty(dk_song.cur_part)) ? 0 : dk_song.part[dk_song.cur_part & 7].bars;
     case F_QNT: return k->qnt;
@@ -709,6 +714,13 @@ static void field_set(int f, int v)
     case F_CLIPLEN:                      /* the part's length (all its tracks); set by hand: the tape's AUTO off */
         part_bars_set(dk_song.cur_part, v);
         ui_rec_auto = 0;
+        break;
+    case F_RECPART: dk_cmd(C_PART, v & 7, 0, 0); break;   /* (playing: at the bar's end) */
+    case F_RECCOUNT:
+        dk_metro.on_note = (uint8_t)(v == 0);
+        if (v)
+            dk_metro.count = (uint8_t)v;
+        settings_save_later();
         break;
     case F_RECBARS:
         ui_rec_auto = (uint8_t)(v == 0);
@@ -892,6 +904,8 @@ static const char *field_label(int f)
     case F_SEPITCH: return "PITCH";
     case F_SHIFT: return "SHIFT";
     case F_MOVE: return "MOVE";
+    case F_RECPART: return "PART";
+    case F_RECCOUNT: return "COUNT IN";
     case F_SLEN: return "LENGTH";
     case F_CLIPLEN: return "BARS";
     case F_RECBARS: return "BARS";
@@ -1146,6 +1160,11 @@ static void field_text(int f, char *b)
     case F_METRO: cpy(b, METRO_MODE[v % 3]); break;
     case F_CLIPLEN:
     case F_GBARS: bars_text(v, b); break;
+    case F_RECPART:                      /* the letter; an empty one NEW */
+        b[0] = (char)('A' + (v & 7));
+        cpy(b + 1, part_empty(v) ? " NEW" : "");
+        break;
+    case F_RECCOUNT: cpy(b, v == 0 ? "1ST NOTE" : v == 1 ? "4 CLICKS" : "8 CLICKS"); break;
     case F_RECBARS:                      /* (the tape's foot is narrow: the number, BARS its name) */
         if (v)
             itoa_b(v, b);

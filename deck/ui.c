@@ -36,7 +36,9 @@ static struct {
     uint32_t mix_t;                      /* MIX: the white key down (mix_key: its track + 1): a tap mutes, 1 s clears */
     uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
-    uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
+    uint8_t erase_ok, erase_on, erase_stage, erase_kind;
+    uint8_t rec_parts[8], rec_np;        /* the looper: the parts a take went into (their blocks come after it) */
+    uint8_t copy_part;                   /* ROAD's COPY: the block's part (+1) whose notes PASTE puts in another */   /* REC held: ERASE on the screen, how far; 0 the track,
                                                             * 1 a part (the garage), 2 the road */
 } ui;
 
@@ -316,6 +318,8 @@ static void rec_start(void)
         dk_song.clip[clip].len = 0;
         dk_unlock();
     }
+    if (dk_song.play_mode)               /* the looper records a part: it loops it (SONG again: hold PLAY) */
+        dk_song.play_mode = 0;
     ui_auto_on = 0;
     if (!dk_playing && ui_rec_auto && part_empty(dk_song.cur_part)) {   /* AUTO: open, up to 16 bars, REC ends it */
         ui.auto_prev = dk_song.part[dk_song.cur_part & 7].bars;
@@ -397,6 +401,59 @@ static void road_insert(int part, int dup)
     }
     dk_song.nroad++;
     ui_road_cur = (uint8_t)at;
+    mark_dirty();
+}
+static int road_has(int p)               /* the part is on the road */
+{
+    int i;
+    for (i = 0; i < dk_song.nroad; i++)
+        if ((dk_song.road[i].part & 7) == (p & 7))
+            return 1;
+    return 0;
+}
+/* a part's notes into another (all six tracks, its bars and its label), one undo step (the caller's group) */
+static void part_copy(int src, int dst)
+{
+    int t, i;
+    src &= 7;
+    dst &= 7;
+    if (src == dst)
+        return;
+    for (t = 0; t < DK_NTRACK; t++) {
+        int cs = src * DK_NTRACK + t, cd = dst * DK_NTRACK + t, n = dk_song.clip[cs].n;
+        undo_push(cd);
+        dk_lock();
+        clip_clear(cd);
+        for (i = 0; i < n; i++) {        /* (one by one: an insert may move the source along) */
+            dk_ev_t ev = dk_ev[dk_song.clip[cs].at + i];
+            if (dk_song_insert(cd, &ev) < 0)
+                break;
+        }
+        dk_song.clip[cd].len = dk_song.clip[cs].len;
+        dk_unlock();
+    }
+    dk_song.part[dst].bars = dk_song.part[src].bars;
+    dk_song.part[dst].label = dk_song.part[src].label;
+}
+static int part_free(void)               /* an empty part no block plays (-1 none) */
+{
+    int p;
+    for (p = 0; p < DK_NPART; p++)
+        if (part_empty(p) && !road_has(p))
+            return p;
+    return -1;
+}
+static void road_move(int d)             /* HOME + K1 on ROAD: the block a place left or right */
+{
+    int to = ui_road_cur + d;
+    dk_block_t b;
+    if (!dk_song.nroad || to < 0 || to >= dk_song.nroad)
+        return;
+    undo_push_road();
+    b = dk_song.road[to];
+    dk_song.road[to] = dk_song.road[ui_road_cur];
+    dk_song.road[ui_road_cur] = b;
+    ui_road_cur = (uint8_t)to;
     mark_dirty();
 }
 static void road_delete(int keep)
@@ -489,19 +546,8 @@ static void action(int a, int b)
         break;
     }
     case A_REC:
-        if (ui.page == PG_ROAD && !dk_song.play_mode) {   /* the road, recorded from the parts you play */
-            ui.road_rec ^= 1u;
-            if (ui.road_rec) {
-                undo_push_road();
-                dk_song.nroad = 0;
-                ui.road_part = dk_cur_part;
-                ui.road_loops = 0;
-                ui.road_last_tick = dk_part_tick;
-                if (!dk_playing)
-                    dk_cmd(C_PLAY, 1, 0, 0);
-            }
-            say("ROAD", ui.road_rec ? "REC" : "DONE");
-        } else if (dk_recording || dk_counting)
+        if (dk_recording || dk_counting)       /* (everywhere the same: the take into the part; its block on
+                                                 * the road comes by itself, see rec_parts) */
             rec_stop_ui();
         else
             rec_start();
@@ -785,16 +831,38 @@ static void key_down(int k, int vel)
             } else if (b == 7) {
                 road_delete(0);
                 say("BLOCK", "DELETED");
-            } else if (b == 8) {
-                road_insert(0, 1);
-                say("BLOCK", "DOUBLED");
-            } else if (b == 9) {
-                road_delete(1);
-                say("BLOCK", "CUT");
-            } else if (ui.road_clip_ok) {
-                road_insert(ui.road_clip.part, 0);
-                dk_song.road[ui_road_cur] = ui.road_clip;
-                say("BLOCK", "PASTED");
+            } else if (b == 8) {             /* CLONE: a new block after it, its own part, the notes copied */
+                int src = dk_song.road[ui_road_cur].part & 7, dst = part_free();
+                char s[16] = "PART A";
+                if (dst < 0) {
+                    say("CLONE", "ALL 8 PARTS USED");
+                    return;
+                }
+                undo_group(1);
+                part_copy(src, dst);
+                road_insert(dst, 0);
+                undo_group(0);
+                s[5] = (char)('A' + dst);
+                say("CLONED TO", s);
+            } else if (b == 9) {             /* COPY: this block's notes */
+                char s[16] = "PART A";
+                ui.copy_part = (uint8_t)((dk_song.road[ui_road_cur].part & 7) + 1);
+                s[5] = (char)('A' + ui.copy_part - 1);
+                say("COPY", s);
+                return;
+            } else if (ui.copy_part) {       /* PASTE: the copied notes into this block's part */
+                int dst = dk_song.road[ui_road_cur].part & 7;
+                if (dst == ui.copy_part - 1) {
+                    say("PASTE", "SAME PART");
+                    return;
+                }
+                undo_group(1);
+                part_copy(ui.copy_part - 1, dst);
+                undo_group(0);
+                say("PASTED", "UNDO: HOLD EDIT");
+            } else {
+                say("PASTE", "COPY A BLOCK FIRST");
+                return;
             }
             mark_dirty();
             return;
@@ -999,6 +1067,13 @@ static void turn(int i, int e)
         dk_unlock();
         say("P-LOCK", field_label(F_P0));
         mark_dirty();
+        return;
+    }
+    if (f == F_ROADCUR && held(B_HOME)) {   /* ROAD: HOME + K1 moves the block */
+        road_move(e > 0 ? 1 : -1);
+        say("BLOCK", e > 0 ? "MOVED RIGHT" : "MOVED LEFT");
+        ui.touched = (int8_t)i;
+        ui.touch_until = now + 800u;
         return;
     }
     if (f == F_SENOTE || f == F_SETIE || f == F_SEPITCH || f == F_SHIFT || f == F_MOVE || (f == F_CURSOR && held(B_HOME))) {
@@ -1445,23 +1520,38 @@ static void housekeeping(uint32_t now)
     }
     /* the tape page goes back a bar after the recording */
     ui.rec_end = 0;                      /* (the tape page stays after a take: its settings to look at) */
-    /* the road recorded live: each part's loops become a block when the next one starts */
-    if (ui.road_rec && dk_playing) {
-        if (dk_part_tick < ui.road_last_tick && dk_cur_part == ui.road_part)
-            ui.road_loops++;
-        if (dk_cur_part != ui.road_part) {
-            if (dk_song.nroad < DK_NROAD) {
-                dk_song.road[dk_song.nroad].part = ui.road_part;
-                dk_song.road[dk_song.nroad].reps = (uint8_t)(ui.road_loops + 1 > 8 ? 8 : ui.road_loops + 1);
+    /* the looper: the parts recorded into, in that order; when the take ends each one not on the road yet becomes a
+     * block at its end (the road builds itself; on ROAD the blocks are moved, copied, deleted) */
+    if (dk_recording) {
+        int p = dk_cur_part & 7, i, have = 0;
+        for (i = 0; i < ui.rec_np; i++)
+            have |= ui.rec_parts[i] == p;
+        if (!have && ui.rec_np < 8)
+            ui.rec_parts[ui.rec_np++] = (uint8_t)p;
+    } else if (ui.rec_np) {
+        int i, added = 0;
+        rec_flush();
+        for (i = 0; i < ui.rec_np; i++) {
+            int p = ui.rec_parts[i];
+            if (!part_empty(p) && !road_has(p) && dk_song.nroad < DK_NROAD) {
+                if (!added)
+                    undo_push_road();
+                dk_song.road[dk_song.nroad].part = (uint8_t)p;
+                dk_song.road[dk_song.nroad].reps = 1;
                 dk_song.road[dk_song.nroad].tricks = 0;
                 dk_song.road[dk_song.nroad].drop = 0;
+                ui_road_cur = dk_song.nroad;
                 dk_song.nroad++;
+                added++;
             }
-            ui.road_part = dk_cur_part;
-            ui.road_loops = 0;
+        }
+        ui.rec_np = 0;
+        if (added) {
+            char s[16] = "PART A";
+            s[5] = (char)('A' + dk_song.road[ui_road_cur].part);
+            say("NEW BLOCK", s);
             mark_dirty();
         }
-        ui.road_last_tick = dk_part_tick;
     }
     /* the export: a few frames a UI frame */
     if (ui.export_on) {
