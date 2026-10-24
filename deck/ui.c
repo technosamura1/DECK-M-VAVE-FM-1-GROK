@@ -40,9 +40,11 @@ static struct {
                                                             * 1 a part (the garage), 2 the road */
 } ui;
 
-#define ERASE_SHOW 350u                    /* REC held: ERASE shown; at ERASE_1 the clip goes, at ERASE_2 the track */
+#define ERASE_SHOW 350u                    /* REC held: ERASE shown; at ERASE_1 the clip goes, at ERASE_2 the part,
+                                            * at ERASE_3 the track in all parts too */
 #define ERASE_1 1000u
 #define ERASE_2 2500u
+#define ERASE_3 4000u
 #define AUTOSAVE_MS 90000u                 /* the autosave: no more often than this */
 static void say(const char *a, const char *b)
 {
@@ -1212,11 +1214,20 @@ static void lights(void)
 }
 
 /* ERASE: REC held (not recording). On the screen from 0.35 s with what goes: at 1 s the track's clip in this part,
- * held on to 2.5 s the track in all eight parts. In the garage the part (all six tracks), on ROAD the road. Let go
- * before 1 s: nothing. One undo step (HOLD EDIT) brings all of it back */
+ * held on to 2.5 s the whole part (its six tracks), to 4 s the track in the other parts too. In the garage the part,
+ * on ROAD the road. Let go before 1 s: nothing. One undo step (HOLD EDIT) brings all of it back */
+static void erase_clip(int c)
+{
+    if (!dk_song.clip[c].n)
+        return;
+    undo_push(c);
+    dk_lock();
+    clip_clear(c);
+    dk_unlock();
+}
 static void erase_do(int stage)
 {
-    int t = dk_song.cur_track, p, c;
+    int t = dk_song.cur_track, p, c, cp = dk_song.cur_part % DK_NPART;
     if (stage == 1)
         undo_group(1);
     if (ui.erase_kind == 2) {                /* the road */
@@ -1239,15 +1250,14 @@ static void erase_do(int stage)
             dk_cmd(C_TOMBOLA, 0, 0, 0);
             dk_song.nball = 0;
         }
-        for (p = 0; p < DK_NPART; p++) {     /* stage 1 this part, 2 the others */
-            c = p * DK_NTRACK + t;
-            if ((stage == 1) != (p == dk_song.cur_part % DK_NPART) || !dk_song.clip[c].n)
-                continue;
-            undo_push(c);
-            dk_lock();
-            clip_clear(c);
-            dk_unlock();
-        }
+        if (stage == 1)                      /* the track's clip here */
+            erase_clip(cp * DK_NTRACK + t);
+        else if (stage == 2)                 /* the whole part: its six */
+            for (c = 0; c < DK_NTRACK; c++)
+                erase_clip(cp * DK_NTRACK + c);
+        else                                 /* the track in the other parts too */
+            for (p = 0; p < DK_NPART; p++)
+                erase_clip(p * DK_NTRACK + t);
     }
     mark_dirty();
 }
@@ -1267,6 +1277,9 @@ static void erase_hold(uint32_t dt)
     } else if (ui.erase_stage == 1 && ui.erase_kind == 0 && dt >= ERASE_2) {
         erase_do(2);
         ui.erase_stage = 2;
+    } else if (ui.erase_stage == 2 && ui.erase_kind == 0 && dt >= ERASE_3) {
+        erase_do(3);
+        ui.erase_stage = 3;
     }
 }
 static void erase_end(void)

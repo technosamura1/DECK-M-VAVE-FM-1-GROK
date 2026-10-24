@@ -22,20 +22,36 @@ wait 800
 release EDIT
 wait 50
 expect same 1
+# held on: the whole part (all six tracks), then the track in every part
 press REC
 wait 2700
+shot erase_part.png
+release REC
+wait 50
+expect events 0
+expect eventsA6 0
+expect eventsB1 >0
+press EDIT
+wait 800
+release EDIT
+wait 50
+expect same 1
+expect eventsA6 >0
+press REC
+wait 4200
 shot erase_all.png
 release REC
 wait 50
 expect events 0
+expect eventsA6 0
 expect eventsB1 0
-expect eventsC1 0
 press EDIT
 wait 800
 release EDIT
 wait 50
 expect same 1
 expect eventsB1 >0
+expect eventsA6 >0
 # a tap is still a recording
 tap REC
 wait 100

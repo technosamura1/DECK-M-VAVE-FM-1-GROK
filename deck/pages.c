@@ -454,9 +454,10 @@ static void draw_toast(void)
 /* ERASE (REC held): what goes, a bar each that fills as you hold, what is gone in red */
 static void draw_erase(void)
 {
-    int x = 14, y = 64, w = 212, h = 100, i, rows = ui.erase_kind == 0 ? 2 : 1;
+    static const uint32_t AT[4] = {ERASE_SHOW, ERASE_1, ERASE_2, ERASE_3};
+    int rows = ui.erase_kind == 0 ? 3 : 1, x = 14, w = 212, h = 52 + rows * 24, y = rows > 1 ? 40 : 64, i;
     uint32_t dt = plat_ms() - ui.down_t[B_REC];
-    char who[24], row[2][24];
+    char who[24], row[3][24];
     if (!ui.erase_on)
         return;
     cv_rect(x, y, w, h, TH_BG);
@@ -473,20 +474,23 @@ static void draw_erase(void)
         *p++ = (char)('A' + ui_gpart % DK_NPART);
         *p = 0;
         cpy(row[0], "ALL SIX TRACKS");
-    } else {
+    } else {                                 /* the track here; the whole part; the track everywhere */
         char *p;
         cpy(who, track_label(dk_song.cur_track));
         p = cpy(row[0], "IN PART ");
         *p++ = (char)('A' + dk_song.cur_part % DK_NPART);
         *p = 0;
-        cpy(row[1], "IN ALL 8 PARTS");
+        p = cpy(row[1], "WHOLE PART ");
+        *p++ = (char)('A' + dk_song.cur_part % DK_NPART);
+        *p = 0;
+        cpy(row[2], "+ IN ALL 8 PARTS");
     }
     text_box(x + 100, y + 9, w - 110, 2, &FONT_S, &FONT_T, who, TH_TEXT);
     for (i = 0; i < rows; i++) {
-        int ry = y + 34 + i * 24, bw = w - 20, from = i ? (int)ERASE_1 : (int)ERASE_SHOW, to = i ? (int)ERASE_2 : (int)ERASE_1,
+        int ry = y + 34 + i * 24, bw = w - 20, from = (int)AT[i], to = (int)AT[i + 1],
             f = (int)dt <= from ? 0 : (int)dt >= to ? bw : ((int)dt - from) * bw / (to - from), done = ui.erase_stage > i;
-        text_box(x + 10, ry, 120, 0, &FONT_T, &FONT_T, row[i], done ? TH_REC : TH_TEXT);
-        text_box(x + 130, ry, w - 140, 2, &FONT_T, &FONT_T, done ? "GONE" : i ? "HOLD ON" : "HOLD", done ? TH_REC : TH_GRAY);
+        text_box(x + 10, ry, 130, 0, &FONT_T, &FONT_T, row[i], done ? TH_REC : TH_TEXT);
+        text_box(x + 140, ry, w - 150, 2, &FONT_T, &FONT_T, done ? "GONE" : i ? "HOLD ON" : "HOLD", done ? TH_REC : TH_GRAY);
         cv_rect(x + 10, ry + 12, bw, 4, TH_LINE);
         cv_rect(x + 10, ry + 12, done ? bw : f, 4, done ? TH_REC : TH_TEXT);
     }
