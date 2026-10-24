@@ -134,3 +134,24 @@ release HOME
 wait 50
 expect eng 5
 expect textfit 0
+# EDIT held + OCT-: an undo step, the octave untouched (and no KEYS page when EDIT is let go)
+tap HOME
+wait 50
+press HOME
+tapkey b0
+release HOME
+wait 50
+expect oct 0
+mark
+press SEQ
+tapkey b0
+release SEQ
+wait 50
+expect same 0
+press EDIT
+tap OCT-
+release EDIT
+wait 50
+expect same 1
+expect oct 0
+expect page 0

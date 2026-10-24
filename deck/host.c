@@ -65,6 +65,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "roadpart")) g = dk_song.nroad ? dk_song.road[ui_road_cur].part : -1;   /* the chosen block's */
     else if (!strncmp(what, "road", 4) && what[4] >= '0' && what[4] <= '9')   /* roadN: block N's part */
         g = atoi(what + 4) < dk_song.nroad ? dk_song.road[atoi(what + 4)].part : -1;
+    else if (!strcmp(what, "oct")) g = cur()->oct;   /* the track's octave */
     else if (!strcmp(what, "bars")) g = dk_song.part[dk_song.cur_part & 7].bars;   /* the part's */
     else if (!strcmp(what, "cursor")) g = ui_cursor;                 /* the step editor's */
     else if (!strcmp(what, "senotes")) g = field_get(F_SENOTE);

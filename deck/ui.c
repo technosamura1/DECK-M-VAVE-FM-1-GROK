@@ -1398,8 +1398,9 @@ static void input(void)
             ui.btn |= bit;
             if (k == B_REC)                  /* ERASE by holding it, when not recording (nor with SEQ / HOME) */
                 ui.erase_ok = (uint8_t)(!dk_recording && !dk_counting && !held(B_SEQ) && !held(B_HOME) && !ui.road_rec);
-            if ((k == B_OCTDN || k == B_OCTUP) && held(B_SEQ)) {   /* SEQ held + OCT-/OCT+: undo / redo, step by step */
-                ui.used[B_SEQ] = 1;
+            if ((k == B_OCTDN || k == B_OCTUP) && (held(B_SEQ) || held(B_EDIT))) {   /* SEQ or EDIT held + OCT-/OCT+:
+                                                 * undo / redo, step by step (the octave stays) */
+                ui.used[held(B_SEQ) ? B_SEQ : B_EDIT] = 1;
                 ui.used[k] = 1;
                 action(k == B_OCTDN ? A_UNDO : A_REDO, 1);
             } else if (k == B_REC && held(B_SEQ)) {   /* SEQ held + REC: the track's clip cleared at once */
