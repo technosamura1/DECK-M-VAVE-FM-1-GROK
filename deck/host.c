@@ -65,6 +65,13 @@ int app_expect(const char *what, int *got)
             g += dk_song.snd[dk_song.cur_track][i].used;
     }
     else if (!strcmp(what, "sndeng")) g = dk_song.snd[dk_song.cur_track][0].used ? dk_song.snd[dk_song.cur_track][0].eng : -1;
+    else if (!strcmp(what, "allsnds")) {                                /* the frozen sounds of all tracks */
+        int i, t;
+        for (t = 0; t < DK_NTRACK; t++)
+            for (i = 0; i < DK_NSND; i++)
+                g += dk_song.snd[t][i].used;
+    }
+    else if (!strcmp(what, "clrask")) g = ui.clr_t ? 1 : 0;           /* CLEAR ALL asked once */
     else if (!strcmp(what, "vfrozen")) g = dk_voices_frozen;
     else if (!strcmp(what, "locktake")) g = dk_lock_take;
     else if (!strcmp(what, "recarm")) g = dk_rec_arm;
@@ -210,6 +217,8 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     if (!strcmp(cmd, "seed")) {                 /* seed P T N SND: N events into part P (0 = A), track T (1..6), with frozen sound SND */
         int pt = atoi(a) & 7, t = (atoi(b) - 1 + DK_NTRACK) % DK_NTRACK, n = atoi(c), i, snd = atoi(d);
         dk_lock();
+        if (snd >= 1 && snd <= DK_NSND)         /* (the table's place: the events point to it) */
+            dk_song.snd[t][snd - 1].used = 1;
         for (i = 0; i < n; i++) {
             dk_ev_t e = {0};
             e.pos = (uint16_t)(i * DK_T16 % (DK_TPB * 2));

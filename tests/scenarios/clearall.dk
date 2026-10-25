@@ -1,0 +1,127 @@
+# CLEAR ALL (PROJECT page, black key 4): the whole composition erased (all parts' clips, the road, the frozen sounds, the parts' bars
+# and mutes, undo); the tracks' sounds, tempo, key and the project slot stay. A second press within 3 s; the first only asks; stopped only.
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+listen
+# a composition: notes in parts A, B, C on several tracks, frozen sounds, bars, a mute, a road
+seed 0 1 6 2
+seed 0 3 3 0
+seed 1 1 4 1
+seed 2 5 2 3
+setbars 0 2
+setbars 1 8
+setpmask 1 16
+tap ENV
+wait 100
+tapkey w0
+tapkey w1
+wait 100
+expect nroad >0
+tap SAVE
+wait 200
+expect nev 15
+expect nroad >0
+expect allsnds >0
+expect barsB 8
+expect page 6
+expect proj 0
+# keep: the track's sound (a preset chosen), the tempo, the project
+press HOME
+tapkey w3
+release HOME
+wait 100
+expect tempo 76
+# the first press only asks
+press SAVE
+release SAVE
+wait 100
+tapkey b3
+wait 100
+said CLEAR ALL
+expect clrask 1
+expect nev 15
+expect nroad >0
+# 3 s without the second press: asked again, nothing cleared
+wait 3500
+tapkey b3
+wait 100
+expect clrask 1
+expect nev 15
+# another page in between forgets the ask
+tap GLO
+wait 100
+expect clrask 0
+tap SAVE
+wait 100
+tapkey b3
+wait 100
+expect nev 15
+# playing: refused
+tap PLAY
+wait 300
+expect playing 1
+tapkey b3
+wait 100
+tapkey b3
+wait 100
+expect nev 15
+tap PLAY
+wait 300
+expect playing 0
+# the second press within 3 s: all of it gone
+tap GLO
+wait 100
+tap SAVE
+wait 100
+tapkey b3
+wait 100
+tapkey b3
+wait 200
+said CLEAR ALL
+expect clrask 0
+expect nev 0
+expect eventsA1 0
+expect eventsB1 0
+expect eventsC5 0
+expect nroad 0
+expect allsnds 0
+expect barsA 4
+expect barsB 4
+expect pmaskB 0
+expect part 0
+expect undo 0
+expect dirty 1
+expect proj 0
+expect tempo 76
+expect preset 3
+# nothing to undo; still works as a fresh song: a take, then it plays
+press EDIT
+wait 900
+release EDIT
+wait 200
+said UNDO
+expect nev 0
+tap REC
+wait 200
+expect counting >0
+tap REC
+wait 300
+expect counting 0
+tap PLAY
+wait 500
+expect playing 1
+tap PLAY
+wait 300
+expect playing 0
+# saved with the empty state: a reboot keeps it empty
+wait 92000
+expect dirty 0
+reboot
+wait 300
+expect nev 0
+expect nroad 0
+expect tempo 76

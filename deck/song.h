@@ -41,6 +41,7 @@ int undo_count(void);
 int song_undo(int *what);
 int song_redo(int *what);
 int rec_flush(void);
+void song_clear_all(void);               /* CLEAR ALL: every clip, the road, the frozen sounds, the parts' bars; undo forgotten; the sounds kept */
 int part_has_events(int p);              /* 1: any of the part's six clips has an event */
 /* NEW PART = COPY: the part `from` copied into the empty part `to` (all six clips with their events, takes and frozen-sound ids,
  * lengths, the part's bars and track mutes), one undo step. 1 copied; 0 nothing done (same part, `to` not empty, `from` empty);

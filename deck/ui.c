@@ -36,6 +36,7 @@ static struct {
     uint32_t mix_t;                      /* MIX: the white key down (mix_key: its track + 1): a tap mutes, 1 s clears */
     uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
+    uint32_t clr_t;                      /* PROJECT, black 4 (CLEAR ALL): when it was pressed once (0: not asked); again within 3 s clears */
     uint8_t armed;                       /* REC ARM: REC pressed, the tape waits for PLAY (or a note on ON NOTE) */
     uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
                                                             * 1 a part (the garage), 2 the road */
@@ -110,6 +111,7 @@ static int held(int b) { return (int)(ui.btn >> b & 1u); }
 static void page_go(int p)
 {
     ui.page_t = plat_ms();
+    ui.clr_t = 0;                        /* (CLEAR ALL asked once: forgotten) */
     if (ui.page == p) {                  /* again: its next tab or row */
         ui.row[p] = (uint8_t)((ui.row[p] + 1) % page_rows(p));
         if (p == PG_SOUND) {
@@ -921,6 +923,25 @@ static void key_down(int k, int vel)
         if (b == 1) {
             dk_cmd(C_STEMS, 1, 0, 0);
             say("STEMS", "7 PASSES");
+            return;
+        }
+        if (b == 3) {                    /* CLEAR ALL: the whole composition; a second press within 3 s */
+            if (dk_playing) {
+                say("PROJECT", "STOP FIRST");
+                return;
+            }
+            if (!ui.clr_t || plat_ms() - ui.clr_t > 3000u) {
+                ui.clr_t = plat_ms() | 1u;
+                say("CLEAR ALL", "PRESS AGAIN");
+                return;
+            }
+            ui.clr_t = 0;
+            song_clear_all();
+            tape_ui_init();
+            dk_cmd(C_RETUNE, 0, 0, 0);
+            ui_road_cur = 0;
+            mark_dirty();
+            say("CLEAR ALL", "DONE - NO UNDO");
             return;
         }
         if (b == 2) {

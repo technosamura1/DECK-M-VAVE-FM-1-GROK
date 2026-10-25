@@ -935,6 +935,49 @@ void dk_song_clear(void)
     song_edits++;
 }
 
+/* CLEAR ALL: the whole composition erased: every clip (8 parts x 6 tracks), the road, the frozen sounds, the parts' bars (4),
+ * labels and track mutes, the undo and redo (they cannot hold a whole song). Kept: the tracks' sounds and setup, the tempo,
+ * key, harmony, name, the settings, the project slot. The song is not playing (the caller checks) */
+void song_clear_all(void)
+{
+    int i;
+    rec_flush();                         /* (nothing waits in the recording's queue) */
+    dk_lock();
+    for (i = 0; i < DK_NCLIP; i++) {
+        dk_song.clip[i].n = 0;
+        dk_song.clip[i].len = 0;
+        dk_song.clip[i].layers = 0;
+        dk_song.clip[i].at = 0;
+    }
+    dk_song.nev = 0;
+    for (i = 0; i < DK_NPART; i++) {
+        dk_song.part[i].bars = 4;
+        dk_song.part[i].label = (uint8_t)(i % 8);
+        dk_song.part[i].mute = 0;
+        dk_song.part[i].rsv = 0;
+    }
+    dk_song.nroad = 0;
+    for (i = 0; i < DK_NROAD; i++) {
+        dk_song.road[i].part = 0;
+        dk_song.road[i].reps = 0;
+        dk_song.road[i].tricks = 0;
+        dk_song.road[i].drop = 0;
+    }
+    {
+        uint8_t *b = (uint8_t *)dk_song.snd;
+        for (i = 0; i < (int)sizeof dk_song.snd; i++)
+            b[i] = 0;
+    }
+    dk_song.cur_part = 0;
+    dk_pm_x = 0;
+    takes_forget();
+    un = 0;
+    rn = 0;
+    pc_part = 0xFF;
+    song_edits++;
+    dk_unlock();
+}
+
 /* the templates: empty parts with their labels and a road of them */
 void song_template(int tp)
 {

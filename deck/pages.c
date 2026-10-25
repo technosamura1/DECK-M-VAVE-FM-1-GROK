@@ -311,7 +311,7 @@ static const char *hint(void)
     case PG_ROAD:
         return ui.garage ? "HOLD ENV = BACK TO ROAD" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
-    case PG_PROJECT: return "W1-4 OPEN  W5 NEW  SAVE = SAVE NOW";
+    case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
     case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
     case PG_ATMO: return "SEL = NEXT ROW  KNOBS = HOW MUCH";
     case PG_REC:
@@ -1325,7 +1325,7 @@ static void draw_project(void)
     char nm[12], s[4];
     int i, fill = dk_song.nev * (WW - 20) / DK_NEV, sel = field_get(F_SLOT),
         phase = dk_playing ? (int)(dk_ticks * 8u / DK_TPB) % 24 : 0;
-    module("PROJECTS", export_busy() ? "EXPORT..." : dk_stems ? "STEMS: RECORD IT" : ui.dirty ? "NOT SAVED" : "SAVED");
+    module("PROJECTS", ui.clr_t && plat_ms() - ui.clr_t <= 3000u ? "CLEAR ALL: PRESS AGAIN" : export_busy() ? "EXPORT..." : dk_stems ? "STEMS: RECORD IT" : ui.dirty ? "NOT SAVED" : "SAVED");
     for (i = 0; i < DK_NPROJ; i++) {
         int x = WX + 6 + i * 55, y = WY + 18, w = 51, h = 48, open = i == set.proj, used = project_used(i) || open, j;
         s[0] = (char)('1' + i);
