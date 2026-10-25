@@ -1,0 +1,151 @@
+# NEW PART = COPY: playing, switching (ARP held + a white key) to an EMPTY part copies the part you leave into it
+# (events with their takes and frozen sounds, clip lengths, the part's bars and track mutes), as one undo step; a part with notes is
+# never touched; no room: "NO ROOM" and the switch goes on; NEW PART = EMPTY: nothing is copied; stopped: nothing is copied
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+expect newpart 1
+listen
+# part A: six notes on track 1 (frozen sound 2), three on track 3, 2 bars, track 5 muted in the part
+seed 0 1 6 2
+seed 0 3 3 0
+setbars 0 2
+setpmask 0 16
+expect nev 9
+expect eventsA1 6
+expect eventsB1 0
+# stopped: choosing B is only choosing it (an empty part to compose in), nothing copied
+press ARP
+tapkey w1
+release ARP
+wait 100
+expect part 1
+expect eventsB1 0
+expect nev 9
+press ARP
+tapkey w0
+release ARP
+wait 100
+expect part 0
+# playing: B is asked for; the copy is made at once, the switch waits for the bar's end
+tap PLAY
+wait 300
+expect playing 1
+press ARP
+tapkey w1
+release ARP
+wait 100
+expect next 1
+expect part 0
+said A->B
+expect eventsB1 6
+expect eventsB3 3
+expect eventsB2 0
+expect nev 18
+expect psndB1 2
+expect psndA1 2
+expect barsB 2
+expect pmaskB 16
+expect pmaskA 16
+expect undo 3
+wait 4600
+expect part 1
+expect playing 1
+expect eventsA1 6
+# a part with notes is never touched: C has two notes; asked for from B, it stays as it is
+seed 2 1 2 0
+setbars 2 3
+expect nev 20
+press ARP
+tapkey w2
+release ARP
+wait 100
+expect eventsC1 2
+expect eventsC3 0
+expect barsC 3
+expect nev 20
+wait 4600
+expect part 2
+# UNDO takes the copy away (D was empty): the clips, and the part's bars and mutes
+setbars 3 6
+press ARP
+tapkey w3
+release ARP
+wait 100
+expect eventsD1 2
+expect barsD 3
+expect nev 22
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect eventsD1 0
+expect nev 20
+expect barsD 6
+# D is still asked for; the song goes there at the bar's end, empty
+wait 4600
+expect part 3
+expect playing 1
+# from an empty part nothing is copied; back to C (it has notes): untouched
+press ARP
+tapkey w2
+release ARP
+wait 100
+expect nev 20
+wait 4600
+expect part 2
+# a part asked for and changed our mind about, no edit in between: its copy is taken back
+press ARP
+tapkey w4
+release ARP
+wait 100
+expect eventsE1 2
+press ARP
+tapkey w5
+release ARP
+wait 100
+expect eventsE1 0
+expect eventsF1 2
+press ARP
+tapkey w2
+release ARP
+wait 100
+expect eventsF1 0
+expect nev 20
+wait 4600
+expect part 2
+# NEW PART = EMPTY: the old way, nothing copied
+newpart 0
+press ARP
+tapkey w6
+release ARP
+wait 100
+expect eventsG1 0
+expect next 6
+wait 4600
+expect part 6
+# back to C
+newpart 1
+press ARP
+tapkey w2
+release ARP
+wait 4600
+expect part 2
+# no room: the pool full (part H holds the ballast): the copy is skipped, NO ROOM, the switch still happens
+ballast 4090
+expect nev 4096
+said
+press ARP
+tapkey w4
+release ARP
+wait 100
+said NO ROOM
+expect eventsE1 0
+expect next 4
+expect nev 4096
+wait 4600
+expect part 4
+expect playing 1

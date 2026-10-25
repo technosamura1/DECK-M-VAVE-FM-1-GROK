@@ -5,7 +5,10 @@
  *   (part A..H, track 1..6: events of that clip) nroad pass rectrk dirty voices clicks metro fill perform harmroot
  *   textfit (texts cut short: 0) undo playmode tmb; the step editor's cursor senotes selen sepitch; keywN (white key N's
  *   note)
- *   commands: demo (the tape's demo song), export FILE (the song's SysEx stream to a .syx file), textaudit (every page,
+ *   parts: pmask (the part's track mutes, the one now) pmaskA..H pmpend (a mute waiting for the bar's end) newpart (NEW PART 1 COPY, 0 EMPTY)
+ *   barsA..H psndA1 (the first event's frozen sound, part A track 1) clenA1 (clip length) pmgen tmute0..5 (a track's old global mute)
+ *   commands: seed P T N SND (N events into part P (A=0) track T (1..6), sound id SND), setbars P N, setpmask P MASK, newpart N,
+ *   ballast N (N events into part H's track 6: the pool nearly full), demo (the tape's demo song), export FILE (the song's SysEx stream to a .syx file), textaudit (every page,
  *   row, track and engine drawn: the texts that did not fit counted), page N, track N, wavsolo T */
 static int host_events(int part, int trk) { return dk_song.clip[(part & 7) * DK_NTRACK + (trk % DK_NTRACK)].n; }
 static uint32_t host_mark;                   /* "mark": the clip now, to compare with ("same": 1 if it is as marked) */
@@ -78,6 +81,19 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "undo")) g = undo_count();
     else if (!strcmp(what, "playmode")) g = dk_song.play_mode;
     else if (!strcmp(what, "tmb")) g = dk_tmb_n;
+    else if (!strcmp(what, "pmask")) g = dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute;
+    else if (!strncmp(what, "pmask", 5) && what[5] >= 'A' && what[5] <= 'H') g = dk_song.part[what[5] - 'A'].mute;
+    else if (!strncmp(what, "tmute", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.trk[what[5] - '0'].mute;
+    else if (!strcmp(what, "pmpend")) g = dk_pm_x;
+    else if (!strcmp(what, "pmgen")) g = dk_pm_gen;
+    else if (!strcmp(what, "newpart")) g = dk_newpart_copy;
+    else if (!strncmp(what, "bars", 4) && what[4] >= 'A' && what[4] <= 'H') g = dk_song.part[what[4] - 'A'].bars;
+    else if (!strncmp(what, "psnd", 4) && what[4] >= 'A' && what[4] <= 'H' && what[5] >= '1') {
+        const dk_clip_t *c = &dk_song.clip[(what[4] - 'A') * DK_NTRACK + (what[5] - '1') % DK_NTRACK];
+        g = c->n ? (int)DK_L_SND(dk_ev[c->at].layer) : -1;
+    }
+    else if (!strncmp(what, "clen", 4) && what[4] >= 'A' && what[4] <= 'H' && what[5] >= '1')
+        g = dk_song.clip[(what[4] - 'A') * DK_NTRACK + (what[5] - '1') % DK_NTRACK].len;
     else if (!strcmp(what, "preset")) g = cur()->preset;
     else if (!strcmp(what, "eng")) g = cur()->eng;
     else if (!strcmp(what, "mute")) g = cur()->mute;
@@ -189,6 +205,48 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "lat")) {                  /* lat N: REC LAT in ms */
         dk_rec_lat = (uint8_t)atoi(a);
+        return 1;
+    }
+    if (!strcmp(cmd, "seed")) {                 /* seed P T N SND: N events into part P (0 = A), track T (1..6), with frozen sound SND */
+        int pt = atoi(a) & 7, t = (atoi(b) - 1 + DK_NTRACK) % DK_NTRACK, n = atoi(c), i, snd = atoi(d);
+        dk_lock();
+        for (i = 0; i < n; i++) {
+            dk_ev_t e = {0};
+            e.pos = (uint16_t)(i * DK_T16 % (DK_TPB * 2));
+            e.dur = DK_T16;
+            e.note = (uint8_t)(48 + i % 12);
+            e.vel = 90;
+            e.layer = DK_L_MAKE(snd ? 1 : 0, snd);
+            dk_song_insert(pt * DK_NTRACK + t, &e);
+        }
+        dk_unlock();
+        return 1;
+    }
+    if (!strcmp(cmd, "setbars")) {              /* setbars P N */
+        dk_song.part[atoi(a) & 7].bars = (uint8_t)atoi(b);
+        return 1;
+    }
+    if (!strcmp(cmd, "setpmask")) {             /* setpmask P MASK */
+        dk_song.part[atoi(a) & 7].mute = (uint8_t)atoi(b);
+        return 1;
+    }
+    if (!strcmp(cmd, "newpart")) {              /* newpart N: NEW PART COPY (1) / EMPTY (0) */
+        dk_newpart_copy = (uint8_t)atoi(a);
+        return 1;
+    }
+    if (!strcmp(cmd, "ballast")) {              /* ballast N: N events into part H's track 6 (the pool nearly full) */
+        int i, n = atoi(a);
+        dk_lock();
+        for (i = 0; i < n; i++) {
+            dk_ev_t e = {0};
+            e.pos = (uint16_t)(i % 1000);
+            e.dur = 1;
+            e.note = 60;
+            e.vel = 50;
+            if (dk_song_insert(7 * DK_NTRACK + 5, &e) < 0)
+                break;
+        }
+        dk_unlock();
         return 1;
     }
     if (!strcmp(cmd, "demo")) {
