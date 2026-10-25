@@ -8,6 +8,15 @@
 static uint32_t gt;                            /* the grid's clock: the transport's ticks, or the free clock */
 static uint16_t part_tick;
 static uint8_t cur_part, queued = 0xFF, tricks, block_last;
+/* a part's track mutes changed while playing (C_PMUTE) wait for the bar's end: dk_pm_x (the tracks that flip) in part dk_pm_part */
+static void pm_apply(void)
+{
+    if (dk_pm_x) {
+        dk_song.part[dk_pm_part & 7].mute = (uint8_t)((dk_song.part[dk_pm_part & 7].mute ^ dk_pm_x) & DK_PMUTE_ALL);
+        dk_pm_x = 0;
+        dk_pm_gen++;
+    }
+}
 static int32_t count_left;
 static uint8_t rec_start_after, rec_wait_note, rec_bake, rec_trk2 = 0xFF;
 static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
@@ -731,6 +740,7 @@ static void play_stop(void)
 {
     int i;
     rec_stop();
+    pm_apply();
     dk_playing = 0;
     dk_stems = 0;
     stems_solo = 0xFF;
@@ -994,6 +1004,7 @@ static void seq_tick(void)
     dk_ticks++;
     if (part_tick % DK_TPB == 0) {             /* a bar ends */
         bar_n++;
+        pm_apply();                            /* the part's mutes asked for during the bar */
         if (rec_bake && --rec_bake == 0)       /* BAKE done (the UI turns the track to STEP) */
             rec_stop();
         if (!dk_song.play_mode && queued != 0xFF) {   /* PART: the queued part, from the bar's end */
@@ -1080,6 +1091,16 @@ static void drain(void)
                 rec_close_all();
             dk_rec_trk = (uint8_t)(a % DK_NTRACK);
             dk_pass = (uint8_t)(CLIP(cur_part, dk_rec_trk)->layers + 1);
+            break;
+        case C_PMUTE:                          /* a = track, b = part: while playing at the bar's end, else now */
+            if (a >= DK_NTRACK)
+                break;
+            if (dk_pm_x && dk_pm_part != (b & 7))
+                pm_apply();
+            dk_pm_part = (uint8_t)(b & 7);
+            dk_pm_x = (uint8_t)(dk_pm_x ^ (1u << a));
+            if (!dk_playing)
+                pm_apply();
             break;
         case C_PART:
             a &= 7;

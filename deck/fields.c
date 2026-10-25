@@ -17,7 +17,7 @@ enum {
     /* KEYS */ F_ROOT, F_MODE, F_CHORD, F_WHITE, F_BLACK, F_QUALITY, F_VOICING, F_STRUM, F_LEAD, F_LAYOUT, F_SPLIT,
     F_BASS, F_KOCT, F_DIM, F_HARMTRK,
     /* PROJECT */ F_SLOT, F_TEMPLATE, F_SWING, F_SONGSTYLE, F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL, F_ONNOTE,
-    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT, F_LOCKTAKE, F_RECARM,
+    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT, F_LOCKTAKE, F_RECARM, F_NEWPART,
     /* REC */ F_RECTRK,
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
@@ -97,6 +97,35 @@ static dk_ev_t *step_ev(void)
  * short); K4 the pitch by the scale (HOME: an octave). The keys write their note at the step too. A run of turns on one
  * knob is one undo step; the knobs' values say what changed (no messages over the grid) */
 static void say(const char *a, const char *b);
+
+/* The part to play next (ARP + a white key, NEXT PART, the road's block): while PLAYING in PART mode, an EMPTY part is first made a copy of
+ * the one playing (NEW PART = COPY; never over a part with notes; one undo step, "A->B COPIED"; no room for the notes: "NO ROOM", the
+ * switch goes on); the switch itself is at the bar's end. Stopped, or NEW PART = EMPTY: only the part (an empty one to compose in).
+ * 1 copied, -1 no room (said), 0 nothing */
+static int part_go(int p)
+{
+    int r = 0;
+    p &= 7;
+    if (dk_playing && !dk_song.play_mode) {
+        uint8_t was = dk_next_part;           /* a part chosen before, not reached: its copy taken back (if untouched) */
+        if (was != 0xFF && was != p && was != dk_cur_part)
+            part_copy_undo(was);
+        if (dk_newpart_copy && p != dk_cur_part) {
+            char s[8] = "A->B";
+            s[0] = (char)('A' + (dk_cur_part & 7));
+            s[3] = (char)('A' + p);
+            r = part_copy(dk_cur_part, p);
+            if (r > 0)
+                say(s, "COPIED");
+            else if (r < 0)
+                say("NO ROOM", s);
+        }
+    }
+    dk_cmd(C_PART, p, 0, 0);
+    if (!dk_playing)
+        dk_song.cur_part = (uint8_t)p;
+    return r;
+}
 static void mark_dirty(void);
 static char *cpy(char *d, const char *s);
 static uint8_t se_pitch;                 /* the note K2 puts in: the last one written or moved (0: the tonic) */
@@ -442,6 +471,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_ONNOTE:
     case F_LOCKTAKE:
     case F_RECARM:
+    case F_NEWPART:
     case F_MIDIOUT:
     case F_CLOCK:
     case F_MIDIIN:
@@ -625,6 +655,7 @@ static int field_get(int f)
     case F_ONNOTE: return dk_metro.on_note;
     case F_LOCKTAKE: return dk_lock_take;
     case F_RECARM: return dk_rec_arm;
+    case F_NEWPART: return dk_newpart_copy;
     case F_MIDIOUT: return dk_midi_notes;
     case F_CLOCK: return dk_midi_clock;
     case F_MIDIIN: return set.midi_in;
@@ -768,7 +799,7 @@ static void field_set(int f, int v)
     case F_ROADCUR:                      /* the block chosen: its part is the one PART plays (at the bar's end if on) */
         ui_road_cur = (uint8_t)v;
         if (dk_song.nroad && !(dk_playing && dk_song.play_mode))
-            dk_cmd(C_PART, dk_song.road[v].part & 7, 0, 0);
+            part_go(dk_song.road[v].part);
         break;
     case F_ROADPART:
         if (dk_song.nroad) {
@@ -831,6 +862,7 @@ static void field_set(int f, int v)
     case F_ONNOTE: dk_metro.on_note = (uint8_t)v; settings_save_later(); break;
     case F_LOCKTAKE: dk_lock_take = (uint8_t)v; settings_save_later(); break;
     case F_RECARM: dk_rec_arm = (uint8_t)v; ui_arm_reset(); settings_save_later(); break;
+    case F_NEWPART: dk_newpart_copy = (uint8_t)v; settings_save_later(); break;
     case F_MIDIOUT: dk_midi_notes = (uint8_t)v; settings_save_later(); break;
     case F_CLOCK: dk_midi_clock = (uint8_t)v; settings_save_later(); break;
     case F_MIDIIN: set.midi_in = (uint8_t)v; settings_save_later(); break;
@@ -971,6 +1003,7 @@ static const char *field_label(int f)
     case F_ONNOTE: return "ON NOTE";
     case F_LOCKTAKE: return "LOCK TAKE";
     case F_RECARM: return "REC ARM";
+    case F_NEWPART: return "NEW PART";
     case F_MIDIOUT: return "MIDI OUT";
     case F_CLOCK: return "CLOCK";
     case F_MIDIIN: return "MIDI IN";
@@ -1207,6 +1240,7 @@ static void field_text(int f, char *b)
     case F_MIDIOUT:
     case F_CLOCK:
     case F_MIDIIN: cpy(b, ONOFF[v & 1]); break;
+    case F_NEWPART: cpy(b, v ? "COPY" : "EMPTY"); break;
     default: itoa_b(v, b); break;
     }
 }

@@ -171,8 +171,10 @@ typedef struct {                        /* a drum sound's own settings (0 = as t
     uint8_t rev, echo, crush, rsv;      /* extra sends 0..100; crush: bits and rate down, 0..100 */
 } dk_lane_t;
 typedef struct {
-    uint8_t label, bars, rsv[2];        /* label: INTRO VERSE PRE CHORUS DROP BRIDGE BREAK OUTRO; bars 1..16 */
+    uint8_t label, bars;                /* label: INTRO VERSE PRE CHORUS DROP BRIDGE BREAK OUTRO; bars 1..16 */
+    uint8_t mute, rsv;                  /* mute: the tracks silent in THIS part (bit t = track t; 0 = all play). Older projects: 0 */
 } dk_part_t;
+#define DK_PMUTE_ALL 0x3Fu              /* (DK_NTRACK bits) */
 
 #define DK_MAGIC 0x4B434544u            /* "DECK" */
 #define DK_FORMAT 1u

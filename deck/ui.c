@@ -69,6 +69,33 @@ static void say(const char *a, const char *b)
 }
 void ui_say(const char *a, const char *b) { say(a, b); }
 
+static void mark_dirty(void);
+/* MIX: a track's mute IN THE PART (the one playing, or the one chosen when stopped). Stopped, or now: at once; playing: it
+ * waits for the bar's end (the sequencer applies it; blinking on MIX). Toasts "B: PAD MUTED" */
+static void part_mute_toggle(int t, int now)
+{
+    int p = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, mute, pend;
+    char s[28] = "A: ";
+    const char *l = track_label(t);
+    uint32_t i = 3;
+    if (t < 0 || t >= DK_NTRACK)
+        return;
+    pend = dk_pm_x && dk_pm_part == p ? (dk_pm_x >> t & 1) : 0;
+    mute = dk_song.part[p].mute >> t & 1u;
+    s[0] = (char)('A' + p);
+    while (*l && i < 26u)
+        s[i++] = *l++;
+    s[i] = 0;
+    if (dk_playing && !now) {
+        dk_cmd(C_PMUTE, t, p, 0);
+        say(s, (mute ^ pend ^ 1) ? "MUTE AT BAR END" : "ON AT BAR END");
+    } else {
+        dk_song.part[p].mute ^= (uint8_t)(1u << t);
+        say(s, dk_song.part[p].mute >> t & 1u ? "MUTED" : "ON");
+    }
+    mark_dirty();
+}
+
 static void mark_dirty(void)
 {
     ui.dirty = 1;
@@ -568,14 +595,8 @@ static void action(int a, int b)
         say("METRO", dk_metro.mode ? "ON" : "OFF");
         break;
     case A_NEXT_TRACK: track_select((dk_song.cur_track + 1) % DK_NTRACK); break;
-    case A_MUTE:
-        cur()->mute ^= 1u;
-        mark_dirty();
-        {
-            char s[16] = "TRACK 1";
-            s[6] = (char)('1' + dk_song.cur_track);
-            say(s, cur()->mute ? "MUTED" : "ON");
-        }
+    case A_MUTE:                          /* (the track's mute in this part) */
+        part_mute_toggle(dk_song.cur_track, 0);
         break;
     case A_ARP: {                         /* the ARP's page (and the ARP on); again there: its next row */
         dk_track_t *k = cur();
@@ -607,11 +628,9 @@ static void action(int a, int b)
     case A_NEXT_PART: {
         int p = ((dk_next_part != 0xFF ? dk_next_part : dk_song.cur_part) + 1) % DK_NPART;
         char s[16] = "PART A";
-        dk_cmd(C_PART, p, 0, 0);
-        if (!dk_playing)
-            dk_song.cur_part = (uint8_t)p;
         s[5] = (char)('A' + p);
-        say(s, LABEL_NAME[dk_song.part[p].label & 7]);
+        if (!part_go(p))
+            say(s, LABEL_NAME[dk_song.part[p].label & 7]);
         break;
     }
     case A_FILL:
@@ -639,7 +658,7 @@ static void action(int a, int b)
         int what;
         if (a == A_UNDO ? song_undo(&what) : song_redo(&what)) {
             mark_dirty();
-            say(a == A_UNDO ? "UNDO" : "REDO", what < 0 ? "ROAD" : "LAST TAKE");
+            say(a == A_UNDO ? "UNDO" : "REDO", what == -1 ? "ROAD" : what == -2 ? "PART" : "LAST TAKE");
         } else
             say(a == A_UNDO ? "UNDO" : "REDO", "NOTHING");
         break;
@@ -730,6 +749,18 @@ static void key_down(int k, int vel)
     int w = white_of(k), b = black_of(k);
     const dk_track_t *trk = cur();
     const dk_engine_t *e = cur_eng();
+    if (ui.page == PG_MIX && w >= 0 && w < DK_NTRACK && (held(B_HOME) || held(B_SEQ))) {
+        if (held(B_HOME)) {              /* MIX: HOME + white 1-6: the part's mute at once (not at the bar's end) */
+            ui.used[B_HOME] = 1;
+            part_mute_toggle(w, 1);
+        } else {                         /* MIX: SEQ + white 1-6: the TEMPORARY mute (not in the part, not saved by the part) */
+            ui.used[B_SEQ] = 1;
+            dk_song.trk[w].mute ^= 1u;
+            mark_dirty();
+            say(track_label(w), dk_song.trk[w].mute ? "TEMP MUTE" : "TEMP OFF");
+        }
+        return;
+    }
     if (held(B_HOME)) {
         ui.used[B_HOME] = 1;
         if (w >= 0)
@@ -763,11 +794,9 @@ static void key_down(int k, int vel)
     if (held(B_ARP) && w >= 0 && w < 8) {
         char s[8] = "PART A";
         ui.used[B_ARP] = 1;
-        dk_cmd(C_PART, w, 0, 0);
-        if (!dk_playing)
-            dk_song.cur_part = (uint8_t)w;
         s[5] = (char)('A' + w);
-        say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
+        if (!part_go(w))
+            say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
     if (held(B_SEQ) && b >= 0 && b < 2) {   /* SEQ held + black 1: COOK, black 2: RANDOM (each an undo step) */
@@ -985,9 +1014,7 @@ static void key_up(int k)
     if (ui.mix_key && white_of(k) == ui.mix_key - 1) {
         int w = ui.mix_key - 1;
         ui.mix_key = 0;
-        dk_song.trk[w].mute ^= 1u;
-        mark_dirty();
-        say(track_label(w), dk_song.trk[w].mute ? "MUTED" : "ON");
+        part_mute_toggle(w, 0);
         return;
     }
     if (ui.page == PG_SEQ && ui.step_key == k + 1) {
@@ -1464,6 +1491,13 @@ static void housekeeping(uint32_t now)
     if (song_edits != ui.edits_seen) {
         ui.edits_seen = song_edits;
         mark_dirty();
+    }
+    {                                    /* a part's mutes changed at a bar's end (the sequencer did it): to be saved */
+        static uint8_t pm_seen;
+        if (dk_pm_gen != pm_seen) {
+            pm_seen = dk_pm_gen;
+            mark_dirty();
+        }
     }
     /* BAKE done: the track to STEP */
     if (ui.baking == 1 && dk_recording)    /* (the render has started it) */

@@ -36,10 +36,17 @@ void clip_random(int clip, uint32_t seed, const dk_engine_t *e);   /* the same r
 void undo_push(int clip);
 void undo_group(int on);                 /* undo_push-es until undo_group(0): one undo step */
 void undo_push_road(void);
+void undo_push_part(int p);
 int undo_count(void);
 int song_undo(int *what);
 int song_redo(int *what);
 int rec_flush(void);
+int part_has_events(int p);              /* 1: any of the part's six clips has an event */
+/* NEW PART = COPY: the part `from` copied into the empty part `to` (all six clips with their events, takes and frozen-sound ids,
+ * lengths, the part's bars and track mutes), one undo step. 1 copied; 0 nothing done (same part, `to` not empty, `from` empty);
+ * -1 no room for the events (nothing done) */
+int part_copy(int from, int to);
+int part_copy_undo(int to);              /* the copy just made taken back (nothing in `to` was edited since): 1 done */
 void track_sound_to(int t);              /* before a track's preset or engine changes: its take being recorded is frozen as it is */
 void takes_forget(void);
 extern uint8_t song_layers_full;         /* the table of frozen sounds was full (the UI says it once) */

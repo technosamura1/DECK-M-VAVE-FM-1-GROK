@@ -13,7 +13,7 @@ static dk_ev_t clipboard[384] DK_POOL;
 static int clip_n = -1, clipb_len;
 static uint8_t clip_src_t;               /* the track the clipboard came from (its frozen sounds are that track's) */
 typedef struct {
-    uint8_t kind, clip;                  /* 0 a clip, 1 the road */
+    uint8_t kind, clip;                  /* 0 a clip, 1 the road, 2 a part's bars and track mutes (clip = the part; len, layers) */
     uint16_t n, len, at;                 /* events, the clip's length; where in the buffer */
     uint8_t layers, nroad;
     uint8_t grp;                         /* snapshots of one edit over several clips: undone together (0 alone) */
@@ -157,11 +157,14 @@ static int snap_take(snap_t *tab, int *cnt, int max, dk_ev_t *buf, int bufn, int
     if (need > bufn)
         return -1;
     s = &tab[(*cnt)++];
-    s->kind = (uint8_t)(road ? 1 : 0);
+    s->kind = (uint8_t)road;
     s->clip = (uint8_t)clip;
     s->at = (uint16_t)used;
     s->n = (uint16_t)need;
-    if (road) {
+    if (road == 2) {
+        s->len = dk_song.part[clip & 7].bars;
+        s->layers = dk_song.part[clip & 7].mute;
+    } else if (road) {
         s->nroad = dk_song.nroad;
         for (i = 0; i < DK_NROAD; i++)
             s->road[i] = dk_song.road[i];
@@ -176,7 +179,10 @@ static int snap_take(snap_t *tab, int *cnt, int max, dk_ev_t *buf, int bufn, int
 static void snap_restore(const snap_t *s, const dk_ev_t *buf)
 {
     int i;
-    if (s->kind) {
+    if (s->kind == 2) {
+        dk_song.part[s->clip & 7].bars = (uint8_t)s->len;
+        dk_song.part[s->clip & 7].mute = s->layers;
+    } else if (s->kind) {
         dk_song.nroad = s->nroad;
         for (i = 0; i < DK_NROAD; i++)
             dk_song.road[i] = s->road[i];
@@ -202,6 +208,12 @@ void undo_group(int on)                  /* the pushes until undo_group(0) are o
     } else
         grp_now = 0;
 }
+void undo_push_part(int p)                /* a part's bars and track mutes */
+{
+    if (snap_take(usnap, &un, NSNAP, ubuf, 1024, p & 7, 2) == 0)
+        usnap[un - 1].grp = grp_now;
+    rn = 0;
+}
 void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, 1024, 0, 1), rn = 0; }
 int undo_count(void) { return un; }
 /* 1 = done; what: the clip (or -1 the road) */
@@ -221,7 +233,7 @@ int song_undo(int *what)
         dk_unlock();
         un--;
     } while (g && un && usnap[un - 1].grp == g);
-    *what = s.kind ? -1 : s.clip;
+    *what = s.kind == 2 ? -2 : s.kind ? -1 : s.clip;
     return 1;
 }
 int song_redo(int *what)
@@ -243,7 +255,7 @@ int song_redo(int *what)
         dk_unlock();
         rn--;
     } while (g && rn && rsnap[rn - 1].grp == g);
-    *what = s.kind ? -1 : s.clip;
+    *what = s.kind == 2 ? -2 : s.kind ? -1 : s.clip;
     return 1;
 }
 
@@ -468,6 +480,76 @@ void rec_reset(void)
 {
     rec_r = dk_recq_w;
     rec_snapped_pass = 0xFF;
+}
+
+/* ------------------------------------------------------------------ parts --- */
+int part_has_events(int p)
+{
+    int t;
+    for (t = 0; t < DK_NTRACK; t++)
+        if (dk_song.clip[(p & 7) * DK_NTRACK + t].n)
+            return 1;
+    return 0;
+}
+static uint8_t pc_part = 0xFF, pc_grp;   /* the part a copy was just made into, and its undo step */
+static uint32_t pc_edits;               /* (the edits then) */
+int part_copy(int from, int to)
+{
+    int t, need = 0, i;
+    from &= 7;
+    to &= 7;
+    if (from != to)
+        rec_flush();                       /* (what was just recorded is in the clips: it goes along) */
+    if (from == to || part_has_events(to) || !part_has_events(from))   /* never over a part with notes */
+        return 0;
+    for (t = 0; t < DK_NTRACK; t++)
+        need += dk_song.clip[from * DK_NTRACK + t].n;
+    if (dk_song.nev + need > DK_NEV)
+        return -1;
+    undo_group(1);
+    pc_grp = grp_now;
+    for (t = 0; t < DK_NTRACK; t++)       /* (its undo: the clips of `to` as they are: empty; and the part's bars and mutes) */
+        if (dk_song.clip[from * DK_NTRACK + t].n)
+            undo_push(to * DK_NTRACK + t);
+    undo_push_part(to);
+    undo_group(0);
+    dk_lock();
+    pc_part = (uint8_t)to;
+    for (t = 0; t < DK_NTRACK; t++) {
+        int c = to * DK_NTRACK + t, src = from * DK_NTRACK + t, n = dk_song.clip[src].n;
+        if (n) {                           /* `c` is empty: its place opened (the events behind move up), the events copied in */
+            for (i = dk_song.nev - 1; i >= dk_song.clip[c].at; i--)
+                dk_ev[i + n] = dk_ev[i];
+            dk_song.clip[c].n = (uint16_t)n;
+            reindex();                     /* (the source's place has moved if it lay behind) */
+            for (i = 0; i < n; i++)
+                dk_ev[dk_song.clip[c].at + i] = dk_ev[dk_song.clip[src].at + i];
+            dk_song.clip[c].len = dk_song.clip[src].len;
+            dk_song.clip[c].layers = dk_song.clip[src].layers;
+            take_pend[c] = take_pend[src];
+        }
+    }
+    dk_song.part[to].bars = dk_song.part[from].bars;
+    dk_song.part[to].mute = dk_song.part[from].mute;
+    song_edits++;
+    pc_edits = song_edits;
+    dk_unlock();
+    return 1;
+}
+int part_copy_undo(int to)
+{
+    uint8_t g;
+    if (pc_part != (uint8_t)(to & 7) || pc_edits != song_edits || !un || !pc_grp || usnap[un - 1].grp != pc_grp)
+        return 0;
+    g = pc_grp;
+    pc_part = 0xFF;
+    do {                                 /* (no redo kept: the copy never was) */
+        dk_lock();
+        snap_restore(&usnap[un - 1], ubuf);
+        dk_unlock();
+        un--;
+    } while (un && usnap[un - 1].grp == g);
+    return 1;
 }
 
 /* ------------------------------------------------------------- clip edits --- */

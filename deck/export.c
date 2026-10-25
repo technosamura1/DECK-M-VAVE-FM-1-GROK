@@ -35,7 +35,7 @@ static int export_events(uint32_t skip, int max, xev_t *out, uint32_t *all)
                 const dk_clip_t *c = CLIP(part, t);
                 const dk_engine_t *e = TAPE.eng[dk_song.trk[t].eng % TAPE.neng];
                 int clen = c->len ? c->len : plen, i, cyc;
-                if ((blk.drop >> t & 1u) || !c->n)
+                if ((blk.drop >> t & 1u) || (dk_song.part[part].mute >> t & 1u) || !c->n)   /* (dropped, or muted in the part: not in the file) */
                     continue;
                 for (i = 0; i < c->n; i++) {
                     const dk_ev_t *ev = &dk_ev[c->at + i];

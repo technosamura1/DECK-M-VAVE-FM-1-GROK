@@ -140,6 +140,9 @@ int project_load(int slot)
     for (i = 0; i < DK_NCLIP; i++)
         if (dk_song.clip[i].layers > 31)
             dk_song.clip[i].layers = 31;
+    for (i = 0; i < DK_NPART; i++)         /* the parts' track mutes: six bits (older projects: 0, none) */
+        dk_song.part[i].mute &= DK_PMUTE_ALL;
+    dk_pm_x = 0;
     song_track_order();
     for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS and HOLD too */
         dk_track_t *k = &dk_song.trk[i];
@@ -273,6 +276,7 @@ void settings_save(void)
     set.lat = (uint8_t)(dk_rec_lat + 1u);
     set.nolock = (uint8_t)!dk_lock_take;
     set.noarm = (uint8_t)!dk_rec_arm;
+    set.emptypart = (uint8_t)!dk_newpart_copy;
     {                                    /* as it was last written: no erase */
         static uint8_t last[sizeof set];
         static int have;
@@ -316,6 +320,7 @@ static void settings_load(void)
     dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
     dk_lock_take = set.nolock ? 0 : 1;
     dk_rec_arm = set.noarm ? 0 : 1;
+    dk_newpart_copy = set.emptypart ? 0 : 1;
     if (set.proj >= DK_NPROJ)
         set.proj = 0;
 }

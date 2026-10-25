@@ -74,6 +74,15 @@ static uint16_t dimc(uint16_t c, int k16)   /* a colour darker: k16/16 of it */
     return (uint16_t)(r << 11 | g << 5 | b);
 }
 
+/* the track's mute in the part now (the one playing, or the one chosen): the part's own (MIX, white key tap) */
+static int part_muted(int t) { return dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute >> t & 1; }
+/* ... and a change waiting for the bar's end: the state it will be in (else -1) */
+static int part_mute_pending(int t)
+{
+    int p = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7;
+    return dk_pm_x && dk_pm_part == p && (dk_pm_x >> t & 1) ? !part_muted(t) : -1;
+}
+
 /* ------------------------------------------------------------------ texts --- */
 static const felucca_font_t *const FONTS[5] = {&FONT_L, &FONT_M, &FONT_B, &FONT_S, &FONT_XS};
 static int font_rank(const felucca_font_t *f)
@@ -174,7 +183,7 @@ static int page_field(int i, int home)
     /* GLOBAL (GLO): the song's time and air, the metronome, MIDI, the rest */
     static const uint8_t GLOB_F[4][5] = {{F_TEMPO, F_SWING, F_DUST, F_SLEEP, F_SIDECHAIN},
                                          {F_METRO, F_COUNT, F_CLICK, F_MVOL, F_MDIV},
-                                         {F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ONNOTE, F_NONE},
+                                         {F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ONNOTE, F_NEWPART},
                                          {F_RECLAT, F_ECHOTIME, F_CPU, F_VERSION, F_LOCKTAKE}};
     (void)home;
     switch (ui.page) {
@@ -394,7 +403,7 @@ no_batt:
     for (t = 0; t < DK_NTRACK; t++) {    /* the six tracks: the one you are on bright, a muted one hollow */
         int cx = 211 + (t % 3) * 9, cy = 6 + (t / 3) * 8;
         uint16_t c = t == dk_song.cur_track ? TH_TEXT : dk_level[t] > 0.01f ? TH_TRACK[t] : TH_GRAY;
-        if (dk_song.trk[t].mute)
+        if (dk_song.trk[t].mute || part_muted(t))
             circle(cx, cy, 2, TH_GRAY);
         else
             disc(cx, cy, 2, c);
@@ -1109,11 +1118,21 @@ static void draw_seq(void)
 static void draw_mix(void)
 {
     int t;
-    char s[16];
+    char s[16], ttl[28];
+    int pp = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, blink = (plat_ms() / 230u) & 1u, i0 = 0;
     itoa_b((int)(dk_master_level * 100.0f), s);
-    module(track_label(dk_song.cur_track), s);
+    ttl[i0++] = (char)('A' + pp);              /* the part the mutes are in */
+    ttl[i0++] = ' ';
+    {
+        const char *l = track_label(dk_song.cur_track);
+        while (*l && i0 < 26)
+            ttl[i0++] = *l++;
+    }
+    ttl[i0] = 0;
+    module(ttl, s);
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_track_t *k = &dk_song.trk[t];
+        int pm = part_muted(t), pend = part_mute_pending(t), show = pend >= 0 && blink ? pend : pm;   /* (a change waiting: it blinks) */
         int x = WX + 2 + t * 36, cx = x + 15, top = WY + 20, h = 44, fy = top + h - (int)k->vol * h / 100,
             sel = t == dk_song.cur_track, lv = (int)(fm_minf(1.0f, dk_level[t] * 3.0f) * 7.0f), i;
         if (sel)
@@ -1124,10 +1143,17 @@ static void draw_mix(void)
             cv_rect(x + 27, top + h - 5 - i * 6, 3, 4, i < lv ? (i < 4 ? TH_ENC[0] : i < 6 ? TH_ENC[2] : TH_REC) : RGB(60, 54, 48));
         cv_rect(cx - 8, fy - 4, 17, 8, sel ? CS_LABEL : CS_BODY_D);   /* the cap */
         hline(cx - 8, fy, 17, sel ? TH_ENC[0] : CS_INK);
-        cv_rect(x + 4, WY + WH - 14, 24, 12, k->mute ? CS_BODY_D : TH_TRACK[t]);   /* the strip of tape */
-        s[0] = (char)(k->mute ? 'M' : '1' + t);
+        cv_rect(x + 4, WY + WH - 14, 24, 12, k->mute || show ? CS_BODY_D : TH_TRACK[t]);   /* the strip of tape: dark when silent */
+        s[0] = (char)(k->mute ? 'M' : '1' + t);    /* M: the temporary mute (SEQ + white); the part's: the number crossed out */
         s[1] = 0;
-        text_box(x + 4, WY + WH - 14, 24, 1, &FONT_T, &FONT_T, s, k->mute ? CS_INK : TH_BG);
+        text_box(x + 4, WY + WH - 14, 24, 1, &FONT_T, &FONT_T, s, k->mute || show ? CS_INK : TH_BG);
+        if (show) {
+            int i;
+            for (i = 0; i < 24; i++)
+                cv_rect(x + 4 + i, WY + WH - 4 - i * 10 / 23, 1, 2, TH_REC);
+        }
+        if (pend >= 0)                             /* waiting for the bar's end: a red edge above the strip */
+            hline(x + 4, WY + WH - 16, 24, TH_REC);
         if (k->solo)
             text_box(x + 2, WY + 1, 10, 0, &FONT_T, &FONT_T, "S", TH_REC);
     }
@@ -1608,7 +1634,7 @@ static void draw_trackbar(void)
     vline(229, y, 58, TH_TEXT);
     for (t = 0; t < DK_NTRACK; t++) {
         int cx = 30 + t * 36, on = t == cur_t, cy = y + 18;
-        uint16_t c = dk_song.trk[t].mute ? TH_GRAY : TH_TRACK[t];
+        uint16_t c = dk_song.trk[t].mute || part_muted(t) ? TH_GRAY : TH_TRACK[t];
         if (on) {
             disc(cx, cy, 11, c);
             circle(cx, cy, 13, TH_TEXT);

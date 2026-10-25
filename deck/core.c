@@ -22,6 +22,8 @@ dk_metro_t dk_metro = {1, 1, METRO_WOOD, 0, 55, 0};
 uint8_t dk_midi_notes = 1, dk_midi_clock = 1;
 uint8_t dk_rec_lat = 9;
 uint8_t dk_rec_arm = 1;                 /* REC ARM: REC arms the tape, PLAY starts it (two steps, like the OP-1) */
+uint8_t dk_newpart_copy = 1;             /* NEW PART: COPY (the default) or EMPTY */
+volatile uint8_t dk_pm_part, dk_pm_x, dk_pm_gen;
 uint8_t dk_lock_take = 1;                /* LOCK TAKE: a take keeps the sound it was recorded with */                  /* 5.8 ms the block + ~2.9 ms the note waits for it (APP_BLOCK 256 at 44.1 kHz) */
 
 #include "music.c"
@@ -707,9 +709,10 @@ static float lvl_acc[DK_NTRACK];
 static int track_audible(int t)
 {
     const dk_track_t *k = &dk_song.trk[t];
-    if (stems_solo != 0xFF)
-        return t == stems_solo;
-    if (k->mute || (drop_mask >> t & 1u))
+    int pm = dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute >> t & 1u;   /* muted in the part playing */
+    if (stems_solo != 0xFF)                    /* STEMS: the one track alone, silent where the song has it muted in the part */
+        return t == stems_solo && !pm;
+    if (k->mute || (drop_mask >> t & 1u) || pm)
         return 0;
     if (perf_mute_drums && (dk_engine(t)->flags & EF_DRUM))
         return 0;

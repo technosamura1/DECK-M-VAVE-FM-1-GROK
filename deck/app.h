@@ -47,7 +47,8 @@ typedef struct {
     uint8_t lat;                         /* REC LAT: the audio latency made up while recording, ms + 1 (0: the default, 9) */
     uint8_t noarm;                       /* REC ARM off (inverted: 0 is on) */
     uint8_t nolock;                      /* LOCK TAKE off (inverted: 0, as in an older store, is on) */
-    uint8_t rsv[17];
+    uint8_t emptypart;                   /* NEW PART = EMPTY (inverted: 0, as in an older store, is COPY) */
+    uint8_t rsv[16];
 } settings_t;
 extern settings_t set;
 

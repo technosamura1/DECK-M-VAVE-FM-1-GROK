@@ -13,7 +13,7 @@ void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (
 
 /* commands (main loop -> render) */
 enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_TOMBOLA, C_SEED, C_PEDAL,
-       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE };
+       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE };
 void dk_cmd(int c, int a, int b, int d);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
 
@@ -86,6 +86,10 @@ extern uint8_t dk_midi_notes, dk_midi_clock;
 extern uint8_t dk_rec_lat;
 extern uint8_t dk_rec_arm;              /* REC ARM: two steps (REC arms, PLAY records) when stopped (1) */
 extern uint8_t dk_lock_take;             /* LOCK TAKE: a take keeps the sound it was recorded with (1) */
+extern uint8_t dk_newpart_copy;          /* NEW PART (GLOBAL): 1 COPY (switching to an empty part while playing copies the part you leave), 0 EMPTY */
+/* a part's track mutes (dk_song.part[p].mute): a change made while playing waits for the bar's end (C_PMUTE a = track, b = part);
+ * the pending one (dk_pm_part's tracks in dk_pm_x flip at the bar's end) is shown on MIX; dk_pm_gen counts the changes made */
+extern volatile uint8_t dk_pm_part, dk_pm_x, dk_pm_gen;
 extern volatile uint32_t dk_metro_clicks;               /* clicks made (tests) */
 extern volatile uint32_t dk_metro_err_max;              /* the worst offset of a click from its tick, samples */
 
