@@ -1,6 +1,5 @@
 # REC LAT: the same take played twice (the same press, the same time after the count-in), once with no latency made up
 # for and once with 30 ms: the second is earlier, by about 30 ms in ticks (a tick at 76 BPM is 8.2 ms), its length the same
-recarm 0   # (the one-step REC; recarm.dk has the two steps)
 wait 300
 tap SAVE
 wait 100

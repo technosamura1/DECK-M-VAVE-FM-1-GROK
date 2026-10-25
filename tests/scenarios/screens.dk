@@ -1,5 +1,4 @@
 # the pictures for the report (not a test): every page clean, the tape, TOMBOLA, the garden by day and by night
-recarm 0   # (the one-step REC; recarm.dk has the two steps)
 wait 300
 flower 300
 wait 1500

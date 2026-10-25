@@ -1,6 +1,5 @@
 # the tape as a looper: BARS on AUTO, an empty part, the first take's length set by REC (to the nearest bar line);
 # then a fixed BARS; SEQ's BARS is the part's (all tracks); ARP baked into the part's bars
-recarm 0   # (the one-step REC; recarm.dk has the two steps)
 wait 300
 tap SAVE
 wait 100

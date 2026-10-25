@@ -1,5 +1,4 @@
 # a new empty song, the piano: REC with a count-in, a few chords, a second pass, undo, redo
-recarm 0   # (the one-step REC; recarm.dk has the two steps)
 wait 300
 tap SAVE
 wait 100

@@ -1,6 +1,5 @@
 # the keys transposed: F minor puts F on the C key; the step editor (SEQ's third row on the piano): K1 walks, K2 a note
 # in / a third on it / out, K3 a tie up to the cursor and a cut, K4 the pitch, a key at the cursor, the undo
-recarm 0   # (the one-step REC; recarm.dk has the two steps)
 wait 300
 expect keyw4 60
 tap EDIT
