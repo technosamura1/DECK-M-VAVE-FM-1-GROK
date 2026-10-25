@@ -17,6 +17,7 @@ static uint8_t open_vel[128], open_trk[128];
  * early). Held on: they start at 0 when the take does; let go already: a note at 0 as long as it was */
 static uint8_t pre_vel[128], pre_trk[128];
 static int16_t pre_dur[128];                   /* -1 still held; else its length in ticks */
+static uint8_t pre_off[128];                   /* its strum's offset, ticks */
 static int16_t pre_at[128];                    /* count_left when pressed (two bars at most) */
 #define PRE_WIN DK_PPQ
 static uint8_t arp_step[DK_NTRACK], arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
@@ -222,17 +223,21 @@ static void rec_pre_flush(void)                /* the take begins: the early not
     for (n = 0; n < 128; n++) {
         if (!pre_vel[n])
             continue;
-        if (pre_dur[n] < 0) {                  /* still held: open from 0 */
-            open_pos[n] = 0;
+        if (pre_dur[n] < 0) {                  /* still held: open from 0 (and its strum) */
+            open_pos[n] = (int16_t)pre_off[n];
             open_vel[n] = pre_vel[n];
             open_trk[n] = pre_trk[n];
         } else
-            rec_push(cur_part * DK_NTRACK + pre_trk[n], 0, 0, pre_dur[n] > DK_T16 / 2 ? pre_dur[n] : DK_T16 / 2, n,
+            rec_push(cur_part * DK_NTRACK + pre_trk[n], 0, pre_off[n], pre_dur[n] > DK_T16 / 2 ? pre_dur[n] : DK_T16 / 2, n,
                      pre_vel[n], 0);
         pre_vel[n] = 0;
     }
 }
-static void rec_open(int t, int note, int vel)
+static int strum_ticks(int delay)              /* a strummed note's delay (samples) in ticks: kept in the take */
+{
+    return tick_len > 0.0f && delay > 0 ? (int)((float)delay / tick_len + 0.5f) : 0;
+}
+static void rec_open(int t, int note, int vel, int delay)
 {
     const dk_track_t *k = &dk_song.trk[t];
     int clip = cur_part * DK_NTRACK + t;
@@ -249,7 +254,8 @@ static void rec_open(int t, int note, int vel)
     if (open_pos[note] >= 0)
         rec_push(cur_part * DK_NTRACK + open_trk[note], 0, open_pos[note], DK_T16, note,
                  open_vel[note], 0);
-    open_pos[note] = (int16_t)rec_pos(t);
+    open_pos[note] = (int16_t)((rec_pos(t) + strum_ticks(delay)) % clip_len_of(cur_part, t));   /* the grid's
+                                                 * place, then the strum's offset after it (STRUM survives QUANT) */
     open_vel[note] = (uint8_t)vel;
     open_trk[note] = (uint8_t)t;
 }
@@ -821,7 +827,7 @@ static void live_note(int t, int note, int vel, int delay)
                 dk_held[t][dk_held_n[t]++] = (uint8_t)note;
             voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 3);
             if (rec_track_of(t))
-                rec_open(t, note, vel);
+                rec_open(t, note, vel, delay);
             return;
         case SQ_TOMBOLA:
             tmb_add(t, note);
@@ -830,12 +836,16 @@ static void live_note(int t, int note, int vel, int delay)
         }
         voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0);
         if (rec_track_of(t))
-            rec_open(t, note, vel);
+            rec_open(t, note, vel, delay);
         else if (rec_pre_track(t)) {           /* a touch early: kept for the take's first beat */
             pre_vel[note] = (uint8_t)vel;
             pre_trk[note] = (uint8_t)t;
             pre_dur[note] = -1;
             pre_at[note] = (int16_t)count_left;
+            {
+                int o = strum_ticks(delay);
+                pre_off[note] = (uint8_t)(o > 255 ? 255 : o);
+            }
         }
     } else {
         held_pcs[t] &= ~(1u << (note % 12));
