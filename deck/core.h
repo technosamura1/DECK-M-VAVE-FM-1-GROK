@@ -57,6 +57,7 @@ extern volatile uint8_t dk_open_n;                      /* notes held while reco
 extern volatile uint16_t dk_open_pos[8];
 extern volatile uint8_t dk_open_note[8];
 extern volatile uint8_t dk_voices_on;
+extern volatile uint8_t dk_voices_frozen;   /* (of them, with a frozen sound) */
 extern volatile uint8_t dk_fill;
 extern volatile uint32_t dk_rec_hits;                   /* notes recorded (the head blinks) */
 /* TOMBOLA for the screen: the drum's turn (turns) and its balls (x, y in -1..1, 0 none) */
@@ -83,11 +84,13 @@ extern dk_metro_t dk_metro;
 extern uint8_t dk_midi_notes, dk_midi_clock;
 /* recording: the audio's latency made up, ms (GLOBAL: REC LAT; 0..30): a played note is put that much earlier */
 extern uint8_t dk_rec_lat;
+extern uint8_t dk_lock_take;             /* LOCK TAKE: a take keeps the sound it was recorded with (1) */
 extern volatile uint32_t dk_metro_clicks;               /* clicks made (tests) */
 extern volatile uint32_t dk_metro_err_max;              /* the worst offset of a click from its tick, samples */
 
 /* the engine of a track and the values its voices get */
 const dk_engine_t *dk_engine(int trk);
+int dk_param_static(int trk, int target);               /* the knobs and the MACRO only (what a take is frozen with) */
 int dk_param_value(int trk, int target);                /* the value now (MACRO, motion and modulation applied) */
 uint32_t dk_cpu_cost(void);
 /* the CPU's load (the render's %, the device's measure) to the voices' budget: it sheds sooner when the render runs

@@ -116,6 +116,7 @@ int project_load(int slot)
     uint8_t *dst;
     uint32_t i, n;
     dk_lock();
+    takes_forget();
     if (!h)
         goto empty;
     src = plat_data(at + sizeof(phead_t));
@@ -270,6 +271,7 @@ void settings_save(void)
     set.midi_notes = dk_midi_notes;
     set.midi_clock = dk_midi_clock;
     set.lat = (uint8_t)(dk_rec_lat + 1u);
+    set.nolock = (uint8_t)!dk_lock_take;
     {                                    /* as it was last written: no erase */
         static uint8_t last[sizeof set];
         static int have;
@@ -311,6 +313,7 @@ static void settings_load(void)
     dk_midi_notes = set.midi_notes;
     dk_midi_clock = set.midi_clock;
     dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
+    dk_lock_take = set.nolock ? 0 : 1;
     if (set.proj >= DK_NPROJ)
         set.proj = 0;
 }

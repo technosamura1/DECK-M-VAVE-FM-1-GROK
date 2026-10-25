@@ -47,6 +47,23 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "lat")) g = dk_rec_lat;
     else if (!strcmp(what, "evpos")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].pos : -1;   /* the clip's first event */
     else if (!strcmp(what, "evdur")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].dur : -1;
+    else if (!strcmp(what, "evsnd")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_SND(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;   /* the first event's frozen sound */
+    else if (!strcmp(what, "evlay")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_TAKE(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;
+    else if (!strcmp(what, "nfrozen") || !strcmp(what, "nlive")) {      /* the clip's notes with a frozen sound / with the track's own */
+        const dk_clip_t *c = &dk_song.clip[cur_clip()];
+        int i;
+        for (i = 0; i < c->n; i++)
+            if (!(dk_ev[c->at + i].fl & EV_MOTION) && (DK_L_SND(dk_ev[c->at + i].layer) != 0) == (what[1] == 'f'))
+                g++;
+    }
+    else if (!strcmp(what, "snds")) {                                   /* the track's frozen sounds */
+        int i;
+        for (i = 0; i < DK_NSND; i++)
+            g += dk_song.snd[dk_song.cur_track][i].used;
+    }
+    else if (!strcmp(what, "sndeng")) g = dk_song.snd[dk_song.cur_track][0].used ? dk_song.snd[dk_song.cur_track][0].eng : -1;
+    else if (!strcmp(what, "vfrozen")) g = dk_voices_frozen;
+    else if (!strcmp(what, "locktake")) g = dk_lock_take;
     else if (!strcmp(what, "rectrk")) g = dk_rec_trk;
     else if (!strcmp(what, "dirty")) g = ui.dirty;
     else if (!strcmp(what, "voices")) g = dk_voices_on;
@@ -158,6 +175,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "onnote")) {               /* onnote N: ON NOTE (the first note starts the take) */
         dk_metro.on_note = (uint8_t)atoi(a);
+        return 1;
+    }
+    if (!strcmp(cmd, "locktake")) {             /* locktake N: LOCK TAKE on/off */
+        dk_lock_take = (uint8_t)atoi(a);
         return 1;
     }
     if (!strcmp(cmd, "lat")) {                  /* lat N: REC LAT in ms */

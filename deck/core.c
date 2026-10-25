@@ -20,7 +20,8 @@ dk_ev_t dk_ev[DK_NEV] DK_POOL;
 dk_ctx_t dk_ctx;
 dk_metro_t dk_metro = {1, 1, METRO_WOOD, 0, 55, 0};
 uint8_t dk_midi_notes = 1, dk_midi_clock = 1;
-uint8_t dk_rec_lat = 9;                  /* 5.8 ms the block + ~2.9 ms the note waits for it (APP_BLOCK 256 at 44.1 kHz) */
+uint8_t dk_rec_lat = 9;
+uint8_t dk_lock_take = 1;                /* LOCK TAKE: a take keeps the sound it was recorded with */                  /* 5.8 ms the block + ~2.9 ms the note waits for it (APP_BLOCK 256 at 44.1 kHz) */
 
 #include "music.c"
 
@@ -114,6 +115,7 @@ volatile uint8_t dk_open_n;
 volatile uint16_t dk_open_pos[8];
 volatile uint8_t dk_open_note[8];
 volatile uint8_t dk_voices_on;
+volatile uint8_t dk_voices_frozen;       /* (of them, the ones with a frozen sound: layers) */
 volatile uint8_t dk_fill;
 volatile uint32_t dk_rec_hits;
 volatile float dk_tmb_angle;
@@ -178,25 +180,29 @@ static int base_value(int t, int target, int *lo, int *hi)
     }
 }
 
-int dk_param_value(int t, int target)
+/* live: with the clip's motion and the modulators (what the track's voices hear); else the knobs and the MACRO only (what a
+ * take is frozen with) */
+static int param_value(int t, int target, int live)
 {
     const dk_track_t *k = &dk_song.trk[t];
     int lo, hi, v = base_value(t, target, &lo, &hi), i;
     float f;
-    if (mot[t][target] >= 0)                  /* the clip's motion: 0..100 of the range */
+    if (live && mot[t][target] >= 0)          /* the clip's motion: 0..100 of the range */
         v = lo + (mot[t][target] * (hi - lo) + 50) / 100;
     f = (float)v;
     for (i = 0; i < 3; i++)                    /* MACRO: amount % of the range at full */
         if (k->mt[i] == target && k->ma[i])
             f += (float)k->ma[i] * 0.01f * (float)k->macro * 0.01f * (float)(hi - lo);
-    for (i = 0; i < 2; i++)
+    for (i = 0; live && i < 2; i++)
         if (k->mod[i][0] != MOD_OFF && k->mod[i][0] != MOD_TREMOLO && k->mod[i][3] == target)
             f += modv[t][i] * (float)k->mod[i][1] * 0.01f * (float)(hi - lo) * 0.5f;
-    if (target == T_P1 && perf_rain && (dk_engine(t)->flags & EF_CONT))
+    if (live && target == T_P1 && perf_rain && (dk_engine(t)->flags & EF_CONT))
         f += 40.0f;
     f = fm_clampf(f, (float)lo, (float)hi);
     return (int)(f + (f >= 0.0f ? 0.5f : -0.5f));
 }
+int dk_param_value(int t, int target) { return param_value(t, target, 1); }
+int dk_param_static(int t, int target) { return param_value(t, target, 0); }
 
 static uint8_t params_half;
 static void params_update_some(int all)
@@ -1078,8 +1084,14 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         out += 2 * k;
         n -= k;
     }
-    for (i = 0; i < DK_NVOICE; i++)
-        vo += vc[i].on;
+    {
+        int fz = 0;
+        for (i = 0; i < DK_NVOICE; i++) {
+            vo += vc[i].on;
+            fz += vc[i].on && vc[i].snd;
+        }
+        dk_voices_frozen = (uint8_t)fz;
+    }
     dk_voices_on = (uint8_t)vo;
     shed = 0;
 }

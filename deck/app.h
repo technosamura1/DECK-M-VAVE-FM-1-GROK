@@ -45,7 +45,8 @@ typedef struct {
     uint8_t metro[6];                    /* dk_metro_t */
     uint8_t midi_notes, midi_clock, midi_in;
     uint8_t lat;                         /* REC LAT: the audio latency made up while recording, ms + 1 (0: the default, 9) */
-    uint8_t rsv[19];
+    uint8_t nolock;                      /* LOCK TAKE off (inverted: 0, as in an older store, is on) */
+    uint8_t rsv[18];
 } settings_t;
 extern settings_t set;
 

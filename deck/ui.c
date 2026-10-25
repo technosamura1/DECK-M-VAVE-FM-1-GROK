@@ -127,6 +127,7 @@ static int keys_group_at(void)           /* where the track is in it, -1 off it 
 static void preset_select(int slot)
 {
     dk_preset_t tmp;
+    track_sound_to(dk_song.cur_track);
     if (slot < DK_NFACT && keys_group()) {
         keys_all_up();
         cur()->eng = TAPE.keys_set[slot][0];
@@ -258,6 +259,7 @@ static void engine_step(int d)
         if (!(TAPE.eng[e]->flags & (EF_DRUM | EF_CONT)))
             break;
     }
+    track_sound_to(dk_song.cur_track);
     keys_all_up();
     cur()->eng = (uint8_t)e;
     track_preset(dk_song.cur_track, 0);

@@ -11,6 +11,7 @@ static dk_ev_t ubuf[1024] DK_POOL;       /* undo: snapshots back to back (entrie
 static dk_ev_t rbuf[512] DK_POOL;        /* redo */
 static dk_ev_t clipboard[384] DK_POOL;
 static int clip_n = -1, clipb_len;
+static uint8_t clip_src_t;               /* the track the clipboard came from (its frozen sounds are that track's) */
 typedef struct {
     uint8_t kind, clip;                  /* 0 a clip, 1 the road */
     uint16_t n, len, at;                 /* events, the clip's length; where in the buffer */
@@ -246,18 +247,176 @@ int song_redo(int *what)
     return 1;
 }
 
+/* ---------------------------------------------------------- frozen sounds --- */
+/* LOCK TAKE (layers like the OP-1's tape): when a take ends, the sound the track has then (its engine, knobs and MACRO) is
+ * kept in dk_song.snd[track] and the take's notes point to it (the layer byte's bits 5..7): the notes play with it whatever
+ * the track's preset, engine or knobs become. The next take is recorded with the new sound */
+static uint8_t take_pend[DK_NCLIP];      /* a clip: the take (pass + 1) with notes in it not frozen yet; 0 none */
+uint8_t song_layers_full;                /* the sounds' table was full: the UI says it, once */
+
+void takes_forget(void)                  /* a new song: no take waits to be frozen */
+{
+    int c;
+    for (c = 0; c < DK_NCLIP; c++)
+        take_pend[c] = 0;
+}
+
+static int snd_scan(const dk_ev_t *b, int n, int id)
+{
+    int i;
+    for (i = 0; i < n; i++)
+        if (DK_L_SND(b[i].layer) == (unsigned)id)
+            return 1;
+    return 0;
+}
+/* a place of the track's table that its notes (or the undo's and redo's) still point to */
+static int snd_in_use(int t, int id)
+{
+    int c, i;
+    for (c = t; c < DK_NCLIP; c += DK_NTRACK)
+        if (snd_scan(dk_ev + dk_song.clip[c].at, dk_song.clip[c].n, id))
+            return 1;
+    for (i = 0; i < un; i++)
+        if (!usnap[i].kind && usnap[i].clip % DK_NTRACK == t && snd_scan(ubuf + usnap[i].at, usnap[i].n, id))
+            return 1;
+    for (i = 0; i < rn; i++)
+        if (!rsnap[i].kind && rsnap[i].clip % DK_NTRACK == t && snd_scan(rbuf + rsnap[i].at, rsnap[i].n, id))
+            return 1;
+    return 0;
+}
+static int snd_same(const dk_snd_t *a, const dk_snd_t *b)
+{
+    int i;
+    if (a->eng != b->eng || a->drift != b->drift)
+        return 0;
+    for (i = 0; i < DK_NP; i++)
+        if (a->p[i] != b->p[i])
+            return 0;
+    for (i = 0; i < 3; i++)
+        if (a->env[i] != b->env[i])
+            return 0;
+    return 1;
+}
+static void snd_capture(int t, dk_snd_t *s)   /* the track's sound now */
+{
+    const dk_track_t *k = &dk_song.trk[t];
+    const dk_engine_t *e = TAPE.eng[k->eng % TAPE.neng];
+    int i;
+    for (i = 0; i < (int)sizeof *s; i++)
+        ((uint8_t *)s)[i] = 0;
+    s->used = 1;
+    s->eng = (uint8_t)(k->eng % TAPE.neng);
+    s->drift = k->drift;
+    for (i = 0; i < DK_NP; i++)
+        s->p[i] = i < e->nparams ? (int8_t)dk_param_static(t, T_P0 + i) : 0;
+    s->env[0] = (int8_t)dk_param_static(t, T_ATT);
+    s->env[1] = (int8_t)dk_param_static(t, T_DEC);
+    s->env[2] = (int8_t)dk_param_static(t, T_REL);
+}
+/* the place of this sound in the track's table: the same one if it is there, else a free one (or one nothing points to);
+ * 0: the table is full */
+static int snd_make(int t, const dk_snd_t *s)
+{
+    int i;
+    for (i = 0; i < DK_NSND; i++)
+        if (dk_song.snd[t][i].used && snd_same(&dk_song.snd[t][i], s))
+            return i + 1;
+    for (i = 0; i < DK_NSND; i++)
+        if (!dk_song.snd[t][i].used) {
+            dk_song.snd[t][i] = *s;
+            return i + 1;
+        }
+    for (i = 0; i < DK_NSND; i++)
+        if (!snd_in_use(t, i + 1)) {
+            dk_song.snd[t][i] = *s;
+            return i + 1;
+        }
+    return 0;
+}
+/* a frozen sound moved to another track's table (a paste): its place there, 0 the track's own */
+static int snd_move(int from, int id, int to)
+{
+    if (id < 1 || id > DK_NSND || !dk_song.snd[from][id - 1].used)
+        return 0;
+    return snd_make(to, &dk_song.snd[from][id - 1]);
+}
+
+/* the take's notes (clip, pass) with the track's sound now: how many were frozen (the song is locked) */
+static int take_freeze(int clip, int pass)
+{
+    int t = clip % DK_NTRACK, take = pass > 31 ? 31 : pass, n = 0, i, id;
+    const dk_clip_t *c = &dk_song.clip[clip];
+    dk_snd_t s;
+    if (!dk_lock_take || (TAPE.eng[dk_song.trk[t].eng % TAPE.neng]->flags & (EF_DRUM | EF_CONT)))
+        return 0;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        n += !(e->fl & EV_MOTION) && DK_L_TAKE(e->layer) == (unsigned)take && !DK_L_SND(e->layer);
+    }
+    if (!n)
+        return 0;
+    snd_capture(t, &s);
+    id = snd_make(t, &s);
+    if (!id) {
+        song_layers_full = 1;
+        return 0;
+    }
+    for (i = 0; i < c->n; i++) {
+        dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && DK_L_TAKE(e->layer) == (unsigned)take && !DK_L_SND(e->layer))
+            e->layer = DK_L_MAKE(take, id);
+    }
+    song_edits++;
+    return n;
+}
+/* the takes that have ended (the recording went on to the next pass, or stopped; a track's: all, force) are frozen */
+static int takes_settle(int rec_on, int pass, int only_t)
+{
+    int c, n = 0;
+    for (c = 0; c < DK_NCLIP; c++) {
+        int take = take_pend[c] - 1;
+        if (!take_pend[c] || (only_t >= 0 && c % DK_NTRACK != only_t))
+            continue;
+        if (only_t < 0 && rec_on && take == (pass > 31 ? 31 : pass))   /* (still being played) */
+            continue;
+        take_pend[c] = 0;
+        n += take_freeze(c, take);
+    }
+    return n;
+}
+static int takes_waiting(void)
+{
+    int c;
+    for (c = 0; c < DK_NCLIP; c++)
+        if (take_pend[c])
+            return 1;
+    return 0;
+}
+
 /* --------------------------------------------------------- the recording --- */
 static uint32_t rec_r;
 static uint8_t rec_snapped_pass = 0xFF, rec_snapped_clip = 0xFF;
-/* the render's recorded events into the song (a snapshot first for each new pass: its undo) */
-int rec_flush(void)
+/* the render's recorded events into the song (a snapshot first for each new pass: its undo); only_t >= 0: also freeze that
+ * track's take at once (its sound is about to change) */
+static int rec_flush_do(int only_t)
 {
-    uint32_t w = dk_recq_w;
+    /* (the pass and the recording as they are before the ring is read: the render pushes a take's last notes before it goes
+     * on to the next pass, so a take that is over by now is all in the ring) */
+    int pass = dk_pass, rec_on = dk_recording;
+    uint32_t w;
     int n = 0;
+    __asm__ volatile("" ::: "memory");
+    w = dk_recq_w;
     if (w - rec_r > DK_RECQ)
         rec_r = w - DK_RECQ;
-    if (rec_r == w)
-        return 0;
+    if (rec_r == w) {
+        if (!takes_waiting())
+            return 0;
+        dk_lock();
+        n = takes_settle(rec_on, pass, only_t);
+        dk_unlock();
+        return n;
+    }
     dk_lock();
     while (rec_r != w) {
         dk_recev_t r;
@@ -291,11 +450,19 @@ int rec_flush(void)
         }
         if (dk_song.clip[r.clip].len == 0 && r.ev.pos + r.ev.dur > clip_len(r.clip))
             r.ev.dur = (uint16_t)(clip_len(r.clip) - r.ev.pos);
-        dk_song_insert(r.clip, &r.ev);
+        if (dk_song_insert(r.clip, &r.ev) >= 0 && !(r.ev.fl & EV_MOTION) && !DK_L_SND(r.ev.layer))
+            take_pend[r.clip] = (uint8_t)(DK_L_TAKE(r.ev.layer) + 1u);
         n++;
     }
+    n += takes_settle(rec_on, pass, only_t);
     dk_unlock();
     return n;
+}
+int rec_flush(void) { return rec_flush_do(-1); }
+/* the track's sound is about to change (a preset, an engine): the take being recorded on it is frozen with the old one */
+void track_sound_to(int t)
+{
+    rec_flush_do(t);
 }
 void rec_reset(void)
 {
@@ -310,6 +477,7 @@ void clip_copy(int clip)
     const dk_clip_t *c = &dk_song.clip[clip];
     int i;
     clip_n = c->n > 384 ? 384 : c->n;
+    clip_src_t = (uint8_t)(clip % DK_NTRACK);
     for (i = 0; i < clip_n; i++)
         clipboard[i] = dk_ev[c->at + i];
     clipb_len = clip_len_raw(clip);
@@ -321,7 +489,17 @@ int clip_paste(int clip)
         return 0;
     undo_push(clip);
     dk_lock();
-    clip_put(clip, clipboard, clip_n);
+    if (clip_src_t != clip % DK_NTRACK) {   /* on another track: the frozen sounds go with the notes (its table's places) */
+        static dk_ev_t pt[384];
+        int i, to = clip % DK_NTRACK;
+        for (i = 0; i < clip_n; i++) {
+            pt[i] = clipboard[i];
+            if (DK_L_SND(pt[i].layer))
+                pt[i].layer = DK_L_MAKE(DK_L_TAKE(pt[i].layer), snd_move(clip_src_t, (int)DK_L_SND(pt[i].layer), to));
+        }
+        clip_put(clip, pt, clip_n);
+    } else
+        clip_put(clip, clipboard, clip_n);
     dk_song.clip[clip].len = (uint16_t)clipb_len;
     dk_unlock();
     return 1;
@@ -640,6 +818,7 @@ void dk_song_clear(void)
     uint8_t *b = (uint8_t *)&dk_song;
     for (i = 0; i < (int)sizeof dk_song; i++)
         b[i] = 0;
+    takes_forget();
     dk_song.magic = DK_MAGIC;
     dk_song.format = DK_FORMAT;
     dk_song.name[0] = 'S';
@@ -714,6 +893,7 @@ void song_mood(int m)
     dk_song.dust = md->dust;
     dk_song.space = md->space;
     for (t = 0; t < DK_NTRACK; t++) {
+        track_sound_to(t);
         if (md->eng[t] >= 0 && md->eng[t] != dk_song.trk[t].eng)   /* (the track keeps its role: PIANO, KEYS ...) */
             dk_song.trk[t].eng = (uint8_t)md->eng[t];
         if (md->preset[t] >= 0)

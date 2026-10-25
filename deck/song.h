@@ -40,6 +40,9 @@ int undo_count(void);
 int song_undo(int *what);
 int song_redo(int *what);
 int rec_flush(void);
+void track_sound_to(int t);              /* before a track's preset or engine changes: its take being recorded is frozen as it is */
+void takes_forget(void);
+extern uint8_t song_layers_full;         /* the table of frozen sounds was full (the UI says it once) */
 void rec_reset(void);
 const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp);
 void track_preset(int t, int slot);

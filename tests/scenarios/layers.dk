@@ -1,0 +1,130 @@
+# LAYERS (LOCK TAKE): a take keeps the sound it was recorded with; the next take has the new one
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+press HOME
+tapkey b0
+release HOME
+wait 100
+expect track 0
+expect eng 0
+tap SEQ
+tap SEQ
+turn K2 1
+turn K2 -1
+wait 50
+expect bars 4
+expect locktake 1
+qnt 0
+# take 1, on the piano (FELT): frozen when it ends
+tap REC
+wait 3500
+expect recording 1
+wait 700
+key w0 down 90
+wait 700
+key w0 up
+wait 300
+expect snds 0
+tap REC
+wait 400
+expect recording 0
+expect events 4
+expect nfrozen 4
+expect nlive 0
+expect evsnd 1
+expect snds 1
+expect sndeng 0
+# the track takes another engine: the take is the same, it is still the piano
+press HOME
+turn PRESET -1
+release HOME
+wait 100
+expect eng 8
+expect evsnd 1
+expect nfrozen 4
+expect sndeng 0
+# played (from the start), it sounds with its own sound: a voice with a frozen sound
+tap PLAY
+wait 300
+expect playing 0
+tap PLAY
+wait 1500
+expect vfrozen >0
+tap PLAY
+wait 600
+expect playing 0
+# take 2, on the new engine: the first one stays
+tap REC
+wait 3500
+expect recording 1
+wait 700
+key w0 down 90
+wait 700
+key w0 up
+wait 300
+tap REC
+wait 400
+expect recording 0
+expect events 8
+expect nfrozen 8
+expect nlive 0
+expect snds 2
+expect sndeng 0
+# LOCK TAKE off: the old way, the take follows the track
+locktake 0
+tap REC
+wait 3500
+expect recording 1
+wait 700
+key w0 down 90
+wait 700
+key w0 up
+wait 300
+tap REC
+wait 400
+expect recording 0
+expect events 12
+expect nfrozen 8
+expect nlive 4
+expect snds 2
+# the sound changed in the middle of a take: what was played before keeps the old one, the rest has the new one
+locktake 1
+tap REC
+wait 3500
+expect recording 1
+wait 500
+key w0 down 90
+wait 500
+key w0 up
+wait 200
+press HOME
+turn PRESET 1
+release HOME
+wait 100
+expect eng 0
+key w0 down 90
+wait 500
+key w0 up
+wait 300
+tap REC
+wait 400
+expect recording 0
+expect events 20
+expect nfrozen 16
+expect nlive 4
+# the setting through the page: GLO, its fourth row, the last knob
+locktake 1
+expect locktake 1
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn ALGO -1
+wait 50
+expect locktake 0
+turn ALGO 1
+wait 50
+expect locktake 1
