@@ -91,6 +91,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "pmask")) g = dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute;
     else if (!strncmp(what, "pmask", 5) && what[5] >= 'A' && what[5] <= 'H') g = dk_song.part[what[5] - 'A'].mute;
     else if (!strncmp(what, "tmute", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.trk[what[5] - '0'].mute;
+    else if (!strncmp(what, "solo", 4) && what[4] >= '0' && what[4] <= '5') g = dk_song.trk[what[4] - '0'].solo;
     else if (!strcmp(what, "pmpend")) g = dk_pm_x;
     else if (!strcmp(what, "pmgen")) g = dk_pm_gen;
     else if (!strcmp(what, "newpart")) g = dk_newpart_copy;

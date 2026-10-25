@@ -26,7 +26,7 @@ static const ui_map_t UI_MAP[] = {
     {B_GLO, A_PAGE_GLOBAL, A_FILL, A_NONE, 250, "GLOBAL (tempo, swing, dust, metronome, MIDI); again: its row | hold: FILL"},
     {B_EDIT, A_PAGE_KEYS, A_UNDO, A_REDO, 700, "KEYS; again: its next row | hold: UNDO | HOME+: REDO"},
     {B_SAVE, A_PAGE_PROJECT, A_NONE, A_NONE, HOLD_MOD, "PROJECT (white 1-4 open, 5 new, 6 demo; black 1 EXPORT, 2 STEMS, 3 SAVE, 4 CLEAR ALL: press twice); again there: save now | hold + white 13-16: save preset"},
-    {B_HOME, A_PAGE_PLAY, A_NONE, A_NONE, HOLD_MOD, "PLAY | HOME + white 1-16: preset (in MIX: white 1-6 = the part's track mute at once) | HOME + black 1-6: track | HOME + black 7-11: COPY PASTE DOUBLE VARIATE HUMANIZE the clip"},
+    {B_HOME, A_PAGE_PLAY, A_NONE, A_NONE, HOLD_MOD, "PLAY; on PLAY: TRACKS (six track rows; again: back; while recording: TRACKS <-> REC) | HOME + white 1-16: preset (in MIX: white 1-6 = the part's track mute at once; on TRACKS: white 1-6 = SELECT the track, black 1-6 = mute in the part, SEQ + black 1-6 = solo) | HOME + black 1-6: track | HOME + black 7-11: COPY PASTE DOUBLE VARIATE HUMANIZE the clip"},
     {B_OCTDN, A_OCT_DOWN, A_NONE, A_TRANS_DOWN, 0, "the track's octave down | HOME+: the clip a scale step down"},
     {B_OCTUP, A_OCT_UP, A_NONE, A_TRANS_UP, 0, "the track's octave up | HOME+: the clip a scale step up"},
 };

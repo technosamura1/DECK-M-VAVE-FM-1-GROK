@@ -5,9 +5,9 @@
  * recording, undo, saving by itself in the silence, the lights, MIDI in, the export's stream. The pages are drawn in
  * pages.c. Part of the unity build. */
 
-enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, PG_GLOB, PG_ATMO, NPG };
+enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, PG_GLOB, PG_ATMO, PG_TRACKS, NPG };
 static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP", "GLOBAL",
-                                          "ATMO"};
+                                          "ATMO", "TRACKS"};
 
 static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
@@ -355,7 +355,7 @@ static void rec_start(void)
     }
     dk_cmd(C_REC, 1, 0, t | t2 << 16);
     ui.rec_end = 0;
-    if (ui.page != PG_REC) {
+    if (ui.page != PG_REC && ui.page != PG_TRACKS) {
         ui.prev = ui.page;
         ui.page = PG_REC;
     }
@@ -511,7 +511,12 @@ static void action(int a, int b)
         break;
     case A_PAGE_GLOBAL: page_go(PG_GLOB); break;
     case A_PAGE_ATMO: page_go(PG_ATMO); break;
-    case A_PAGE_PLAY: page_go(PG_PLAY); break;
+    case A_PAGE_PLAY:                    /* HOME: PLAY; on PLAY: TRACKS; on TRACKS: back (to REC while it records) */
+        if (ui.page == PG_PLAY || (ui.page == PG_REC && (dk_recording || dk_counting)))
+            page_go(PG_TRACKS);
+        else
+            page_go(ui.page == PG_TRACKS && (dk_recording || dk_counting) ? PG_REC : PG_PLAY);
+        break;
     case A_PLAY:
         if (dk_playing || dk_counting) {
             auto_end();
@@ -761,6 +766,20 @@ static void key_down(int k, int vel)
             mark_dirty();
             say(track_label(w), dk_song.trk[w].mute ? "TEMP MUTE" : "TEMP OFF");
         }
+        return;
+    }
+    if (ui.page == PG_TRACKS && !held(B_HOME) && ((w >= 0 && w < DK_NTRACK) || (b >= 0 && b < DK_NTRACK))) {
+        if (w >= 0) {                    /* TRACKS: white 1-6 select the track (one press) */
+            track_select(w);
+            return;
+        }
+        if (held(B_SEQ)) {               /* SEQ + black 1-6: solo */
+            ui.used[B_SEQ] = 1;
+            dk_song.trk[b].solo ^= 1u;
+            mark_dirty();
+            say(track_label(b), dk_song.trk[b].solo ? "SOLO" : "SOLO OFF");
+        } else                           /* black 1-6: the track's mute in this part (at the bar's end while playing) */
+            part_mute_toggle(b, 0);
         return;
     }
     if (held(B_HOME)) {
@@ -1246,7 +1265,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
 /* ------------------------------------------------------------------- input --- */
 static void lights(void)
 {
-    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP, B_GLO, B_SEL};
+    static const uint8_t PAGE_BTN[NPG] = {B_HOME, B_SEQ, B_FX, B_LFO, B_ENV, B_EDIT, B_SAVE, B_REC, B_ARP, B_GLO, B_SEL, B_HOME};
     uint32_t now = plat_ms(), b = 1u << PAGE_BTN[ui.page], keys = ui.keys, dimk = 0, dimb = 0;
     int k;
     const dk_track_t *trk = cur();
@@ -1599,7 +1618,7 @@ void ui_frame(void)
         song_layers_full = 0;
         say("LAYERS FULL", "7 SOUNDS ON THIS TRACK");
     }
-    if (dk_recording && ui.page != PG_REC) {   /* the tape page whenever it records */
+    if (dk_recording && ui.page != PG_REC && ui.page != PG_TRACKS) {   /* the tape page whenever it records (or TRACKS) */
         ui.prev = ui.page;
         ui.page = PG_REC;
     }

@@ -1,0 +1,88 @@
+# TRACKS (HOME on PLAY; HOME on it goes back): six rows, one per track. SELECT or white 1-6 select the track with ONE press (HOME + black
+# still does); black 1-6 toggle the track's mute IN THE PART (at the bar end while playing), SEQ + black 1-6 the solo.
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+listen
+seed 0 1 4 1
+seed 0 2 6 0
+# HOME on PLAY: TRACKS; again: PLAY
+tap HOME
+wait 100
+expect page 0
+tap HOME
+wait 100
+expect page 11
+shot p30_tracks.png
+tap HOME
+wait 100
+expect page 0
+# one press selects
+tap HOME
+wait 100
+expect page 11
+tapkey w3
+wait 100
+expect track 3
+tapkey w0
+wait 100
+expect track 0
+turn SELECT 1
+wait 100
+expect track 1
+turn SELECT -1
+wait 100
+expect track 0
+# HOME + black still selects
+press HOME
+tapkey b4
+release HOME
+wait 100
+expect track 4
+expect page 11
+# black: the part's mute (stopped: at once)
+tapkey b1
+wait 100
+expect pmask 2
+said MUTED
+tapkey b1
+wait 100
+expect pmask 0
+# SEQ + black: solo
+press SEQ
+tapkey b2
+release SEQ
+wait 100
+expect solo2 1
+expect page 11
+press SEQ
+tapkey b2
+release SEQ
+wait 100
+expect solo2 0
+# playing: the mute waits for the bar's end
+tap PLAY
+wait 300
+tapkey b0
+wait 100
+expect pmpend 1
+expect pmask 0
+shot p31_tracks_play.png
+wait 3400
+expect pmask 1
+expect pmpend 0
+tapkey b0
+wait 3600
+expect pmask 0
+# recording from TRACKS: stays on TRACKS, the row of the track is marked
+tapkey w2
+tap REC
+wait 200
+expect page 11
+tap REC
+wait 200
+expect recording 0
+expect playing 1

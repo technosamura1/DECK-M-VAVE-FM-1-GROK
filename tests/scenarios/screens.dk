@@ -62,7 +62,7 @@ shot p12_project.png
 tap PLAY
 wait 300
 # the tape (REC) with its count-in, then recording
-tap HOME
+page 0
 wait 300
 tap REC
 wait 1200
@@ -74,6 +74,12 @@ key w2 up
 key w4 down 80
 wait 1400
 shot p14_tape_rec.png
+# TRACKS while it records (HOME on the tape page): the row of the track red, the take red
+tap HOME
+wait 600
+shot p30_tracks_rec.png
+tap HOME
+wait 100
 key w4 up
 tap REC
 wait 4000

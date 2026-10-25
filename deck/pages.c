@@ -161,7 +161,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 static int seq_edit_row(void);
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 4, 2};
+    static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 4, 2, 1};
     if (p == PG_SEQ && ((cur_eng()->flags & EF_DRUM) || cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE))
         return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings;
                                               * STEP and LIVE: their own, the settings, the step editor */
@@ -189,6 +189,10 @@ static int page_field(int i, int home)
     switch (ui.page) {
     case PG_PLAY: {                          /* the garden: the track you play, its sound and its space; ALGO the mood */
         static const uint8_t F[5] = {F_MACRO, F_REV, F_ECHO, F_VOL, F_MOOD};
+        return F[i];
+    }
+    case PG_TRACKS: {                        /* the selected track's level and pan */
+        static const uint8_t F[5] = {F_VOL, F_PAN, F_NONE, F_NONE, F_NONE};
         return F[i];
     }
     case PG_ARP: {                           /* the arpeggiator's own page */
@@ -318,6 +322,7 @@ static const char *hint(void)
         if (ui_auto_on)
             return "REC AGAIN = THE LOOP ENDS HERE";
         return "K1 BARS  K4 METRONOME  HOLD EDIT = UNDO";
+    case PG_TRACKS: return "SELECT = TRACK  HOME = BACK";
     case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
@@ -1599,6 +1604,82 @@ static void draw_tape(void)
                        clip_len(dk_cur_part * DK_NTRACK + dk_rec_trk), 148, 36, TH_TEXT);
 }
 
+/* ----------------------------------------------------------------- TRACKS --- */
+/* TRACKS (HOME on PLAY): the six tracks as rows, like a DAW's: the number in the track's colour, its name and sound, the part's
+ * mute (M, blinking while it waits for the bar's end), solo (S), the level; to the right the CURRENT PART's clip as a thumbnail
+ * (notes of a frozen layer dim, the take being recorded red) and the playhead. The row recording is red. */
+static int trk_rec(int t) { return (dk_recording || dk_counting) && t == dk_rec_trk; }
+static void draw_tracks(void)
+{
+    int t, part = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, blink = (plat_ms() / 230u) & 1u;
+    dk_preset_t tmp;
+    char s[16];
+    for (t = 0; t < DK_NTRACK; t++) {
+        const dk_track_t *k = &dk_song.trk[t];
+        int ry = 30 + t * 25, cl = part * DK_NTRACK + t, clen = clip_len(cl), i, lo = 127, hi = 0, tx = 108, tw = 128, sel = t == dk_song.cur_track,
+            pm = part_muted(t), pend = part_mute_pending(t), muted = k->mute || pm, rec = trk_rec(t), n = dk_song.clip[cl].n;
+        const dk_clip_t *c = &dk_song.clip[cl];
+        uint16_t col = muted ? dimc(TH_TRACK[t], 5) : TH_TRACK[t];
+        if (rec)
+            cv_rect(0, ry, 240, 23, dimc(TH_REC, 4));
+        else if (sel)
+            cv_rect(0, ry, 240, 23, RGB(52, 46, 40));
+        if (rec)
+            cv_rect(0, ry, 3, 23, TH_REC);
+        cv_rect(4, ry + 1, 16, 21, col);
+        s[0] = (char)('1' + t);
+        s[1] = 0;
+        text_box(4, ry + 5, 16, 1, &FONT_S, &FONT_S, s, TH_BG);
+        text_box(23, ry + 1, 54, 0, &FONT_XS, &FONT_XS, track_label(t), muted ? TH_GRAY : TH_TEXT);
+        text_box(23, ry + 13, 54, 0, &FONT_T, &FONT_T, preset_of(k->eng, k->preset, &tmp)->name, TH_GRAY);
+        {                                    /* M: the part's mute (or the temporary one), blinking while a change waits; S: solo */
+            int show = pend >= 0 && blink ? pend : pm;
+            text_box(80, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", k->mute || show ? TH_REC : dimc(TH_GRAY, 6));
+            text_box(92, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", k->solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
+        }
+        cv_rect(80, ry + 15, 24, 4, RGB(34, 30, 27));      /* the level */
+        cv_rect(80, ry + 15, (int)k->vol * 24 / 100, 4, muted ? TH_GRAY : TH_ENC[0]);
+        cv_rect(tx, ry + 2, tw, 19, RGB(20, 18, 16));      /* the thumbnail's window */
+        for (i = 0; i < n; i++) {
+            const dk_ev_t *e = &dk_ev[c->at + i];
+            if (e->fl & EV_MOTION)
+                continue;
+            if (e->note < lo)
+                lo = e->note;
+            if (e->note > hi)
+                hi = e->note;
+        }
+        if (hi >= lo && hi - lo < 12) {
+            lo -= (12 - (hi - lo)) / 2;
+            hi = lo + 12;
+        }
+        for (i = 0; hi > lo && i < n; i++) {
+            const dk_ev_t *e = &dk_ev[c->at + i];
+            int x, w, y;
+            uint16_t nc = col;
+            if (e->fl & EV_MOTION)
+                continue;
+            x = tx + e->pos * (tw - 2) / clen;
+            w = e->dur * (tw - 2) / clen;
+            y = ry + 2 + 16 - (e->note - lo) * 16 / (hi - lo);
+            if (x + w > tx + tw)
+                w = tx + tw - x;
+            if (DK_L_SND(e->layer))          /* a frozen layer: dim */
+                nc = dimc(col, 8);
+            if (rec && dk_recording && DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass))
+                nc = TH_REC;
+            cv_rect(x, y, w < 2 ? 2 : w, 2, nc);
+        }
+        if (rec)
+            for (i = 0; i < dk_open_n; i++)
+                cv_rect(tx + dk_open_pos[i] * (tw - 2) / clen, ry + 2, 2, 19, TH_REC);
+        if (dk_playing)                      /* the playhead, across the rows */
+            vline(tx + (int)(dk_part_tick % (uint16_t)clen) * (tw - 2) / clen, ry, 23, TH_TEXT);
+    }
+    text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "SELECT/W1-6 TRACK  B1-6 MUTE", TH_GRAY);
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEQ+B1-6 SOLO  K1 LEVEL  HOME BACK", TH_GRAY);
+}
+
 /* -------------------------------------------------------------------- frame --- */
 static void draw_body(void)
 {
@@ -1613,9 +1694,10 @@ static void draw_body(void)
     case PG_ARP: draw_seq(); break;
     case PG_GLOB: draw_global(); break;
     case PG_ATMO: draw_atmo(); break;
+    case PG_TRACKS: draw_tracks(); break;
     default: break;
     }
-    if (ui.page != PG_PLAY && ui.page != PG_REC)
+    if (ui.page != PG_PLAY && ui.page != PG_REC && ui.page != PG_TRACKS)
         knob_row(KNOB_Y);                    /* the module's four knobs, on its plate */
 }
 
