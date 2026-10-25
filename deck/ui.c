@@ -536,6 +536,87 @@ static void garage_dup(int to)
         say("NO ROOM", s);
 }
 
+/* CLIP QUANTIZE (every note toward the 1/16 by the track's QUANT %), COPY BAR / PASTE BAR. The bar: the one under the playhead while
+ * playing, else the first; stopped, PASTE goes to the bar after the copied one, and the next press to the bar after that. */
+static uint8_t bar_src, bar_next;
+static char *put_n(char *p, int n)       /* n (0..99) as text, the end of it */
+{
+    if (n >= 10)
+        *p++ = (char)('0' + n / 10 % 10);
+    *p++ = (char)('0' + n % 10);
+    return p;
+}
+static void clip_edit_key(int k)
+{
+    int c = cur_clip(), bars = clip_bars(c), bar = dk_playing ? (int)(dk_part_tick / DK_TPB) % (bars ? bars : 1) : 0, r;
+    int q = dk_song.trk[dk_song.cur_track].qnt;
+    char s[16];
+    char *p = s;
+    if (k != 2 && !dk_song.clip[c].n) {
+        say("CLIP", "IS EMPTY");
+        return;
+    }
+    if (dk_recording || dk_counting) {
+        say("CLIP", "STOP REC");
+        return;
+    }
+    if (k == 0) {
+        if (q == 0) {
+            say("QUANTIZE", "TRACK QUANT IS 0");
+            return;
+        }
+        r = clip_quantize(c, q);
+        *p++ = 'Q';
+        *p++ = ' ';
+        p = put_n(p, q > 99 ? 99 : q);
+        *p++ = '%';
+        *p = 0;
+        mark_dirty();
+        say(s, r ? "ON THE GRID" : "NOTHING TO MOVE");
+        return;
+    }
+    if (k == 1) {
+        r = bar_copy(c, bar);
+        if (r < 0) {
+            say("BAR", "TOO MANY NOTES");
+            return;
+        }
+        bar_src = (uint8_t)bar;
+        bar_next = (uint8_t)(bar + 1);
+        *p++ = 'B';
+        *p++ = 'A';
+        *p++ = 'R';
+        *p++ = ' ';
+        p = put_n(p, bar + 1);
+        *p = 0;
+        say(s, "COPIED");
+        return;
+    }
+    if (!dk_playing) {                   /* stopped: after the copied bar, then the next one */
+        if (bars < 2) {
+            say("BAR", "CLIP HAS ONE BAR");
+            return;
+        }
+        bar = bar_next % bars;
+        if (bar == bar_src)
+            bar = (bar + 1) % bars;
+    }
+    r = bar_paste(c, bar);
+    if (r < 0) {
+        say("BAR", "NO ROOM");
+        return;
+    }
+    if (!dk_playing)
+        bar_next = (uint8_t)(bar + 1);
+    mark_dirty();
+    p = put_n(p, bar_src + 1);
+    *p++ = '-';
+    *p++ = '>';
+    p = put_n(p, bar + 1);
+    *p = 0;
+    say(s, "BAR PASTED");
+}
+
 static void action(int a, int b)
 {
     switch (a) {
@@ -906,6 +987,11 @@ static void key_down(int k, int vel)
         s[5] = (char)('A' + w);
         if (!part_go(w))
             say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
+        return;
+    }
+    if (held(B_SEQ) && b >= 2 && b < 5) {   /* SEQ held + black 3: QUANTIZE the clip, 4: COPY BAR, 5: PASTE BAR (each one undo step) */
+        ui.used[B_SEQ] = 1;
+        clip_edit_key(b - 2);
         return;
     }
     if (held(B_SEQ) && b >= 0 && b < 2) {   /* SEQ held + black 1: COOK, black 2: RANDOM (each an undo step) */

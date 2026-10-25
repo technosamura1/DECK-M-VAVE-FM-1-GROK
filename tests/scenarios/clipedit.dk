@@ -1,0 +1,79 @@
+# CLIP EDITING on SEQ + black keys (each one undo step): black 3 = QUANTIZE (every note toward the 1/16 by the track's QUANT),
+# black 4 = COPY BAR, black 5 = PASTE BAR (stopped: into the bar after the copied one, the next press the one after that).
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+page 0
+press HOME
+tapkey b0
+release HOME
+wait 50
+expect track 0
+expect part 0
+expect nev 0
+listen
+qnt 50
+setbars 0 4
+seedat 0 1 30
+seedat 0 1 400
+expect events 2
+# QUANTIZE at 50%: 30 -> 27, 400 -> 404
+press SEQ
+tapkey b2
+release SEQ
+wait 100
+said ON THE GRID
+expect evpos 27
+shot p38_clip_quant.png
+expect evlast 404
+# one undo step brings the notes back
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect evpos 30
+expect evlast 400
+# QUANTIZE with QUANT 0 says so and moves nothing
+qnt 0
+press SEQ
+tapkey b2
+release SEQ
+wait 100
+said QUANT IS 0
+expect evpos 30
+# COPY BAR 1 (the note at 30), PASTE twice: bar 2 (its note at 400 goes), then bar 3
+press SEQ
+tapkey b3
+release SEQ
+wait 100
+said COPIED
+press SEQ
+tapkey b4
+release SEQ
+wait 100
+said BAR PASTED
+expect events 2
+expect evlast 414
+press SEQ
+tapkey b4
+release SEQ
+wait 100
+said 1->3
+shot p39_bar_paste.png
+expect events 3
+expect evlast 798
+# undo the last paste
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect events 2
+# SHIFT (SEQ's first row on STEP, K1): the whole clip a step later (30 -> 54), round; one undo step
+page 1
+row 0
+wait 50
+turn K1 1
+wait 50
+expect evpos 54

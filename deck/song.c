@@ -1205,3 +1205,83 @@ int layers_merge(int clip)
     song_edits++;
     return n;
 }
+
+/* ------------------------------------------------------------ CLIP EDITING --- */
+/* CLIP QUANTIZE: every note moved toward the nearest 1/16 by `strength` percent (the track's QUANT); one undo step.
+ * Returns how many notes moved. */
+int clip_quantize(int clip, int strength)
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, len = clip_len(clip), moved = 0;
+    if (strength <= 0 || !c->n)
+        return 0;
+    if (strength > 100)
+        strength = 100;
+    undo_push(clip);
+    dk_lock();
+    for (i = 0; i < c->n; i++) {
+        dk_ev_t *e = &dk_ev[c->at + i];
+        int p = e->pos, g = (p + DK_T16 / 2) / DK_T16 * DK_T16, np;
+        if (e->fl & EV_MOTION)
+            continue;
+        np = p + (g - p) * strength / 100;
+        if (np >= len)
+            np = 0;
+        if (np < 0)
+            np = 0;
+        if (np != p)
+            moved++;
+        e->pos = (uint16_t)np;
+    }
+    clip_sort(clip);
+    dk_unlock();
+    song_edits++;
+    return moved;
+}
+
+/* BAR COPY / PASTE: one bar of a clip (its events, bar-relative) kept; pasted over another bar of a clip (that bar's own events go);
+ * one undo step. At most BARBUF events. */
+#define BARBUF 64
+static dk_ev_t barbuf[BARBUF];
+static int barbuf_n;
+int clip_bars(int clip) { return (clip_len(clip) + DK_TPB - 1) / DK_TPB; }
+int bar_copy(int clip, int bar)          /* the events kept (0: an empty bar, which is a copy too), -1 too many */
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, n = 0, lo = bar * DK_TPB, hi = lo + DK_TPB;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (e->pos < lo || e->pos >= hi)
+            continue;
+        if (n >= BARBUF)
+            return -1;
+        barbuf[n] = *e;
+        barbuf[n].pos = (uint16_t)(e->pos - lo);
+        n++;
+    }
+    barbuf_n = n;
+    return n;
+}
+int bar_paste(int clip, int bar)         /* the events pasted, -1 no room */
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, gone = 0, lo = bar * DK_TPB, hi = lo + DK_TPB;
+    for (i = 0; i < c->n; i++)
+        if (dk_ev[c->at + i].pos >= lo && dk_ev[c->at + i].pos < hi)
+            gone++;
+    if (dk_song.nev - gone + barbuf_n > DK_NEV)
+        return -1;
+    undo_push(clip);
+    dk_lock();
+    for (i = c->n - 1; i >= 0; i--)
+        if (dk_ev[c->at + i].pos >= lo && dk_ev[c->at + i].pos < hi)
+            ev_delete(clip, i);
+    for (i = 0; i < barbuf_n; i++) {
+        dk_ev_t e = barbuf[i];
+        e.pos = (uint16_t)(e.pos + lo);
+        dk_song_insert(clip, &e);
+    }
+    dk_unlock();
+    song_edits++;
+    return barbuf_n;
+}

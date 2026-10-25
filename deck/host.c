@@ -49,6 +49,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "pass")) g = dk_pass;
     else if (!strcmp(what, "lat")) g = dk_rec_lat;
     else if (!strcmp(what, "evpos")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].pos : -1;   /* the clip's first event */
+    else if (!strcmp(what, "evlast")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at + dk_song.clip[cur_clip()].n - 1].pos : -1;
     else if (!strcmp(what, "evdur")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].dur : -1;
     else if (!strcmp(what, "evsnd")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_SND(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;   /* the first event's frozen sound */
     else if (!strcmp(what, "evlay")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_TAKE(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;
@@ -261,6 +262,18 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         }
         if (dk_song.clip[pt * DK_NTRACK + t].layers < tk)
             dk_song.clip[pt * DK_NTRACK + t].layers = (uint8_t)tk;
+        dk_unlock();
+        return 1;
+    }
+    if (!strcmp(cmd, "seedat")) {               /* seedat P T POS: one note (take 1) at tick POS of part P, track T */
+        dk_ev_t e = {0};
+        e.pos = (uint16_t)atoi(c);
+        e.dur = DK_T16;
+        e.note = 60;
+        e.vel = 90;
+        e.layer = DK_L_MAKE(1, 0);
+        dk_lock();
+        dk_song_insert((atoi(a) & 7) * DK_NTRACK + (atoi(b) - 1 + DK_NTRACK) % DK_NTRACK, &e);
         dk_unlock();
         return 1;
     }

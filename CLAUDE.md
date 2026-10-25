@@ -236,7 +236,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
 | Кнопка | Тап | Удержание | HOME + |
 |---|---|---|---|
 | FX | SOUND; ещё раз — вкладка ENGINE/ENV/FX/MOD | — | — |
-| SEQ | SEQ; ещё раз — ряд (мелодия: 3-й — STEP EDIT); на странице ARP — копия арпеджио в STEP | + белая 1–5: секвенсор; + чёрная 1 COOK, 2 RANDOM; + OCT−/OCT+ UNDO/REDO; + REC стереть | BAKE (DRIVE → STEP) |
+| SEQ | SEQ; ещё раз — ряд (мелодия: 3-й — STEP EDIT); на странице ARP — копия арпеджио в STEP | + белая 1–5: секвенсор; + чёрная 1 COOK, 2 RANDOM, 3 QUANTIZE, 4 COPY BAR, 5 PASTE BAR (на TRACKS чёрные — соло); + OCT−/OCT+ UNDO/REDO; + REC стереть | BAKE (DRIVE → STEP) |
 | ENV | ROAD | 0,6 с: гараж частей | — |
 | LFO | MIX (пульт) | + крутить ручку SOUND: MOD 1 на неё | — |
 | PLAY | старт/стоп (сразу по нажатию) | 0,8 с: PART/SONG | тапы: TAP TEMPO |
@@ -355,3 +355,15 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   Копия при переключении (NEW PART = COPY) не менялась.
 - Тесты: `partdup.dk` (копия в пустую, «себя», спрос и перезапись, UNDO, смена цели забывает вопрос, `expect next`). Снимки:
   `out/screens/p36_garage_dup.png`, `p37_next_a.png`, `p37_next_b.png`.
+
+## Правка нот клипа, этап 5
+
+- **QUANTIZE** (SEQ + чёрная 3): `clip_quantize(clip, qnt)` в song.c — каждая нота (кроме MOTION) сдвигается к ближайшей 1/16 (`DK_T16`) на `trk.qnt` %
+  (QUANT дорожки, K на SEQ ряд 2, по умолчанию 60). Длительности не меняются, ноты за концом клипа уходят в 0, клип пересортируется. Один шаг UNDO.
+  QUANT 0 — тост `TRACK QUANT IS 0`, ничего не двигается.
+- **COPY BAR / PASTE BAR** (SEQ + чёрная 4 / 5): `bar_copy`/`bar_paste` в song.c. Копируется такт клипа (ноты с `pos` внутри такта, до 64 событий, в статический
+  `barbuf`, ≈ 1.5 КБ RAM) — это такт под головкой при игре, иначе первый. PASTE кладёт в такт под головкой; в остановке — в такт после скопированного,
+  следующее нажатие — в следующий (так один такт разводится на весь клип). Ноты такта-приёмника заменяются. Один шаг UNDO, «NO ROOM» если пул полон.
+  Тост `BAR 1 COPIED` / `1->3 BAR PASTED`.
+- SHIFT (клип на шаг, STEP EDIT K1 — `se_rotate`), длина и громкость ноты (STEP EDIT `F_SLEN`/`F_SVEL`) уже были — проверено, не менялись.
+- Тест `tests/scenarios/clipedit.dk`; экраны `p38_clip_quant.png`, `p39_bar_paste.png`.
