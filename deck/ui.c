@@ -341,11 +341,15 @@ static void rec_start(void)
         itoa_b(n, s + 5);
         if (dk_playing) {
             if (used) {
-                int l = (int)strlen(s);
+                int l = 0;
+                while (s[l])
+                    l++;
                 s[l++] = ' ';
                 s[l++] = 'L';
                 itoa_b(used, s + l);
-                l = (int)strlen(s);
+                l = 0;
+                while (s[l])
+                    l++;
                 s[l++] = '/';
                 s[l++] = '7';
                 s[l] = 0;
