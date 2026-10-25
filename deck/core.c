@@ -125,9 +125,6 @@ volatile uint8_t dk_voices_on;
 volatile uint8_t dk_voices_frozen;       /* (of them, the ones with a frozen sound: layers) */
 volatile uint8_t dk_fill;
 volatile uint32_t dk_rec_hits;
-volatile float dk_tmb_angle;
-volatile int16_t dk_tmb_x[DK_NBALL], dk_tmb_y[DK_NBALL];
-volatile uint8_t dk_tmb_note[DK_NBALL], dk_tmb_n, dk_tmb_hit[DK_NBALL];
 volatile uint8_t dk_held_n[DK_NTRACK];
 volatile uint8_t dk_held[DK_NTRACK][8];
 volatile uint32_t dk_metro_clicks, dk_metro_err_max;

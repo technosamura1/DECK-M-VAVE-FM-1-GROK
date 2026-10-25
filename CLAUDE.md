@@ -46,7 +46,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
 - Секвенсоры: STEP (сетка барабанов / курсор для нот, VEL, PROB, RATCHET, p-lock удержанием шага), LIVE (квант 0–100 %,
   дозапись проходами), ENDLESS, ARP (6 режимов, 4 деления, октавы, LATCH), DRIVE (DREAM: стили C418/LOFI/AMBIENT/
   CAMPFIRE по ролям, «зов и ответ», дыхание раз в 8 тактов, сбивки), FINGER (16 рисунков, вариации на чёрных, LATCH),
-  HOLD (бурдон), TOMBOLA (шестиугольник, шарики, притяжение к сетке). BAKE: DRIVE → STEP.
+  HOLD (бурдон), TOMBOLA (шестиугольник, шарики) — последние три убраны (этап 6). BAKE: DRIVE → STEP.
 - Клавиатура: SCALE/CHROMA, белые = ноты/аккорды, чёрные = аккорды (7 ступеней + 4 «острых» кассеты)/PERFORM/OCTAVE,
   23 типа аккордов, DIATONIC/FIXED, 5 голосоведений, автоголосоведение, бас, страм, SPLIT, DIM SKIP.
 - Трасса: до 64 блоков, повторы, трюки HALF/DOUBLE/REVERSE/±12/DROP/TAPESTOP, вставка/удаление/дубль/вырезать/
@@ -175,7 +175,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
   перекладываются в начало). BARS руками в SEQ/гараже выключает AUTO. Тест `tests/scenarios/looper.dk`.
 - DIM SKIP: аккорд другой ступени, но в басу нота самой клавиши (Си в до мажоре: G7/B) — `skip_pc` в `chord_build`.
 - SEQ без повторов: ряд 2 (тип, BARS, SWING, QUANT) общий; ряд 1 у LIVE — SHIFT, MOVE (клип на ступень, `se_transpose`), VOL,
-  REV; DREAM — ENERGY STYLE VAR VOL; FINGER — LATCH VOL REV ECHO; TOMBOLA K4 — GRID.
+  REV; DREAM — ENERGY STYLE VAR VOL; FINGER — LATCH VOL REV ECHO.
 
 ## Добавлено 2026-10-25 — запись как на OP-1 (ветка feature/op1-rec, только копия GROK)
 - **Компенсация задержки (`dk_rec_lat`, GLOBAL › REC LAT, по умолчанию 9 мс)**: нота, сыгранная на клавише, пишется
@@ -240,7 +240,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
 | ENV | ROAD | 0,6 с: гараж частей | — |
 | LFO | MIX (пульт) | + крутить ручку SOUND: MOD 1 на неё | — |
 | PLAY | старт/стоп (сразу по нажатию) | 0,8 с: PART/SONG | тапы: TAP TEMPO |
-| REC | запись (со счётом); при записи — punch-out (игра продолжается); на ROAD — запись трассы; SEQ+REC — стереть клип сразу | 1 с: очистить клип (TOMBOLA — вытряхнуть) | метроном вкл/выкл |
+| REC | запись (со счётом); при записи — punch-out (игра продолжается); на ROAD — запись трассы; SEQ+REC — стереть клип сразу | 1 с: очистить клип | метроном вкл/выкл |
 | SEL | ATMO (PG_ATMO): слои атмосферы, DUST, TAPE; ещё раз — ряд | — | — |
 | ARP | страница ARP (PG_ARP) + ARP вкл; ещё раз — ряд | + белая A–H: часть (с конца такта; пустая получает КОПИЮ этой, NEW PART) | ARP выкл |
 | GLO | GLOBAL (PG_GLOB: темп, свинг, пыль, сон, метроном, MIDI); ещё раз — ряд | 0,25 с: FILL пока держишь | — |
@@ -309,7 +309,7 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   (выбранная; в ней номер дубля/слои для REC-страницы). Команда `C_REC` несёт `d = t | t2<<16 | arm<<24`; `C_RECMASK` меняет набор
   во время записи (SEQ + белая на TRACKS при записи; открытые ноты снятых дорожек закрываются). Задел `C_RECTRK` добавляет бит.
 - **Что куда пишется**: клавиши — ТОЛЬКО на выбранную дорожку (если она в наборе — а она всегда в нём в момент старта). Ноты
-  генератора, ARP, FINGER, DRIVE, TOMBOLA/HOLD, BAKE — на каждую взведённую дорожку (раньше — только на `dk_rec_trk`).
+  генератора, ARP, FINGER, DRIVE, BAKE — на каждую взведённую дорожку (раньше — только на `dk_rec_trk`).
   Номер дубля один на всех: `dk_pass` = наибольший `layers` среди дорожек набора + 1.
 - **REC MODE (`F_RECMODE`, `dk_rec_mode`, `settings_t.recmode`, по умолчанию OVERDUB)**: поле «REC MODE» — GLO, 5-я строка (K1; K2 =
   REC ARM), и на TRACKS K3 (K4 = REC ARM). На странице REC K3 теперь MODE (раньше TRACK: дорожка выбирается SELECT/белой на TRACKS; `F_RECTRK` остаётся в коде). REPLACE: пока запись проходит по клипу, старые ноты взведённых дорожек
@@ -367,3 +367,15 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   Тост `BAR 1 COPIED` / `1->3 BAR PASTED`.
 - SHIFT (клип на шаг, STEP EDIT K1 — `se_rotate`), длина и громкость ноты (STEP EDIT `F_SLEN`/`F_SVEL`) уже были — проверено, не менялись.
 - Тест `tests/scenarios/clipedit.dk`; экраны `p38_clip_quant.png`, `p39_bar_paste.png`.
+
+## Уборка, этап 6
+
+- **TOMBOLA удалена полностью**: генератор и физика (`tmb_add`/`tmb_tick`) из seq.c, команда `C_TOMBOLA`, глобалы `dk_tmb_*`, вид и ручки (`F_SPIN/F_GRAV/F_BOUNCE/F_TQUANT`),
+  подсказка, очистка шариков, пункт в `SQ_LIST` (теперь 4: STEP LIVE DREAM FINGER; `SEQ + белая 5` ничего не делает). Тесты `seqtypes.dk`/`screens.dk` без TOMBOLA, экран `p15_seq_tombola.png` удалён.
+- **Формат песни не менялся**: значение секвенсора 7 теперь `SQ_RSV7` (резерв), поля `dk_track_t.tmb[4]`, `dk_song_t.ball[12]/nball/ball_trk` остались в структуре
+  как резерв (размер проекта и порядок полей те же). `project_load` (store.c) превращает `SQ_TOMBOLA`(7)/ENDLESS/HOLD/ARP → LIVE (ARP — с `ARPO_ON`), как раньше ENDLESS/HOLD.
+  Тест `tests/scenarios/oldseq.dk` (команда host `reseq T SQ`: поставить значение, сохранить и загрузить).
+- **ENDLESS и HOLD**: в рантайме недостижимы (нет в `SQ_LIST`, при загрузке → LIVE), поэтому мёртвый код убран: запись ENDLESS в `rec_open`, `endless_n`, ветки HOLD на
+  нажатие/отпускание (`hold_keys`), особые случаи в `rec_start`/проходе записи, поле `F_DIV` (DIVISION). Значения `SQ_ENDLESS`/`SQ_HOLD` и `dk_track_t.div` остались в
+  формате (старые файлы читаются). `rec_push(kind 1)` в song.c оставлен (безвредно).
+- DREAM и FINGER, ARP, STEP, LIVE не менялись. `deck/words.tsv` (словарь озвучки) и `docs/OVERWORLD_TAPE.md` — историческое, не трогали.

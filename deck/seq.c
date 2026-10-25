@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 DECK contributors */
 /* The sequencer, part of the core's unit (core.c): the clock (free, and the transport's), the parts and the road,
- * the clips' playback with the road's tricks, recording (LIVE, ENDLESS, the generators', BAKE), the count-in and the
- * metronome, the generators (ARP, HOLD, FINGER, DRIVE, TOMBOLA), the harmony, the modulators, the performance
+ * the clips' playback with the road's tricks, recording (LIVE, the generators', BAKE), the count-in and the
+ * metronome, the generators (ARP, FINGER, DRIVE), the harmony, the modulators, the performance
  * effects, STEMS, MIDI clock. Everything here runs in the render, a tick at a time. */
 
 static uint32_t gt;                            /* the grid's clock: the transport's ticks, or the free clock */
@@ -25,13 +25,11 @@ static void pm_apply(void)
 static int32_t count_left;
 static uint8_t rec_start_after, rec_wait_note, rec_bake;
 static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
-static uint16_t endless_n;
 static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */
 static uint8_t open_vel[128], open_trk[128];
 static uint8_t arp_step[DK_NTRACK], arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
 volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
-static uint8_t hold_keys[DK_NTRACK];
 static uint16_t finger_held[DK_NTRACK];        /* FINGER: the patterns held (a bit each) */
 static uint8_t finger_var[DK_NTRACK];          /* its variations: 1 HALF 2 DOUBLE 4 ACCENT 8 GHOST 16 SHIFT- 32 SHIFT+ */
 static uint8_t perf_half, perf_rev, perf_stutter, stems_pass, stems_gap;
@@ -42,11 +40,6 @@ static int32_t user_hold;                      /* ticks a chord you played holds
 static uint8_t prog_i, prog_row;
 static uint32_t held_pcs[DK_NTRACK], win_pcs, win_at;
 static uint32_t part_loops, bar_n;
-static struct {
-    float x, y, vx, vy;
-    uint8_t note, on;
-} ball[DK_NBALL];
-static float tmb_a;
 
 static int part_len_of(int p)
 {
@@ -237,16 +230,6 @@ static void rec_open(int t, int note, int vel)
 {
     const dk_track_t *k = &dk_song.trk[t];
     int clip = cur_part * DK_NTRACK + t;
-    if (k->seq == SQ_ENDLESS) {                /* ENDLESS: one after another, a division each */
-        static const uint8_t DIV[4] = {96, 48, 24, 32};
-        int dv = DIV[k->div & 3];
-        if ((endless_n + 1) * dv > 60000)
-            return;
-        rec_push(clip, 0, endless_n * dv, dv, note, vel, 0);
-        endless_n++;
-        rec_push(clip, 1, endless_n * dv, 0, 0, 0, 0);
-        return;
-    }
     if (open_pos[note] >= 0)
         rec_push(cur_part * DK_NTRACK + open_trk[note], 0, open_pos[note], DK_T16, note,
                  open_vel[note], 0);
@@ -373,7 +356,7 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
             note -= 12;
     }
     delay = swing_delay(t, ct_pos);
-    if (dk_song.trk[t].seq == SQ_LIVE || dk_song.trk[t].seq == SQ_ENDLESS) {
+    if (dk_song.trk[t].seq == SQ_LIVE) {
         delay += jitter() / 2;
         vel = fm_clampf(vel + (dk_frand() - 0.5f) * 0.12f * (float)TAPE.human * 0.01f, 0.05f, 1.0f);
     }
@@ -564,96 +547,6 @@ static void arp_publish(int t)
     dk_held_n[t] = arp_n[t];
 }
 
-/* ---------------------------------------------------------------- TOMBOLA --- */
-static void tmb_add(int t, int note)
-{
-    int i, slot = -1;
-    for (i = 0; i < DK_NBALL && slot < 0; i++)
-        if (!ball[i].on)
-            slot = i;
-    if (slot < 0) {                            /* full: the oldest goes */
-        for (i = 0; i < DK_NBALL - 1; i++)
-            ball[i] = ball[i + 1];
-        slot = DK_NBALL - 1;
-    }
-    ball[slot].on = 1;
-    ball[slot].note = (uint8_t)note;
-    ball[slot].x = (dk_frand() - 0.5f) * 0.3f;
-    ball[slot].y = -0.3f;
-    ball[slot].vx = (dk_frand() - 0.5f) * 0.004f;
-    ball[slot].vy = 0.0f;
-    dk_song.ball_trk = (uint8_t)t;
-}
-static void tmb_tick(int t)
-{
-    const dk_track_t *k = &dk_song.trk[t];
-    float spin = ((float)k->tmb[0] - 50.0f) * (0.00004f), g = 0.000004f + (float)k->tmb[1] * 0.0000012f,
-          e = 0.45f + (float)k->tmb[2] * 0.0053f, w = 6.2831853f * spin, nx[6], ny[6];
-    int i, j, n = 0;
-    tmb_a += spin;
-    if (tmb_a >= 1.0f)
-        tmb_a -= 1.0f;
-    if (tmb_a < 0.0f)
-        tmb_a += 1.0f;
-    for (j = 0; j < 6; j++) {
-        float a = 6.2831853f * (tmb_a + (float)j / 6.0f) + 0.5235988f;
-        nx[j] = fm_cosf(a);
-        ny[j] = fm_sinf(a);
-    }
-    for (i = 0; i < DK_NBALL; i++) {
-        if (!ball[i].on)
-            continue;
-        ball[i].vy += g;
-        ball[i].x += ball[i].vx;
-        ball[i].y += ball[i].vy;
-        for (j = 0; j < 6; j++) {
-            float d = ball[i].x * nx[j] + ball[i].y * ny[j], lim = 0.80f;
-            if (d > lim) {
-                float wx = -w * ball[i].y, wy = w * ball[i].x;
-                float vn = (ball[i].vx - wx) * nx[j] + (ball[i].vy - wy) * ny[j];
-                ball[i].x -= (d - lim) * nx[j];
-                ball[i].y -= (d - lim) * ny[j];
-                if (vn > 0.0f) {
-                    ball[i].vx -= (1.0f + e) * vn * nx[j];
-                    ball[i].vy -= (1.0f + e) * vn * ny[j];
-                    if (vn > 0.0012f) {        /* a hit: its note, as hard as it struck (drawn toward the grid) */
-                        static const uint8_t QG[3] = {0, DK_T16, 2 * DK_T16};
-                        int qg = QG[k->tmb[3] % 3], dl = 0, rem;
-                        float vel = fm_clampf(vn * 70.0f, 0.18f, 0.95f);
-                        if (qg) {
-                            rem = qg - (int)(gt % (uint32_t)qg);
-                            if (rem < qg && (float)rem <= 0.3f * (float)qg)
-                                dl = (int)((float)rem * tick_len);
-                        }
-                        note_play(t, ball[i].note, vel, (int32_t)(0.4f * DK_SR), dl + jitter() / 2, 2);
-                        if (rec_track_of(t))
-                            rec_done(t, ball[i].note, (int)(vel * 127.0f), DK_T16 * 2);
-                        dk_tmb_hit[i] = 6;
-                    }
-                }
-            }
-        }
-        {
-            float sp = ball[i].vx * ball[i].vx + ball[i].vy * ball[i].vy;
-            if (sp > 0.0004f) {
-                ball[i].vx *= 0.98f;
-                ball[i].vy *= 0.98f;
-            }
-        }
-    }
-    dk_tmb_angle = tmb_a;
-    for (i = 0; i < DK_NBALL; i++) {
-        if (dk_tmb_hit[i])
-            dk_tmb_hit[i]--;
-        if (!ball[i].on)
-            continue;
-        dk_tmb_x[n] = (int16_t)(ball[i].x * 1000.0f);
-        dk_tmb_y[n] = (int16_t)(ball[i].y * 1000.0f);
-        dk_tmb_note[n++] = ball[i].note;
-    }
-    dk_tmb_n = (uint8_t)n;
-}
-
 /* ------------------------------------------------------------- modulators --- */
 static void mods_tick(void)
 {
@@ -818,30 +711,6 @@ static void live_note(int t, int note, int vel, int delay)
             arp_publish(t);
             return;
         }
-        switch (k->seq) {
-        case SQ_HOLD:
-            if (!hold_keys[t]) {               /* a new hand: the old drone lets go */
-                int i;
-                for (i = 0; i < DK_NVOICE; i++)
-                    if (vc[i].on && vc[i].trk == t && vc[i].src == 3) {
-                        if (rec_track_of(t))
-                            rec_close(vc[i].note, 0);
-                        voice_release(&vc[i]);
-                    }
-                dk_held_n[t] = 0;
-            }
-            hold_keys[t]++;
-            if (dk_held_n[t] < 8)
-                dk_held[t][dk_held_n[t]++] = (uint8_t)note;
-            voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 3, 0);
-            if (rec_track_of(t))
-                rec_open(t, note, vel);
-            return;
-        case SQ_TOMBOLA:
-            tmb_add(t, note);
-            break;
-        default: break;
-        }
         voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0, 0);
         if (rec_track_of(t))
             rec_open(t, note, vel);
@@ -860,15 +729,8 @@ static void live_note(int t, int note, int vel, int delay)
             arp_publish(t);
             return;
         }
-        switch (k->seq) {
-        case SQ_HOLD:
-            if (hold_keys[t])
-                hold_keys[t]--;
-            return;
-        default: break;
-        }
         voices_off_note(t, note);
-        if (rec_track_of(t) && k->seq != SQ_ENDLESS)
+        if (rec_track_of(t))
             rec_close(note, 0);
     }
 }
@@ -1004,8 +866,6 @@ static void seq_tick(void)
             arp_tick(t);
         if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
             finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
-        else if (k->seq == SQ_TOMBOLA)
-            tmb_tick(t);
     }
     {
         int n = 0, i;
@@ -1039,7 +899,7 @@ static void seq_tick(void)
     }
     if (dk_recording) {                        /* the recording clip comes round: a new pass (a layer for undo) */
         int clen = clip_len_of(cur_part, dk_rec_trk);
-        if (dk_song.trk[dk_rec_trk].seq != SQ_ENDLESS && part_tick % clen == 0) {
+        if (part_tick % clen == 0) {
             rec_close_all();
             if (dk_pass < 250)
                 dk_pass++;
@@ -1092,7 +952,6 @@ static void drain(void)
                         lay = CLIP(cur_part, i)->layers;
                 dk_pass = (uint8_t)(lay + 1);
                 dk_rec_pass0 = dk_pass;
-                endless_n = (uint16_t)(dk_song.trk[t].seq == SQ_ENDLESS ? 0 : endless_n);
                 if (bake) {
                     rec_bake = (uint8_t)(bake + (dk_playing ? 1 : 0));
                     if (!dk_playing)
@@ -1205,16 +1064,6 @@ static void drain(void)
             break;
         }
         case C_FILL: dk_fill = (uint8_t)(a != 0); break;
-        case C_TOMBOLA:
-            if (a == 1)
-                tmb_add(b >> 8, b & 0x7F);
-            else {
-                int i;
-                for (i = 0; i < DK_NBALL; i++)
-                    ball[i].on = 0;
-                dk_tmb_n = 0;
-            }
-            break;
         case C_SEED:
             rng ^= (uint32_t)c.d * 2654435761u;
             if (!rng)

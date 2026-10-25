@@ -100,7 +100,7 @@ typedef struct {
 } dk_fx_t;
 
 /* ------------------------------------------------------------------ the song --- */
-enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_TOMBOLA, SQ_N };
+enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_RSV7, SQ_N };
 
 /* an event: a note, or (EV_MOTION) a knob's move: note = its target (T_*), vel = the value 0..100, dur 0 a move,
  * dur > 0 a p-lock held that long */
@@ -147,7 +147,7 @@ typedef struct {
     uint8_t swing, drift;
     uint8_t drv[3];                     /* DRIVE: ENERGY, STYLE, VARIATION */
     uint8_t arp[4];                     /* ARP: mode, rate (ARPD_*: 1/4 1/8 1/8T 1/16 1/16T 1/32), octaves, latch */
-    uint8_t tmb[4];                     /* TOMBOLA: SPIN, GRAVITY, BOUNCE, QUANT */
+    uint8_t tmb[4];                     /* reserved (TOMBOLA once: SPIN, GRAVITY, BOUNCE, QUANT); kept for the song format */
     uint8_t div;                        /* ENDLESS: the division (ticks / 6) */
     uint8_t qnt;                        /* LIVE: quantize strength 0..100 */
     uint8_t role;
@@ -192,7 +192,7 @@ typedef struct {
     dk_part_t part[DK_NPART];
     dk_clip_t clip[DK_NCLIP];
     dk_block_t road[DK_NROAD];
-    uint8_t ball[12], nball, ball_trk;  /* TOMBOLA's balls (their notes) */
+    uint8_t ball[12], nball, ball_trk;  /* reserved (TOMBOLA's balls once); kept for the song format */
     float garden[4];                    /* the screen's world (the tape's): its day, its flower */
     uint8_t rsv[16];
     /* (added 2026-10: an older project ends here, DK_SONG_V1; the rest loads as zeros, which are the defaults) */

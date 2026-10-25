@@ -256,10 +256,6 @@ static int page_field(int i, int home)
             static const uint8_t F[5] = {F_FLATCH, F_VOL, F_REV, F_ECHO, F_NONE};
             return F[i];
         }
-        case SQ_TOMBOLA: {
-            static const uint8_t F[5] = {F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_NONE};
-            return F[i];
-        }
         default: {
             static const uint8_t F[5] = {F_SHIFT, F_MOVE, F_VOL, F_REV, F_NONE};   /* the clip a step on, a scale step up */
             return F[i];
@@ -308,8 +304,6 @@ static const char *hint(void)
             return "WHITE PATTERNS  BLACK VARIATIONS";
         if (k->seq == SQ_DRIVE)
             return "PLAY = IT PLAYS  HOME+SEQ = TO STEP";
-        if (k->seq == SQ_TOMBOLA)
-            return "PLAY TO DROP  HOLD REC = EMPTY";
         return "SEQ+B1 COOK  B2 RANDOM  OCT-/+ UNDO/REDO";
     case PG_SOUND: return "FX = TAB  HOME+PRESET = INSTRUMENT";
     case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
@@ -1049,7 +1043,6 @@ static void draw_seq(void)
             draw_step_grid(c, len);
         break;
     case SQ_LIVE:
-    case SQ_ENDLESS:
         roll(c, WX + 4, WY + 4, WW - 8, WH - 14, len, TH_TRACK[dk_song.cur_track], 1);
         hline(WX + 4, WY + WH - 6, WW - 8, W_LINE);
         for (i = 0; i <= len / DK_TPB; i++)
@@ -1101,22 +1094,6 @@ static void draw_seq(void)
                 }
             }
         }
-        break;
-    }
-    case SQ_TOMBOLA: {                       /* the drum turning, the balls in it */
-        float a0 = dk_tmb_angle * 6.2831853f;
-        int cx = WX + WW / 2, cy = WY + WH / 2, R = 45;
-        for (i = 0; i < 6; i++) {
-            float a = a0 + (float)i * 1.0471976f, b = a + 1.0471976f;
-            cv_line(cx + (int)((float)R * fm_cosf(a)), cy + (int)((float)R * fm_sinf(a)), cx + (int)((float)R * fm_cosf(b)),
-                    cy + (int)((float)R * fm_sinf(b)), TH_TEXT);
-        }
-        for (i = 0; i < dk_tmb_n; i++) {
-            int bx = cx + dk_tmb_x[i] * R / 1000, by = cy + dk_tmb_y[i] * R / 1000;
-            disc(bx, by, 3, dk_tmb_hit[i] ? TH_ENC[2] : TH_ENC[1]);
-        }
-        if (!dk_tmb_n)
-            text_box(WX, WY + 36, WW, 1, &FONT_T, &FONT_T, "PLAY NOTES TO DROP BALLS", W_GRAY);
         break;
     }
     default:

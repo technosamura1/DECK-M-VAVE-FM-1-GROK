@@ -1,4 +1,4 @@
-# the pictures for the report (not a test): every page clean, the tape, TOMBOLA, the garden by day and by night
+# the pictures for the report (not a test): every page clean, the tape, the garden by day and by night
 wait 300
 flower 300
 wait 1500
@@ -85,7 +85,7 @@ tap REC
 wait 4000
 tap PLAY
 wait 300
-# TOMBOLA, ARP, DRIVE, FINGER views (a new song: the tape's tracks)
+# ARP, DRIVE, FINGER views (a new song: the tape's tracks)
 tap SAVE
 wait 100
 tapkey w4
@@ -96,18 +96,8 @@ press HOME
 tapkey b1
 release HOME
 wait 50
-press SEQ
-tapkey w4
-release SEQ
-wait 50
 tap SEQ
-tap PLAY
-tapkey w2
-tapkey w5
-tapkey w7
-tapkey w9
-wait 3000
-shot p15_seq_tombola.png
+wait 50
 press SEQ
 tapkey w1
 release SEQ

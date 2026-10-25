@@ -12,7 +12,7 @@ void dk_shed(void);
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (from the render) */
 
 /* commands (main loop -> render) */
-enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_TOMBOLA, C_SEED, C_PEDAL,
+enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
        C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK };
 void dk_cmd(int c, int a, int b, int d);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
@@ -66,11 +66,6 @@ extern volatile uint8_t dk_voices_on;
 extern volatile uint8_t dk_voices_frozen;   /* (of them, with a frozen sound) */
 extern volatile uint8_t dk_fill;
 extern volatile uint32_t dk_rec_hits;                   /* notes recorded (the head blinks) */
-/* TOMBOLA for the screen: the drum's turn (turns) and its balls (x, y in -1..1, 0 none) */
-#define DK_NBALL 12
-extern volatile float dk_tmb_angle;
-extern volatile int16_t dk_tmb_x[DK_NBALL], dk_tmb_y[DK_NBALL];
-extern volatile uint8_t dk_tmb_note[DK_NBALL], dk_tmb_n, dk_tmb_hit[DK_NBALL];
 /* ARP / HOLD: the notes held for them */
 extern volatile uint8_t dk_held_n[DK_NTRACK];
 extern volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* ARP: its rhythm's step, a note just now */

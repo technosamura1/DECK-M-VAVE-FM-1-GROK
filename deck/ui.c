@@ -345,13 +345,6 @@ static void rec_start(void)
 {
     int t = dk_song.cur_track, clip = cur_clip(), t2 = dk_song.split && dk_song.harm_track != t ? dk_song.harm_track : 0xFF;
     rec_reset();
-    if (cur()->seq == SQ_ENDLESS) {      /* ENDLESS: a new loop, from its first note */
-        undo_push(clip);
-        dk_lock();
-        clip_clear(clip);
-        dk_song.clip[clip].len = 0;
-        dk_unlock();
-    }
     ui_auto_on = 0;
     if (!dk_playing && ui_rec_auto && part_empty(dk_song.cur_part)) {   /* AUTO: open, up to 16 bars, REC ends it */
         ui.auto_prev = dk_song.part[dk_song.cur_part & 7].bars;
@@ -731,18 +724,12 @@ static void action(int a, int b)
             rec_start();
         break;
     case A_CLEAR:
-        if (cur()->seq == SQ_TOMBOLA) {
-            dk_cmd(C_TOMBOLA, 0, 0, 0);
-            dk_song.nball = 0;
-            say("TOMBOLA", "EMPTIED");
-        } else {
-            undo_push(cur_clip());
-            dk_lock();
-            clip_clear(cur_clip());
-            dk_unlock();
-            mark_dirty();
-            say("CLIP CLEARED", "UNDO BRINGS IT BACK");
-        }
+        undo_push(cur_clip());
+        dk_lock();
+        clip_clear(cur_clip());
+        dk_unlock();
+        mark_dirty();
+        say("CLIP CLEARED", "UNDO BRINGS IT BACK");
         break;
     case A_METRO:
         dk_metro.mode = (uint8_t)(dk_metro.mode ? 0 : 1);
@@ -1222,8 +1209,6 @@ static void key_down(int k, int vel)
     }
     keys_down(k, vel);
     notes_show(k);
-    if (cur()->seq == SQ_TOMBOLA && dk_song.nball < 12)
-        dk_song.ball[dk_song.nball++] = (uint8_t)(53 + k);
 }
 
 static void key_up(int k)
@@ -1528,10 +1513,6 @@ static void erase_do(int stage)
             dk_unlock();
         }
     } else {
-        if (stage == 1 && cur()->seq == SQ_TOMBOLA) {
-            dk_cmd(C_TOMBOLA, 0, 0, 0);
-            dk_song.nball = 0;
-        }
         for (p = 0; p < DK_NPART; p++) {     /* stage 1 this part, 2 the others */
             c = p * DK_NTRACK + t;
             if ((stage == 1) != (p == dk_song.cur_part % DK_NPART) || !dk_song.clip[c].n)
@@ -1664,10 +1645,6 @@ static void input(void)
         dk_lock();
         clip_clear(c);
         dk_unlock();
-        if (dk_song.trk[t].seq == SQ_TOMBOLA && t == dk_song.cur_track) {
-            dk_cmd(C_TOMBOLA, 0, 0, 0);
-            dk_song.nball = 0;
-        }
         mark_dirty();
         s[6] = (char)('1' + t);
         say(s, "CLEARED");

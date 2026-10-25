@@ -3,7 +3,7 @@
 /* DECK in fm1-base's host simulator: its checks for "expect" and its commands.
  *   expect: playing recording counting page track part next tempo root mode seq nev events(of the clip now) eventsAB
  *   (part A..H, track 1..6: events of that clip) nroad pass rectrk dirty voices clicks metro fill perform harmroot
- *   textfit (texts cut short: 0) undo playmode tmb; the step editor's cursor senotes selen sepitch; keywN (white key N's
+ *   textfit (texts cut short: 0) undo playmode; the step editor's cursor senotes selen sepitch; keywN (white key N's
  *   note)
  *   parts: pmask (the part's track mutes, the one now) pmaskA..H pmpend (a mute waiting for the bar's end) newpart (NEW PART 1 COPY, 0 EMPTY)
  *   barsA..H psndA1 (the first event's frozen sound, part A track 1) clenA1 (clip length) pmgen tmute0..5 (a track's old global mute)
@@ -97,7 +97,6 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "textfit")) g = (int)ui.fit_over;
     else if (!strcmp(what, "undo")) g = undo_count();
     else if (!strcmp(what, "playmode")) g = dk_song.play_mode;
-    else if (!strcmp(what, "tmb")) g = dk_tmb_n;
     else if (!strcmp(what, "pmask")) g = dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute;
     else if (!strncmp(what, "pmask", 5) && what[5] >= 'A' && what[5] <= 'H') g = dk_song.part[what[5] - 'A'].mute;
     else if (!strncmp(what, "tmute", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.trk[what[5] - '0'].mute;
@@ -275,6 +274,14 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_lock();
         dk_song_insert((atoi(a) & 7) * DK_NTRACK + (atoi(b) - 1 + DK_NTRACK) % DK_NTRACK, &e);
         dk_unlock();
+        return 1;
+    }
+    if (!strcmp(cmd, "reseq")) {                /* reseq T SQ: track T's sequencer value (a reserved one too), saved and loaded (the migration) */
+        dk_lock();
+        dk_song.trk[(atoi(a) - 1 + DK_NTRACK) % DK_NTRACK].seq = (uint8_t)atoi(b);
+        dk_unlock();
+        project_save(set.proj);
+        project_load(set.proj);
         return 1;
     }
     if (!strcmp(cmd, "firedclr")) {

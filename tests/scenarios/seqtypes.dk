@@ -1,4 +1,4 @@
-# the sequencers: ARP (over LIVE), TOMBOLA, FINGER, DRIVE (and BAKE); FILL
+# the sequencers: ARP (over LIVE), FINGER, DRIVE (and BAKE); FILL
 wait 300
 # a new empty song: the tape's tracks (PIANO PAD KEYS BASS DRUMS NATURE: LIVE LIVE LIVE STEP FINGER LIVE)
 tap SAVE
@@ -28,21 +28,12 @@ press HOME
 tap ARP
 release HOME
 wait 50
-# TOMBOLA on the keys (SEQ held + white 5)
+# TOMBOLA is gone: SEQ held + white 5 is no sequencer any more, the track stays as it was
 press SEQ
 tapkey w4
 release SEQ
 wait 50
-expect seq 7
-tap PLAY
-tapkey w2
-tapkey w5
-tapkey w7
-wait 4000
-expect tmb >2
-shot tombola.png
-tap PLAY
-wait 200
+expect seq 1
 # FINGER on the drums: a pattern held
 press HOME
 tapkey b4

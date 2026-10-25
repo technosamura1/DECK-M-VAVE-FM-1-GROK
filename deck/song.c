@@ -956,10 +956,6 @@ static void track_defaults(int t)
     k->arp[0] = 0;
     k->arp[1] = 3;                      /* 1/16 */
     k->arp[2] = 1;
-    k->tmb[0] = 60;
-    k->tmb[1] = 45;
-    k->tmb[2] = 70;
-    k->tmb[3] = 2;
     k->div = 1;
     k->qnt = 60;
     for (i = 0; i < 2; i++) {

@@ -9,8 +9,8 @@ enum {
     /* PLAY */ F_TEMPO, F_MACRO, F_MOOD,
     /* SOUND */ F_P0, F_P1, F_P2, F_P3, F_P4, F_P5, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
     F_MODTGT, F_MODSLOT,
-    /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING, F_DIV,
-    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
+    /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING,
+    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_FLATCH,
     F_SEQTYPE, F_OCT, F_DRIFT, F_MIDICH, F_ROLE,
     /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP,
     /* ROAD */ F_ROADCUR, F_ROADPART, F_ROADREPS, F_GPART, F_GLABEL, F_GBARS, F_PLAYMODE,
@@ -27,10 +27,10 @@ enum {
     F_N
 };
 
-static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DREAM", "FINGER", "HOLD", "TOMBOLA"};
+static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DREAM", "FINGER", "HOLD", "-"};
 /* the sequencers offered (ARP is a layer over them now; ENDLESS and HOLD folded into LIVE and the ARP's LATCH) */
-#define NSEQ 5
-static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_LIVE, SQ_DRIVE, SQ_FINGER, SQ_TOMBOLA};
+#define NSEQ 4
+static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_LIVE, SQ_DRIVE, SQ_FINGER};
 static int seq_index(int sq)
 {
     int i;
@@ -46,7 +46,6 @@ static const char *const ARPR_NAME[ARPR_N] = {"STRAIGHT", "PULSE", "OFFBEAT", "D
 static const char *const ARPG_NAME[ARPG_N] = {"SHORT", "NORMAL", "LONG", "TIE"};   /* as the encoder turns */
 static const uint8_t ARPG_ORDER[ARPG_N] = {ARPG_SHORT, ARPG_NORMAL, ARPG_LONG, ARPG_TIE};
 static const char *const ARPSRC_NAME[2] = {"KEYS", "CHORD"};
-static const char *const EDIV_NAME[4] = {"1/4", "1/8", "1/16", "1/8T"};
 static const char *const VOICING_NAME[VC_N] = {"CLOSE", "OPEN", "SPREAD", "DROP2", "POWER"};
 static const char *const WHITE_NAME[2] = {"NOTES", "CHORDS"};
 static const char *const BLACK_NAME[3] = {"CHORDS", "PERFORM", "NOTES"};
@@ -59,7 +58,6 @@ static const char *const TEMPLATE_NAME[5] = {"EMPTY", "POP", "CLUB", "AMBIENT", 
 static const char *const METRO_MODE[3] = {"OFF", "ON REC", "ALWAYS"};
 static const char *const METRO_SND[METRO_N] = {"CLICK", "WOOD", "HAT", "COWBELL", "RIM"};
 static const char *const MDIV_NAME[3] = {"1/4", "1/8", "1/16"};
-static const char *const QUANT3[3] = {"OFF", "1/16", "1/8"};
 static const char *const PMODE_NAME[2] = {"PART", "SONG"};
 static const char *const ECHO_T[4] = {"1/8.", "1/4", "1/8", "1/4."};
 static const char *const TARGET_NAME[T_N] = {"-", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "ATTACK", "DECAY",
@@ -454,7 +452,6 @@ static void field_range(int f, int *lo, int *hi)
     case F_SLEN: *lo = 1; *hi = 16; break;
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_RECBARS: *hi = 16; break;
-    case F_DIV: *hi = 3; break;
     case F_ARPMODE: *hi = 5; break;
     case F_ARPDIV: *hi = DK_ARP_NDIV - 1; break;
     case F_ARPRHY: *hi = ARPR_N - 1; break;
@@ -482,7 +479,6 @@ static void field_range(int f, int *lo, int *hi)
     case F_PLAYMODE: *hi = 1; break;
     case F_STYLE:
     case F_SONGSTYLE: *hi = TAPE.nstyle - 1; break;
-    case F_TQUANT: *hi = 2; break;
     case F_SEQTYPE: *hi = NSEQ - 1; break;
     case F_OCT:
     case F_KOCT: *lo = -3; *hi = 3; break;
@@ -585,7 +581,6 @@ static int field_get(int f)
     case F_RECBARS: return ui_auto_on || (ui_rec_auto && part_empty(dk_song.cur_part)) ? 0 : dk_song.part[dk_song.cur_part & 7].bars;
     case F_QNT: return k->qnt;
     case F_TSWING: return k->swing;
-    case F_DIV: return k->div & 3;
     case F_ARPMODE: return k->arp[0] % 6;
     case F_ARPDIV: return k->arp[1] % DK_ARP_NDIV;
     case F_ARPRHY: return k->arp_rhy % ARPR_N;
@@ -604,10 +599,6 @@ static int field_get(int f)
     case F_ENERGY: return k->drv[0];
     case F_STYLE: return k->drv[1];
     case F_VAR: return k->drv[2];
-    case F_SPIN: return k->tmb[0];
-    case F_GRAV: return k->tmb[1];
-    case F_BOUNCE: return k->tmb[2];
-    case F_TQUANT: return k->tmb[3] % 3;
     case F_SEQTYPE: return seq_index(k->seq);
     case F_OCT: return k->oct;
     case F_DRIFT: return k->drift;
@@ -756,7 +747,6 @@ static void field_set(int f, int v)
         break;
     case F_QNT: k->qnt = (uint8_t)v; break;
     case F_TSWING: k->swing = (uint8_t)v; break;
-    case F_DIV: k->div = (uint8_t)v; break;
     case F_ARPMODE: k->arp[0] = (uint8_t)v; break;
     case F_ARPDIV: k->arp[1] = (uint8_t)v; break;
     case F_ARPRHY: k->arp_rhy = (uint8_t)v; break;
@@ -777,10 +767,6 @@ static void field_set(int f, int v)
     case F_ENERGY: k->drv[0] = (uint8_t)v; break;
     case F_STYLE: k->drv[1] = (uint8_t)v; break;
     case F_VAR: k->drv[2] = (uint8_t)v; break;
-    case F_SPIN: k->tmb[0] = (uint8_t)v; break;
-    case F_GRAV: k->tmb[1] = (uint8_t)v; break;
-    case F_BOUNCE: k->tmb[2] = (uint8_t)v; break;
-    case F_TQUANT: k->tmb[3] = (uint8_t)v; break;
     case F_SEQTYPE:
         k->seq = SQ_LIST[v % NSEQ];
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
@@ -941,7 +927,6 @@ static const char *field_label(int f)
     case F_RECBARS: return "BARS";
     case F_QNT: return "QUANT";
     case F_TSWING: return "SWING";
-    case F_DIV: return "DIVISION";
     case F_ARPMODE: return "MODE";
     case F_ARPDIV: return "RATE";
     case F_ARPRHY: return "RHYTHM";
@@ -954,10 +939,6 @@ static const char *field_label(int f)
     case F_ENERGY: return "ENERGY";
     case F_STYLE: return "STYLE";
     case F_VAR: return "VARIATION";
-    case F_SPIN: return "SPIN";
-    case F_GRAV: return "GRAVITY";
-    case F_BOUNCE: return "BOUNCE";
-    case F_TQUANT: return "GRID";
     case F_SEQTYPE: return "SEQUENCER";
     case F_OCT: return "OCTAVE";
     case F_DRIFT: return "DRIFT";
@@ -1137,7 +1118,6 @@ static void field_text(int f, char *b)
         else
             itoa_b(v, b);
         break;
-    case F_DIV: cpy(b, EDIV_NAME[v & 3]); break;
     case F_ARPMODE: cpy(b, ARP_NAME[v % 6]); break;
     case F_ARPDIV: cpy(b, DIV_NAME[v % DK_ARP_NDIV]); break;
     case F_ARPRHY: cpy(b, ARPR_NAME[v % ARPR_N]); break;
@@ -1146,7 +1126,6 @@ static void field_text(int f, char *b)
     case F_ARPON: cpy(b, v ? "ON" : "OFF"); break;
     case F_STYLE:
     case F_SONGSTYLE: cpy(b, TAPE.style_name[v % TAPE.nstyle]); break;
-    case F_TQUANT: cpy(b, QUANT3[v % 3]); break;
     case F_SEQTYPE: cpy(b, SEQ_NAME[SQ_LIST[v % NSEQ]]); break;
     case F_ROLE: cpy(b, ROLE_NAME[v % R_N]); break;
     case F_OCT:
