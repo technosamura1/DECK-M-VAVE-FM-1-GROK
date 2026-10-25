@@ -44,6 +44,9 @@ int app_expect(const char *what, int *got)
     else if (!strncmp(what, "events", 6) && what[6] && what[7]) g = host_events(what[6] - 'A', what[7] - '1');
     else if (!strcmp(what, "nroad")) g = dk_song.nroad;
     else if (!strcmp(what, "pass")) g = dk_pass;
+    else if (!strcmp(what, "lat")) g = dk_rec_lat;
+    else if (!strcmp(what, "evpos")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].pos : -1;   /* the clip's first event */
+    else if (!strcmp(what, "evdur")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].dur : -1;
     else if (!strcmp(what, "rectrk")) g = dk_rec_trk;
     else if (!strcmp(what, "dirty")) g = ui.dirty;
     else if (!strcmp(what, "voices")) g = dk_voices_on;
@@ -147,6 +150,18 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     (void)d;
     if (!strcmp(cmd, "mark")) {
         host_mark = host_clip_hash();
+        return 1;
+    }
+    if (!strcmp(cmd, "qnt")) {                  /* qnt N: the track's QUANT (the latency scenario wants none) */
+        cur()->qnt = (uint8_t)atoi(a);
+        return 1;
+    }
+    if (!strcmp(cmd, "onnote")) {               /* onnote N: ON NOTE (the first note starts the take) */
+        dk_metro.on_note = (uint8_t)atoi(a);
+        return 1;
+    }
+    if (!strcmp(cmd, "lat")) {                  /* lat N: REC LAT in ms */
+        dk_rec_lat = (uint8_t)atoi(a);
         return 1;
     }
     if (!strcmp(cmd, "demo")) {

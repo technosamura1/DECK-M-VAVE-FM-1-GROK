@@ -17,7 +17,7 @@ enum {
     /* KEYS */ F_ROOT, F_MODE, F_CHORD, F_WHITE, F_BLACK, F_QUALITY, F_VOICING, F_STRUM, F_LEAD, F_LAYOUT, F_SPLIT,
     F_BASS, F_KOCT, F_DIM, F_HARMTRK,
     /* PROJECT */ F_SLOT, F_TEMPLATE, F_SWING, F_SONGSTYLE, F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL, F_ONNOTE,
-    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION,
+    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT,
     /* REC */ F_RECTRK,
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
@@ -475,6 +475,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_SWING: *hi = 60; break;
     case F_METRO: *hi = 2; break;
     case F_COUNT: *lo = 1; *hi = 2; break;
+    case F_RECLAT: *hi = 30; break;
     case F_CLICK: *hi = METRO_N - 1; break;
     case F_MDIV: *hi = 2; break;
     case F_ECHOTIME: *hi = 3; break;
@@ -615,6 +616,7 @@ static int field_get(int f)
     case F_SONGSTYLE: return dk_song.style;
     case F_METRO: return dk_metro.mode;
     case F_COUNT: return dk_metro.count;
+    case F_RECLAT: return dk_rec_lat;
     case F_CLICK: return dk_metro.sound;
     case F_MDIV: return dk_metro.div;
     case F_MVOL: return dk_metro.vol;
@@ -818,6 +820,7 @@ static void field_set(int f, int v)
         break;
     case F_METRO: dk_metro.mode = (uint8_t)v; settings_save_later(); break;
     case F_COUNT: dk_metro.count = (uint8_t)v; settings_save_later(); break;
+    case F_RECLAT: dk_rec_lat = (uint8_t)v; settings_save_later(); break;
     case F_CLICK: dk_metro.sound = (uint8_t)v; settings_save_later(); break;
     case F_MDIV: dk_metro.div = (uint8_t)v; settings_save_later(); break;
     case F_MVOL: dk_metro.vol = (uint8_t)v; break;
@@ -955,6 +958,7 @@ static const char *field_label(int f)
     case F_SONGSTYLE: return "STYLE";
     case F_METRO: return "METRO";
     case F_COUNT: return "COUNT IN";
+    case F_RECLAT: return "REC LAT";
     case F_CLICK: return "CLICK";
     case F_MDIV: return "M DIV";
     case F_MVOL: return "M VOL";
@@ -1155,6 +1159,7 @@ static void field_text(int f, char *b)
     case F_CLICK: cpy(b, METRO_SND[v % METRO_N]); break;
     case F_MDIV: cpy(b, MDIV_NAME[v % 3]); break;
     case F_ECHOTIME: cpy(b, ECHO_T[v & 3]); break;
+    case F_RECLAT: b = itoa_b(v, b); cpy(b, " MS"); break;
     case F_CPU: b = itoa_b(v, b); cpy(b, "%"); break;
     case F_VERSION: cpy(b, DK_VERSION); break;
     case F_LLEVEL:                           /* half dB: +6, -3.5 ... */

@@ -10,7 +10,9 @@ static uint16_t part_tick;
 static uint8_t cur_part, queued = 0xFF, tricks, block_last;
 static int32_t count_left;
 static uint8_t rec_start_after, rec_wait_note, rec_bake, rec_trk2 = 0xFF;
+static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
 static uint16_t endless_n;
+static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */
 static uint8_t open_vel[128], open_trk[128];
 static uint8_t arp_step[DK_NTRACK], arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
@@ -196,9 +198,22 @@ static float clip_now(int t)                   /* the recording clip's time, tic
         f += (float)clen;
     return f - (float)((int)f / clen * clen);
 }
+/* where the note you pressed was HEARD to be: the render's block and the note's wait for it put the sound later than the
+ * press (dk_rec_lat ms), and you played to what you heard: the clip's time less that, round the clip's end */
+static float clip_heard(int t, int nocomp)
+{
+    int clen = clip_len_of(cur_part, t);
+    float f = clip_now(t), comp = 0.0f;
+    if (!nocomp && tick_len > 0.0f)
+        comp = fm_minf((float)dk_rec_lat * 0.001f * DK_SR / tick_len, (float)clen * 0.5f);
+    f -= comp;
+    while (f < 0.0f)
+        f += (float)clen;
+    return f;
+}
 static int rec_pos(int t)
 {
-    float f = clip_now(t), g, q = (float)dk_song.trk[t].qnt * 0.01f;
+    float f = clip_heard(t, rec_nocomp), g, q = (float)dk_song.trk[t].qnt * 0.01f;
     int clen = clip_len_of(cur_part, t), p;
     g = (float)((int)((f + (float)DK_T16 * 0.5f) / (float)DK_T16) * DK_T16);
     p = (int)(f + (g - f) * q + 0.5f);
@@ -222,6 +237,7 @@ static void rec_open(int t, int note, int vel)
         rec_push(cur_part * DK_NTRACK + open_trk[note], 0, open_pos[note], DK_T16, note,
                  open_vel[note], 0);
     open_pos[note] = (int16_t)rec_pos(t);
+    open_nc[note] = rec_nocomp;
     open_vel[note] = (uint8_t)vel;
     open_trk[note] = (uint8_t)t;
 }
@@ -231,7 +247,7 @@ static void rec_close(int note, int to_end)
     if (s < 0)
         return;
     clen = clip_len_of(cur_part, t);
-    now = to_end ? clen : (int)clip_now(t);
+    now = to_end ? clen : (int)clip_heard(t, open_nc[note]);
     d = to_end ? clen - s : ((now - s) % clen + clen) % clen;
     if (d <= 0)
         d = DK_T16 / 2;
@@ -738,6 +754,7 @@ static void live_note(int t, int note, int vel, int delay)
             rec_wait_note = 0;
             play_start();
             dk_recording = 1;
+            rec_nocomp = 1;                    /* its start is the take's start: at 0 */
         }
         if (!(e->flags & EF_DRUM)) {           /* the harmony hears it */
             uint32_t pcs;
@@ -1017,7 +1034,10 @@ static void drain(void)
         BARRIER();
         q_r++;
         switch (c.c) {
-        case C_NOTE: live_note(a, b & 0x7F, (b >> 8) & 0x7F, c.d); break;
+        case C_NOTE:
+            live_note(a, b & 0x7F, (b >> 8) & 0x7F, c.d);
+            rec_nocomp = 0;
+            break;
         case C_PLAY:
             if (a && !dk_playing && !count_left) {
                 road_from = (uint8_t)b;

@@ -175,7 +175,7 @@ static int page_field(int i, int home)
     static const uint8_t GLOB_F[4][5] = {{F_TEMPO, F_SWING, F_DUST, F_SLEEP, F_SIDECHAIN},
                                          {F_METRO, F_COUNT, F_CLICK, F_MVOL, F_MDIV},
                                          {F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ONNOTE, F_NONE},
-                                         {F_SIDECHAIN, F_ECHOTIME, F_CPU, F_VERSION, F_NONE}};
+                                         {F_RECLAT, F_ECHOTIME, F_CPU, F_VERSION, F_NONE}};
     (void)home;
     switch (ui.page) {
     case PG_PLAY: {                          /* the garden: the track you play, its sound and its space; ALGO the mood */
