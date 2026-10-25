@@ -17,8 +17,10 @@ typedef struct {
     uint16_t n, len, at;                 /* events, the clip's length; where in the buffer */
     uint8_t layers, nroad;
     uint8_t grp;                         /* snapshots of one edit over several clips: undone together (0 alone) */
-    dk_block_t road[DK_NROAD];
 } snap_t;
+/* a road snapshot keeps the road's blocks in the event buffer (as bytes, ROAD_EV events' room): ~8 KB of RAM less than a
+ * road array in every snapshot */
+#define ROAD_EV ((DK_NROAD * (int)sizeof(dk_block_t) + (int)sizeof(dk_ev_t) - 1) / (int)sizeof(dk_ev_t))
 static uint8_t grp_now, grp_seq;
 #define NSNAP 24
 static snap_t usnap[NSNAP], rsnap[8];
@@ -140,7 +142,7 @@ int clip_find(int clip, int pos, int note, int tol)
 static int snap_take(snap_t *tab, int *cnt, int max, dk_ev_t *buf, int bufn, int clip, int road)
 {
     snap_t *s;
-    int need = road ? 0 : dk_song.clip[clip].n, used = 0, i;
+    int need = road == 1 ? ROAD_EV : road ? 0 : dk_song.clip[clip].n, used = 0, i;
     if (*cnt > 0)
         used = tab[*cnt - 1].at + tab[*cnt - 1].n;
     while (*cnt > 0 && (*cnt >= max || used + need > bufn)) {   /* full: the oldest forgotten */
@@ -165,9 +167,11 @@ static int snap_take(snap_t *tab, int *cnt, int max, dk_ev_t *buf, int bufn, int
         s->len = dk_song.part[clip & 7].bars;
         s->layers = dk_song.part[clip & 7].mute;
     } else if (road) {
+        uint8_t *d = (uint8_t *)(buf + used);
+        const uint8_t *r = (const uint8_t *)dk_song.road;
         s->nroad = dk_song.nroad;
-        for (i = 0; i < DK_NROAD; i++)
-            s->road[i] = dk_song.road[i];
+        for (i = 0; i < DK_NROAD * (int)sizeof(dk_block_t); i++)
+            d[i] = r[i];
     } else {
         s->len = dk_song.clip[clip].len;
         s->layers = dk_song.clip[clip].layers;
@@ -183,9 +187,11 @@ static void snap_restore(const snap_t *s, const dk_ev_t *buf)
         dk_song.part[s->clip & 7].bars = (uint8_t)s->len;
         dk_song.part[s->clip & 7].mute = s->layers;
     } else if (s->kind) {
+        uint8_t *d = (uint8_t *)dk_song.road;
+        const uint8_t *r = (const uint8_t *)(buf + s->at);
         dk_song.nroad = s->nroad;
-        for (i = 0; i < DK_NROAD; i++)
-            dk_song.road[i] = s->road[i];
+        for (i = 0; i < DK_NROAD * (int)sizeof(dk_block_t); i++)
+            d[i] = r[i];
     } else {
         clip_put(s->clip, buf + s->at, s->n);
         dk_song.clip[s->clip].len = s->len;
