@@ -200,6 +200,7 @@ typedef struct {
     uint8_t atmo[8];                    /* ATMO: the layers' levels 0..100 (the tape's atmo list) */
     uint8_t tapesim, atmo_lvl, rsv2[6]; /* ATMO: the tape emulation 0..100; the layers' master level (0 = 100) */
     dk_snd_t snd[DK_NTRACK][DK_NSND];   /* the frozen sounds of each track (events' layer bits 5..7 point here) */
+    uint32_t lmute[DK_NCLIP];           /* LAYERS: per clip, the takes muted (bit = take 0..31; playback skips them). Older projects: 0 */
 } dk_song_t;
 #define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
 

@@ -125,6 +125,7 @@ int project_load(int slot)
     dst = (uint8_t *)&dk_song;
     for (i = 0; i < sizeof dk_song; i++)   /* an older, shorter song: the rest zeros (the defaults) */
         dst[i] = i < h->nsong ? src[i] : 0;
+    dk_lsolo_clip = 0xFF;
     n = h->nev * sizeof(dk_ev_t);
     src = plat_data(at + sizeof(phead_t) + h->nsong);
     dst = (uint8_t *)dk_ev;

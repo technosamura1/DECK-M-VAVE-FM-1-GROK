@@ -78,6 +78,12 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "armed")) g = ui.armed;
     else if (!strcmp(what, "rectrk")) g = dk_rec_trk;
     else if (!strcmp(what, "recmask")) g = dk_rec_mask;           /* the tracks the render records (bit t) */
+    else if (!strcmp(what, "nlay")) g = lay_count();                 /* LAYERS: the current clip's layers */
+    else if (!strcmp(what, "lmute")) g = (int)dk_song.lmute[lay_clip()];   /* its muted takes (bit = take) */
+    else if (!strcmp(what, "lsolo")) g = dk_lsolo_clip == lay_clip() ? dk_lsolo_take + 1 : 0;
+    else if (!strcmp(what, "laycur")) g = ui.lay_cur;
+    else if (!strcmp(what, "layview")) g = ui.lay;
+    else if (!strcmp(what, "fired")) g = (int)dk_fired;              /* the takes the sequencer has played (bit = take) */
     else if (!strcmp(what, "armtrk")) g = ui.arm_trk;              /* the tracks armed on TRACKS (bit t) */
     else if (!strcmp(what, "recmode")) g = dk_rec_mode;            /* 0 OVERDUB, 1 REPLACE */
     else if (!strcmp(what, "dirty")) g = ui.dirty;
@@ -237,6 +243,29 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             dk_song_insert(pt * DK_NTRACK + t, &e);
         }
         dk_unlock();
+        return 1;
+    }
+    if (!strcmp(cmd, "seedl")) {                /* seedl P T N D: N events (an octave per take) of take D % 10 with frozen sound D / 10 */
+        int pt = atoi(a) & 7, t = (atoi(b) - 1 + DK_NTRACK) % DK_NTRACK, n = atoi(c), i, tk = atoi(d) % 10, snd = atoi(d) / 10;
+        dk_lock();
+        if (snd >= 1 && snd <= DK_NSND)
+            dk_song.snd[t][snd - 1].used = 1;
+        for (i = 0; i < n; i++) {
+            dk_ev_t e = {0};
+            e.pos = (uint16_t)(i * DK_T16 * 2 % (DK_TPB * 2));
+            e.dur = DK_T16;
+            e.note = (uint8_t)(36 + tk * 5 + i % 3);
+            e.vel = 90;
+            e.layer = DK_L_MAKE(tk, snd);
+            dk_song_insert(pt * DK_NTRACK + t, &e);
+        }
+        if (dk_song.clip[pt * DK_NTRACK + t].layers < tk)
+            dk_song.clip[pt * DK_NTRACK + t].layers = (uint8_t)tk;
+        dk_unlock();
+        return 1;
+    }
+    if (!strcmp(cmd, "firedclr")) {
+        dk_fired = 0;
         return 1;
     }
     if (!strcmp(cmd, "setbars")) {              /* setbars P N */

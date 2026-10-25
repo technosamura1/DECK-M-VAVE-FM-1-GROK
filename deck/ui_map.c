@@ -24,7 +24,7 @@ static const ui_map_t UI_MAP[] = {
     {B_SEL, A_PAGE_ATMO, A_NONE, A_NONE, 0, "ATMO: rain, fire, birds, ocean, wind, crickets, the dust, the tape; again: its row"},
     {B_ARP, A_ARP, A_NONE, A_ARP_OFF, HOLD_MOD, "ARP on (over the sequencer); again: LATCH on/off | HOME+: ARP off | hold + white A-H: a part (an empty one gets a COPY of this part, NEW PART on GLOBAL)"},
     {B_GLO, A_PAGE_GLOBAL, A_FILL, A_NONE, 250, "GLOBAL (tempo, swing, dust, metronome, MIDI); again: its row | hold: FILL"},
-    {B_EDIT, A_PAGE_KEYS, A_UNDO, A_REDO, 700, "KEYS; again: its next row | hold: UNDO | HOME+: REDO"},
+    {B_EDIT, A_PAGE_KEYS, A_UNDO, A_REDO, 700, "KEYS; again: next row; on TRACKS: LAYERS | hold: UNDO | HOME+: REDO"},
     {B_SAVE, A_PAGE_PROJECT, A_NONE, A_NONE, HOLD_MOD, "PROJECT (white 1-4 open, 5 new, 6 demo; black 1 EXPORT, 2 STEMS, 3 SAVE, 4 CLEAR ALL: press twice); again there: save now | hold + white 13-16: save preset"},
     {B_HOME, A_PAGE_PLAY, A_NONE, A_NONE, HOLD_MOD, "PLAY; on PLAY: TRACKS (six track rows; again: back; while recording: TRACKS <-> REC) | HOME + white 1-16: preset (in MIX: white 1-6 = the part's track mute at once; on TRACKS: white 1-6 = SELECT the track, black 1-6 = mute in the part, SEQ + black 1-6 = solo, SEQ + white 1-6 = ARM; K3 REC MODE, K4 REC ARM) | HOME + black 1-6: track | HOME + black 7-11: COPY PASTE DOUBLE VARIATE HUMANIZE the clip"},
     {B_OCTDN, A_OCT_DOWN, A_NONE, A_TRANS_DOWN, 0, "the track's octave down | HOME+: the clip a scale step down"},

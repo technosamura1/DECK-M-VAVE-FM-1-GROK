@@ -338,6 +338,14 @@ static int swing_delay(int t, int pos)
     return (int)(fm_minf(sw, 0.75f) * (float)DK_T16 * tick_len * 0.66f);
 }
 
+static int layer_silent(int t, const dk_ev_t *e)
+{
+    int c = (cur_part & 7) * DK_NTRACK + t, take = (int)DK_L_TAKE(e->layer);
+    if (dk_lsolo_clip == c && dk_lsolo_take != take)
+        return 1;
+    return (dk_song.lmute[c] >> take & 1u) != 0;
+}
+
 static void fire(int t, const dk_ev_t *e, int ct_pos)
 {
     static const uint8_t PROB[4] = {100, 75, 50, 25};
@@ -353,6 +361,9 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
         }
         return;
     }
+    if (layer_silent(t, e))                     /* a layer muted (or another one soloed) on the LAYERS list */
+        return;
+    dk_fired |= 1u << DK_L_TAKE(e->layer);
     if ((e->fl & EV_PROB) && (uint32_t)irand(100) >= PROB[e->fl & EV_PROB])
         return;
     if (!(eng->flags & EF_DRUM)) {

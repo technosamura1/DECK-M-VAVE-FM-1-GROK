@@ -100,6 +100,9 @@ void clip_clear(int clip)
 {
     clip_put(clip, 0, 0);
     dk_song.clip[clip].layers = 0;
+    dk_song.lmute[clip] = 0;
+    if (dk_lsolo_clip == clip)
+        dk_lsolo_clip = 0xFF;
 }
 
 /* the events sorted by position (after an edit that moved them) */
@@ -592,6 +595,7 @@ int part_copy(int from, int to)
                 dk_ev[dk_song.clip[c].at + i] = dk_ev[dk_song.clip[src].at + i];
             dk_song.clip[c].len = dk_song.clip[src].len;
             dk_song.clip[c].layers = dk_song.clip[src].layers;
+            dk_song.lmute[c] = dk_song.lmute[src];
             take_pend[c] = take_pend[src];
         }
     }
@@ -1013,9 +1017,11 @@ void song_clear_all(void)
         dk_song.clip[i].n = 0;
         dk_song.clip[i].len = 0;
         dk_song.clip[i].layers = 0;
+        dk_song.lmute[i] = 0;
         dk_song.clip[i].at = 0;
     }
     dk_song.nev = 0;
+    dk_lsolo_clip = 0xFF;
     for (i = 0; i < DK_NPART; i++) {
         dk_song.part[i].bars = 4;
         dk_song.part[i].label = (uint8_t)(i % 8);
@@ -1092,4 +1098,103 @@ void song_mood(int m)
         dk_song.trk[t].drv[1] = md->style;
     }
     song_edits++;
+}
+
+/* ------------------------------------------------------------------ LAYERS --- */
+/* A clip's layers: one per take that has notes in it, in take order. take[i] 0..31, snd[i] the frozen sound of the take's
+ * first note (0: the track's own), cnt[i] its notes. Returns how many (at most `max`). */
+int layers_list(int clip, uint8_t *take, uint8_t *snd, uint16_t *cnt, int max)
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, j, n = 0;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        int tk = (int)DK_L_TAKE(e->layer);
+        if (e->fl & EV_MOTION)
+            continue;
+        for (j = 0; j < n && take[j] != tk; j++)
+            ;
+        if (j == n) {                         /* a new layer: kept in take order */
+            if (n >= max)
+                continue;
+            for (j = n; j > 0 && take[j - 1] > tk; j--) {
+                take[j] = take[j - 1];
+                snd[j] = snd[j - 1];
+                cnt[j] = cnt[j - 1];
+            }
+            take[j] = (uint8_t)tk;
+            snd[j] = (uint8_t)DK_L_SND(e->layer);
+            cnt[j] = 0;
+            n++;
+        }
+        for (j = 0; j < n && take[j] != tk; j++)
+            ;
+        cnt[j]++;
+    }
+    return n;
+}
+int layer_muted(int clip, int take) { return (dk_song.lmute[clip] >> take & 1u) != 0; }
+int layer_soloed(int clip, int take) { return dk_lsolo_clip == clip && dk_lsolo_take == take; }
+void layer_mute_toggle(int clip, int take)
+{
+    dk_song.lmute[clip] ^= 1u << take;
+    song_edits++;
+}
+void layer_solo_toggle(int clip, int take)
+{
+    if (layer_soloed(clip, take))
+        dk_lsolo_clip = 0xFF;
+    else {
+        dk_lsolo_take = (uint8_t)take;
+        dk_lsolo_clip = (uint8_t)clip;
+    }
+}
+/* the layer's notes (every event of the take) removed: one undo step; the clip's top take number follows */
+int layer_delete(int clip, int take)
+{
+    dk_clip_t *c = &dk_song.clip[clip];
+    int i, n = 0, top = 0;
+    undo_group(1);
+    undo_push(clip);
+    dk_lock();
+    for (i = c->n - 1; i >= 0; i--)
+        if ((int)DK_L_TAKE(dk_ev[c->at + i].layer) == take) {
+            ev_delete(clip, i);
+            n++;
+        }
+    for (i = 0; i < c->n; i++)
+        if ((int)DK_L_TAKE(dk_ev[c->at + i].layer) > top)
+            top = (int)DK_L_TAKE(dk_ev[c->at + i].layer);
+    c->layers = (uint8_t)top;
+    dk_song.lmute[clip] &= ~(1u << take);
+    if (dk_lsolo_clip == clip && dk_lsolo_take == take)
+        dk_lsolo_clip = 0xFF;
+    dk_unlock();
+    undo_group(0);
+    song_edits++;
+    return n;
+}
+/* MERGE: every layer of the clip becomes one (the lowest take's number), with the track's own sound (id 0); one undo step.
+ * 0 when there is only one layer (nothing to merge). */
+int layers_merge(int clip)
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    uint8_t tk[40], sd[40];
+    uint16_t cn[40];
+    int i, n = layers_list(clip, tk, sd, cn, 40);
+    if (n < 2)
+        return 0;
+    undo_group(1);
+    undo_push(clip);
+    dk_lock();
+    for (i = 0; i < c->n; i++)
+        dk_ev[c->at + i].layer = DK_L_MAKE(tk[0], 0);
+    dk_song.clip[clip].layers = tk[0];
+    dk_song.lmute[clip] = 0;
+    if (dk_lsolo_clip == clip)
+        dk_lsolo_clip = 0xFF;
+    dk_unlock();
+    undo_group(0);
+    song_edits++;
+    return n;
 }

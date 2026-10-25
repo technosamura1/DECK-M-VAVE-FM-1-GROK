@@ -40,6 +40,8 @@ extern volatile uint32_t dk_seen[DK_SEEN];
 /* state for the screen */
 extern volatile uint8_t dk_playing, dk_recording, dk_counting, dk_rec_trk, dk_pass;
 extern volatile uint16_t dk_rec_tick0;   /* the clip tick the take started at */
+extern volatile uint32_t dk_fired;          /* the takes (bit) whose notes the sequencer has fired since the host cleared it (tests) */
+extern volatile uint8_t dk_lsolo_clip, dk_lsolo_take;   /* LAYERS solo (not saved): that clip plays only that take (clip 0xFF: none) */
 extern volatile uint8_t dk_rec_pass0;    /* the pass number the REC press started with (REPLACE: older takes are the ones it erases) */
 extern volatile uint8_t dk_rec_mask;     /* the tracks being recorded (bit t): the armed ones and the track the take began on */
 extern uint8_t dk_rec_mode;              /* REC MODE: 0 OVERDUB (default), 1 REPLACE (the take erases the armed tracks' old notes it passes over) */

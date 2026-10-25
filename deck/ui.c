@@ -37,6 +37,7 @@ static struct {
     uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
     uint32_t clr_t;                      /* PROJECT, black 4 (CLEAR ALL): when it was pressed once (0: not asked); again within 3 s clears */
+    uint8_t lay, lay_cur;                /* TRACKS: the LAYERS list is shown (EDIT toggles it); its cursor */
     uint8_t arm_trk;                     /* the tracks armed for recording (bit t; TRACKS: SEQ + white 1-6) */
     uint8_t armed;                       /* REC ARM: REC pressed, the tape waits for PLAY (or a note on ON NOTE) */
     uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
@@ -112,6 +113,8 @@ static int held(int b) { return (int)(ui.btn >> b & 1u); }
 static void page_go(int p)
 {
     ui.page_t = plat_ms();
+    if (ui.page != p)
+        ui.lay = 0;
     ui.clr_t = 0;                        /* (CLEAR ALL asked once: forgotten) */
     if (ui.page == p) {                  /* again: its next tab or row */
         ui.row[p] = (uint8_t)((ui.row[p] + 1) % page_rows(p));
@@ -506,7 +509,14 @@ static void action(int a, int b)
         break;
     case A_PAGE_ROAD: page_go(PG_ROAD); break;
     case A_PAGE_MIX: page_go(PG_MIX); break;
-    case A_PAGE_KEYS: page_go(PG_KEYS); break;
+    case A_PAGE_KEYS:
+        if (ui.page == PG_TRACKS) {          /* TRACKS: EDIT is the LAYERS list of the track's clip (again: back) */
+            ui.lay ^= 1u;
+            ui.page_t = plat_ms();
+            ui.lay_cur = 0;
+        } else
+            page_go(PG_KEYS);
+        break;
     case A_PAGE_PROJECT:
         if (ui.page == PG_PROJECT) {         /* SAVE again on its page: saved now */
             if (dk_playing || dk_recording || dk_counting)
@@ -796,6 +806,10 @@ static void key_down(int k, int vel)
             mark_dirty();
             say(track_label(w), dk_song.trk[w].mute ? "TEMP MUTE" : "TEMP OFF");
         }
+        return;
+    }
+    if (ui.page == PG_TRACKS && ui.lay && w >= 0 && !held(B_HOME)) {   /* LAYERS: white 1 MUTE, 2 SOLO, 3 DELETE, 4 MERGE */
+        lay_do(w);
         return;
     }
     if (ui.page == PG_TRACKS && !held(B_HOME) && ((w >= 0 && w < DK_NTRACK) || (b >= 0 && b < DK_NTRACK))) {
@@ -1210,6 +1224,11 @@ static void enc_side(int sel, int e)     /* SELECT (sel 1): the track; PRESET: t
     if (!sel && held(B_HOME)) {          /* HOME + PRESET: the instrument itself (a melodic track's) */
         ui.used[B_HOME] = 1;
         engine_step(e > 0 ? 1 : -1);
+        return;
+    }
+    if (sel && ui.page == PG_TRACKS && ui.lay) {   /* LAYERS: SELECT moves the cursor */
+        int n = lay_count();
+        ui.lay_cur = (uint8_t)(n ? ((int)ui.lay_cur + n + (e > 0 ? 1 : -1)) % n : 0);
         return;
     }
     if (sel)

@@ -323,7 +323,10 @@ static const char *hint(void)
         if (ui_auto_on)
             return "REC AGAIN = THE LOOP ENDS HERE";
         return "K1 BARS  K4 METRONOME  HOLD EDIT = UNDO";
-    case PG_TRACKS: return "SEQ+WHITE = ARM  K3 MODE  HOME = BACK";
+    case PG_TRACKS:
+        if (ui.lay)
+            return "HOLD EDIT = UNDO  HOME = BACK";
+        return "SEQ+WHITE = ARM  K3 MODE  HOME = BACK";
     case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
@@ -387,7 +390,7 @@ static void draw_header(void)
         int k = (int)(itoa_b(dk_song.cur_track + 1, tl) - tl);
         tl[k] = ' ';
         cpy(tl + k + 1, track_label(dk_song.cur_track));
-        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC || ui.page == PG_ARP ? tl : PAGE_NAME[ui.page], TH_GRAY);
+        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC || ui.page == PG_ARP ? tl : ui.page == PG_TRACKS && ui.lay ? "LAYERS" : PAGE_NAME[ui.page], TH_GRAY);
     }
     {                                    /* the battery: shown only when low or HOME held (a quiet header) */
         int pct = batt_pct(), w;
@@ -1622,9 +1625,122 @@ static void draw_tape(void)
 /* TRACKS (HOME on PLAY): the six tracks as rows, like a DAW's: the number in the track's colour, its name and sound, the part's
  * mute (M, blinking while it waits for the bar's end), solo (S), the level; to the right the CURRENT PART's clip as a thumbnail
  * (notes of a frozen layer dim, the take being recorded red) and the playhead. The row recording is red. */
+/* LAYERS: the list of the selected track's clip in the part now (EDIT on TRACKS); one row per take with notes */
+static int lay_clip(void) { return ((dk_playing ? dk_cur_part : dk_song.cur_part) & 7) * DK_NTRACK + dk_song.cur_track; }
+static int lay_count(void)
+{
+    uint8_t tk[40], sd[40];
+    uint16_t cn[40];
+    return layers_list(lay_clip(), tk, sd, cn, 40);
+}
+static void lay_do(int w)                /* white key w (0..) on the LAYERS list */
+{
+    uint8_t tk[40], sd[40];
+    uint16_t cn[40];
+    int clip = lay_clip(), n = layers_list(clip, tk, sd, cn, 40), i = ui.lay_cur;
+    char s[16];
+    if (w > 3)
+        return;
+    if (!n) {
+        say("LAYERS", "NO NOTES");
+        return;
+    }
+    if (i >= n)
+        i = n - 1;
+    s[0] = 'L';
+    itoa_b(i + 1, s + 1);
+    if (w == 0) {
+        layer_mute_toggle(clip, tk[i]);
+        say(s, layer_muted(clip, tk[i]) ? "MUTED" : "ON");
+    } else if (w == 1) {
+        layer_solo_toggle(clip, tk[i]);
+        say(s, layer_soloed(clip, tk[i]) ? "SOLO" : "SOLO OFF");
+    } else if (w == 2) {
+        layer_delete(clip, tk[i]);
+        if (ui.lay_cur > 0 && ui.lay_cur >= n - 1)
+            ui.lay_cur--;
+        say(s, "DELETED");
+    } else {
+        say("LAYERS", layers_merge(clip) ? "MERGED" : "ONE LAYER");
+        ui.lay_cur = 0;
+    }
+}
+static void draw_layers(void)
+{
+    uint8_t tk[40], sd[40];
+    uint16_t cn[40];
+    int clip = lay_clip(), n = layers_list(clip, tk, sd, cn, 40), cur = ui.lay_cur, top, r, t = dk_song.cur_track, i;
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int clen = clip_len(clip);
+    char s[40], *p;
+    if (cur >= n)
+        cur = n ? n - 1 : 0;
+    top = cur > 5 ? cur - 5 : 0;
+    p = cpy(s, track_label(t));
+    p = cpy(p, "  ");
+    *p++ = (char)('A' + (((dk_playing ? dk_cur_part : dk_song.cur_part) & 7)));
+    *p = 0;
+    text_box(4, 20, 232, 0, &FONT_T, &FONT_T, s, TH_TRACK[t]);
+    if (!n)
+        text_box(4, 90, 232, 1, &FONT_B, &FONT_B, "NO NOTES", TH_GRAY);
+    for (r = 0; r < 6 && top + r < n; r++) {
+        int k = top + r, ry = 30 + r * 25, muted = layer_muted(clip, tk[k]), solo = layer_soloed(clip, tk[k]), lo = 127, hi = 0, tx = 108,
+            tw = 128, dim = muted || (dk_lsolo_clip == clip && !solo);
+        uint16_t col = dim ? dimc(TH_TRACK[t], 5) : TH_TRACK[t];
+        char *q;
+        if (k == cur)
+            cv_rect(0, ry, 240, 23, RGB(46, 42, 38));
+        q = s;
+        *q++ = 'L';
+        q = itoa_b(k + 1, q);
+        *q++ = ' ';
+        q = cpy(q, sd[k] ? TAPE.eng[dk_song.snd[t][sd[k] & 7].eng % TAPE.neng]->name : "LIVE");
+        text_box(4, ry + 1, 76, 0, &FONT_T, &FONT_T, s, dim ? TH_GRAY : TH_TEXT);
+        q = itoa_b(cn[k], s);
+        q = cpy(q, " N  TAKE ");
+        itoa_b(tk[k], q);
+        text_box(4, ry + 13, 76, 0, &FONT_T, &FONT_T, s, TH_GRAY);
+        text_box(80, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", muted ? TH_REC : dimc(TH_GRAY, 6));
+        text_box(92, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
+        cv_rect(tx, ry + 2, tw, 19, RGB(20, 18, 16));
+        for (i = 0; i < c->n; i++) {
+            const dk_ev_t *e = &dk_ev[c->at + i];
+            if (!(e->fl & EV_MOTION) && (int)DK_L_TAKE(e->layer) == tk[k]) {
+                if (e->note < lo)
+                    lo = e->note;
+                if (e->note > hi)
+                    hi = e->note;
+            }
+        }
+        if (hi - lo < 12) {
+            lo -= (12 - (hi - lo)) / 2;
+            hi = lo + 12;
+        }
+        for (i = 0; i < c->n; i++) {
+            const dk_ev_t *e = &dk_ev[c->at + i];
+            int x, w, y;
+            if ((e->fl & EV_MOTION) || (int)DK_L_TAKE(e->layer) != tk[k])
+                continue;
+            x = tx + e->pos * (tw - 2) / clen;
+            w = e->dur * (tw - 2) / clen;
+            y = ry + 2 + 16 - (e->note - lo) * 16 / (hi - lo);
+            if (x + w > tx + tw)
+                w = tx + tw - x;
+            cv_rect(x, y, w < 2 ? 2 : w, 2, col);
+        }
+        if (dk_playing)
+            vline(tx + (int)(dk_part_tick % (uint16_t)clen) * (tw - 2) / clen, ry, 23, TH_TEXT);
+    }
+    text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "W1 MUTE  W2 SOLO  W3 DELETE  W4 MERGE", TH_GRAY);
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = LAYER  EDIT = BACK", dimc(TH_GRAY, 8));
+}
 static int trk_rec(int t) { return (dk_recording || dk_counting) && (dk_rec_mask >> t & 1u); }
 static void draw_tracks(void)
 {
+    if (ui.lay) {
+        draw_layers();
+        return;
+    }
     int t, part = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, blink = (plat_ms() / 230u) & 1u;
     dk_preset_t tmp;
     char s[40];
