@@ -295,11 +295,12 @@ static void rec_stop(void)
 
 /* ---------------------------------------------------------------- playing --- */
 static uint32_t ch_bits(void) { return 0; }
+static uint8_t ev_snd;                   /* the sound of the event being played (fire): 0 the track's own */
 static void note_play(int t, int note, float vel, int32_t gate, int32_t delay, int src)
 {
     if (!track_audible(t) && src)
         return;
-    voice_start(t, note, vel, gate, delay, src);
+    voice_start(t, note, vel, gate, delay, src, ev_snd);
 }
 void dk_emit(int t, int note, int vel, int dur, int delay)
 {
@@ -326,7 +327,8 @@ static int swing_delay(int t, int pos)
 static void fire(int t, const dk_ev_t *e, int ct_pos)
 {
     static const uint8_t PROB[4] = {100, 75, 50, 25};
-    const dk_engine_t *eng = dk_engine(t);
+    const dk_snd_t *fs = DK_L_SND(e->layer) ? snd_get(t, (int)DK_L_SND(e->layer)) : 0;
+    const dk_engine_t *eng = fs ? TAPE.eng[fs->eng] : dk_engine(t);
     int note = e->note, r, i, delay, dur = e->dur;
     float vel = (float)e->vel * (1.0f / 127.0f);
     if (e->fl & EV_MOTION) {                    /* a knob's move, or a p-lock held */
@@ -353,9 +355,11 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
     r = ((e->fl & EV_RATCH) >> 2) + 1;
     if (r > 1)
         dur /= r;
+    ev_snd = fs ? (uint8_t)DK_L_SND(e->layer) : 0;   /* (the track's sound as it was when this was recorded) */
     for (i = 0; i < r; i++)
         note_play(t, note, vel * (i ? 0.85f : 1.0f), (int32_t)((float)dur * tick_len * (r > 1 ? 0.8f : 1.0f)),
                   delay + (int32_t)((float)(i * dur) * tick_len), 1);
+    ev_snd = 0;
 }
 
 static void clip_tick(int t, uint32_t *harm_pcs)
@@ -803,7 +807,7 @@ static void live_note(int t, int note, int vel, int delay)
             hold_keys[t]++;
             if (dk_held_n[t] < 8)
                 dk_held[t][dk_held_n[t]++] = (uint8_t)note;
-            voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 3);
+            voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 3, 0);
             if (rec_track_of(t))
                 rec_open(t, note, vel);
             return;
@@ -812,7 +816,7 @@ static void live_note(int t, int note, int vel, int delay)
             break;
         default: break;
         }
-        voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0);
+        voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0, 0);
         if (rec_track_of(t))
             rec_open(t, note, vel);
     } else {

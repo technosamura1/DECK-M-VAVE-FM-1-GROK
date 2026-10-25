@@ -227,7 +227,8 @@ static void params_update(void) { params_update_some(1); }
 
 /* ------------------------------------------------------------------- voices --- */
 typedef struct {
-    uint8_t on, held, note, trk, src, eng, lane, rsv;   /* lane: a drum's sound + 1 (its own settings), 0 none */
+    uint8_t on, held, note, trk, src, eng, lane, snd;   /* lane: a drum's sound + 1 (its own settings), 0 none; snd: 0 the track's
+                                                         * live sound, 1..7 a frozen one (dk_song.snd[trk][snd - 1]: layers) */
     int32_t gate, delay;
     uint32_t age;
     float ch_l, ch_r, ch_c;                            /* a drum sound's CRUSH: the sample held, its count */
@@ -260,18 +261,48 @@ static void midi(uint32_t st, uint32_t d1, uint32_t d2)
 }
 static uint32_t ch_of(int t) { return (uint32_t)((dk_song.trk[t].midi_ch ? dk_song.trk[t].midi_ch - 1 : t) & 15); }
 
+/* a frozen sound (a take recorded with it, kept as it was): valid when its place is in use and its engine is a melodic one */
+static const dk_snd_t *snd_get(int t, int id)
+{
+    const dk_snd_t *s;
+    if (id < 1 || id > DK_NSND)
+        return 0;
+    s = &dk_song.snd[t][id - 1];
+    if (!s->used || s->eng >= TAPE.neng || (TAPE.eng[s->eng]->flags & (EF_DRUM | EF_CONT)))
+        return 0;
+    return s;
+}
+/* what a voice hears of its track: the live values, or a frozen sound's own (b: PX_N floats to build them in) */
+static const float *voice_params(const voice_t *v, float *b)
+{
+    const dk_snd_t *s = v->snd ? snd_get(v->trk, v->snd) : 0;
+    const dk_engine_t *e;
+    int i;
+    if (!s)
+        return tp[v->trk];
+    e = TAPE.eng[s->eng];
+    for (i = 0; i < DK_NP; i++)
+        b[i] = i < e->nparams ? (float)s->p[i] : 0.0f;
+    b[PX_ATT] = (float)s->env[0];
+    b[PX_DEC] = (float)s->env[1];
+    b[PX_REL] = (float)s->env[2];
+    b[PX_DRIFT] = (float)s->drift;
+    return b;
+}
+
 static void voice_release(voice_t *v)
 {
+    float pb[PX_N];
     if (!v->held)
         return;
     v->held = 0;
     v->gate = 0;
     if (!(TAPE.eng[v->eng]->flags & EF_DRUM))   /* a drum rings out its own way (off: choked) */
-        TAPE.eng[v->eng]->off(v->st, tp[v->trk]);
+        TAPE.eng[v->eng]->off(v->st, voice_params(v, pb));
     midi(0x80u | ch_of(v->trk), v->note, 0);
 }
 
-static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
+static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *retrig, int note)
 {
     int i, cnt = 0;
     voice_t *best = 0;
@@ -281,7 +312,7 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
     if (e->flags & EF_MONO) {                  /* one voice: played again while held (legato glides); a sound that
                                                 * goes on (the world) whenever it still sounds */
         for (i = 0; i < DK_NVOICE; i++)
-            if (vc[i].on && vc[i].trk == t && vc[i].eng == dk_song.trk[t].eng && (vc[i].held || (e->flags & EF_CONT))) {
+            if (vc[i].on && vc[i].trk == t && vc[i].eng == eng && vc[i].snd == snd && (vc[i].held || (e->flags & EF_CONT))) {
                 if (vc[i].held)
                     midi(0x80u | ch_of(t), vc[i].note, 0);
                 *retrig = vc[i].held ? 2 : 1;
@@ -290,8 +321,10 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int *retrig, int note)
     }
     if (e->flags & EF_DRUM)                    /* a drum hit again: its own voice cut short */
         for (i = 0; i < DK_NVOICE; i++)
-            if (vc[i].on && vc[i].trk == t && vc[i].note == note && vc[i].delay <= 0)
-                TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);
+            if (vc[i].on && vc[i].trk == t && vc[i].note == note && vc[i].delay <= 0) {
+                float pb[PX_N];
+                TAPE.eng[vc[i].eng]->off(vc[i].st, voice_params(&vc[i], pb));
+            }
     for (i = 0; i < DK_NVOICE; i++)
         cnt += vc[i].on && vc[i].trk == t;
     if (cnt >= e->max_voices) {                /* the track's own: its quietest let go, else its oldest */
@@ -374,19 +407,25 @@ static void budget_make_room(int want)
     }
 }
 
-static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t delay, int src)
+static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t delay, int src, int snd)
 {
-    const dk_engine_t *e = dk_engine(t);
+    const dk_snd_t *fs = snd ? snd_get(t, snd) : 0;   /* a frozen sound that is gone plays as the track's own */
+    int eng = fs ? fs->eng : dk_song.trk[t].eng;
+    const dk_engine_t *e = fs ? TAPE.eng[eng] : dk_engine(t);
     voice_t *v;
+    float pb[PX_N];
+    const float *pp;
     int retrig, i;
+    if (!fs)
+        snd = 0;
     if (note < 0 || note > 127 || vel <= 0.0f)
         return 0;
     if ((e->flags & EF_DRUM) && (note == 42 || note == 44 || note == 46))   /* the hats choke each other */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t && (vc[i].note == 42 || vc[i].note == 44 || vc[i].note == 46))
-                TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);
+                TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);   /* (drums are never frozen) */
     budget_make_room(e->cost);
-    v = voice_get(t, e, &retrig, note);
+    v = voice_get(t, e, eng, snd, &retrig, note);
     if (!v)
         return 0;
     if (!retrig)
@@ -397,7 +436,8 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
     v->note = (uint8_t)note;
     v->trk = (uint8_t)t;
     v->src = (uint8_t)src;
-    v->eng = dk_song.trk[t].eng;
+    v->eng = (uint8_t)eng;
+    v->snd = (uint8_t)snd;
     v->gate = gate;
     v->delay = delay > 0 ? delay : 0;
     v->age = age_ctr++;
@@ -421,7 +461,8 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
             goto started;
         }
     }
-    e->on(v->st, note, vel, tp[t], retrig);
+    pp = voice_params(v, pb);
+    e->on(v->st, note, vel, pp, retrig);
 started:
     if ((e->flags & EF_DRUM) && (note == 35 || note == 36))
         sc_env = 1.0f;
@@ -730,9 +771,10 @@ static void render_tracks(uint32_t n)
             voice_t *v = &vc[i];
             uint32_t j0 = 0;
             const dk_engine_t *ve;
+            float vpb[PX_N];
             if (!v->on || v->trk != t)
                 continue;
-            if (v->eng != k->eng) {            /* its track took another engine: let it go */
+            if (!v->snd && v->eng != k->eng) { /* its track took another engine: let it go (a frozen sound's voice stays) */
                 if (v->held)
                     midi(0x80u | ch_of(t), v->note, 0);
                 voice_fade(v);
@@ -777,7 +819,7 @@ static void render_tracks(uint32_t n)
                     v->on = 0;
                 continue;
             }
-            if (!ve->render(v->st, tl + j0, tr + j0, (int)(n - j0), tp[t])) {
+            if (!ve->render(v->st, tl + j0, tr + j0, (int)(n - j0), voice_params(v, vpb))) {
                 if (v->held)
                     midi(0x80u | ch_of(t), v->note, 0);
                 v->on = 0;
@@ -786,12 +828,13 @@ static void render_tracks(uint32_t n)
         }
         for (i = 0; i < NFADE; i++) {          /* the voices fading out */
             static float fl_[DK_BLK], fr_[DK_BLK];
+            float fpb[PX_N];
             float g = fv_g[i], dg = 1.0f / (0.006f * DK_SR);
             if (g <= 0.0f || fv[i].trk != t)
                 continue;
             for (j = 0; j < n; j++)
                 fl_[j] = fr_[j] = 0.0f;
-            TAPE.eng[fv[i].eng]->render(fv[i].st, fl_, fr_, (int)n, tp[t]);
+            TAPE.eng[fv[i].eng]->render(fv[i].st, fl_, fr_, (int)n, voice_params(&fv[i], fpb));
             for (j = 0; j < n && g > 0.0f; j++, g -= dg) {
                 tl[j] += fl_[j] * g;
                 tr[j] += fr_[j] * g;
