@@ -131,8 +131,14 @@ int project_load(int slot)
         dst[i] = src[i];
     if (!src || dk_song.magic != DK_MAGIC || dk_song.nev != h->nev || song_sum_n(h->nsong) != h->sum)
         goto empty;
-    for (i = 0; i < dk_song.nev; i++)      /* nothing waits for a pass that is long gone */
+    for (i = 0; i < dk_song.nev; i++) {    /* nothing waits for a pass that is long gone */
         dk_ev[i].fl &= (uint8_t)~EV_FRESH;
+        if (dk_ev[i].layer > 0x1Fu)        /* older projects: the take had 7 bits, now 5 (the sound's three are 0: the track's own) */
+            dk_ev[i].layer = 0x1Fu;
+    }
+    for (i = 0; i < DK_NCLIP; i++)
+        if (dk_song.clip[i].layers > 31)
+            dk_song.clip[i].layers = 31;
     song_track_order();
     for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS and HOLD too */
         dk_track_t *k = &dk_song.trk[i];

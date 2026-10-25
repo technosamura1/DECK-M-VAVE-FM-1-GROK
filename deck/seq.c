@@ -178,7 +178,7 @@ static void rec_push(int clip, int kind, int pos, int dur, int note, int vel, in
     r->ev.note = (uint8_t)note;
     r->ev.vel = (uint8_t)(vel < 1 ? 1 : vel > 127 ? 127 : vel);
     r->ev.fl = (uint8_t)fl;
-    r->ev.layer = dk_pass;
+    r->ev.layer = DK_L_MAKE(dk_pass, 0);
     BARRIER();
     dk_recq_w = w + 1u;
     if (!kind)

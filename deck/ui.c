@@ -1043,7 +1043,7 @@ static void turn(int i, int e)
             ev.note = (uint8_t)tgt;
             ev.vel = (uint8_t)(hi > lo ? (v - lo) * 100 / (hi - lo) : 0);
             ev.fl = EV_MOTION | EV_FRESH;
-            ev.layer = dk_pass;
+            ev.layer = DK_L_MAKE(dk_pass, 0);
             dk_lock();
             dk_song_insert(clip, &ev);
             dk_unlock();

@@ -107,14 +107,28 @@ enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_TO
 enum { EV_PROB = 3, EV_RATCH = 3 << 2, EV_SLIDE = 1 << 4, EV_MOTION = 1 << 6, EV_FRESH = 1 << 7 };
 typedef struct {
     uint16_t pos, dur;                  /* ticks into the clip; length */
-    uint8_t note, vel, fl, layer;       /* fl: probability 0..3 (100 75 50 25 %), ratchet (x1..x4), slide; layer: take */
+    uint8_t note, vel, fl, layer;       /* fl: probability 0..3 (100 75 50 25 %), ratchet (x1..x4), slide; layer: see below */
 } dk_ev_t;
+/* an event's layer byte (2026-10, layers like the OP-1's tape): bits 0..4 the take (1..31; 0 none), bits 5..7 the SOUND it
+ * was frozen with: 0 the track's own, as it is now; 1..7 a place in dk_song.snd[track][id - 1], the sound the take was
+ * recorded with, which a later preset, engine or knob does not change. Older projects had the take in 7 bits (0..127) */
+#define DK_L_TAKE(l) ((unsigned)(l) & 0x1Fu)
+#define DK_L_SND(l) ((unsigned)(l) >> 5)
+#define DK_L_MAKE(take, snd) ((uint8_t)(((take) > 31 ? 31 : (take)) | (unsigned)(snd) << 5))
+#define DK_NSND 7                       /* frozen sounds a track can keep */
 
 typedef struct {
     uint16_t at, n;                     /* its events: dk_ev[at .. at + n), sorted by pos */
     uint16_t len;                       /* ticks (a clip shorter than its part goes round) */
     uint8_t layers, rsv;
 } dk_clip_t;
+
+typedef struct {                        /* a frozen sound: what a voice hears of its track (the engine, its knobs with MACRO in) */
+    uint8_t used, eng, drift, rsv;
+    int8_t p[DK_NP];
+    int8_t env[3];
+    uint8_t rsv2[5];
+} dk_snd_t;
 
 typedef struct {
     uint8_t eng, preset, seq, fx;
@@ -183,6 +197,7 @@ typedef struct {
     dk_lane_t lane[DK_NTRACK][8];       /* a drum track's sounds, each its own */
     uint8_t atmo[8];                    /* ATMO: the layers' levels 0..100 (the tape's atmo list) */
     uint8_t tapesim, atmo_lvl, rsv2[6]; /* ATMO: the tape emulation 0..100; the layers' master level (0 = 100) */
+    dk_snd_t snd[DK_NTRACK][DK_NSND];   /* the frozen sounds of each track (events' layer bits 5..7 point here) */
 } dk_song_t;
 #define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
 

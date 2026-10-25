@@ -51,8 +51,8 @@ int dk_song_insert(int clip, const dk_ev_t *e)
     for (k = clip + 1; k < DK_NCLIP; k++)
         dk_song.clip[k].at++;
     dk_song.nev++;
-    if ((e->layer & 0x7F) > c->layers)
-        c->layers = (uint8_t)(e->layer & 0x7F);
+    if (DK_L_TAKE(e->layer) > c->layers)
+        c->layers = (uint8_t)DK_L_TAKE(e->layer);
     song_edits++;
     return p - c->at;
 }

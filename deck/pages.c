@@ -785,7 +785,7 @@ static void roll(const dk_clip_t *c, int x0, int y0, int w, int h, int len, uint
             continue;
         if (x + ww > WX + WW)
             ww = WX + WW - x;
-        cv_rect(x, y, ww < 2 ? 2 : ww, 2, pass_red && (e->layer & 0x7F) == dk_pass && dk_recording ? TH_REC : col);
+        cv_rect(x, y, ww < 2 ? 2 : ww, 2, pass_red && DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass) && dk_recording ? TH_REC : col);
     }
 }
 
@@ -1562,7 +1562,7 @@ static void draw_tape(void)
             int x = 30 + e->pos * 200 / clen, w = e->dur * 200 / clen;
             if (e->fl & EV_MOTION)
                 continue;
-            cv_rect(x, y + 1, w < 2 ? 2 : w, 3, (e->layer & 0x7F) == dk_pass && t == dk_rec_trk ? TH_REC : TH_TRACK[t]);
+            cv_rect(x, y + 1, w < 2 ? 2 : w, 3, DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass) && t == dk_rec_trk ? TH_REC : TH_TRACK[t]);
         }
         if (t == dk_rec_trk)
             for (i = 0; i < dk_open_n; i++)
