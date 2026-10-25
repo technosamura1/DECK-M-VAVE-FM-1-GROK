@@ -20,7 +20,7 @@ static const ui_map_t UI_MAP[] = {
     {B_ENV, A_PAGE_ROAD, A_GARAGE, A_NONE, 600, "ROAD | hold: the garage of parts"},
     {B_LFO, A_PAGE_MIX, A_NONE, A_NONE, HOLD_MOD, "MIX; again: MASTER | hold + turn a SOUND knob: MOD 1 on it"},
     {B_PLAY, A_PLAY, A_PLAYMODE, A_TAP_TEMPO, 800, "play/stop | hold: PART/SONG | HOME+: tap tempo"},
-    {B_REC, A_REC, A_CLEAR, A_METRO, 1000, "record (count-in) | hold 1 s: clear the clip | HOME+: metronome"},
+    {B_REC, A_REC, A_CLEAR, A_METRO, 1000, "record: arm, then PLAY (count-in) | REC ARM off: record at once | hold 1 s: clear the clip | HOME+: metronome"},
     {B_SEL, A_PAGE_ATMO, A_NONE, A_NONE, 0, "ATMO: rain, fire, birds, ocean, wind, crickets, the dust, the tape; again: its row"},
     {B_ARP, A_ARP, A_NONE, A_ARP_OFF, HOLD_MOD, "ARP on (over the sequencer); again: LATCH on/off | HOME+: ARP off | hold + white A-H: a part"},
     {B_GLO, A_PAGE_GLOBAL, A_FILL, A_NONE, 250, "GLOBAL (tempo, swing, dust, metronome, MIDI); again: its row | hold: FILL"},

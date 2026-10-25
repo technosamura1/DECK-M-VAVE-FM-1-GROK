@@ -1,0 +1,49 @@
+# two-step REC (like the OP-1): REC arms the tape, PLAY starts it (count-in, then the take); REC again lets it go.
+# Playing already: REC records at once. UNDO takes the last take away.
+wait 300
+expect recarm 1
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+# REC: armed, nothing runs
+tap REC
+wait 200
+expect armed 1
+expect recording 0
+expect playing 0
+# REC again: let go
+tap REC
+wait 200
+expect armed 0
+# armed, PLAY: the take starts (count-in)
+tap REC
+wait 200
+expect armed 1
+tap PLAY
+wait 200
+expect armed 0
+wait 3500
+expect recording 1
+key w0 down 90
+wait 500
+key w0 up
+wait 300
+tap REC
+wait 400
+expect recording 0
+expect events >0
+# playing: REC at once, no arming
+tap PLAY
+wait 300
+tap PLAY
+wait 300
+expect playing 1
+tap REC
+wait 300
+expect armed 0
+expect recording 1
+tap REC
+wait 400
+expect recording 0

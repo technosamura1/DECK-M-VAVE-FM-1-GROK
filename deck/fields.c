@@ -17,7 +17,7 @@ enum {
     /* KEYS */ F_ROOT, F_MODE, F_CHORD, F_WHITE, F_BLACK, F_QUALITY, F_VOICING, F_STRUM, F_LEAD, F_LAYOUT, F_SPLIT,
     F_BASS, F_KOCT, F_DIM, F_HARMTRK,
     /* PROJECT */ F_SLOT, F_TEMPLATE, F_SWING, F_SONGSTYLE, F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL, F_ONNOTE,
-    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT, F_LOCKTAKE,
+    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT, F_LOCKTAKE, F_RECARM,
     /* REC */ F_RECTRK,
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
@@ -441,6 +441,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_DIM:
     case F_ONNOTE:
     case F_LOCKTAKE:
+    case F_RECARM:
     case F_MIDIOUT:
     case F_CLOCK:
     case F_MIDIIN:
@@ -623,6 +624,7 @@ static int field_get(int f)
     case F_MVOL: return dk_metro.vol;
     case F_ONNOTE: return dk_metro.on_note;
     case F_LOCKTAKE: return dk_lock_take;
+    case F_RECARM: return dk_rec_arm;
     case F_MIDIOUT: return dk_midi_notes;
     case F_CLOCK: return dk_midi_clock;
     case F_MIDIIN: return set.midi_in;
@@ -828,6 +830,7 @@ static void field_set(int f, int v)
     case F_MVOL: dk_metro.vol = (uint8_t)v; break;
     case F_ONNOTE: dk_metro.on_note = (uint8_t)v; settings_save_later(); break;
     case F_LOCKTAKE: dk_lock_take = (uint8_t)v; settings_save_later(); break;
+    case F_RECARM: dk_rec_arm = (uint8_t)v; ui_arm_reset(); settings_save_later(); break;
     case F_MIDIOUT: dk_midi_notes = (uint8_t)v; settings_save_later(); break;
     case F_CLOCK: dk_midi_clock = (uint8_t)v; settings_save_later(); break;
     case F_MIDIIN: set.midi_in = (uint8_t)v; settings_save_later(); break;
@@ -967,6 +970,7 @@ static const char *field_label(int f)
     case F_MVOL: return "M VOL";
     case F_ONNOTE: return "ON NOTE";
     case F_LOCKTAKE: return "LOCK TAKE";
+    case F_RECARM: return "REC ARM";
     case F_MIDIOUT: return "MIDI OUT";
     case F_CLOCK: return "CLOCK";
     case F_MIDIIN: return "MIDI IN";
@@ -1199,6 +1203,7 @@ static void field_text(int f, char *b)
     case F_DIM:
     case F_ONNOTE:
     case F_LOCKTAKE:
+    case F_RECARM:
     case F_MIDIOUT:
     case F_CLOCK:
     case F_MIDIIN: cpy(b, ONOFF[v & 1]); break;

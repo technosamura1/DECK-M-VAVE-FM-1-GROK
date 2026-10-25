@@ -1,5 +1,6 @@
 # ERASE by holding REC: shown on the screen; at 1 s the clip of this part, held on the track in all parts; one undo
 # brings it all back. PLAY on ROAD from the chosen block; the block chosen picks the part. DREAM's drums play
+recarm 0   # (the one-step REC; recarm.dk has the two steps)
 wait 300
 demo
 wait 100

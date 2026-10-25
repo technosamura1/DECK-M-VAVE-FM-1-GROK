@@ -1,4 +1,5 @@
 # LAYERS (LOCK TAKE): a take keeps the sound it was recorded with; the next take has the new one
+recarm 0   # (the one-step REC; recarm.dk has the two steps)
 wait 300
 tap SAVE
 wait 100

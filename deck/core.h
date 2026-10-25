@@ -84,6 +84,7 @@ extern dk_metro_t dk_metro;
 extern uint8_t dk_midi_notes, dk_midi_clock;
 /* recording: the audio's latency made up, ms (GLOBAL: REC LAT; 0..30): a played note is put that much earlier */
 extern uint8_t dk_rec_lat;
+extern uint8_t dk_rec_arm;              /* REC ARM: two steps (REC arms, PLAY records) when stopped (1) */
 extern uint8_t dk_lock_take;             /* LOCK TAKE: a take keeps the sound it was recorded with (1) */
 extern volatile uint32_t dk_metro_clicks;               /* clicks made (tests) */
 extern volatile uint32_t dk_metro_err_max;              /* the worst offset of a click from its tick, samples */

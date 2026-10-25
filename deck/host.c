@@ -64,6 +64,8 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "sndeng")) g = dk_song.snd[dk_song.cur_track][0].used ? dk_song.snd[dk_song.cur_track][0].eng : -1;
     else if (!strcmp(what, "vfrozen")) g = dk_voices_frozen;
     else if (!strcmp(what, "locktake")) g = dk_lock_take;
+    else if (!strcmp(what, "recarm")) g = dk_rec_arm;
+    else if (!strcmp(what, "armed")) g = ui.armed;
     else if (!strcmp(what, "rectrk")) g = dk_rec_trk;
     else if (!strcmp(what, "dirty")) g = ui.dirty;
     else if (!strcmp(what, "voices")) g = dk_voices_on;
@@ -175,6 +177,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "onnote")) {               /* onnote N: ON NOTE (the first note starts the take) */
         dk_metro.on_note = (uint8_t)atoi(a);
+        return 1;
+    }
+    if (!strcmp(cmd, "recarm")) {               /* recarm N: REC ARM (two-step REC) on/off */
+        dk_rec_arm = (uint8_t)atoi(a);
         return 1;
     }
     if (!strcmp(cmd, "locktake")) {             /* locktake N: LOCK TAKE on/off */

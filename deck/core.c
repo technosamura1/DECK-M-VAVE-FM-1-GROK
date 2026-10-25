@@ -21,6 +21,7 @@ dk_ctx_t dk_ctx;
 dk_metro_t dk_metro = {1, 1, METRO_WOOD, 0, 55, 0};
 uint8_t dk_midi_notes = 1, dk_midi_clock = 1;
 uint8_t dk_rec_lat = 9;
+uint8_t dk_rec_arm = 1;                 /* REC ARM: REC arms the tape, PLAY starts it (two steps, like the OP-1) */
 uint8_t dk_lock_take = 1;                /* LOCK TAKE: a take keeps the sound it was recorded with */                  /* 5.8 ms the block + ~2.9 ms the note waits for it (APP_BLOCK 256 at 44.1 kHz) */
 
 #include "music.c"

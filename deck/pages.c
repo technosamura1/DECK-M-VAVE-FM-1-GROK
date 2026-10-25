@@ -273,7 +273,7 @@ static int page_field(int i, int home)
         return F[row & 1][i];
     }
     case PG_REC: {
-        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECTRK, F_METRO, F_MVOL};   /* BARS first: how long a take */
+        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECTRK, F_METRO, F_RECARM};   /* BARS first: how long a take */
         return F[i];
     }
     default: return F_NONE;

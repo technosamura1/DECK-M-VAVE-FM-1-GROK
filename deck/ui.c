@@ -36,6 +36,7 @@ static struct {
     uint32_t mix_t;                      /* MIX: the white key down (mix_key: its track + 1): a tap mutes, 1 s clears */
     uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
+    uint8_t armed;                       /* REC ARM: REC pressed, the tape waits for PLAY (or a note on ON NOTE) */
     uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
                                                             * 1 a part (the garage), 2 the road */
 } ui;
@@ -329,7 +330,30 @@ static void rec_start(void)
         ui.prev = ui.page;
         ui.page = PG_REC;
     }
-    say("REC", dk_playing ? "NEW PASS" : dk_metro.on_note ? "PLAY A NOTE" : "COUNT IN");
+    ui.armed = 0;
+    {
+        char s[12] = "TAKE ";
+        int n = dk_song.clip[clip].layers + 1, i, used = 0;
+        for (i = 0; i < DK_NSND; i++)
+            used += dk_song.snd[t][i].used ? 1 : 0;
+        if (n > 31)
+            n = 31;
+        itoa_b(n, s + 5);
+        if (dk_playing) {
+            if (used) {
+                int l = (int)strlen(s);
+                s[l++] = ' ';
+                s[l++] = 'L';
+                itoa_b(used, s + l);
+                l = (int)strlen(s);
+                s[l++] = '/';
+                s[l++] = '7';
+                s[l] = 0;
+            }
+            say("REC", s);
+        } else
+            say("REC", dk_metro.on_note ? "PLAY A NOTE" : "COUNT IN");
+    }
 }
 
 static void auto_end(void)               /* AUTO's take ends (REC or PLAY): the loop at the nearest bar line */
@@ -341,8 +365,10 @@ static void auto_end(void)               /* AUTO's take ends (REC or PLAY): the 
         part_bars_set(dk_song.cur_part, ui.auto_prev);
     ui_auto_on = 0;
 }
+void ui_arm_reset(void) { ui.armed = 0; }
 static void rec_stop_ui(void)
 {
+    ui.armed = 0;
     dk_cmd(C_REC, 0, 0, 0);
     auto_end();
     say("REC", "OFF");
@@ -459,7 +485,9 @@ static void action(int a, int b)
             dk_cmd(C_PLAY, 0, 0, 0);
             ui.change_t = plat_ms() - 3000u;   /* saved soon after the stop */
             ui.road_rec = 0;
-        } else                               /* on ROAD: from the block chosen there */
+        } else if (ui.armed)                 /* armed: PLAY starts the tape (the count-in, then the take) */
+            rec_start();
+        else                                 /* on ROAD: from the block chosen there */
             dk_cmd(C_PLAY, 1, ui.page == PG_ROAD && !ui.garage ? ui_road_cur : 0, 0);
         break;
     case A_PLAYMODE:
@@ -503,7 +531,17 @@ static void action(int a, int b)
             say("ROAD", ui.road_rec ? "REC" : "DONE");
         } else if (dk_recording || dk_counting)
             rec_stop_ui();
-        else
+        else if (ui.armed) {                 /* armed: REC again lets it go */
+            ui.armed = 0;
+            say("REC", "OFF");
+        } else if (dk_rec_arm && !dk_playing) {   /* two steps: REC arms, PLAY records */
+            ui.armed = 1;
+            if (ui.page != PG_REC) {
+                ui.prev = ui.page;
+                ui.page = PG_REC;
+            }
+            say("REC", dk_metro.on_note ? "ARMED - PLAY A NOTE" : "ARMED - PRESS PLAY");
+        } else
             rec_start();
         break;
     case A_CLEAR:
@@ -517,7 +555,7 @@ static void action(int a, int b)
             clip_clear(cur_clip());
             dk_unlock();
             mark_dirty();
-            say("CLIP", "CLEARED");
+            say("CLIP CLEARED", "UNDO BRINGS IT BACK");
         }
         break;
     case A_METRO:
@@ -597,7 +635,7 @@ static void action(int a, int b)
         int what;
         if (a == A_UNDO ? song_undo(&what) : song_redo(&what)) {
             mark_dirty();
-            say(a == A_UNDO ? "UNDO" : "REDO", what < 0 ? "ROAD" : "CLIP");
+            say(a == A_UNDO ? "UNDO" : "REDO", what < 0 ? "ROAD" : "LAST TAKE");
         } else
             say(a == A_UNDO ? "UNDO" : "REDO", "NOTHING");
         break;
@@ -1161,7 +1199,7 @@ static void lights(void)
     int k;
     const dk_track_t *trk = cur();
     const dk_engine_t *e = cur_eng();
-    if (dk_recording || (dk_counting && ((now / 250u) & 1u)))
+    if (dk_recording || (dk_counting && ((now / 250u) & 1u)) || (ui.armed && ((now / 500u) & 1u)))
         b |= 1u << B_REC;
     if (dk_playing)
         b |= LED_PLAY_GREEN;
@@ -1311,7 +1349,7 @@ static void input(void)
             ui.held_done[k] = 0;
             ui.btn |= bit;
             if (k == B_REC)                  /* ERASE by holding it, when not recording (nor with SEQ / HOME) */
-                ui.erase_ok = (uint8_t)(!dk_recording && !dk_counting && !held(B_SEQ) && !held(B_HOME) && !ui.road_rec);
+                ui.erase_ok = (uint8_t)(!ui.armed && !dk_recording && !dk_counting && !held(B_SEQ) && !held(B_HOME) && !ui.road_rec);
             if ((k == B_OCTDN || k == B_OCTUP) && held(B_SEQ)) {   /* SEQ held + OCT-/OCT+: undo / redo, step by step */
                 ui.used[B_SEQ] = 1;
                 ui.used[k] = 1;
@@ -1498,6 +1536,10 @@ void ui_frame(void)
     }
     tape_ui_step(dt);
     housekeeping(now);
+    if (song_layers_full) {              /* the sounds' table of a track is full: the takes after it stay live */
+        song_layers_full = 0;
+        say("LAYERS FULL", "7 SOUNDS ON THIS TRACK");
+    }
     if (dk_recording && ui.page != PG_REC) {   /* the tape page whenever it records */
         ui.prev = ui.page;
         ui.page = PG_REC;
