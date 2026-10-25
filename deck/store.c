@@ -277,6 +277,7 @@ void settings_save(void)
     set.nolock = (uint8_t)!dk_lock_take;
     set.noarm_old = 0;
     set.recarm = dk_rec_arm ? 1 : 0;
+    set.recmode = dk_rec_mode ? 1 : 0;
     set.emptypart = (uint8_t)!dk_newpart_copy;
     {                                    /* as it was last written: no erase */
         static uint8_t last[sizeof set];
@@ -321,6 +322,7 @@ static void settings_load(void)
     dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
     dk_lock_take = set.nolock ? 0 : 1;
     dk_rec_arm = set.recarm == 1 ? 1 : 0;
+    dk_rec_mode = set.recmode == 1 ? 1 : 0;
     dk_newpart_copy = set.emptypart ? 0 : 1;
     if (set.proj >= DK_NPROJ)
         set.proj = 0;

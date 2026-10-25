@@ -7,6 +7,11 @@
 
 static uint32_t gt;                            /* the grid's clock: the transport's ticks, or the free clock */
 static uint16_t part_tick;
+static void rec_on_now(void)           /* the take starts: where in the clip (REPLACE erases from here) */
+{
+    dk_rec_tick0 = part_tick;
+    dk_recording = 1;
+}
 static uint8_t cur_part, queued = 0xFF, tricks, block_last;
 /* a part's track mutes changed while playing (C_PMUTE) wait for the bar's end: dk_pm_x (the tracks that flip) in part dk_pm_part */
 static void pm_apply(void)
@@ -18,7 +23,7 @@ static void pm_apply(void)
     }
 }
 static int32_t count_left;
-static uint8_t rec_start_after, rec_wait_note, rec_bake, rec_trk2 = 0xFF;
+static uint8_t rec_start_after, rec_wait_note, rec_bake;
 static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
 static uint16_t endless_n;
 static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
@@ -197,7 +202,7 @@ static int rec_track_of(int t)
 {
     if (!dk_recording)
         return 0;
-    return t == dk_rec_trk || (rec_trk2 != 0xFF && t == rec_trk2);
+    return (unsigned)t < DK_NTRACK && (dk_rec_mask >> t & 1u);
 }
 static float clip_now(int t)                   /* the recording clip's time, ticks with the fraction */
 {
@@ -767,7 +772,7 @@ static void live_note(int t, int note, int vel, int delay)
         if (rec_wait_note && !dk_playing) {    /* armed: the first note starts the take */
             rec_wait_note = 0;
             play_start();
-            dk_recording = 1;
+            rec_on_now();
             rec_nocomp = 1;                    /* its start is the take's start: at 0 */
         }
         if (!(e->flags & EF_DRUM)) {           /* the harmony hears it */
@@ -931,7 +936,7 @@ static void seq_tick(void)
             if (rec_start_after) {
                 rec_start_after = 0;
                 play_start();
-                dk_recording = 1;
+                rec_on_now();
             }
             if (dk_stems == 1)
                 play_start(), dk_stems = 2;
@@ -1063,19 +1068,27 @@ static void drain(void)
         case C_REC:
             if (a) {
                 int t = c.d & 7, bake = (c.d >> 8) & 31;
+                int t2 = c.d >> 16 & 0xFF, m = c.d >> 24 & 0x3F, i, lay = 0;
+                if (t >= DK_NTRACK)
+                    t = 0;
                 dk_rec_trk = (uint8_t)t;
-                rec_trk2 = (uint8_t)(c.d >> 16 & 0xFF);
-                if (rec_trk2 >= DK_NTRACK)
-                    rec_trk2 = 0xFF;
-                dk_pass = (uint8_t)(CLIP(cur_part, t)->layers + 1);
+                m |= 1 << t;                   /* the armed tracks, the one the take began on, the split's harmony track */
+                if (t2 < DK_NTRACK)
+                    m |= 1 << t2;
+                dk_rec_mask = (uint8_t)m;
+                for (i = 0; i < DK_NTRACK; i++)   /* one pass number for all: the highest layer + 1 */
+                    if ((m >> i & 1) && CLIP(cur_part, i)->layers > lay)
+                        lay = CLIP(cur_part, i)->layers;
+                dk_pass = (uint8_t)(lay + 1);
+                dk_rec_pass0 = dk_pass;
                 endless_n = (uint16_t)(dk_song.trk[t].seq == SQ_ENDLESS ? 0 : endless_n);
                 if (bake) {
                     rec_bake = (uint8_t)(bake + (dk_playing ? 1 : 0));
                     if (!dk_playing)
                         play_start();
-                    dk_recording = 1;
+                    rec_on_now();
                 } else if (dk_playing)
-                    dk_recording = 1;
+                    rec_on_now();
                 else if (dk_metro.on_note)
                     rec_wait_note = 1;
                 else {
@@ -1090,7 +1103,17 @@ static void drain(void)
             if (dk_recording)
                 rec_close_all();
             dk_rec_trk = (uint8_t)(a % DK_NTRACK);
+            dk_rec_mask = (uint8_t)(dk_rec_mask | 1u << dk_rec_trk);
             dk_pass = (uint8_t)(CLIP(cur_part, dk_rec_trk)->layers + 1);
+            break;
+        case C_RECMASK:                        /* a = the armed tracks, changed while it records: a track let go closes its notes */
+            if (dk_recording) {
+                int i, m = (a & 0x3F) | 1 << dk_rec_trk;
+                for (i = 0; i < 128; i++)
+                    if (open_pos[i] >= 0 && !(m >> open_trk[i] & 1))
+                        rec_close(i, 1);
+                dk_rec_mask = (uint8_t)m;
+            }
             break;
         case C_PMUTE:                          /* a = track, b = part: while playing at the bar's end, else now */
             if (a >= DK_NTRACK)

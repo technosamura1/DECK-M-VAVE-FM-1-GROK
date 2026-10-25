@@ -37,6 +37,7 @@ static struct {
     uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
     uint32_t clr_t;                      /* PROJECT, black 4 (CLEAR ALL): when it was pressed once (0: not asked); again within 3 s clears */
+    uint8_t arm_trk;                     /* the tracks armed for recording (bit t; TRACKS: SEQ + white 1-6) */
     uint8_t armed;                       /* REC ARM: REC pressed, the tape waits for PLAY (or a note on ON NOTE) */
     uint8_t erase_ok, erase_on, erase_stage, erase_kind;   /* REC held: ERASE on the screen, how far; 0 the track,
                                                             * 1 a part (the garage), 2 the road */
@@ -353,7 +354,7 @@ static void rec_start(void)
         ui_auto_on = 1;
         ui.auto_max = 0;
     }
-    dk_cmd(C_REC, 1, 0, t | t2 << 16);
+    dk_cmd(C_REC, 1, 0, t | t2 << 16 | (ui.arm_trk & 0x3F) << 24);   /* (the selected track is always in it) */
     ui.rec_end = 0;
     if (ui.page != PG_REC && ui.page != PG_TRACKS) {
         ui.prev = ui.page;
@@ -363,6 +364,9 @@ static void rec_start(void)
     {
         char s[12] = "TAKE ";
         int n = dk_song.clip[clip].layers + 1, i, used = 0;
+        for (i = 0; i < DK_NTRACK; i++)       /* (several armed: one number for them all, the highest + 1) */
+            if ((ui.arm_trk >> i & 1) && dk_song.clip[dk_song.cur_part * DK_NTRACK + i].layers + 1 > n)
+                n = dk_song.clip[dk_song.cur_part * DK_NTRACK + i].layers + 1;
         for (i = 0; i < DK_NSND; i++)
             used += dk_song.snd[t][i].used ? 1 : 0;
         if (n > 31)
@@ -401,10 +405,23 @@ static void auto_end(void)               /* AUTO's take ends (REC or PLAY): the 
 void ui_arm_reset(void) { ui.armed = 0; }
 static void rec_stop_ui(void)
 {
+    int was_playing = dk_playing;
     ui.armed = 0;
-    dk_cmd(C_REC, 0, 0, 0);
+    dk_cmd(C_REC, 0, 0, 0);               /* (the tape goes on playing: this is the punch-out) */
     auto_end();
-    say("REC", "OFF");
+    say("REC", was_playing && dk_recording ? "PUNCH OUT" : "OFF");
+}
+/* TRACKS, SEQ + white 1-6: arm / disarm a track for recording (live too: the render's set follows) */
+static void rec_arm_toggle(int t)
+{
+    char s[16] = "ARM T";
+    ui.arm_trk = (uint8_t)((ui.arm_trk ^ 1u << t) & 0x3F);
+    if (dk_recording)
+        dk_cmd(C_RECMASK, ui.arm_trk, 0, 0);
+    s[5] = (char)('1' + t);
+    s[6] = 0;
+    say(ui.arm_trk >> t & 1 ? s : "DISARM", track_label(t));
+    mark_dirty();
 }
 /* AUTO's end: the take's notes past the new end wrapped round to its start, the part that long */
 static void auto_apply(void)
@@ -665,7 +682,20 @@ static void action(int a, int b)
         int what;
         if (a == A_UNDO ? song_undo(&what) : song_redo(&what)) {
             mark_dirty();
-            say(a == A_UNDO ? "UNDO" : "REDO", what == -1 ? "ROAD" : what == -2 ? "PART" : "LAST TAKE");
+            if (what >= 0) {             /* which track's (and part's, if not this one) take it was */
+                char s[20] = "T";
+                int l = 1;
+                s[l++] = (char)('1' + what % DK_NTRACK);
+                s[l++] = ' ';
+                l = (int)(cpy(s + l, track_label(what % DK_NTRACK)) - s);
+                if (what / DK_NTRACK != dk_song.cur_part) {
+                    s[l++] = ' ';
+                    s[l++] = (char)('A' + what / DK_NTRACK);
+                    s[l] = 0;
+                }
+                say(a == A_UNDO ? "UNDO" : "REDO", s);
+            } else
+                say(a == A_UNDO ? "UNDO" : "REDO", what == -1 ? "ROAD" : "PART");
         } else
             say(a == A_UNDO ? "UNDO" : "REDO", "NOTHING");
         break;
@@ -769,8 +799,12 @@ static void key_down(int k, int vel)
         return;
     }
     if (ui.page == PG_TRACKS && !held(B_HOME) && ((w >= 0 && w < DK_NTRACK) || (b >= 0 && b < DK_NTRACK))) {
-        if (w >= 0) {                    /* TRACKS: white 1-6 select the track (one press) */
-            track_select(w);
+        if (w >= 0) {                    /* TRACKS: white 1-6 select the track (one press); SEQ + white: arm it for REC */
+            if (held(B_SEQ)) {
+                ui.used[B_SEQ] = 1;
+                rec_arm_toggle(w);
+            } else
+                track_select(w);
             return;
         }
         if (held(B_SEQ)) {               /* SEQ + black 1-6: solo */

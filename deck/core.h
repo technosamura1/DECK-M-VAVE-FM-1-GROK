@@ -13,7 +13,7 @@ void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (
 
 /* commands (main loop -> render) */
 enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_TOMBOLA, C_SEED, C_PEDAL,
-       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE };
+       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK };
 void dk_cmd(int c, int a, int b, int d);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
 
@@ -39,6 +39,10 @@ extern volatile uint32_t dk_seen[DK_SEEN];
 
 /* state for the screen */
 extern volatile uint8_t dk_playing, dk_recording, dk_counting, dk_rec_trk, dk_pass;
+extern volatile uint16_t dk_rec_tick0;   /* the clip tick the take started at */
+extern volatile uint8_t dk_rec_pass0;    /* the pass number the REC press started with (REPLACE: older takes are the ones it erases) */
+extern volatile uint8_t dk_rec_mask;     /* the tracks being recorded (bit t): the armed ones and the track the take began on */
+extern uint8_t dk_rec_mode;              /* REC MODE: 0 OVERDUB (default), 1 REPLACE (the take erases the armed tracks' old notes it passes over) */
 extern volatile uint8_t dk_cur_part, dk_next_part, dk_road_i, dk_road_rep, dk_stems;
 extern volatile uint16_t dk_part_tick, dk_part_len;
 extern volatile uint32_t dk_ticks;                      /* since the transport started */

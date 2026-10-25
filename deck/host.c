@@ -77,6 +77,9 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "recarm")) g = dk_rec_arm;
     else if (!strcmp(what, "armed")) g = ui.armed;
     else if (!strcmp(what, "rectrk")) g = dk_rec_trk;
+    else if (!strcmp(what, "recmask")) g = dk_rec_mask;           /* the tracks the render records (bit t) */
+    else if (!strcmp(what, "armtrk")) g = ui.arm_trk;              /* the tracks armed on TRACKS (bit t) */
+    else if (!strcmp(what, "recmode")) g = dk_rec_mode;            /* 0 OVERDUB, 1 REPLACE */
     else if (!strcmp(what, "dirty")) g = ui.dirty;
     else if (!strcmp(what, "voices")) g = dk_voices_on;
     else if (!strcmp(what, "clicks")) g = (int)dk_metro_clicks;
@@ -201,6 +204,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "onnote")) {               /* onnote N: ON NOTE (the first note starts the take) */
         dk_metro.on_note = (uint8_t)atoi(a);
+        return 1;
+    }
+    if (!strcmp(cmd, "recmode")) {              /* recmode N: REC MODE 0 OVERDUB / 1 REPLACE */
+        dk_rec_mode = (uint8_t)atoi(a);
         return 1;
     }
     if (!strcmp(cmd, "recarm")) {               /* recarm N: REC ARM (two-step REC) on/off */

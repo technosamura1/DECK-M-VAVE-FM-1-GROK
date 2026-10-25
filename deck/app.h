@@ -49,7 +49,8 @@ typedef struct {
     uint8_t nolock;                      /* LOCK TAKE off (inverted: 0, as in an older store, is on) */
     uint8_t emptypart;                   /* NEW PART = EMPTY (inverted: 0, as in an older store, is COPY) */
     uint8_t recarm;                      /* REC ARM on (0, as in every older store, is OFF: one press of REC records) */
-    uint8_t rsv[15];
+    uint8_t recmode;                     /* REC MODE: 0 OVERDUB (as in every older store), 1 REPLACE */
+    uint8_t rsv[14];
 } settings_t;
 extern settings_t set;
 

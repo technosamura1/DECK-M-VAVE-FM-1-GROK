@@ -1,0 +1,130 @@
+# REC polish: several armed tracks (TRACKS: SEQ + white 1-6), REPLACE / OVERDUB, the punch-out (REC again leaves the tape
+# playing), UNDO per track with the track named.
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+listen
+qnt 0
+expect recmode 0
+page 0
+wait 50
+tap HOME
+wait 100
+expect page 11
+tapkey w0
+wait 100
+expect track 0
+# SEQ + white arms (no selecting), again disarms
+press SEQ
+tapkey w2
+release SEQ
+wait 100
+expect armtrk 4
+expect track 0
+expect page 11
+said ARM T3
+press SEQ
+tapkey w2
+release SEQ
+wait 100
+expect armtrk 0
+said DISARM
+press SEQ
+tapkey w2
+release SEQ
+wait 50
+expect armtrk 4
+wait 2500
+wait 2500
+shot p32_tracks_arm.png
+page 0
+wait 50
+# seed old notes: the armed track 3 (index 2) and an unarmed one (index 1), one on the selected track
+seed 0 3 6 0
+seed 0 2 6 0
+seed 0 1 4 0
+expect eventsA3 6
+# one press of REC: the selected track (1) and the armed (3) record, track 2 does not
+tap REC
+wait 3500
+expect recording 1
+expect recmask 5
+wait 700
+key w0 down 90
+wait 700
+key w0 up
+wait 400
+shot p33_rec_multi.png
+# arming while it records: the render's set follows
+tap HOME
+wait 100
+expect page 11
+press SEQ
+tapkey w1
+release SEQ
+wait 100
+expect recmask 7
+press SEQ
+tapkey w1
+release SEQ
+wait 100
+expect recmask 5
+tap HOME
+wait 100
+# REC again: the punch-out, the tape goes on
+tap REC
+wait 300
+expect recording 0
+expect playing 1
+said PUNCH OUT
+# OVERDUB (default): the old notes are all there
+expect eventsA3 6
+expect eventsA2 6
+expect eventsA1 8
+# UNDO takes the last take of ONE track at a press, and says which
+press EDIT
+wait 800
+release EDIT
+wait 100
+said T1
+expect eventsA1 4
+expect eventsA3 6
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect eventsA3 6
+tap PLAY
+wait 300
+expect playing 0
+# REPLACE: the old notes of the armed tracks go as the take passes over them (one undo step for the pass)
+recmode 1
+expect recmode 1
+tap REC
+wait 3500
+expect recording 1
+wait 5000
+tap REC
+wait 300
+expect recording 0
+expect eventsA3 0
+expect eventsA2 6
+expect eventsA1 0
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect eventsA3 6
+expect eventsA1 0
+expect eventsA2 6
+# (one more UNDO: the other armed track's pass)
+press EDIT
+wait 800
+release EDIT
+wait 100
+said T1
+expect eventsA1 4
+expect eventsA2 6

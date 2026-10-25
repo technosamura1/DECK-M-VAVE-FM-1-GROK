@@ -1,0 +1,40 @@
+# an armed track records the notes its generator plays (DRIVE here) while the keys play on the selected one: the selected track is not armed here, so it only records what is keyed
+# (the take began on track 1 (selected) and the armed track 5)
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+qnt 0
+page 0
+wait 50
+press HOME
+tapkey b4
+release HOME
+wait 50
+press SEQ
+tapkey w2
+release SEQ
+wait 50
+expect seq 4
+press HOME
+tapkey b0
+release HOME
+wait 50
+tap HOME
+wait 100
+press SEQ
+tapkey w4
+release SEQ
+wait 100
+expect armtrk 16
+page 0
+tap REC
+wait 3500
+wait 8000
+expect recmask 17
+tap REC
+wait 300
+expect eventsA5 >0
+expect eventsA1 0   # (nothing keyed: the selected track has nothing)
+expect playing 1

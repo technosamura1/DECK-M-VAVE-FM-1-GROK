@@ -161,7 +161,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 static int seq_edit_row(void);
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 4, 2, 1};
+    static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 5, 2, 1};
     if (p == PG_SEQ && ((cur_eng()->flags & EF_DRUM) || cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE))
         return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings;
                                               * STEP and LIVE: their own, the settings, the step editor */
@@ -181,10 +181,11 @@ static int page_field(int i, int home)
                                          {F_LAYOUT, F_LEAD, F_DIM, F_NONE, F_NONE}};
     static const uint8_t PROJ_F[1][5] = {{F_SLOT, F_TEMPLATE, F_SONGSTYLE, F_NONE, F_NONE}};
     /* GLOBAL (GLO): the song's time and air, the metronome, MIDI, the rest */
-    static const uint8_t GLOB_F[4][5] = {{F_TEMPO, F_SWING, F_DUST, F_SLEEP, F_SIDECHAIN},
+    static const uint8_t GLOB_F[5][5] = {{F_TEMPO, F_SWING, F_DUST, F_SLEEP, F_SIDECHAIN},
                                          {F_METRO, F_COUNT, F_CLICK, F_MVOL, F_MDIV},
                                          {F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ONNOTE, F_NEWPART},
-                                         {F_RECLAT, F_ECHOTIME, F_CPU, F_VERSION, F_LOCKTAKE}};
+                                         {F_RECLAT, F_ECHOTIME, F_CPU, F_VERSION, F_LOCKTAKE},
+                                         {F_RECMODE, F_RECARM, F_NONE, F_NONE, F_NONE}};
     (void)home;
     switch (ui.page) {
     case PG_PLAY: {                          /* the garden: the track you play, its sound and its space; ALGO the mood */
@@ -192,7 +193,7 @@ static int page_field(int i, int home)
         return F[i];
     }
     case PG_TRACKS: {                        /* the selected track's level and pan */
-        static const uint8_t F[5] = {F_VOL, F_PAN, F_NONE, F_NONE, F_NONE};
+        static const uint8_t F[5] = {F_VOL, F_PAN, F_RECMODE, F_RECARM, F_NONE};
         return F[i];
     }
     case PG_ARP: {                           /* the arpeggiator's own page */
@@ -279,14 +280,14 @@ static int page_field(int i, int home)
         }
     case PG_KEYS: return KEYS_F[row & 3][i];
     case PG_PROJECT: return PROJ_F[0][i];
-    case PG_GLOB: return GLOB_F[row & 3][i];
+    case PG_GLOB: return GLOB_F[row % 5][i];
     case PG_ATMO: {                          /* ATMO (SEL): the place's layers, then the noise and the tape */
         static const uint8_t F[2][5] = {{F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ALVL},
                                         {F_ATMO4, F_ATMO5, F_DUST, F_ATAPE, F_ALVL}};
         return F[row & 1][i];
     }
     case PG_REC: {
-        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECTRK, F_METRO, F_RECARM};   /* BARS first: how long a take */
+        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECMODE, F_METRO, F_RECARM};   /* BARS first: how long a take */
         return F[i];
     }
     default: return F_NONE;
@@ -322,7 +323,7 @@ static const char *hint(void)
         if (ui_auto_on)
             return "REC AGAIN = THE LOOP ENDS HERE";
         return "K1 BARS  K4 METRONOME  HOLD EDIT = UNDO";
-    case PG_TRACKS: return "SELECT = TRACK  HOME = BACK";
+    case PG_TRACKS: return "SEQ+WHITE = ARM  K3 MODE  HOME = BACK";
     case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
@@ -1535,9 +1536,13 @@ static void draw_tape(void)
     cv_text(53, 26, &FONT_XS, s, TH_BG);
     cv_text(68, 26, &FONT_XS, LABEL_NAME[dk_song.part[dk_cur_part & 7].label & 7], TH_TEXT);
     {
-        char *p = cpy(s, "PASS ");
-        itoa_b(dk_pass, p);
-        text_box(160, 26, 72, 2, &FONT_XS, &FONT_XS, s, TH_GRAY);
+        char *p = itoa_b(dk_pass > 31 ? 31 : dk_pass, cpy(s, "TAKE "));    /* the take, and the track's frozen sounds of 7 */
+        int used = 0, k;
+        for (k = 0; k < DK_NSND; k++)
+            used += dk_song.snd[dk_rec_trk % DK_NTRACK][k].used ? 1 : 0;
+        p = itoa_b(used, cpy(p, "  L"));
+        cpy(p, "/7");
+        text_box(130, 26, 102, 2, &FONT_XS, &FONT_XS, s, TH_GRAY);
     }
     /* the cassette */
     cv_rect(14, 44, 212, 100, CS_BODY);
@@ -1561,7 +1566,16 @@ static void draw_tape(void)
         cv_rect(108, 68, 24, 28, CS_LABEL);
         text_box(108, 70, 24, 1, &FONT_L, &FONT_B, s, TH_REC);
     }
-    text_box(24, 113, 100, 0, &FONT_T, &FONT_T, TAPE_TITLE, CS_INK);
+    {                                         /* the mode and the tracks it records (the armed ones, and the one the take began on) */
+        char *p = cpy(s, dk_rec_mode ? "REPLACE " : "OVERDUB ");
+        for (i = 0; i < DK_NTRACK; i++)
+            if (dk_rec_mask >> i & 1u) {
+                *p++ = (char)('1' + i);
+                *p++ = ' ';
+            }
+        *p = 0;
+        text_box(24, 113, 100, 0, &FONT_T, &FONT_T, s, CS_INK);
+    }
     {                                         /* the bars: where it is of how many (AUTO: counting up) */
         int bars = dk_song.part[dk_cur_part & 7].bars, at = dk_playing ? (int)(dk_part_tick / DK_TPB) + 1 : 1;
         char *p = itoa_b(at, cpy(s, "BAR "));
@@ -1585,7 +1599,7 @@ static void draw_tape(void)
         int y = 150 + t * 6, cl = dk_cur_part * DK_NTRACK + t;
         const dk_clip_t *c = &dk_song.clip[cl];
         int clen = clip_len(cl);
-        if (t == dk_rec_trk && (dk_recording || dk_counting))
+        if ((dk_rec_mask >> t & 1u) && (dk_recording || dk_counting))
             cv_rect(28, y - 1, 204, 6, dimc(TH_REC, 3));
         cv_rect(8, y + 1, 4, 3, TH_TRACK[t]);
         for (i = 0; i < c->n; i++) {
@@ -1593,9 +1607,9 @@ static void draw_tape(void)
             int x = 30 + e->pos * 200 / clen, w = e->dur * 200 / clen;
             if (e->fl & EV_MOTION)
                 continue;
-            cv_rect(x, y + 1, w < 2 ? 2 : w, 3, DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass) && t == dk_rec_trk ? TH_REC : TH_TRACK[t]);
+            cv_rect(x, y + 1, w < 2 ? 2 : w, 3, DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass) && (dk_rec_mask >> t & 1u) ? TH_REC : TH_TRACK[t]);
         }
-        if (t == dk_rec_trk)
+        if (dk_rec_mask >> t & 1u)
             for (i = 0; i < dk_open_n; i++)
                 cv_rect(30 + dk_open_pos[i] * 200 / clen, y + 1, 3, 3, TH_REC);
     }
@@ -1608,12 +1622,12 @@ static void draw_tape(void)
 /* TRACKS (HOME on PLAY): the six tracks as rows, like a DAW's: the number in the track's colour, its name and sound, the part's
  * mute (M, blinking while it waits for the bar's end), solo (S), the level; to the right the CURRENT PART's clip as a thumbnail
  * (notes of a frozen layer dim, the take being recorded red) and the playhead. The row recording is red. */
-static int trk_rec(int t) { return (dk_recording || dk_counting) && t == dk_rec_trk; }
+static int trk_rec(int t) { return (dk_recording || dk_counting) && (dk_rec_mask >> t & 1u); }
 static void draw_tracks(void)
 {
     int t, part = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, blink = (plat_ms() / 230u) & 1u;
     dk_preset_t tmp;
-    char s[16];
+    char s[40];
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_track_t *k = &dk_song.trk[t];
         int ry = 30 + t * 25, cl = part * DK_NTRACK + t, clen = clip_len(cl), i, lo = 127, hi = 0, tx = 108, tw = 128, sel = t == dk_song.cur_track,
@@ -1624,8 +1638,8 @@ static void draw_tracks(void)
             cv_rect(0, ry, 240, 23, dimc(TH_REC, 4));
         else if (sel)
             cv_rect(0, ry, 240, 23, RGB(52, 46, 40));
-        if (rec)
-            cv_rect(0, ry, 3, 23, TH_REC);
+        if (rec || (ui.arm_trk >> t & 1))      /* recording, or armed for it: the red stripe */
+            cv_rect(0, rec ? ry : ry + 7, 3, rec ? 23 : 9, TH_REC);   /* (armed: a short dash, recording: the whole row) */
         cv_rect(4, ry + 1, 16, 21, col);
         s[0] = (char)('1' + t);
         s[1] = 0;
@@ -1676,8 +1690,22 @@ static void draw_tracks(void)
         if (dk_playing)                      /* the playhead, across the rows */
             vline(tx + (int)(dk_part_tick % (uint16_t)clen) * (tw - 2) / clen, ry, 23, TH_TEXT);
     }
-    text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "SELECT/W1-6 TRACK  B1-6 MUTE", TH_GRAY);
-    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEQ+B1-6 SOLO  K1 LEVEL  HOME BACK", TH_GRAY);
+    text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "SEL/W1-6 TRACK  B1-6 MUTE  SEQ+B SOLO", TH_GRAY);
+    {                                        /* the take's settings: the armed tracks and the mode (SEQ + white arms) */
+        char *p = cpy(s, "ARM ");
+        int any = 0;
+        for (t = 0; t < DK_NTRACK; t++)
+            if (ui.arm_trk >> t & 1) {
+                *p++ = (char)('1' + t);
+                any = 1;
+            }
+        if (!any)
+            *p++ = '-';
+        *p++ = ' ';
+        *p++ = ' ';
+        cpy(cpy(p, dk_rec_mode ? "REPLACE" : "OVERDUB"), "  SEQ+W ARM  K3 MODE");
+        text_box(4, 195, 232, 0, &FONT_T, &FONT_T, s, TH_GRAY);
+    }
 }
 
 /* -------------------------------------------------------------------- frame --- */

@@ -18,7 +18,7 @@ enum {
     F_BASS, F_KOCT, F_DIM, F_HARMTRK,
     /* PROJECT */ F_SLOT, F_TEMPLATE, F_SWING, F_SONGSTYLE, F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL, F_ONNOTE,
     F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT, F_LOCKTAKE, F_RECARM, F_NEWPART,
-    /* REC */ F_RECTRK,
+    /* REC */ F_RECTRK, F_RECMODE,
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
     /* the step editor (SEQ's third row) */ F_SENOTE, F_SETIE, F_SEPITCH, F_SHIFT,
@@ -471,6 +471,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_ONNOTE:
     case F_LOCKTAKE:
     case F_RECARM:
+    case F_RECMODE:
     case F_NEWPART:
     case F_MIDIOUT:
     case F_CLOCK:
@@ -655,6 +656,7 @@ static int field_get(int f)
     case F_ONNOTE: return dk_metro.on_note;
     case F_LOCKTAKE: return dk_lock_take;
     case F_RECARM: return dk_rec_arm;
+    case F_RECMODE: return dk_rec_mode;
     case F_NEWPART: return dk_newpart_copy;
     case F_MIDIOUT: return dk_midi_notes;
     case F_CLOCK: return dk_midi_clock;
@@ -862,6 +864,7 @@ static void field_set(int f, int v)
     case F_ONNOTE: dk_metro.on_note = (uint8_t)v; settings_save_later(); break;
     case F_LOCKTAKE: dk_lock_take = (uint8_t)v; settings_save_later(); break;
     case F_RECARM: dk_rec_arm = (uint8_t)v; ui_arm_reset(); settings_save_later(); break;
+    case F_RECMODE: dk_rec_mode = (uint8_t)v; settings_save_later(); break;
     case F_NEWPART: dk_newpart_copy = (uint8_t)v; settings_save_later(); break;
     case F_MIDIOUT: dk_midi_notes = (uint8_t)v; settings_save_later(); break;
     case F_CLOCK: dk_midi_clock = (uint8_t)v; settings_save_later(); break;
@@ -1003,6 +1006,7 @@ static const char *field_label(int f)
     case F_ONNOTE: return "ON NOTE";
     case F_LOCKTAKE: return "LOCK TAKE";
     case F_RECARM: return "REC ARM";
+    case F_RECMODE: return "REC MODE";
     case F_NEWPART: return "NEW PART";
     case F_MIDIOUT: return "MIDI OUT";
     case F_CLOCK: return "CLOCK";
@@ -1241,6 +1245,7 @@ static void field_text(int f, char *b)
     case F_CLOCK:
     case F_MIDIIN: cpy(b, ONOFF[v & 1]); break;
     case F_NEWPART: cpy(b, v ? "COPY" : "EMPTY"); break;
+    case F_RECMODE: cpy(b, v ? "REPLACE" : "OVERDUB"); break;
     default: itoa_b(v, b); break;
     }
 }
