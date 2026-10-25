@@ -17,7 +17,7 @@ typedef struct {
 static const ui_map_t UI_MAP[] = {
     {B_FX, A_PAGE_SOUND, A_NONE, A_NONE, 0, "SOUND; again: ENGINE ENV FX MOD"},
     {B_SEQ, A_PAGE_SEQ, A_NONE, A_BAKE, HOLD_MOD, "SEQ; again: its next row | hold + white 1-5: the sequencer (in MIX: white 1-6 = TEMP mute of the track; on TRACKS: white 1-6 = ARM the track for REC, black 1-6 = SOLO) | HOME+: BAKE (DRIVE to STEP)"},
-    {B_ENV, A_PAGE_ROAD, A_GARAGE, A_NONE, 600, "ROAD | hold: the garage of parts"},
+    {B_ENV, A_PAGE_ROAD, A_GARAGE, A_NONE, 600, "ROAD | hold: the garage (white 1-8: copy part to)"},
     {B_LFO, A_PAGE_MIX, A_NONE, A_NONE, HOLD_MOD, "MIX (white 1-6: mute the track IN THIS PART; playing: at the bar end; hold 1 s: clear its clip); again: MASTER | hold + turn a SOUND knob: MOD 1 on it"},
     {B_PLAY, A_PLAY, A_PLAYMODE, A_TAP_TEMPO, 800, "play/stop | hold: PART/SONG | HOME+: tap tempo"},
     {B_REC, A_REC, A_CLEAR, A_METRO, 1000, "record at once (count-in, or ON NOTE; optional REC ARM: arm, then PLAY); while recording: punch-out (the tape plays on) | hold 1 s: clear the clip, 2.5 s: the track in all parts | SEQ+: clear the clip | HOME+: metronome"},

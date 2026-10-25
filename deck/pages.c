@@ -314,7 +314,7 @@ static const char *hint(void)
     case PG_SOUND: return "FX = TAB  HOME+PRESET = INSTRUMENT";
     case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
     case PG_ROAD:
-        return ui.garage ? "HOLD ENV = BACK TO ROAD" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
+        return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
     case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
@@ -365,8 +365,13 @@ static void draw_header(void)
             vline(8 + i, 10 - (8 - i) / 2, 8 - i < 1 ? 1 : (8 - i), TH_TEXT);
     } else
         cv_rect(8, 6, 8, 8, TH_GRAY);
-    cv_rect(22, 3, 13, 15, TH_PART[part & 7]);
-    s[0] = (char)('A' + (part & 7));
+    {
+        int lp = part & 7;
+        if (dk_playing && dk_next_part != 0xFF && (dk_next_part & 7) != lp && (now / 230u & 1u))
+            lp = dk_next_part & 7;       /* a part queued (for the bar's end): its letter blinks in the part's place */
+        cv_rect(22, 3, 13, 15, TH_PART[lp]);
+        s[0] = (char)('A' + lp);
+    }
     s[1] = 0;
     cv_text(25, 4, &FONT_XS, s, TH_BG);
     bar = dk_playing ? dk_part_tick / DK_TPB + 1 : 1;
@@ -1179,6 +1184,8 @@ static void draw_road(void)
             int x = WX + 3 + (i / 4) * 113, y = WY + 3 + (i % 4) * 24, t, sel = i == ui_gpart;
             if (sel)
                 cv_rect(x, y, 109, 22, RGB(58, 52, 45));
+            if (ui.dup_t && plat_ms() - ui.dup_t < 3000u && i == ui.dup_to)   /* the overwrite asked: the target red */
+                cv_rect(x, y, 109, 22, dimc(TH_REC, 4));
             cv_rect(x + 3, y + 4, 14, 14, TH_PART[i]);
             s[0] = (char)('A' + i);
             s[1] = 0;

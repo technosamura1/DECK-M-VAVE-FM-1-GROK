@@ -562,28 +562,35 @@ int part_has_events(int p)
 }
 static uint8_t pc_part = 0xFF, pc_grp;   /* the part a copy was just made into, and its undo step */
 static uint32_t pc_edits;               /* (the edits then) */
-int part_copy(int from, int to)
+int part_copy_x(int from, int to, int wipe);
+int part_copy(int from, int to) { return part_copy_x(from, to, 0); }
+/* wipe: the target's own clips go first (DUPLICATE PART TO a part with notes, after the second press); one undo step */
+int part_copy_x(int from, int to, int wipe)
 {
     int t, need = 0, i;
     from &= 7;
     to &= 7;
     if (from != to)
         rec_flush();                       /* (what was just recorded is in the clips: it goes along) */
-    if (from == to || part_has_events(to) || !part_has_events(from))   /* never over a part with notes */
+    if (from == to || (!wipe && part_has_events(to)) || !part_has_events(from))   /* never over a part with notes, unless asked */
         return 0;
     for (t = 0; t < DK_NTRACK; t++)
-        need += dk_song.clip[from * DK_NTRACK + t].n;
+        need += dk_song.clip[from * DK_NTRACK + t].n - (wipe ? (int)dk_song.clip[to * DK_NTRACK + t].n : 0);
     if (dk_song.nev + need > DK_NEV)
         return -1;
     undo_group(1);
     pc_grp = grp_now;
     for (t = 0; t < DK_NTRACK; t++)       /* (its undo: the clips of `to` as they are: empty; and the part's bars and mutes) */
-        if (dk_song.clip[from * DK_NTRACK + t].n)
+        if (dk_song.clip[from * DK_NTRACK + t].n || (wipe && dk_song.clip[to * DK_NTRACK + t].n))
             undo_push(to * DK_NTRACK + t);
     undo_push_part(to);
     undo_group(0);
     dk_lock();
     pc_part = (uint8_t)to;
+    if (wipe)
+        for (t = 0; t < DK_NTRACK; t++)
+            if (dk_song.clip[to * DK_NTRACK + t].n)
+                clip_clear(to * DK_NTRACK + t);
     for (t = 0; t < DK_NTRACK; t++) {
         int c = to * DK_NTRACK + t, src = from * DK_NTRACK + t, n = dk_song.clip[src].n;
         if (n) {                           /* `c` is empty: its place opened (the events behind move up), the events copied in */

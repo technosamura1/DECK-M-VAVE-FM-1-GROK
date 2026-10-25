@@ -54,6 +54,7 @@ int part_has_events(int p);              /* 1: any of the part's six clips has a
  * lengths, the part's bars and track mutes), one undo step. 1 copied; 0 nothing done (same part, `to` not empty, `from` empty);
  * -1 no room for the events (nothing done) */
 int part_copy(int from, int to);
+int part_copy_x(int from, int to, int wipe);
 int part_copy_undo(int to);              /* the copy just made taken back (nothing in `to` was edited since): 1 done */
 void track_sound_to(int t);              /* before a track's preset or engine changes: its take being recorded is frozen as it is */
 void takes_forget(void);

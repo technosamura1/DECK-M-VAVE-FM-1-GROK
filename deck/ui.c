@@ -37,6 +37,8 @@ static struct {
     uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
     uint32_t clr_t;                      /* PROJECT, black 4 (CLEAR ALL): when it was pressed once (0: not asked); again within 3 s clears */
+    uint8_t dup_from, dup_to;            /* GARAGE: DUPLICATE PART TO a part with notes: asked once (when: dup_t), the second press overwrites */
+    uint32_t dup_t;
     uint8_t lay, lay_cur;                /* TRACKS: the LAYERS list is shown (EDIT toggles it); its cursor */
     uint8_t arm_trk;                     /* the tracks armed for recording (bit t; TRACKS: SEQ + white 1-6) */
     uint8_t armed;                       /* REC ARM: REC pressed, the tape waits for PLAY (or a note on ON NOTE) */
@@ -496,6 +498,44 @@ static void road_delete(int keep)
     mark_dirty();
 }
 
+/* GARAGE: white 1-8 = DUPLICATE the part on the cursor TO that part. An empty target takes it at once; a target with notes asks
+ * once ("AGAIN = OVERWRITE", red), and only the second press (same pair, within 3 s) replaces it. One undo step. */
+static void garage_dup(int to)
+{
+    int from = ui_gpart % DK_NPART, wipe, r;
+    char s[8] = "A->B";
+    uint32_t now = plat_ms();
+    s[0] = (char)('A' + from);
+    s[3] = (char)('A' + to);
+    if (dk_recording || dk_counting) {
+        say("DUPLICATE", "STOP REC");
+        return;
+    }
+    if (from == to) {
+        say("DUPLICATE", "PICK ANOTHER");
+        return;
+    }
+    if (!part_has_events(from)) {
+        say(s, "EMPTY");
+        return;
+    }
+    wipe = part_has_events(to);
+    if (wipe && !(ui.dup_t && now - ui.dup_t < 3000u && ui.dup_from == from && ui.dup_to == to)) {
+        ui.dup_t = now;
+        ui.dup_from = (uint8_t)from;
+        ui.dup_to = (uint8_t)to;
+        say(s, "AGAIN = OVERWRITE");
+        return;
+    }
+    ui.dup_t = 0;
+    r = part_copy_x(from, to, wipe);
+    if (r > 0) {
+        mark_dirty();
+        say(s, wipe ? "OVERWRITTEN" : "COPIED");
+    } else
+        say("NO ROOM", s);
+}
+
 static void action(int a, int b)
 {
     switch (a) {
@@ -898,8 +938,11 @@ static void key_down(int k, int vel)
     }
     switch (ui.page) {
     case PG_ROAD:
-        if (ui.garage)
+        if (ui.garage) {
+            if (w >= 0 && w < 8)
+                garage_dup(w);
             break;
+        }
         if (w >= 0 && w < 8) {
             road_insert(w, 0);
             say("ROAD", "BLOCK ADDED");
