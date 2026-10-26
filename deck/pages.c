@@ -419,7 +419,15 @@ static void draw_header(void)
     cv_text(40, 4, &FONT_XS, s, TH_GRAY);
     if (plat_ms() < ui.notes_until)      /* what you play, for a moment: its notes (or the drum) */
         text_box(70, 4, 92, 0, &FONT_XS, &FONT_T, ui.notes, ui.notes_k ? RGB(250, 150, 70) : TH_ENC[1]);
-    else if (ui.page == PG_PLAY) {       /* PLAY: the part's name and the chord, in the header (not on the meadow) */
+    else if (held(B_HOME)) {             /* HOME held: the load, for a look: the voices of 24, the CPU */
+        char ld[24], *q = itoa_b(dk_voices_on, ld);
+        q = cpy(q, "/");
+        q = itoa_b(DK_NVOICE, q);
+        q = cpy(q, " V  CPU ");
+        q = itoa_b((int)plat_cpu_pct(), q);
+        cpy(q, "%");
+        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ld, plat_cpu_pct() > 80u ? TH_REC : TH_ENC[2]);
+    } else if (ui.page == PG_PLAY) {       /* PLAY: the part's name and the chord, in the header (not on the meadow) */
         int pcs[4], n = dk_harm_n ? dk_harm_n : 1, i;
         char c[12];
         text_box(70, 4, 50, 0, &FONT_XS, &FONT_XS, LABEL_NAME[dk_song.part[part & 7].label & 7], TH_TEXT);
@@ -471,9 +479,9 @@ static const char *hold_hint(uint32_t now)
     static const char *const H[NB] = {
         "FX: SOUND  +W1-4 BYPASS", "SEL: ATMO  HOME+SEL = PREV BANK",
         "ENV: ROAD  HOLD = GARAGE", "LFO: MIX  +SOUND KNOB = MOD 1",
-        "EDIT: KEYS  HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
+        "EDIT: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
         0, "SAVE: PROJECT  +W13-16 PRESET",
-        "ARP: ON  AGAIN LATCH  +WHITE PART", "SEQ: ROW  +B1 COOK B2 RAND B3 QNT",
+        "ARP: AGAIN LATCH  +WHITE PART", "SEQ +B1 COOK B2 RAND B3 QNT",
         "PLAY/STOP  HOLD PART/SONG", 0,
         "OCT-: OCTAVE  HOME+ SCALE STEP", "OCT+: OCTAVE  HOME+ SCALE STEP"};
     int b, best = -1;

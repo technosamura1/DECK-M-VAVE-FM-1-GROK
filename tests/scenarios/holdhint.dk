@@ -18,3 +18,27 @@ shot hint_env.png
 wait 400
 release ENV
 wait 100
+# HOME held: the load (voices of 24, CPU) takes the header's middle for a look
+tap FX
+wait 100
+press HOME
+wait 200
+shot load_home.png
+release HOME
+# every hint fits its line
+tap SEQ
+wait 100
+press SEQ
+wait 600
+release SEQ
+press ARP
+wait 600
+release ARP
+press SAVE
+wait 600
+release SAVE
+press HOME
+wait 100
+release HOME
+wait 100
+expect textfit 0
