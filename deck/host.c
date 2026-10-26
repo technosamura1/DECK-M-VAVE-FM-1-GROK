@@ -529,8 +529,8 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_newpart_copy = (uint8_t)atoi(a);
         return 1;
     }
-    if (!strcmp(cmd, "ballast")) {              /* ballast N: N events into part H's track 6 (the pool nearly full) */
-        int i, n = atoi(a);
+    if (!strcmp(cmd, "ballast")) {              /* ballast N [T]: N events into part H's track 6 (the pool nearly full), in T takes (take = i mod T) */
+        int i, n = atoi(a), tk = atoi(b) > 0 ? atoi(b) : 1;
         dk_lock();
         for (i = 0; i < n; i++) {
             dk_ev_t e = {0};
@@ -538,6 +538,7 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             e.dur = 1;
             e.note = 60;
             e.vel = 50;
+            e.layer = DK_L_MAKE(i % tk, 0);
             if (dk_song_insert(7 * DK_NTRACK + 5, &e) < 0)
                 break;
         }

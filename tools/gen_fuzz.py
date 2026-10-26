@@ -5,6 +5,7 @@ invariants are checked (expect inv 0: events in the pool, clips sorted, lengths 
 import random, sys
 seed, n = int(sys.argv[1]), int(sys.argv[2])
 auto = len(sys.argv) > 3 and sys.argv[3] == "auto"
+recf = len(sys.argv) > 3 and sys.argv[3] == "rec"   # RECORDING INTO A FULL POOL: ballast of many takes, then takes of chords on every track, never silent, invariants hold
 snd = len(sys.argv) > 3 and sys.argv[3] == "sound"   # SOUND: block / preset / engine / kit / FILTER cutoff switches, REC layers and automation, user presets, save+load round-trips   # AUTOMATION: mostly REC held + knobs on SOUND / MIX, tracks and parts switched, copies
 r = random.Random(seed)
 BTN = "FX SEL ENV LFO EDIT GLO HOME ARP SEQ PLAY REC OCT- OCT+".split()   # (no SAVE: the project's pages are a wipe away)
@@ -12,6 +13,8 @@ ENC = "SELECT ALGO PRESET K1 K2 K3 K4".split()
 out = ["# FUZZ seed %d, %d events (tools/gen_fuzz.py): random buttons, holds, keys and knobs on every page; the song's invariants hold" % (seed, n),
        "wait 300", "demo", "wait 100"]
 held = []
+if recf:
+    out += ["ballast %d %d" % (r.choice([3000, 3700, 4000]), r.choice([2, 5, 12]))]
 if auto:
     out += ["tap PLAY", "wait 400", "tap FX"]
 def sound_event():
@@ -44,6 +47,17 @@ def sound_event():
     return o
 for i in range(n):
     x = r.random()
+    if recf and x < 0.4:
+        out += ["tap REC", "wait %d" % r.choice([200, 3500])]
+        for _ in range(r.randrange(1, 6)):
+            k = r.randrange(0, 12)
+            out += ["key w%d down %d" % (k, r.randrange(30, 127)), "key w%d down 90" % ((k + 2) % 12), "wait %d" % r.choice([100, 600, 2500]),
+                    "key w%d up" % k, "key w%d up" % ((k + 2) % 12), "wait 30"]
+        out += ["tap REC", "wait 300"]
+        if r.random() < 0.3:
+            out.append("press HOME\ntapkey b%d\nrelease HOME" % r.randrange(0, 6))       # another track
+        out.append("expect inv 0")
+        continue
     if snd and x < 0.5:
         out += sound_event()
         out.append("wait %d" % r.choice([5, 30, 120]))

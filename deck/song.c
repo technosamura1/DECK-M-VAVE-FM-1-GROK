@@ -647,6 +647,55 @@ static void rep_run(void)
     }
     rep_started = 1;
 }
+/* THE POOL IS FULL while a take records: the oldest take of the clip with the most layers goes (its notes only: the
+ * automation and the take being recorded stay), one undo step; 0: nothing to drop (every clip has a single take).
+ * The UI says it (song_mem_dropped / song_mem_full). The song is locked */
+uint8_t song_mem_dropped, song_mem_full;
+static int mem_make_room(int pass)
+{
+    int c, best = -1, bn = 0, take, cur = pass > 31 ? 31 : pass, i, w;
+    for (c = 0; c < DK_NCLIP; c++) {
+        const dk_clip_t *k = &dk_song.clip[c];
+        uint32_t seen = 0;
+        int n = 0;
+        for (i = 0; i < k->n; i++) {
+            const dk_ev_t *e = &dk_ev[k->at + i];
+            if (!(e->fl & EV_MOTION)) {
+                seen |= 1u << DK_L_TAKE(e->layer);
+                n++;
+            }
+        }
+        if ((seen & (seen - 1u)) && n > bn) {      /* two takes or more */
+            best = c;
+            bn = n;
+        }
+    }
+    if (best < 0)
+        return 0;
+    {
+        dk_clip_t *k = &dk_song.clip[best];
+        uint32_t seen = 0;
+        for (i = 0; i < k->n; i++)
+            if (!(dk_ev[k->at + i].fl & EV_MOTION))
+                seen |= 1u << DK_L_TAKE(dk_ev[k->at + i].layer);
+        for (take = 0; take < 32 && !(seen >> take & 1u); take++)
+            ;
+        if (take >= cur && (dk_rec_mask >> (best % DK_NTRACK) & 1u) && best / DK_NTRACK == (dk_cur_part & 7))
+            return 0;                              /* (the oldest is the one being recorded) */
+        snap_take(usnap, &un, NSNAP, ubuf, 1024, best, 0);
+        rn = 0;
+        for (i = 0, w = 0; i < k->n; i++) {
+            const dk_ev_t *e = &dk_ev[k->at + i];
+            if ((e->fl & EV_MOTION) || (int)DK_L_TAKE(e->layer) != take)
+                dk_ev[k->at + w++] = *e;
+        }
+        if (w == k->n)
+            return 0;
+        clip_close(best, w);
+    }
+    song_mem_dropped = 1;
+    return 1;
+}
 /* the render's recorded events into the song (a snapshot first for each new pass of a clip: its undo); only_t >= 0: also
  * freeze that track's take at once (its sound is about to change) */
 static int rec_flush_do(int only_t)
@@ -701,6 +750,15 @@ static int rec_flush_do(int only_t)
         }
         if (dk_song.clip[r.clip].len == 0 && r.ev.pos + r.ev.dur > clip_len(r.clip))
             r.ev.dur = (uint16_t)(clip_len(r.clip) - r.ev.pos);
+        {
+            int tries = DK_NCLIP;
+            while (dk_song.nev >= DK_NEV && tries-- > 0 && mem_make_room(pass))
+                ;
+            if (dk_song.nev >= DK_NEV) {       /* nothing to drop: said, not silent */
+                song_mem_full = 1;
+                continue;
+            }
+        }
         if (dk_song_insert(r.clip, &r.ev) >= 0 && !(r.ev.fl & EV_MOTION) && !DK_L_SND(r.ev.layer)) {
             take_pend[r.clip] = (uint8_t)(DK_L_TAKE(r.ev.layer) + 1u);
             if (last_sess[r.clip] != rec_sess) {     /* the first note of this REC press in the clip: its take is where it starts */

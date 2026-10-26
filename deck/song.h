@@ -72,6 +72,7 @@ int snapshot_recall(void);               /* the part as taken (one undo step): 1
 int part_copy_undo(int to);              /* the copy just made taken back (nothing in `to` was edited since): 1 done */
 void track_sound_to(int t);              /* before a track's preset or engine changes: its take being recorded is frozen as it is */
 void takes_forget(void);
+extern uint8_t song_mem_dropped, song_mem_full;   /* the pool was full while recording: the oldest take went / nothing to drop (the UI says it) */
 extern uint8_t song_layers_full;         /* the table of frozen sounds was full (the UI says it once) */
 void rec_reset(void);
 const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp);

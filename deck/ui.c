@@ -1989,6 +1989,17 @@ void ui_frame(void)
         song_layers_full = 0;
         say("LAYERS FULL", "7 SOUNDS ON THIS TRACK");
     }
+    if (song_mem_dropped || song_mem_full) {   /* the event pool filled up while recording (said at most every 2 s) */
+        static uint32_t mem_t;
+        if (now - mem_t > 2000u || !mem_t) {
+            mem_t = now | 1u;
+            if (song_mem_full)
+                say("MEMORY FULL", "NOTES LOST");
+            else
+                say("MEMORY FULL", "OLDEST TAKE ERASED");
+        }
+        song_mem_dropped = song_mem_full = 0;
+    }
     if (dk_recording && ui.page != PG_REC && ui.page != PG_TRACKS) {   /* the tape page whenever it records (or TRACKS) */
         ui.prev = ui.page;
         ui.page = PG_REC;

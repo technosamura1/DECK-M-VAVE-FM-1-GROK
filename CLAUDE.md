@@ -590,3 +590,12 @@ ON NOTE: первая нота и так в записи (`rec_nocomp`). Ран�
 **BASS-дорожка играет низко и одним звуком (-14).** Раньше белая клавиша на SOFTBASS (моно, один голос) слала аккорд из 4 нот, звучала только верхняя (E5, 659 Hz), а клавиши начинались с C4. Теперь `keys.c`: `is_bass(t)` (роль дорожки или движка = R_BASS) → `trk_oct` на 2 октавы ниже (белые F1…), аккорд на басе (белые CHORDS и чёрные) шлёт только нижнюю ноту (корень). `trk.oct` по умолчанию не трогали (его читает seq.c для FINGER). Тесты: `bassroot.dk` (нота и один голос), `deck_test pitch` (основной тон C2/G2/C3 у всех пресетов БАСА; sub-октава «SUB DRONE/RUMBLE/DRAGON BREATH» — по замыслу; остальные движки печатаются как info).
 
 **Смена страницы перерисовывает весь экран (-14).** `draw_frame` (pages.c): при смене `ui.page` — сразу все 3 полосы (или сад + шапка + подвал), а не по полосе за кадр: при HOME-HOME-HOME сад оставался поверх рядов TRACKS (на медленных кадрах — надолго). Тест `pagedraw.dk` (команды хоста `snap 0|1`, `expect_snap [y0 y1]` — сравнение экрана через 40 мс и через 500 мс).
+
+### Recording into a full pool (op1-rec-14)
+The song's events share one pool of DK_NEV = 4096 (8 bytes each; the project's flash slot is sized for exactly that, so it cannot grow).
+A take recorded while the pool was full used to be refused silently (`dk_song_insert` returned -1; "4 instruments recorded, no 5th
+would"). Now `rec_flush_do` (song.c) calls `mem_make_room`: the oldest take (lowest take number, notes only, never automation or the
+take being recorded) of the clip with the most layers is dropped (one undo step) and the UI says "MEMORY FULL / OLDEST TAKE ERASED";
+with nothing to drop (every clip has one take) what does not fit is lost WITH "MEMORY FULL / NOTES LOST" (`song_mem_dropped`,
+`song_mem_full`, said at most every 2 s). Tests: `recfull.dk`, `recfull2.dk`, `fuzz5.dk` (`gen_fuzz.py SEED N rec`; the host's `ballast N T`
+fills the pool with N events in T takes).
