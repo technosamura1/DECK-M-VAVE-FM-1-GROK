@@ -932,7 +932,7 @@ static const char *field_label(int f)
     case F_DEC: return "DECAY";
     case F_REL: return "RELEASE";
     case F_FXTYPE: return "EFFECT";
-    case F_FXAMT: return "AMOUNT";
+    case F_FXAMT: return cur()->fx == 5 ? "CUTOFF" : "AMOUNT";   /* FILTER: its cutoff is the amount */
     case F_FXA: return TAPE.fx[cur()->fx % TAPE.nfx]->pa[0] ? TAPE.fx[cur()->fx % TAPE.nfx]->pa : "-";
     case F_FXB: return TAPE.fx[cur()->fx % TAPE.nfx]->pb[0] ? TAPE.fx[cur()->fx % TAPE.nfx]->pb : "-";
     case F_MODTYPE: return ui_mod_slot ? "MOD 2" : "MOD 1";
@@ -1377,7 +1377,11 @@ static void field_big(int f, char *num, const char *unit_out[1])
         return;
     case F_FXAMT:
         if (k->fx == 5) {                              /* FILTER: the cutoff */
+            float xh = 0.5f * dk_svf_fmax(1.6f - 1.45f * (float)k->fxa * 0.01f), cap;
             fl = 60.0f * fm_exp2f((float)v * 0.01f * 8.2f);
+            cap = DK_SR * 0.3183099f * xh * (1.0f + xh * xh * (0.16667f + xh * xh * 0.075f));   /* the Hz the filter is held at (asin) */
+            if (fl > cap)
+                fl = cap;
             itoa_b((int)fl, num);
             unit_out[0] = "HZ";
             return;

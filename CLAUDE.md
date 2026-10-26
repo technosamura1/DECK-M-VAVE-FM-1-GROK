@@ -469,3 +469,11 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   щелчков учитывает собственные края волны (90-й перцентиль огибающей) — щелчок размером с край пилы он не увидит.
 - **Тесты**: `tests/scenarios/blocks.dk` (переключение блоков, `expect blk`, `pcnt<E>.<B>`, снимки `blk_*.png`); host-геттеры
   `blk`, `pcnt<engine>.<block>`; `tools/make_listen.py` — блоки и новые движки.
+
+## CUTOFF (op1-rec, -6)
+
+- Отдельного параметра cutoff нет: срез FILTER — это ручка AMOUNT строки FX (F_FXAMT, 60·2^(v·0.082) Гц). `field_label` показывает
+  «CUTOFF» при `fx==5`; одна точка — покрывает строку FX, readout, автоматизацию, p-lock. Читаемо в Гц (readout).
+- Одна поправка DSP: `dk_svf_fmax(q)` (core.c) — предел устойчивости SVF; `fx_filter` режет коэффициент по нему, readout показывает то же
+  (на RES 0 верх ≈ 6 кГц, на макс. RES ≈ 11 кГц; выше ручка звук не меняет). Раньше выше ~7.5 кГц фильтр расходился.
+- Сценарий `tests/scenarios/cutoff.dk`, снимки `fx_cutoff*.png`.

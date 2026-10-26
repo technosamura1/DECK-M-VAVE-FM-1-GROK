@@ -1,0 +1,22 @@
+# FILTER's cutoff is the FX row's AMOUNT knob: with the FILTER effect it reads CUTOFF, in Hz
+wait 300
+tap FX
+tap FX
+tap FX
+tap FX
+expect rowof 3
+turn K1 5
+wait 100
+wait 100
+tap FX
+tap FX
+tap FX
+tap FX
+expect rowof 2
+turn K2 -100
+turn K2 55
+wait 150
+shot fx_cutoff.png
+turn K2 100
+wait 150
+shot fx_cutoff_top.png

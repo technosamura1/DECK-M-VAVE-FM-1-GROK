@@ -210,7 +210,7 @@ static int page_field(int i, int home)
         case 1:                              /* MORE: the rest of the sound's own */
             sound_lists(fav, more);
             return more[i];
-        case 2: {                            /* FX: always TONE, DEPTH, SPACE (reverb), SEND (echo); on a drum track: the kit's, or one sound's */
+        case 2: {                            /* FX: always TONE, DEPTH (FILTER: RES, CUTOFF), SPACE (reverb), SEND (echo); on a drum track: the kit's, or one sound's */
             static const uint8_t F[5] = {F_FXA, F_FXAMT, F_REV, F_ECHO, F_NONE};
             static const uint8_t ONE[5] = {F_LCRUSH, F_LLEVEL, F_LREV, F_LECHO, F_FXFOR};
             if (drum)

@@ -340,6 +340,7 @@ float dk_lpk(float fc);                 /* a one-pole low-pass coefficient */
 float dk_sine(float ph);                /* a sine from the table, ph in turns >= 0 */
 float dk_saw(float t, float dt);        /* a band-limited saw (polyBLEP) */
 float dk_svf_f(float fc);
+float dk_svf_fmax(float q);          /* the biggest dk_svf_f() the filter stays stable at, for damping q */
 
 /* DRIVE's output: a note on the track (dur ticks; delay samples, loose) */
 void dk_emit(int trk, int note, int vel, int dur, int delay);

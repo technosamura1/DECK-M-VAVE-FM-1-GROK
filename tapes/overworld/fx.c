@@ -122,11 +122,14 @@ static void fx_chorus(dk_fxst_t *s, float *l, float *r, int n, float amt, float 
     }
 }
 
-/* FILTER: a state-variable filter, its cutoff AMOUNT, resonance a, low-pass to high-pass b */
+/* FILTER: a state-variable filter, its CUTOFF (the AMOUNT knob; 60 Hz..17.6 kHz, held where the filter stays stable), resonance a, low-pass to high-pass b */
 static void fx_filter(dk_fxst_t *s, float *l, float *r, int n, float amt, float a, float b)
 {
-    float *f = s->f, fc = dk_svf_f(60.0f * fm_exp2f(amt * 8.2f)), q = 1.6f - 1.45f * a;
+    float *f = s->f, fc, q = 1.6f - 1.45f * a;
     int j, mode = b < 0.33f ? 0 : b < 0.66f ? 1 : 2;
+    fc = dk_svf_f(60.0f * fm_exp2f(amt * 8.2f));
+    if (fc > dk_svf_fmax(q))                     /* (the top of the knob: 17 kHz is open anyway; past this the filter would run away) */
+        fc = dk_svf_fmax(q);
     for (j = 0; j < n; j++) {
         float hp;
         f[0] += fc * f[1];

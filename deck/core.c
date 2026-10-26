@@ -49,6 +49,9 @@ float dk_sine(float ph) { return dk_sinx(ph); }
 float dk_mtof(float n) { return 440.0f * dk_ctx.tune * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
 float dk_decay(float tau) { return fm_expf(-1.0f / (fm_maxf(tau, 0.0001f) * DK_SR)); }
 float dk_lpk(float fc) { return 1.0f - fm_expf(-6.2831853f * fm_clampf(fc, 20.0f, 18000.0f) * (1.0f / DK_SR)); }
+/* the biggest coefficient the Chamberlin filter keeps stable at this damping q (measured: 0.96 at q 1.6 .. 1.86 at q 0.15; this
+ * is the safe side of it); above it FILTER's cutoff would blow up */
+float dk_svf_fmax(float q) { return -0.5f * q + fm_sqrtf(0.25f * q * q + 2.0f); }
 float dk_svf_f(float fc) { return 2.0f * fm_sinf(3.1415927f * fm_clampf(fc, 30.0f, 16000.0f) * (1.0f / DK_SR)); }
 float dk_saw(float t, float dt)
 {
