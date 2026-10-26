@@ -104,6 +104,13 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "track")) g = dk_song.cur_track;
     else if (!strcmp(what, "part")) g = dk_playing ? dk_cur_part : dk_song.cur_part;
     else if (!strcmp(what, "ptick")) g = dk_part_tick;             /* where the loop is (a part branched while recording does not go back to 0) */
+    else if (!strcmp(what, "adur")) {                              /* the longest note in part A, track 1 (a held note cut at the branch is short) */
+        const dk_clip_t *c = &dk_song.clip[0];
+        int i;
+        for (i = 0; i < c->n; i++)
+            if (!(dk_ev[c->at + i].fl & EV_MOTION) && dk_ev[c->at + i].dur > g)
+                g = dk_ev[c->at + i].dur;
+    }
     else if (!strcmp(what, "next")) g = dk_next_part == 0xFF ? -1 : dk_next_part;
     else if (!strcmp(what, "tempo")) g = dk_song.tempo;
     else if (!strcmp(what, "byp")) g = (int)DK_BYP(dk_song.cur_track);                /* SOUND: the chain's stages off (1 insert, 2 echo, 4 reverb) */

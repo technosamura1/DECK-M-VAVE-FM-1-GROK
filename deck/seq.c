@@ -288,6 +288,40 @@ static void rec_close_all(void)
         if (open_pos[i] >= 0)
             rec_close(i, 1);
 }
+/* a part branch mid-take: the notes you are holding end HERE in this part (not stretched to the end of the loop)
+ * and open again in the part you land on, so the rest of the note records there */
+static uint8_t br_note[16], br_vel[16], br_trk[16], br_nc[16], br_n;
+static void rec_split_close(void)
+{
+    int i;
+    br_n = 0;
+    for (i = 0; i < 128; i++) {
+        if (open_pos[i] < 0)
+            continue;
+        if (br_n < 16) {
+            br_note[br_n] = (uint8_t)i;
+            br_vel[br_n] = open_vel[i];
+            br_trk[br_n] = open_trk[i];
+            br_nc[br_n] = open_nc[i];
+            br_n++;
+        }
+        rec_close(i, 0);
+    }
+}
+static void rec_split_open(void)
+{
+    int i;
+    for (i = 0; i < br_n; i++) {
+        int t = br_trk[i];
+        if (!rec_track_of(t))
+            continue;
+        open_pos[br_note[i]] = (int16_t)rec_pos(t);
+        open_nc[br_note[i]] = br_nc[i];
+        open_vel[br_note[i]] = br_vel[i];
+        open_trk[br_note[i]] = (uint8_t)t;
+    }
+    br_n = 0;
+}
 static void rec_done(int t, int note, int vel, int dur)   /* a generated note: whole at once */
 {
     int clen = clip_len_of(cur_part, t), pos = (int)clip_now(t);
@@ -1188,7 +1222,7 @@ static void drain(void)
             if (!dk_playing || b) {            /* stopped, or at once (b 2: the loop stays, the take goes on) */
                 int keep = b == 2 && dk_playing;
                 if (keep)
-                    rec_close_all();           /* a note still held is closed into this part, before the part changes */
+                    rec_split_close();         /* held notes end here, in this part; they open again after the part changes */
                 cur_part = (uint8_t)a;
                 dk_song.cur_part = (uint8_t)a;
                 queued = 0xFF;
@@ -1199,6 +1233,7 @@ static void drain(void)
                         part_tick = (uint16_t)(part_tick % (uint16_t)len);
                     dk_cur_part = cur_part;
                     dk_part_len = (uint16_t)len;
+                    rec_split_open();
                 } else {
                     if (dk_playing)
                         part_tick = 0;

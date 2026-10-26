@@ -142,11 +142,23 @@ static int part_branch(int p)
         return 0;
     s[0] = (char)('A' + (dk_cur_part & 7));
     s[3] = (char)('A' + p);
-    if (part_has_events(p)) {
-        s[5] = 0;
-        s[4] = (char)('A' + p);
-        say(s + 4, "HAS NOTES");
-        return 0;
+    {                                        /* a part already queued (ARP + white) and not this one: its copy was not edited, take it back */
+        uint8_t was = dk_next_part;
+        if (was != 0xFF && was != (uint8_t)p && was != (dk_cur_part & 7))
+            part_copy_undo(was);
+        if (part_has_events(p)) {
+            if (was == (uint8_t)p) {         /* this is the part already copied and waiting for the bar: go now */
+                dk_cmd(C_PART, p, 2, 0);
+                say(s, "COPIED");
+                return 1;
+            }
+            {
+                char h[16] = "A HAS NOTES";
+                h[0] = (char)('A' + p);
+                say(h, "NOT COPIED");
+            }
+            return 0;
+        }
     }
     if (part_has_events(dk_cur_part)) {
         r = part_copy(dk_cur_part, p);
