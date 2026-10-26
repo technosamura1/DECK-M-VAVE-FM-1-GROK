@@ -18,6 +18,7 @@ enum {
     F_BASS, F_KOCT, F_DIM, F_HARMTRK,
     /* PROJECT */ F_SLOT, F_TEMPLATE, F_SWING, F_SONGSTYLE, F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL, F_ONNOTE,
     F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT, F_LOCKTAKE, F_RECARM, F_NEWPART,
+    /* the Bluetooth row (GLOBAL's sixth) */ F_BT, F_BTROLE, F_BTDEV, F_BTTRIM, F_BTNOTES,
     /* REC */ F_RECTRK, F_RECMODE,
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
@@ -484,6 +485,11 @@ static void field_range(int f, int *lo, int *hi)
     case F_OCT:
     case F_KOCT: *lo = -3; *hi = 3; break;
     case F_MIDICH: *lo = 1; *hi = 16; break;
+    case F_BT:
+    case F_BTNOTES: *hi = 1; break;
+    case F_BTROLE: *hi = 2; break;
+    case F_BTDEV: *hi = link_pick_max(); break;
+    case F_BTTRIM: *hi = 40; break;
     case F_ROLE: *hi = R_N - 1; break;
     case F_PAN: *lo = -50; *hi = 50; break;
     case F_SPACE: *hi = 3; break;
@@ -677,6 +683,11 @@ static int field_get_raw(int f)
     case F_MIDIOUT: return dk_midi_notes;
     case F_CLOCK: return dk_midi_clock;
     case F_MIDIIN: return set.midi_in;
+    case F_BT: return set.bt ? 1 : 0;
+    case F_BTROLE: return dk_bt_role;
+    case F_BTDEV: return link_pick_get();
+    case F_BTTRIM: return dk_bt_trim;
+    case F_BTNOTES: return dk_bt_notes;
     case F_ECHOTIME: return dk_song.echo_time & 3;
     case F_CPU: return (int)plat_cpu_pct();
     case F_RECTRK: return dk_rec_trk;
@@ -884,6 +895,11 @@ static void field_set(int f, int v)
     case F_MIDIOUT: dk_midi_notes = (uint8_t)v; settings_save_later(); break;
     case F_CLOCK: dk_midi_clock = (uint8_t)v; settings_save_later(); break;
     case F_MIDIIN: set.midi_in = (uint8_t)v; settings_save_later(); break;
+    case F_BT: link_set_bt(v); break;
+    case F_BTROLE: dk_bt_role = (uint8_t)v; settings_save_later(); break;
+    case F_BTDEV: link_pick(v); break;
+    case F_BTTRIM: dk_bt_trim = (uint8_t)v; settings_save_later(); break;
+    case F_BTNOTES: dk_bt_notes = (uint8_t)v; settings_save_later(); break;
     case F_ECHOTIME: dk_song.echo_time = (uint8_t)v; break;
     case F_RECTRK: dk_cmd(C_RECTRK, v, 0, 0); break;
     case F_LLEVEL: cur_lane()->level = (int8_t)v; break;
@@ -1022,6 +1038,11 @@ static const char *field_label(int f)
     case F_MIDIOUT: return "MIDI OUT";
     case F_CLOCK: return "CLOCK";
     case F_MIDIIN: return "MIDI IN";
+    case F_BT: return "BLUETOOTH";
+    case F_BTROLE: return "BT ROLE";
+    case F_BTDEV: return "PARTNER";
+    case F_BTTRIM: return "BT TRIM";
+    case F_BTNOTES: return "BT NOTES";
     case F_ECHOTIME: return "ECHO TIME";
     case F_CPU: return "CPU";
     case F_VERSION: return "VERSION";
@@ -1253,7 +1274,12 @@ static void field_text(int f, char *b)
     case F_RECARM:
     case F_MIDIOUT:
     case F_CLOCK:
-    case F_MIDIIN: cpy(b, ONOFF[v & 1]); break;
+    case F_MIDIIN:
+    case F_BT:
+    case F_BTNOTES: cpy(b, ONOFF[v & 1]); break;
+    case F_BTROLE: cpy(b, v == 1 ? "LEAD" : v == 2 ? "FOLLOW" : "AUTO"); break;
+    case F_BTDEV: link_dev_name(v, b, 20); break;
+    case F_BTTRIM: b = itoa_b(v, b); cpy(b, " MS"); break;
     case F_NEWPART: cpy(b, v ? "COPY" : "EMPTY"); break;
     case F_RECMODE: cpy(b, v ? "REPLACE" : "OVERDUB"); break;
     default: itoa_b(v, b); break;

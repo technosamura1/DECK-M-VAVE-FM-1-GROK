@@ -1,0 +1,1319 @@
+# FUZZ seed 71, 400 events (tools/gen_fuzz.py): random buttons, holds, keys and knobs on every page; the song's invariants hold
+wait 300
+demo
+wait 100
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+wait 3200
+turn K3 2
+wait 2000
+tapkey b0
+wait 20
+wait 50
+wait 20
+turn ALGO -1 40
+wait 60
+turn K3 2 40
+wait 5
+tapkey w0
+wait 20
+key w12 down 102
+wait 400
+key w6 up
+wait 5
+tapkey w7
+wait 5
+wait 5
+wait 5
+key w4 down 51
+wait 400
+key w11 up
+wait 20
+key w8 down 64
+wait 20
+key w12 up
+wait 5
+midigen BLE 120 0 54
+wait 20
+tapkey b9
+wait 20
+midigen BLE 120 15 28
+wait 5
+key w15 down 89
+wait 100
+key w8 up
+wait 5
+tap OCT-
+wait 60
+tap EDIT
+wait 60
+tap FX
+wait 5
+press FX
+tapkey w3
+wait 30
+turn SELECT 5 60
+wait 30
+wait 50
+wait 120
+wait 1200
+release FX
+wait 20
+tapkey w4
+wait 20
+key w10 down 99
+wait 100
+key w15 up
+wait 5
+wait 800
+wait 5
+tapkey b9
+wait 60
+wait 200
+wait 60
+midigen start
+wait 20
+turn K2 2 40
+wait 60
+key w11 down 95
+wait 100
+key w1 up
+wait 20
+tapkey b8
+wait 60
+tap EDIT
+wait 60
+key w9 down 112
+wait 400
+key w0 up
+wait 20
+tapkey w10
+wait 20
+tapkey b1
+wait 60
+tapkey w1
+wait 60
+press ENV
+turn K1 5 60
+wait 120
+wait 2700
+release ENV
+wait 20
+tap PLAY
+wait 50
+wait 60
+wait 3000
+wait 5
+tap PLAY
+wait 50
+wait 20
+tap GLO
+wait 5
+tap PLAY
+wait 50
+wait 5
+tap ENV
+wait 60
+tap FX
+wait 20
+key w0 down 27
+wait 100
+key w12 up
+wait 5
+tap REC
+wait 60
+wait 200
+wait 60
+wait 5
+wait 60
+wait 300
+wait 60
+tap REC
+wait 60
+tapkey w0
+wait 20
+tapkey b10
+wait 60
+tap PLAY
+wait 20
+tap FX
+wait 60
+turn K3 1 40
+wait 20
+tapkey w5
+wait 60
+key w2 down 53
+wait 20
+key w14 up
+wait 5
+tap HOME
+wait 60
+tapkey b4
+wait 20
+press GLO
+wait 50
+wait 300
+tapkey w4
+wait 300
+tapkey w2
+wait 120
+turn K2 -5 60
+wait 300
+wait 100
+release GLO
+wait 5
+wait 100
+wait 5
+tap SEQ
+wait 5
+turn ALGO -2 40
+wait 5
+press HOME
+wait 50
+wait 30
+wait 2700
+release HOME
+wait 5
+tap HOME
+wait 5
+key w8 down 51
+wait 20
+key w14 up
+wait 60
+key w9 down 32
+wait 20
+key w10 up
+wait 60
+tap PLAY
+wait 5
+midigen BLE 120 0 71
+wait 20
+tapkey w5
+wait 60
+key w15 down 29
+wait 20
+key w5 up
+wait 5
+press HOME
+wait 50
+wait 30
+wait 50
+wait 120
+wait 50
+wait 30
+wait 50
+wait 30
+turn K3 -5 60
+wait 300
+wait 100
+release HOME
+wait 20
+key w15 down 96
+wait 400
+key w0 up
+wait 60
+tap PLAY
+wait 1500
+wait 5
+tap GLO
+wait 50
+wait 20
+tap FX
+wait 20
+midigen BLE 60 0 11
+wait 60
+midigen off
+wait 5
+wait 200
+wait 5
+tapkey w0
+wait 60
+wait 50
+wait 20
+tapkey b3
+wait 5
+tap OCT+
+wait 5
+press EDIT
+turn K3 5 60
+wait 30
+wait 100
+release EDIT
+wait 60
+expect inv 0
+expect voices <25
+tapkey b8
+wait 60
+press HOME
+turn PRESET -5 60
+wait 120
+turn K4 5 60
+wait 300
+wait 100
+release HOME
+wait 5
+midigen drift 100 3
+wait 60
+turn K1 -1 40
+wait 60
+midigen drift 100 3
+wait 5
+wait 200
+wait 20
+tap GLO
+wait 50
+wait 60
+wait 800
+wait 20
+midigen BLE 150 5 67
+wait 5
+tapkey b5
+wait 5
+key w14 down 107
+wait 100
+key w14 up
+wait 20
+midigen cont
+wait 20
+tap LFO
+wait 20
+tapkey w6
+wait 5
+midigen BLE 90 0 4
+wait 5
+press LFO
+wait 50
+wait 30
+wait 2700
+release LFO
+wait 5
+key w14 down 39
+wait 20
+key w8 up
+wait 60
+tapkey b6
+wait 20
+tapkey w4
+wait 20
+tap PLAY
+wait 1500
+wait 20
+midigen cont
+wait 5
+tap PLAY
+wait 50
+wait 5
+key w12 down 58
+wait 20
+key w12 up
+wait 20
+key w15 down 24
+wait 100
+key w9 up
+wait 20
+key w11 down 113
+wait 20
+key w2 up
+wait 5
+press HOME
+turn K4 -5 60
+wait 120
+turn K3 2 60
+wait 30
+turn K2 -5 60
+wait 30
+wait 50
+wait 30
+wait 2700
+release HOME
+wait 5
+turn K1 1 40
+wait 60
+tap HOME
+wait 20
+key w3 down 115
+wait 20
+key w14 up
+wait 60
+tap PLAY
+wait 20
+press SEQ
+wait 50
+wait 300
+wait 1200
+release SEQ
+wait 60
+key w5 down 75
+wait 100
+key w3 up
+wait 60
+tap ENV
+wait 5
+tap PLAY
+wait 1500
+wait 60
+tap SEL
+wait 5
+press REC
+tapkey w4
+wait 30
+turn ALGO -5 60
+wait 120
+turn SELECT -2 60
+wait 30
+turn K4 -2 60
+wait 300
+wait 100
+release REC
+wait 60
+tapkey b8
+wait 5
+tapkey b7
+wait 60
+tapkey w3
+wait 5
+wait 200
+wait 60
+tapkey w3
+wait 20
+tapkey w4
+wait 60
+wait 2000
+wait 20
+midigen BLE 90 15 85
+wait 20
+press SEQ
+wait 50
+wait 300
+wait 2700
+release SEQ
+wait 20
+tapkey w4
+wait 60
+wait 100
+wait 60
+midigen BLE 60 0 2
+wait 5
+tapkey w9
+wait 5
+tapkey w4
+wait 60
+wait 50
+wait 5
+turn ALGO 2 40
+wait 60
+tapkey w6
+wait 20
+press REC
+tap EDIT
+wait 300
+tapkey w4
+wait 30
+turn PRESET 5 60
+wait 30
+turn ALGO 2 60
+wait 30
+wait 400
+release REC
+wait 20
+tapkey w4
+wait 5
+midigen BLE 120 15 47
+wait 60
+key w5 down 93
+wait 400
+key w2 up
+wait 20
+tap OCT+
+wait 20
+tap SEL
+wait 5
+turn K3 -2 40
+wait 60
+tap ENV
+wait 20
+press ARP
+wait 50
+wait 120
+tapkey w2
+wait 30
+turn K4 -2 60
+wait 300
+tapkey w0
+wait 300
+wait 400
+release ARP
+wait 60
+press LFO
+tapkey w3
+wait 300
+tapkey w5
+wait 30
+wait 50
+wait 300
+turn PRESET -5 60
+wait 30
+turn K1 2 60
+wait 300
+wait 2700
+release LFO
+wait 5
+wait 2000
+wait 60
+tap REC
+wait 20
+turn K4 1 40
+wait 60
+midigen drift 100 3
+wait 20
+key w4 down 63
+wait 20
+key w2 up
+wait 20
+tap GLO
+wait 50
+wait 60
+tapkey b7
+wait 20
+tap SEQ
+wait 5
+turn ALGO 1 40
+wait 20
+tap ENV
+wait 20
+press REC
+tap SEQ
+wait 120
+wait 1200
+release REC
+wait 20
+tap REC
+wait 60
+tapkey b2
+wait 5
+tap GLO
+wait 50
+wait 20
+key w15 down 27
+wait 20
+key w4 up
+wait 60
+tap OCT+
+wait 20
+press REC
+turn K3 -2 60
+wait 30
+tapkey w6
+wait 30
+turn ALGO 5 60
+wait 120
+tap FX
+wait 30
+wait 2700
+release REC
+wait 60
+expect inv 0
+expect voices <25
+press REC
+tap SEQ
+wait 30
+turn ALGO 5 60
+wait 30
+tapkey w2
+wait 120
+turn K3 5 60
+wait 120
+wait 400
+release REC
+wait 20
+tapkey b3
+wait 5
+tapkey b0
+wait 20
+tap SEQ
+wait 20
+key w6 down 54
+wait 20
+key w10 up
+wait 20
+wait 2000
+wait 20
+wait 50
+wait 5
+tap ARP
+wait 5
+key w4 down 106
+wait 400
+key w7 up
+wait 20
+midigen BLE 60 0 60
+wait 20
+key w15 down 62
+wait 20
+key w15 up
+wait 20
+key w13 down 74
+wait 20
+key w4 up
+wait 5
+tapkey w10
+wait 60
+tapkey w6
+wait 5
+tap PLAY
+wait 50
+wait 60
+midigen drift 100 3
+wait 5
+key w5 down 106
+wait 100
+key w9 up
+wait 5
+tap OCT-
+wait 60
+tapkey w1
+wait 5
+tapkey b8
+wait 60
+key w9 down 94
+wait 400
+key w4 up
+wait 5
+press ARP
+turn PRESET -5 60
+wait 30
+turn SELECT -5 60
+wait 30
+wait 2700
+release ARP
+wait 60
+tap GLO
+wait 60
+tap FX
+wait 20
+tapkey b2
+wait 5
+press REC
+tap FX
+wait 30
+tap EDIT
+wait 120
+tapkey w0
+wait 120
+turn K2 2 60
+wait 120
+turn K4 2 60
+wait 120
+wait 1200
+release REC
+wait 60
+tap OCT+
+wait 5
+midigen BLE 150 15 36
+wait 5
+midigen BLE 90 5 68
+wait 5
+midigen off
+wait 20
+tapkey w4
+wait 60
+wait 300
+wait 5
+wait 100
+wait 60
+tap FX
+wait 20
+press REC
+tap EDIT
+wait 300
+tap FX
+wait 120
+tapkey w0
+wait 30
+tapkey w7
+wait 120
+wait 400
+release REC
+wait 5
+tap GLO
+wait 50
+wait 5
+midigen BLE 200 15 67
+wait 60
+key w12 down 121
+wait 400
+key w13 up
+wait 20
+tap GLO
+wait 50
+wait 20
+tap SEL
+wait 20
+tapkey w10
+wait 20
+midigen BLE 90 15 70
+wait 20
+press LFO
+tapkey w4
+wait 120
+wait 2700
+release LFO
+wait 20
+key w13 down 107
+wait 20
+key w7 up
+wait 5
+press REC
+turn K4 -2 60
+wait 30
+tapkey w3
+wait 120
+wait 400
+release REC
+wait 5
+press HOME
+wait 50
+wait 300
+tapkey w1
+wait 300
+wait 400
+release HOME
+wait 20
+tap SEL
+wait 60
+key w4 down 65
+wait 400
+key w12 up
+wait 5
+midigen off
+wait 20
+key w7 down 27
+wait 100
+key w7 up
+wait 5
+tap PLAY
+wait 50
+wait 60
+tapkey w7
+wait 60
+tapkey w1
+wait 20
+key w6 down 58
+wait 20
+key w10 up
+wait 60
+tapkey w3
+wait 5
+tap GLO
+wait 50
+wait 5
+turn ALGO 2 40
+wait 5
+wait 800
+wait 60
+key w1 down 123
+wait 400
+key w7 up
+wait 60
+midigen stop
+wait 5
+tapkey w5
+wait 5
+midigen stop
+wait 20
+midigen BLE 60 15 56
+wait 20
+press REC
+wait 1200
+release REC
+wait 60
+press EDIT
+tapkey w4
+wait 30
+tapkey w2
+wait 300
+tapkey w7
+wait 30
+wait 50
+wait 30
+wait 400
+release EDIT
+wait 60
+tap OCT-
+wait 60
+press ENV
+wait 50
+wait 120
+wait 400
+release ENV
+wait 5
+wait 200
+wait 20
+wait 200
+wait 20
+key w9 down 88
+wait 100
+key w13 up
+wait 60
+tap PLAY
+wait 1500
+wait 60
+press SEQ
+tapkey w0
+wait 300
+tapkey w0
+wait 300
+turn K2 5 60
+wait 120
+wait 1200
+release SEQ
+wait 20
+tapkey b9
+wait 20
+tap OCT+
+wait 60
+wait 5
+wait 60
+tapkey b6
+wait 5
+tap ENV
+wait 20
+wait 200
+wait 60
+wait 5
+wait 5
+tapkey w10
+wait 5
+expect inv 0
+expect voices <25
+tapkey w10
+wait 20
+tap GLO
+wait 50
+wait 5
+tapkey w3
+wait 20
+tap OCT-
+wait 5
+tap GLO
+wait 5
+tap ENV
+wait 60
+wait 5
+wait 20
+tapkey b8
+wait 5
+press HOME
+tapkey w1
+wait 30
+turn ALGO -2 60
+wait 120
+turn PRESET 2 60
+wait 300
+wait 50
+wait 120
+wait 400
+release HOME
+wait 20
+midigen BLE 200 0 17
+wait 60
+turn K3 1 40
+wait 20
+midigen start
+wait 60
+key w7 down 37
+wait 100
+key w6 up
+wait 60
+tap ARP
+wait 60
+midigen cont
+wait 20
+tapkey b9
+wait 20
+wait 50
+wait 60
+press HOME
+tapkey w7
+wait 30
+turn K1 -2 60
+wait 120
+tapkey w5
+wait 30
+turn K1 -5 60
+wait 300
+wait 50
+wait 300
+wait 1200
+release HOME
+wait 5
+press REC
+tap EDIT
+wait 120
+turn PRESET -5 60
+wait 300
+tap SEQ
+wait 300
+tapkey w1
+wait 30
+wait 100
+release REC
+wait 60
+press REC
+tap FX
+wait 30
+wait 2700
+release REC
+wait 5
+tap PLAY
+wait 20
+midigen BLE 200 5 69
+wait 5
+tapkey w3
+wait 20
+tapkey w6
+wait 60
+tapkey w2
+wait 20
+key w4 down 26
+wait 100
+key w0 up
+wait 20
+tapkey w5
+wait 20
+tapkey w1
+wait 60
+tap REC
+wait 60
+tap PLAY
+wait 400
+wait 60
+tapkey b4
+wait 5
+tapkey b1
+wait 60
+tapkey w8
+wait 60
+tapkey w3
+wait 5
+wait 2000
+wait 60
+tapkey w10
+wait 60
+tapkey w2
+wait 20
+wait 50
+wait 20
+turn K4 -2 40
+wait 20
+key w9 down 117
+wait 100
+key w15 up
+wait 20
+press ARP
+turn K4 5 60
+wait 300
+tapkey w7
+wait 300
+turn SELECT -2 60
+wait 30
+wait 50
+wait 30
+wait 50
+wait 30
+wait 400
+release ARP
+wait 5
+tap GLO
+wait 50
+wait 5
+tapkey w2
+wait 5
+tapkey w4
+wait 5
+tapkey b4
+wait 20
+wait 200
+wait 5
+tap GLO
+wait 50
+wait 20
+tapkey b3
+wait 20
+press REC
+tapkey w0
+wait 120
+tap FX
+wait 300
+tapkey w3
+wait 30
+tap SEQ
+wait 300
+turn PRESET 5 60
+wait 120
+wait 400
+release REC
+wait 5
+key w4 down 33
+wait 400
+key w1 up
+wait 60
+tap LFO
+wait 5
+midigen BLE 200 5 74
+wait 5
+press FX
+tapkey w4
+wait 30
+wait 50
+wait 30
+turn SELECT -2 60
+wait 30
+turn K3 -5 60
+wait 120
+wait 2700
+release FX
+wait 20
+tap EDIT
+wait 60
+turn K3 1 40
+wait 5
+tapkey w7
+wait 60
+tapkey b4
+wait 5
+key w11 down 59
+wait 20
+key w2 up
+wait 5
+tap REC
+wait 5
+press ARP
+wait 50
+wait 120
+wait 50
+wait 30
+turn ALGO -2 60
+wait 300
+wait 100
+release ARP
+wait 20
+press GLO
+wait 50
+wait 120
+wait 400
+release GLO
+wait 60
+tap EDIT
+wait 5
+tap LFO
+wait 20
+tap ARP
+wait 20
+tapkey b3
+wait 20
+press GLO
+tapkey w4
+wait 30
+wait 100
+release GLO
+wait 60
+key w10 down 124
+wait 20
+key w5 up
+wait 5
+tapkey w3
+wait 5
+tap EDIT
+wait 60
+tap HOME
+wait 5
+midigen off
+wait 5
+press GLO
+wait 50
+wait 30
+wait 400
+release GLO
+wait 60
+tap LFO
+wait 5
+tap PLAY
+wait 400
+wait 60
+tapkey w4
+wait 5
+press REC
+tap SEQ
+wait 300
+turn K3 -2 60
+wait 30
+turn SELECT 2 60
+wait 120
+wait 1200
+release REC
+wait 5
+press FX
+turn SELECT -5 60
+wait 120
+wait 50
+wait 30
+turn K3 -5 60
+wait 30
+wait 50
+wait 120
+tapkey w1
+wait 30
+wait 2700
+release FX
+wait 5
+tapkey w6
+wait 60
+tap FX
+wait 60
+tap GLO
+wait 50
+wait 20
+expect inv 0
+expect voices <25
+tapkey w2
+wait 20
+key w6 down 53
+wait 20
+key w4 up
+wait 20
+midigen off
+wait 60
+wait 2000
+wait 5
+wait 5
+wait 5
+key w12 down 71
+wait 100
+key w2 up
+wait 20
+tapkey b4
+wait 60
+wait 50
+wait 20
+tap LFO
+wait 60
+midigen stop
+wait 5
+turn K1 1 40
+wait 20
+wait 1000
+wait 5
+tap SEL
+wait 20
+tap LFO
+wait 60
+tapkey w4
+wait 60
+turn K4 1 40
+wait 20
+press REC
+tapkey w0
+wait 120
+tap FX
+wait 300
+tapkey w4
+wait 300
+turn PRESET -5 60
+wait 300
+wait 2700
+release REC
+wait 20
+midigen drift 100 3
+wait 20
+tap ARP
+wait 20
+press REC
+turn K3 5 60
+wait 300
+tapkey w1
+wait 120
+turn PRESET -5 60
+wait 30
+tap EDIT
+wait 300
+tapkey w4
+wait 300
+wait 2700
+release REC
+wait 20
+key w7 down 88
+wait 20
+key w8 up
+wait 20
+midigen BLE 200 5 54
+wait 60
+tap GLO
+wait 60
+turn K1 -1 40
+wait 5
+tap PLAY
+wait 5
+key w12 down 84
+wait 400
+key w11 up
+wait 5
+tapkey w3
+wait 20
+midigen drift 100 3
+wait 5
+wait 5
+wait 5
+midigen BLE 90 15 40
+wait 60
+tap LFO
+wait 5
+tapkey w4
+wait 5
+tap PLAY
+wait 50
+wait 60
+midigen BLE 60 5 73
+wait 60
+tapkey w7
+wait 20
+tapkey b2
+wait 20
+tap GLO
+wait 50
+wait 60
+key w13 down 37
+wait 100
+key w1 up
+wait 5
+tap GLO
+wait 50
+wait 20
+midigen off
+wait 5
+turn K3 1 40
+wait 5
+wait 300
+wait 5
+midigen drift 100 3
+wait 60
+key w2 down 76
+wait 400
+key w4 up
+wait 20
+turn K1 2 40
+wait 5
+press ENV
+tapkey w7
+wait 300
+turn SELECT -5 60
+wait 300
+wait 400
+release ENV
+wait 5
+tapkey b1
+wait 20
+press REC
+tap FX
+wait 30
+wait 1200
+release REC
+wait 20
+wait 300
+wait 20
+wait 300
+wait 5
+midigen BLE 200 5 50
+wait 20
+tap REC
+wait 5
+wait 50
+wait 60
+press ENV
+wait 50
+wait 120
+wait 50
+wait 30
+turn K2 -5 60
+wait 300
+turn PRESET 5 60
+wait 300
+wait 50
+wait 120
+wait 2700
+release ENV
+wait 20
+tapkey b1
+wait 60
+tap EDIT
+wait 20
+turn K2 1 40
+wait 20
+tap PLAY
+wait 5
+tapkey b1
+wait 5
+tap ARP
+wait 60
+tapkey w6
+wait 20
+tap GLO
+wait 5
+press REC
+turn K2 5 60
+wait 120
+wait 100
+release REC
+wait 20
+midigen stop
+wait 20
+tap LFO
+wait 5
+tapkey w7
+wait 20
+tapkey b1
+wait 5
+tap REC
+wait 60
+press SEQ
+tapkey w4
+wait 30
+tapkey w3
+wait 300
+wait 100
+release SEQ
+wait 60
+tapkey w3
+wait 5
+tap GLO
+wait 50
+wait 20
+press ENV
+wait 2700
+release ENV
+wait 5
+tap ENV
+wait 60
+wait 2000
+wait 20
+tapkey w10
+wait 5
+tap HOME
+wait 60
+midigen start
+wait 60
+turn K3 -2 40
+wait 20
+wait 5
+wait 60
+tapkey b10
+wait 5
+expect inv 0
+expect voices <25
+wait 500
+expect inv 0

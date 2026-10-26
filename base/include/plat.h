@@ -85,6 +85,12 @@ int plat_ble_found(int i, char *name, int *rssi);   /* device i of the scan (nam
 int plat_ble_connect(int i);           /* 0 = connecting */
 void plat_ble_disconnect(void);
 int plat_ble_device(void);             /* BLE_DEV_*: READY is connected, MIDI both ways */
+/* Addresses (DECK's partner: two FM-1 both advertise "FM-1", so the name does not tell them apart): a[0] is the
+ * address type, a[1..6] the address. found_addr: device i of the scan (0 = none); peer: the device connecting or
+ * connected (0 = none); own: this radio's own BLE address (6 bytes; zeros before the radio is up) */
+int plat_ble_found_addr(int i, uint8_t a[7]);
+int plat_ble_peer(uint8_t a[7]);
+void plat_ble_own(uint8_t a[6]);
 /* Bluetooth on or off, as the player asks: off ends every link, stops advertising and scanning (the radio quiet);
  * on starts it (or advertises again). Whether it starts at power-on: APP_BLE_AT_BOOT (app.h, e.g. a saved setting;
  * default 1) */

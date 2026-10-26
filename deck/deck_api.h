@@ -371,7 +371,7 @@ int dk_fit_degree(int root, int mode, uint32_t pcs, int *score);
 int dk_nearest(int from, int pc, int lo, int hi);
 
 /* ----------------------------------------------------- inline, for the engines --- */
-extern float dk_sint[1025];
+extern const float dk_sint[1025];
 static inline float dk_sinx(float ph)          /* ph in turns, >= 0: one conversion, the table wraps */
 {
     float x = ph * 1024.0f;

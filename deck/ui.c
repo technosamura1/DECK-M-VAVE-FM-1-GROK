@@ -1558,6 +1558,12 @@ static void midi_in(void)
     while (plat_midi_in(&pkt, &port)) {
         uint32_t st = (pkt >> 8) & 0xFFu, d1 = (pkt >> 16) & 0x7Fu, d2 = pkt >> 24 & 0x7Fu, ch = st & 0x0Fu;
         int t = (int)ch;
+        if (st >= 0xF8u) {               /* the transport (not gated by NOTES IN: it is the partner's, or a DAW's, when the role asks) */
+            if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
+                if (dk_bt_role == 2 || (dk_bt_role == 0 && port == PORT_BLE))
+                    dk_cmd(st == 0xF8u ? C_XCLK : st == 0xFCu ? C_XSTOP : C_XSTART, port, 0, (int)plat_ms());
+            continue;
+        }
         if (!set.midi_in)
             continue;
         if (ch == 9) {                   /* channel 10: the first drum track */
@@ -1916,6 +1922,9 @@ void ui_init(void)
     ui.last_ms = plat_ms();
     ui.edits_seen = song_edits;
     tape_ui_init();
+    link_init();
+    if (lk.crash)
+        say("BT OFF", "THE LAST RUN CRASHED");
     lcd_fill(0, 0, 240, 240, TH_BG);
 }
 
@@ -2010,6 +2019,7 @@ void ui_frame(void)
     }
     tape_ui_step(dt);
     housekeeping(now);
+    link_poll(ui.page == PG_GLOB && ui.row[PG_GLOB] % 6 == 5);
     if (song_layers_full) {              /* the sounds' table of a track is full: the takes after it stay live */
         song_layers_full = 0;
         say("LAYERS FULL", "7 SOUNDS ON THIS TRACK");

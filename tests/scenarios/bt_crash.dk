@@ -1,0 +1,37 @@
+# BLUETOOTH SAFEGUARD: BT is off at the first start (the sound is safe); if the last Bluetooth run crashed the radio stays off
+# at the next start, BT shows OFF and says why; switching it on again by hand works.
+wait 400
+expect bt 0
+expect ble 0
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+wait 2500
+expect bt 1
+expect ble 2
+reboot
+wait 2500
+expect bt 1
+expect ble 2
+# the run crashed: the next start keeps BT off
+ble crash
+reboot
+wait 2500
+expect ble 0
+expect bt 0
+expect btcrash 1
+shot bt9_crash.png
+# by hand again
+tap GLO
+turn K1 1
+wait 2500
+expect bt 1
+expect ble 2
+reboot
+wait 2500
+expect ble 2
+expect btcrash 0

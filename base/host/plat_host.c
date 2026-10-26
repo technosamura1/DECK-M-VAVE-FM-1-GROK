@@ -20,6 +20,11 @@
  *   midi [PORT] B0 B1 B2         incoming MIDI message (PORT: USB, the default, BLE or TRS; hex bytes)
  *   ble connect | ble link | ble disconnect   a central listening, or linked and not yet listening (FM1B_BLE: the
  *                                stand-in stack is ready a second after the start)
+ *   ble unit on|off | ble crash  the partner FM-1s around or gone (FM1B_BLE_CENTRAL: two named "FM-1", told apart by
+ *                                address); the next boot: the last Bluetooth run crashed (the radio stays off)
+ *   midigen PORT BPM [JIT [SEED]] | midigen drift BPM1 SECONDS | midigen start|stop|cont | midigen off
+ *                                a MIDI clock (24 ppqn) in on PORT as a radio link brings it: each late by 0..2*JIT ms,
+ *                                now and then a burst of 2-3; the transport goes in order with it
  *   wav FILE | wavstop           start / stop recording the output
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
  *   shot FILE.png                save the screen
@@ -129,7 +134,7 @@ uint32_t plat_analog_mask(void) { return 0xFFFFFu; }    /* the keys on rows PA7 
 #define MQ 256
 static uint32_t min_q[MQ], mi_w, mi_r;
 static FILE *midi_log;
-static uint32_t midi_out_count, clock_out_count;
+static uint32_t midi_out_count, clock_out_count, clock_ble_count;
 static uint32_t min_port[MQ];
 static uint32_t out_pkt[4096], out_to[4096], n_out;   /* what went out since the script's last "out" */
 static int ble_state, ble_conn, bdev_state;   /* bdev_state: the Bluetooth MIDI device (BLE_DEV_*) */
@@ -177,6 +182,7 @@ void plat_midi_send(uint32_t pkt, uint32_t to)
     }
     if (((pkt >> 8) & 0xFF) == 0xF8) {
         clock_out_count++;
+        clock_ble_count += (to & TO_BLE) != 0;
         return;
     }
     if (midi_log)
@@ -204,7 +210,8 @@ void plat_ble_start(void)
 }
 /* Bluetooth MIDI devices (FM1B_BLE_CENTRAL): one stand-in, "BLE MIDI", found half a second into a scan;
  * connecting takes 0.3 s; "ble device off" takes it away */
-static uint32_t bdev_t;
+static uint32_t bdev_t, bdev_end;                /* the scan started / stopped (the list is kept after, as the stack keeps it) */
+static uint8_t bdev_have;
 static void ble_tick(void)
 {
     if (ble_state == BLE_STARTING && now_ms - ble_t0 >= 1000u) {
@@ -223,24 +230,66 @@ void plat_ble_scan(int on)
     if (on && bdev_state == BLE_DEV_OFF) {
         bdev_state = BLE_DEV_SCANNING;
         bdev_t = now_ms;
+        bdev_end = 0;
+        bdev_have = 1;
     } else if (!on && bdev_state == BLE_DEV_SCANNING) {
         bdev_state = BLE_DEV_OFF;
+        bdev_end = now_ms;
     }
 }
+/* the stand-ins around: "BLE MIDI" (0.5 s into the scan), and two units that advertise the same name "FM-1" and differ
+ * only in their address (0.8 s and 1.1 s); "ble unit off" takes the two FM-1 away (the partner switched off) */
+static const struct { const char *name; uint8_t a[7]; uint32_t at; int rssi; } bdev_list[3] = {
+    {"BLE MIDI", {1, 0xD0, 0x01, 0x02, 0x03, 0x04, 0x05}, 500u, -50},
+    {"FM-1", {1, 0xC0, 0xAA, 0xBB, 0xCC, 0xDD, 0x01}, 800u, -60},
+    {"FM-1", {1, 0xC0, 0xAA, 0xBB, 0xCC, 0xDD, 0x02}, 1100u, -70}};
+static uint8_t bdev_units = 1, bdev_peer = 255;
 int plat_ble_found(int i, char *name, int *rssi)
 {
-    if (bdev_state != BLE_DEV_SCANNING || i != 0 || now_ms - bdev_t < 500u)
+    int k, n = 0;
+    if (!bdev_have)
         return 0;
-    if (name)
-        snprintf(name, 21, "BLE MIDI");
-    if (rssi)
-        *rssi = -50;
+    for (k = 0; k < 3; k++) {
+        if ((bdev_end ? bdev_end : now_ms) - bdev_t < bdev_list[k].at || (k > 0 && !bdev_units))
+            continue;
+        if (n++ == i) {
+            if (name)
+                snprintf(name, 21, "%s", bdev_list[k].name);
+            if (rssi)
+                *rssi = bdev_list[k].rssi;
+            return k + 1;
+        }
+    }
+    return 0;
+}
+int plat_ble_found_addr(int i, uint8_t a[7])
+{
+    int k = plat_ble_found(i, 0, 0);
+    if (!k)
+        return 0;
+    memcpy(a, bdev_list[k - 1].a, 7);
     return 1;
+}
+int plat_ble_peer(uint8_t a[7])
+{
+    if (bdev_peer > 2 || bdev_state == BLE_DEV_OFF || bdev_state == BLE_DEV_SCANNING)
+        return 0;
+    memcpy(a, bdev_list[bdev_peer].a, 7);
+    return 1;
+}
+void plat_ble_own(uint8_t a[6])
+{
+    static const uint8_t own[6] = {0xC0, 0x11, 0x22, 0x33, 0x44, 0x55};
+    memcpy(a, own, 6);
 }
 int plat_ble_connect(int i)
 {
-    if (!plat_ble_found(i, 0, 0))
+    int k = plat_ble_found(i, 0, 0);
+    if (!k)
         return -1;
+    if (bdev_state != BLE_DEV_OFF && bdev_state != BLE_DEV_SCANNING)
+        return -1;
+    bdev_peer = (uint8_t)(k - 1);
     bdev_state = BLE_DEV_CONNECTING;
     bdev_t = now_ms;
     return 0;
@@ -256,6 +305,7 @@ void plat_ble_enable(int on)
 {
     if (!on) {
         bdev_state = BLE_DEV_OFF;
+        bdev_have = 0;
         ble_conn = ble_link = 0;
         ble_state = BLE_OFF;
         ble_say("switched off");
@@ -614,6 +664,7 @@ static double now_ns(void)
     return (double)t.tv_sec * 1e9 + (double)t.tv_nsec;
 }
 
+static uint8_t ble_last_bad;                        /* "ble crash": the last Bluetooth run crashed (the next boot keeps the radio off) */
 static void boot(void)
 {
     palette_set(APP_PALETTE);                       /* as the device does at boot */
@@ -622,14 +673,106 @@ static void boot(void)
     ble_state = BLE_OFF;                            /* Bluetooth starts at every boot, as on the device */
     ble_conn = ble_link = 0;
     bdev_state = BLE_DEV_OFF;
-    if (APP_BLE_AT_BOOT)
+    if (APP_BLE_AT_BOOT && !ble_last_bad)
         plat_ble_start();
+    ble_last_bad = 0;
 #ifdef APP_BOOT
     app_boot();
 #endif
     app_ui_init();
 }
 
+/* "midigen PORT BPM [JITTER_MS [SEED]]": a MIDI clock at 24 ppqn arrives on PORT, as a Bluetooth link brings it: each
+ * clock is late by 0..2*JITTER ms (a link's delay and jitter), never out of order; with jitter, now and then a burst
+ * (2-3 clocks held and delivered together). "midigen drift BPM1 SECONDS" ramps the tempo of the running clock;
+ * "midigen start|stop|cont" sends the transport (in order with the clock); "midigen off" stops it.
+ * Time is the script's ms. */
+#define MG_Q 512
+static struct {
+    int on, port, burst_left, drifting;
+    double bpm, bpm0, bpm1, ramp_ms, t_ramp0, next, last_arr, jit, burst_arr;
+    uint32_t seed;
+    double due[MG_Q];
+    uint32_t pkt[MG_Q], w, r;
+} mg;
+static uint32_t mg_rnd(void)
+{
+    mg.seed = mg.seed * 1664525u + 1013904223u;
+    return mg.seed >> 8;
+}
+static void mg_push(int port, uint32_t pkt)
+{
+    min_q[mi_w % MQ] = pkt;
+    min_port[mi_w++ % MQ] = (uint32_t)port;
+}
+static void mg_queue(double arr, uint32_t pkt)
+{
+    if (arr < mg.last_arr)                           /* a link keeps the order */
+        arr = mg.last_arr;
+    mg.last_arr = arr;
+    if (mg.w - mg.r < MG_Q) {
+        mg.due[mg.w % MG_Q] = arr;
+        mg.pkt[mg.w++ % MG_Q] = pkt;
+    }
+}
+static void mg_tick(void)
+{
+    while (mg.on && (double)now_ms >= mg.next) {      /* a clock is sent: when does it arrive */
+        double arr = mg.next, per;
+        if (mg.drifting) {
+            double f = ((double)now_ms - mg.t_ramp0) / mg.ramp_ms;
+            if (f >= 1.0) {
+                mg.bpm = mg.bpm1;
+                mg.drifting = 0;
+            } else {
+                mg.bpm = mg.bpm0 + (mg.bpm1 - mg.bpm0) * f;
+            }
+        }
+        per = 60000.0 / (mg.bpm * 24.0);
+        if (mg.jit > 0.0) {
+            arr += mg.jit * 2.0 * (double)(mg_rnd() & 0xFFFF) / 65536.0;
+            if (!mg.burst_left && (mg_rnd() & 0xFFFF) < 2000u) {   /* 3 %: a burst of 2 or 3, all as late as the last */
+                mg.burst_left = 2 + (int)(mg_rnd() % 2u);
+                mg.burst_arr = arr + (double)(mg.burst_left - 1) * per;
+            }
+            if (mg.burst_left) {
+                arr = mg.burst_arr;
+                mg.burst_left--;
+            }
+        }
+        mg_queue(arr, 0x0Fu | 0xF8u << 8);
+        mg.next += per;
+    }
+    while (mg.r != mg.w && mg.due[mg.r % MG_Q] <= (double)now_ms) {
+        mg_push(mg.port, mg.pkt[mg.r % MG_Q]);
+        mg.r++;
+    }
+}
+static void mg_cmd(const char *a, const char *b, const char *c, const char *d)
+{
+    int p = !strcmp(a, "USB") ? PORT_USB : !strcmp(a, "BLE") ? PORT_BLE : !strcmp(a, "TRS") ? PORT_TRS : -1;
+    if (!strcmp(a, "off")) {
+        mg.on = 0;
+    } else if (!strcmp(a, "drift")) {              /* midigen drift BPM1 SECONDS */
+        mg.bpm0 = mg.bpm;
+        mg.bpm1 = atof(b);
+        mg.ramp_ms = atof(c) * 1000.0;
+        mg.t_ramp0 = (double)now_ms;
+        mg.drifting = 1;
+    } else if (!strcmp(a, "start") || !strcmp(a, "stop") || !strcmp(a, "cont")) {   /* in order with the clocks, as late as the last */
+        uint32_t st = a[2] == 'a' ? 0xFA : a[2] == 'o' ? 0xFC : 0xFB;
+        mg_queue((double)now_ms, 0x0Fu | st << 8);
+    } else if (p >= 0) {                            /* midigen PORT BPM [JIT [SEED]] */
+        mg.on = 1;
+        mg.port = p;
+        mg.bpm = atof(b);
+        mg.drifting = 0;
+        mg.jit = c[0] ? atof(c) : 0.0;
+        mg.seed = d[0] ? (uint32_t)atoi(d) : 12345u;
+        mg.next = (double)now_ms;
+        mg.burst_left = 0;
+    }
+}
 static void run_ms(uint32_t ms)
 {
     static int32_t blk[2 * APP_BLOCK];
@@ -637,6 +780,7 @@ static void run_ms(uint32_t ms)
     for (i = 0; i < ms; i++) {
         now_ms++;
         ble_tick();
+        mg_tick();
 #if FM1B_WIFI
         wifi_tick();
 #endif
@@ -745,12 +889,16 @@ static int expect(const char *what, const char *val)
         got = (int)store_writes;
     else if (!strcmp(what, "clocks_out"))
         got = (int)clock_out_count;
+    else if (!strcmp(what, "clocks_ble"))             /* clocks sent to Bluetooth (with a link up) */
+        got = (int)clock_ble_count;
     else if (!strcmp(what, "midi_out"))
         got = (int)midi_out_count;
     else if (!strcmp(what, "ble"))
         got = ble_state;
     else if (!strcmp(what, "ble_dev"))              /* the Bluetooth MIDI device: BLE_DEV_* (4 connected) */
         got = bdev_state;
+    else if (!strcmp(what, "midi_out_ble"))          /* plat_midi_count: messages out to BLE (not the realtime ones) */
+        got = (int)plat_midi_count(PORT_BLE, 1);
     else if (!strcmp(what, "midi_in_usb"))          /* plat_midi_count: messages in from USB */
         got = (int)plat_midi_count(PORT_USB, 0);
     else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {
@@ -893,8 +1041,19 @@ int main(int argc, char **argv)
             min_q[mi_w % MQ] = p < 0 ? mk_pkt(a, b, c) : mk_pkt(b, c, d);
             min_port[mi_w++ % MQ] = p < 0 ? PORT_USB : (uint32_t)p;
             run_ms(2);
+        } else if (!strcmp(cmd, "midigen")) {
+            mg_cmd(a, b, c, d);
+            run_ms(1);
         } else if (!strcmp(cmd, "ble")) {
-            if (!strcmp(a, "connect") && ble_state == BLE_READY) {
+            if (!strcmp(a, "crash")) {                      /* the next boot: the last run crashed */
+                ble_last_bad = 1;
+            } else if (!strcmp(a, "unit")) {                       /* the partner FM-1 on or off */
+                bdev_units = !strcmp(b, "off") ? 0 : 1;
+                if (!bdev_units && bdev_state == BLE_DEV_READY && bdev_peer > 0) {
+                    bdev_state = BLE_DEV_OFF;
+                    ble_say("central: disconnected");
+                }
+            } else if (!strcmp(a, "connect") && ble_state == BLE_READY) {
                 ble_conn = 1;
                 ble_say("connected");
             } else if (!strcmp(a, "link") && ble_state == BLE_READY) {   /* linked, its MIDI not subscribed */
@@ -959,6 +1118,8 @@ int main(int argc, char **argv)
 #ifdef APP_HOST_REBOOT
             app_host_reboot();                  /* the app forgets what RAM would (app.h) */
 #endif
+            mg.on = 0;
+            mg.r = mg.w;
             boot();
         } else if (!strcmp(cmd, "listen")) {
             static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};

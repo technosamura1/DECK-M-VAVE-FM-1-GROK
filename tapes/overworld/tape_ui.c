@@ -94,7 +94,7 @@ static uint32_t hash32(uint32_t x)
 #define GW 120
 #define GH 72
 #define FCX 60
-static uint16_t lfb[GH][GW];           /* the garden at its own scale (2 screen pixels a garden pixel) */
+static uint16_t lfb[GH][GW] DK_POOL;           /* the garden at its own scale (2 screen pixels a garden pixel) */
 
 static void gp(int x, int y, rgb_t c)
 {
@@ -298,24 +298,34 @@ static void world_draw(int bio, float nf, uint32_t now)
         }
 }
 
-/* the corners a little darker (it draws the eye to the flower): a table made once a biome, then integer shading */
-static uint8_t vig[GH][GW] DK_POOL;
-static int8_t vig_dark = -1;
+/* the corners a little darker (it draws the eye to the flower): the shade of a pixel is a sum of a column's term
+ * and a row's term (Q16: 0.8 dx^2 and 0.6 dy^2), then integer arithmetic: no 8 KB table in the RAM */
+static int32_t vig_cx[GW], vig_ry[GH];
 static void vignette(int bio)
 {
     int x, y, dark = WHAS(bio, W_DARK) != 0;
-    if (vig_dark != dark) {
-        float k = dark ? 0.55f : 0.30f;
-        for (y = 0; y < GH; y++)
-            for (x = 0; x < GW; x++) {
-                float dx = ((float)x - 59.5f) / 60.0f, dy = ((float)y - 35.5f) / 36.0f, d = dx * dx * 0.8f + dy * dy * 0.6f;
-                vig[y][x] = (uint8_t)(d < 0.45f ? 0 : (int)(fm_minf(1.0f, (d - 0.45f) * k) * 255.0f));
-            }
-        vig_dark = (int8_t)dark;
+    uint32_t kq = dark ? 35904u : 19584u;          /* k * 255 * 256, k = 0.55 (dark) or 0.30 */
+    static int made;
+    if (!made) {
+        for (x = 0; x < GW; x++) {
+            float dx = ((float)x - 59.5f) / 60.0f;
+            vig_cx[x] = (int32_t)(dx * dx * 0.8f * 65536.0f);
+        }
+        for (y = 0; y < GH; y++) {
+            float dy = ((float)y - 35.5f) / 36.0f;
+            vig_ry[y] = (int32_t)(dy * dy * 0.6f * 65536.0f);
+        }
+        made = 1;
     }
     for (y = 0; y < GH; y++)
         for (x = 0; x < GW; x++) {
-            uint32_t a = vig[y][x], c, m;
+            int32_t d = vig_cx[x] + vig_ry[y] - 29491;      /* d - 0.45 */
+            uint32_t a, c, m;
+            if (d <= 0)
+                continue;
+            a = ((uint32_t)d * kq) >> 24;          /* d <= 0.95 * 65536: no overflow */
+            if (a > 255u)
+                a = 255u;
             if (!a)
                 continue;
             c = lfb[y][x];

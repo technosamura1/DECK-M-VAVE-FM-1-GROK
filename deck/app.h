@@ -31,8 +31,8 @@ int app_sysex(const uint8_t *p, uint32_t n);
 /* the store: the settings (metronome, MIDI, the project open) at 0xFC000 (Felucca's settings pair), the user's
  * presets at 0xD0000, the panel calibration at 0xDC000; the projects in the data area, DK_PROJ_SPAN each from
  * DK_PROJ_AT */
-enum { OBJ_SET, OBJ_USER, OBJ_PANEL, OBJ_NOBJ };
-#define APP_STORE_MAP {0xFC000u, 0xD0000u, 0xDC000u}
+enum { OBJ_SET, OBJ_USER, OBJ_PANEL, OBJ_BLE, OBJ_NOBJ };
+#define APP_STORE_MAP {0xFC000u, 0xD0000u, 0xDC000u, 0xDE000u}
 #define DK_PROJ_AT 0xA0000u
 #define DK_PROJ_SPAN 0x9000u              /* 36 KiB: the song and 4096 events */
 #define DK_NPROJ 4
@@ -50,9 +50,16 @@ typedef struct {
     uint8_t emptypart;                   /* NEW PART = EMPTY (inverted: 0, as in an older store, is COPY) */
     uint8_t recarm;                      /* REC ARM on (0, as in every older store, is OFF: one press of REC records) */
     uint8_t recmode;                     /* REC MODE: 0 OVERDUB (as in every older store), 1 REPLACE */
-    uint8_t rsv[14];
+    uint8_t bt;                          /* Bluetooth ON (0, as in every older store, is OFF: the audio is safe; link.c) */
+    uint8_t btrole;                      /* BT ROLE: 0 AUTO, 1 LEAD, 2 FOLLOW */
+    uint8_t btnotes;                     /* BT NOTES: the notes to the partner too */
+    uint8_t btp;                         /* the partner is known: its address below (a[0] type, a[1..6]) */
+    uint8_t btaddr[7];
+    uint8_t bttrim;                      /* BT TRIM: ms the follower runs early to make up the link's delay (0..40) */
+    uint8_t rsv[2];
 } settings_t;
 extern settings_t set;
+#define APP_BLE_AT_BOOT (set.bt != 0)    /* the radio starts at power-on only if the player switched BT on (link.c) */
 
 int project_load(int slot);              /* 0 = loaded; else an empty song */
 int project_save(int slot);              /* 0 = saved and verified */

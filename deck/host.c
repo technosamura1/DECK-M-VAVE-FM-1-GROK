@@ -87,6 +87,20 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "part")) g = dk_playing ? dk_cur_part : dk_song.cur_part;
     else if (!strcmp(what, "next")) g = dk_next_part == 0xFF ? -1 : dk_next_part;
     else if (!strcmp(what, "tempo")) g = dk_song.tempo;
+    else if (!strcmp(what, "fol")) g = dk_fol;                                            /* BT sync: 0 off 1 following 2 HOLD 3 waiting for the start */
+    else if (!strcmp(what, "fol_bpm10")) g = dk_fol_bpm10;                                /* the clock's tempo, tenths of BPM */
+    else if (!strcmp(what, "fol_err")) g = dk_fol_err;                                    /* the phase error, 1/256 tick */
+    else if (!strcmp(what, "clk_alive")) g = dk_clk_alive;
+    else if (!strcmp(what, "bt")) g = set.bt;                                             /* Bluetooth ON in the settings */
+    else if (!strcmp(what, "btstat")) g = link_status();                                  /* LKS_*: 0 off 1 start 2 fail 3 idle 4 scan 5 connecting 6 linked 7 called */
+    else if (!strcmp(what, "btrole")) g = dk_bt_role;
+    else if (!strcmp(what, "btnotes")) g = dk_bt_notes;
+    else if (!strcmp(what, "bttrim")) g = dk_bt_trim;
+    else if (!strcmp(what, "btp")) g = set.btp;                                           /* a partner is saved */
+    else if (!strcmp(what, "btpa")) g = set.btp ? set.btaddr[6] : -1;                     /* ... its address's last byte */
+    else if (!strcmp(what, "btdev")) g = link_pick_get();
+    else if (!strcmp(what, "btcount")) g = lk_count();
+    else if (!strcmp(what, "btcrash")) g = lk.crash;
     else if (!strcmp(what, "byp")) g = (int)DK_BYP(dk_song.cur_track);                /* SOUND: the chain's stages off (1 insert, 2 echo, 4 reverb) */
     else if (!strcmp(what, "bypt")) g = (int)DK_BYP_TAPE();                            /* ... and the tape (the song's) */
     else if (!strcmp(what, "root")) g = dk_song.root;

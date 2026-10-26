@@ -7,6 +7,7 @@
 #include "store.c"
 #include "export.c"
 #include "keys.c"
+#include "link.c"
 #include "fields.c"
 #include "ui_map.c"
 #include "tape_ui.c"
@@ -14,6 +15,13 @@
 
 /* the sound's MIDI out: to USB (status, data 1, data 2 -> a USB-MIDI packet) */
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_out(st >> 4 | st << 8 | d1 << 16 | d2 << 24); }
+
+/* ... and to the Bluetooth partner (to BLE only; the USB packet's CIN: realtime 0xF, SPP 3) */
+void dk_midi_ble(uint32_t st, uint32_t d1, uint32_t d2)
+{
+    uint32_t cin = st == 0xF2u ? 3u : st >= 0xF8u ? 0xFu : st >> 4;
+    plat_midi_send(cin | st << 8 | d1 << 16 | d2 << 24, TO_BLE);
+}
 
 void app_init(void)
 {
@@ -32,6 +40,7 @@ void app_init(void)
 void app_render(int32_t *lr, uint32_t n, uint32_t gain_q12)   /* timed: the diagnostics (ui.c app_sysex) */
 {
     uint32_t t0 = fm1_ticks(), us;
+    dk_ms_now = plat_ms();               /* (the clock arrivals' time base: follow.c) */
     dk_render(lr, n, gain_q12);
     us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;
     if (us > dg_rmax)
@@ -42,7 +51,11 @@ void app_render(int32_t *lr, uint32_t n, uint32_t gain_q12)   /* timed: the diag
         dg_vmax = dk_voices_on;
 }
 #else
-void app_render(int32_t *lr, uint32_t n, uint32_t gain_q12) { dk_render(lr, n, gain_q12); }
+void app_render(int32_t *lr, uint32_t n, uint32_t gain_q12)
+{
+    dk_ms_now = plat_ms();
+    dk_render(lr, n, gain_q12);
+}
 #endif
 void app_panic(void)
 {

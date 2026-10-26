@@ -19,3 +19,6 @@ int plat_ble_connect(int i) { (void)i; return -1; }
 void plat_ble_disconnect(void) {}
 int plat_ble_device(void) { return BLE_DEV_OFF; }
 void plat_ble_enable(int on) { (void)on; }
+int plat_ble_found_addr(int i, uint8_t a[7]) { (void)i, (void)a; return 0; }
+int plat_ble_peer(uint8_t a[7]) { (void)a; return 0; }
+void plat_ble_own(uint8_t a[6]) { memset(a, 0, 6); }

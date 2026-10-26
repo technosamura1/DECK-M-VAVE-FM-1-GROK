@@ -23,6 +23,9 @@ python tools/sound_check.py out/fingerbanks --nolevel > build/test/fingerbank_ch
 build/test/deck_test chords out/chords.wav > /dev/null || fail=1
 build/test/deck_test bypass > build/test/bypass.txt && echo "  ok   SOUND bypass: every stage of the chain off and on again: no clicks, peak under -1 dBFS" || { echo "  FAIL bypass"; grep CLICK build/test/bypass.txt | head -5; fail=1; }
 build/test/deck_test automation > build/test/automation.txt && echo "  ok   AUTOMATION: a curve on every target, three engines: no click, peak under -1 dBFS, no DC, not silent" || { echo "  FAIL automation"; grep "BAD\|SILENT" build/test/automation.txt | head -5; fail=1; }
+$CC $FLAGS -DDK_HOST -Ibase/include -Ideck -Itapes/$TAPE -o build/test/sync_test tests/host/sync_test.c deck/core.c deck/song.c \
+    deck/dsp_unit.c -lm || exit 1
+build/test/sync_test quick > build/test/sync.txt && echo "  ok   BT sync: the follower against a simulated leader ($(tail -1 build/test/sync.txt | cut -c1-70))" || { echo "  FAIL BT sync"; grep FAIL build/test/sync.txt | head; fail=1; }
 build/test/deck_test metro | sed 's/^/  /'
 build/test/deck_test bench | sed 's/^/  /'
 echo "-- the scenarios"

@@ -4,13 +4,16 @@ Presses, holds (REC, FX, EDIT, ... long and short), key taps, knob turns across 
 invariants are checked (expect inv 0: events in the pool, clips sorted, lengths sane, targets valid, voices within the pool)."""
 import random, sys
 seed, n = int(sys.argv[1]), int(sys.argv[2])
-auto = len(sys.argv) > 3 and sys.argv[3] == "auto"   # AUTOMATION: mostly REC held + knobs on SOUND / MIX, tracks and parts switched, copies
+auto = len(sys.argv) > 3 and sys.argv[3] == "auto"
+bt = len(sys.argv) > 3 and sys.argv[3] == "bt"      # BLUETOOTH: BT on, a partner paired, then a clock, transport, notes and the BT page's knobs among the rest   # AUTOMATION: mostly REC held + knobs on SOUND / MIX, tracks and parts switched, copies
 r = random.Random(seed)
 BTN = "FX SEL ENV LFO EDIT GLO HOME ARP SEQ PLAY REC OCT- OCT+".split()   # (no SAVE: the project's pages are a wipe away)
 ENC = "SELECT ALGO PRESET K1 K2 K3 K4".split()
 out = ["# FUZZ seed %d, %d events (tools/gen_fuzz.py): random buttons, holds, keys and knobs on every page; the song's invariants hold" % (seed, n),
        "wait 300", "demo", "wait 100"]
 held = []
+if bt:
+    out += ["tap GLO"] * 6 + ["turn K1 1", "wait 3200", "turn K3 2", "wait 2000"]
 if auto:
     out += ["tap PLAY", "wait 400", "tap FX"]
 for i in range(n):
@@ -39,7 +42,21 @@ for i in range(n):
             out += ["press REC", "wait %d" % r.choice([1200, 2800]), "release REC"]                 # erase by holding
         out.append("expect inv 0") if i % 20 == 19 else None
         continue
-    if x < 0.30:
+    if bt and x < 0.30:
+        c = r.random()
+        if c < 0.30:
+            out.append("midigen BLE %d %d %d" % (r.choice([60, 90, 120, 150, 200]), r.choice([0, 5, 15]), r.randrange(1, 99)))
+        elif c < 0.50:
+            out.append("midigen %s" % r.choice(["start", "stop", "cont", "off", "drift 100 3"]))
+        elif c < 0.70:
+            out.append("turn %s %d 40" % (r.choice(["K1", "K2", "K3", "K4", "ALGO"]), r.choice([-2, -1, 1, 2])))
+        elif c < 0.80:
+            out += ["tap GLO", "wait 50"]
+        elif c < 0.90:
+            out += ["tap PLAY", "wait %d" % r.choice([50, 400, 1500])]
+        else:
+            out += ["wait %d" % r.choice([100, 300, 1000, 3000])]
+    elif x < 0.30:
         out.append("turn %s %d %d" % (r.choice(ENC), r.choice([-6, -3, -1, 1, 2, 4, 9]), r.choice([10, 40, 80])))
     elif x < 0.50:
         out.append("tapkey %s%d" % (r.choice("wwb"), r.randrange(0, 11)))

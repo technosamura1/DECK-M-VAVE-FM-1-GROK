@@ -10,6 +10,7 @@ dk_user_t dk_user;                       /* the user's presets: 4 an engine */
 static dk_ev_t ubuf[1024] DK_POOL;       /* undo: snapshots back to back (entries below) */
 static dk_ev_t rbuf[512] DK_POOL;        /* redo */
 static dk_ev_t clipboard[384] DK_POOL;
+static dk_ev_t cliptmp[384] DK_POOL;     /* clip_paste's and clip_double's scratch (never both at once) */
 static int clip_n = -1, clipb_len;
 static uint8_t clip_src_t;               /* the track the clipboard came from (its frozen sounds are that track's) */
 typedef struct {
@@ -805,7 +806,7 @@ int clip_paste(int clip)
     undo_push(clip);
     dk_lock();
     if (clip_src_t != clip % DK_NTRACK) {   /* on another track: the frozen sounds go with the notes (its table's places) */
-        static dk_ev_t pt[384];
+        dk_ev_t *pt = cliptmp;
         int i, to = clip % DK_NTRACK;
         for (i = 0; i < clip_n; i++) {
             pt[i] = clipboard[i];
@@ -823,7 +824,7 @@ void clip_double(int clip)
 {
     dk_clip_t *c = &dk_song.clip[clip];
     int len = clip_len(clip), n = c->n, i;
-    static dk_ev_t tmp[384];
+    dk_ev_t *tmp = cliptmp;
     if (n > 192 || len * 2 > 16 * DK_TPB)
         return;
     undo_push(clip);

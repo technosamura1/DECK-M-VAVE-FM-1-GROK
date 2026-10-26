@@ -10,10 +10,12 @@ void dk_init(void);
 void dk_render(int32_t *out_lr, uint32_t n, uint32_t gain_q12);
 void dk_shed(void);
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (from the render) */
+void dk_midi_ble(uint32_t st, uint32_t d1, uint32_t d2);   /* ... to Bluetooth (the clock, the transport, the notes when BT NOTES is on) */
 
 /* commands (main loop -> render) */
 enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
-       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK };
+       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK,
+       C_XCLK, C_XSTART, C_XSTOP };   /* a MIDI clock, Start (0xFA/0xFB), Stop arriving: a = the port, d = the app's ms when it did */
 void dk_cmd(int c, int a, int b, int d);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
 
@@ -85,6 +87,16 @@ typedef struct {
 extern dk_metro_t dk_metro;
 /* MIDI out settings */
 extern uint8_t dk_midi_notes, dk_midi_clock;
+/* BT sync (follow.c) */
+extern volatile uint8_t dk_bt_role;       /* 0 AUTO 1 LEAD 2 FOLLOW */
+extern uint8_t dk_bt_notes;               /* the notes to BLE too */
+extern volatile uint8_t dk_bt_trim;       /* ms the follower plays earlier (the link's delay), 0..40 */
+extern volatile uint8_t dk_fol;           /* 0 not following 1 following 2 HOLD 3 waiting to start */
+extern volatile uint16_t dk_fol_bpm10;    /* the clock's tempo, tenths of BPM (0 none yet) */
+void dk_fol_reset(void);                  /* forget the clock followed (the role changed) */
+extern volatile int16_t dk_fol_err;       /* the last phase error, 1/256 tick */
+extern volatile uint8_t dk_clk_alive;     /* a clock arrived within 250 ms */
+extern volatile uint32_t dk_smp, dk_ms_now;   /* samples rendered; the app's ms as this render began (set by the app) */
 /* recording: the audio's latency made up, ms (GLOBAL: REC LAT; 0..30): a played note is put that much earlier */
 extern uint8_t dk_rec_lat;
 extern uint8_t dk_rec_arm;              /* REC ARM: two steps (REC arms, PLAY records) when stopped (1); default 0: REC records at once */

@@ -44,7 +44,10 @@ float dk_white(void) { return (float)(int32_t)dk_rnd() * (1.0f / 2147483648.0f);
 static int irand(int n) { return n > 0 ? (int)((dk_rnd() >> 8) % (uint32_t)n) : 0; }
 
 #define SN 1024
-float dk_sint[SN + 1];
+/* the sine table: const, in the flash (sint_table.h, made by tools/gen_sint.c): 4 KB of RAM less */
+const float dk_sint[SN + 1] = {
+#include "sint_table.h"
+};
 float dk_sine(float ph) { return dk_sinx(ph); }
 float dk_mtof(float n) { return 440.0f * dk_ctx.tune * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
 float dk_decay(float tau) { return fm_expf(-1.0f / (fm_maxf(tau, 0.0001f) * DK_SR)); }
@@ -73,7 +76,7 @@ typedef struct {
     int32_t d;
 } cmd_t;
 #define QN 256u
-static cmd_t q[QN];
+static cmd_t q[QN] DK_POOL;
 static volatile uint32_t q_w, q_r;
 void dk_cmd(int c, int a, int b, int d)
 {
@@ -247,7 +250,7 @@ typedef struct {
     float ch_l, ch_r, ch_c;                            /* a drum sound's CRUSH: the sample held, its count */
     float st[DK_VSTATE];
 } voice_t;
-static voice_t vc[DK_NVOICE];
+static voice_t vc[DK_NVOICE] DK_POOL;      /* (the pool: .bss is for the radio's) */
 static uint32_t age_ctr;
 static uint8_t shed;
 /* a voice taken while it still sounds fades out over a few milliseconds here, from a copy (no click) */
@@ -271,6 +274,8 @@ static void midi(uint32_t st, uint32_t d1, uint32_t d2)
 {
     if (dk_midi_notes)
         dk_midi_out(st, d1, d2);
+    if (dk_midi_notes && dk_bt_notes)
+        dk_midi_ble(st, d1, d2);
 }
 static uint32_t ch_of(int t) { return (uint32_t)((dk_song.trk[t].midi_ch ? dk_song.trk[t].midi_ch - 1 : t) & 15); }
 
@@ -596,7 +601,7 @@ static void plate_init(void)
 }
 /* SHIMMER: an octave up fed into the plate (two heads gliding through a short line, crossfaded) */
 #define SH_N 1024
-static float sh_buf[SH_N];
+static float sh_buf[SH_N] DK_POOL;
 static int sh_w;
 static float sh_ph;
 static uint8_t shimmer;
@@ -924,6 +929,7 @@ static float tick_len = 1000.0f, tick_left;
 static float wow_ph, flutter_ph, stop_f = 1.0f, stop_to = 1.0f;
 static float master_acc;
 #include "seq.c"
+#include "follow.c"
 
 /* ------------------------------------------------------------------- render --- */
 /* ATMO: its layers, each a voice kept going while its level is up (faded out when it goes down) */
@@ -1070,7 +1076,9 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     const float gain = (float)gain_q12 * (1.0f / 4096.0f);
     float drift = 0.0012f;
     int vo = 0, i;
+    const uint32_t n0 = n;
     drain();
+    fol_block();
     params_update_some(0);                     /* the knobs: half the tracks a render (all when the clip moves one) */
     /* the tape's slow wow and its flutter (DUST deepens them); a tape stop's fall */
     wow_ph += (float)n * (0.37f / DK_SR);
@@ -1126,6 +1134,7 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         dk_voices_frozen = (uint8_t)fz;
     }
     dk_voices_on = (uint8_t)vo;
+    dk_smp += n0;
     shed = 0;
 }
 
@@ -1134,8 +1143,6 @@ void dk_shed(void) { shed = 1; }
 void dk_init(void)
 {
     int i, t;
-    for (i = 0; i <= SN; i++)
-        dk_sint[i] = fm_sinf(6.2831853f * (float)i / (float)SN);
     dk_ctx.tune = 1.0f;
     dk_ctx.wow = 1.0f;
     plate_init();

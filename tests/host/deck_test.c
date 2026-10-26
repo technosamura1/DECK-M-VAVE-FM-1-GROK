@@ -42,6 +42,12 @@ extern double dk_prof[8];
 double dk_prof_now(void) { return now_s(); }
 #endif
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { (void)st, (void)d1, (void)d2; }
+uint32_t ble_log[4096], ble_n;                 /* what went to Bluetooth (st, d1, d2 packed) */
+void dk_midi_ble(uint32_t st, uint32_t d1, uint32_t d2)
+{
+    if (ble_n < 4096)
+        ble_log[ble_n++] = st | d1 << 8 | d2 << 16;
+}
 
 static int16_t *buf;
 static int frames, cap;

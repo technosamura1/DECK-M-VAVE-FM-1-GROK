@@ -1,0 +1,140 @@
+# BLUETOOTH SYNC: a partner FM-1 paired; as FOLLOWER (a clock with ±12 ms of jitter and bursts in on BLE: the tempo found, the
+# start on the clock, HOLD when it falls silent, the stop); as LEADER (the clock, SPP, Start and Stop out to BLE); AUTO
+# (the one who presses PLAY leads; a unit already running ignores a clock); notes to BLE only when asked.
+wait 400
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+wait 3200
+turn K3 2
+wait 2000
+expect ble_dev 4
+expect btp 1
+# ---- FOLLOW
+turn K2 2
+wait 100
+expect btrole 2
+tap HOME
+wait 100
+midigen BLE 120 12 7
+wait 3000
+expect fol_bpm10 >1195
+expect fol_bpm10 <1205
+expect clk_alive 1
+expect playing 0
+midigen start
+wait 3000
+expect playing 1
+expect fol 1
+expect fol_err >-700
+expect fol_err <700
+wait 700
+shot bt7_follow.png
+# the tempo moves: it goes with it
+midigen drift 100 6
+wait 10000
+expect fol_bpm10 >995
+expect fol_bpm10 <1005
+expect playing 1
+# silence: the last tempo is held, it keeps playing
+midigen off
+wait 150
+expect fol 1
+wait 400
+expect fol 2
+expect playing 1
+expect fol_bpm10 >995
+expect fol_bpm10 <1005
+wait 1500
+shot bt8_hold.png
+midigen BLE 100 12 9
+wait 2500
+expect fol 1
+midigen stop
+wait 400
+expect playing 0
+expect fol 0
+midigen off
+wait 300
+# in FOLLOW, PLAY alone waits for the clock (a bar of it), then runs
+midigen BLE 150 8 3
+wait 1500
+tap PLAY
+wait 100
+expect fol 3
+wait 2200
+expect playing 1
+expect fol 1
+tap PLAY
+wait 300
+expect playing 0
+midigen off
+# ---- LEAD
+tap GLO
+expect rowof 5
+turn K2 -1
+wait 100
+expect btrole 1
+tap HOME
+wait 100
+out
+tap PLAY
+wait 1500
+expect playing 1
+expect fol 0
+expect clocks_ble >40
+expect_out BLE FA 00 00
+expect_out BLE F2 00 00
+# a leader ignores a clock coming in
+midigen BLE 60 5 1
+wait 1500
+expect fol 0
+midigen off
+out
+tap PLAY
+wait 300
+expect playing 0
+expect_out BLE FC 00 00
+# ---- AUTO: whoever presses PLAY leads; a clock in on BLE is followed only when not playing here
+tap GLO
+turn K2 -1
+wait 100
+expect btrole 0
+tap HOME
+wait 100
+out
+tap PLAY
+wait 1500
+expect playing 1
+expect fol 0
+expect_out BLE FA 00 00
+midigen BLE 60 5 1
+wait 1500
+expect fol 0
+tap PLAY
+wait 300
+expect playing 0
+midigen off
+wait 200
+# a clock in on USB is not followed in AUTO (only BLE); a clock in on BLE is: the start on its Start
+midigen USB 130 3 1
+wait 1500
+midigen start
+wait 3000
+expect playing 0
+midigen off
+midigen BLE 130 3 1
+wait 1500
+midigen start
+wait 3000
+expect playing 1
+expect fol 1
+midigen stop
+wait 300
+expect playing 0
+midigen off
+# ---- notes to BLE: off until asked (BT NOTES = the fifth knob)

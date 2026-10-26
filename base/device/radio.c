@@ -501,6 +501,7 @@ void shim_bt_event(int from, const void *event, int len)
     }
 }
 
+static uint8_t ble_own[6];                         /* this radio's BLE address, once it is made (plat_ble_own) */
 static void ble_start(void)
 {
     uint8_t addr[6];
@@ -514,6 +515,7 @@ static void ble_start(void)
      * library transmits at its lowest (measured: -79 dBm where the stock firmware gives -39) */
     bt_max_pwr_set(BT_TX_POWER, 6, 6, BLE_TX_POWER);
     lib_make_ble_address(addr, (uint8_t *)bt_get_mac_addr());
+    memcpy(ble_own, addr, 6);
     le_controller_set_mac(addr);
     btstack_init();
 }
@@ -580,6 +582,10 @@ extern int ble_midi_found(int i, char *name, int *rssi);
 extern int ble_midi_connect(int i);
 extern void ble_midi_disconnect(void);
 extern int ble_midi_central_state(void);
+extern int ble_midi_addr(int i, uint8_t *a);
+extern int ble_midi_peer(uint8_t *a);
+int plat_ble_found_addr(int i, uint8_t a[7]) { return ble_state == BLE_READY && ble_midi_addr(i, a); }
+int plat_ble_peer(uint8_t a[7]) { return ble_state == BLE_READY && ble_midi_peer(a); }
 void plat_ble_scan(int on)
 {
     if (ble_state == BLE_READY)
@@ -594,6 +600,8 @@ void plat_ble_disconnect(void)
 }
 int plat_ble_device(void) { return ble_state == BLE_READY ? ble_midi_central_state() : BLE_DEV_OFF; }
 #else
+int plat_ble_found_addr(int i, uint8_t a[7]) { (void)i, (void)a; return 0; }
+int plat_ble_peer(uint8_t a[7]) { (void)a; return 0; }
 void plat_ble_scan(int on) { (void)on; }
 int plat_ble_found(int i, char *name, int *rssi) { (void)i, (void)name, (void)rssi; return 0; }
 int plat_ble_connect(int i) { (void)i; return -1; }
@@ -601,6 +609,7 @@ void plat_ble_disconnect(void) {}
 int plat_ble_device(void) { return BLE_DEV_OFF; }
 #endif
 void plat_ble_start(void) { ble_start(); }
+void plat_ble_own(uint8_t a[6]) { memcpy(a, ble_own, 6); }
 #else
 #include "ble_none.c"
 #endif

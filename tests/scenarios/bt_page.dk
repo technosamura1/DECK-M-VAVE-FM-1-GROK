@@ -1,0 +1,88 @@
+# BLUETOOTH (GLOBAL, row 6): off by default (the sound is safe), K1 on, the list of what the scan finds (two FM-1 differ
+# by their address), K3 pairs after a short rest, the partner is kept across a reboot and found again by its address.
+wait 400
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+wait 100
+expect page 9
+expect rowof 5
+expect bt 0
+expect btstat 0
+expect btp 0
+expect ble 0
+shot bt1_off.png
+# K1: on; the radio starts (a second), the page scans
+turn K1 1
+wait 100
+expect bt 1
+expect btstat 1
+expect ble 1
+wait 1500
+expect ble 2
+expect btstat 4
+shot bt2_scan.png
+wait 1500
+expect btcount 3
+shot bt3_list.png
+# K3: 0 = NONE, 1 = BLE MIDI, 2 = the first FM-1; rest on it: it connects, and is kept
+turn K3 1
+wait 300
+expect btdev 1
+turn K3 1
+wait 300
+expect btdev 2
+expect btp 0
+shot bt4_pick.png
+wait 1500
+expect ble_dev 4
+expect btp 1
+expect btpa 1
+expect btstat 6
+shot bt5_linked.png
+# the partner is switched off: the link ends, the dot goes
+ble unit off
+wait 2500
+expect ble_dev 1
+expect btstat 4
+# switched on again: it finds it again by the address
+ble unit on
+wait 30000
+expect ble_dev 4
+expect btstat 6
+# a reboot: BT stays on, the partner is remembered
+reboot
+wait 3000
+expect bt 1
+expect btp 1
+expect btpa 1
+wait 30000
+expect ble_dev 4
+expect btstat 6
+# K1 off: radio off, the link gone, the partner is still saved
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+expect page 9
+expect rowof 5
+turn K1 -1
+wait 500
+expect bt 0
+expect btstat 0
+expect btp 1
+expect ble 0
+shot bt6_off_again.png
+# NONE forgets the partner
+turn K1 1
+wait 3000
+turn K3 -5
+wait 2500
+expect btdev 0
+expect btp 0

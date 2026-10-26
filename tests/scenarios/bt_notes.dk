@@ -1,0 +1,42 @@
+# BLUETOOTH NOTES: the song's notes go to the partner only when BT NOTES is on (the clock and the transport always do, in LEAD
+# and in AUTO); the same for the notes played on the keys.
+wait 400
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+wait 3200
+turn K3 2
+wait 2000
+expect ble_dev 4
+expect btp 1
+turn K2 1
+wait 100
+expect btrole 1
+tap HOME
+wait 100
+tap PLAY
+wait 3000
+expect playing 1
+expect clocks_ble >80
+expect midi_out_ble <4
+tap PLAY
+wait 300
+expect playing 0
+# BT NOTES on (the fifth knob, ALGO)
+tap GLO
+turn ALGO 1 40
+wait 100
+expect btnotes 1
+tap HOME
+wait 100
+out
+tap PLAY
+wait 3000
+expect midi_out_ble >8
+tap PLAY
+wait 300
+expect playing 0

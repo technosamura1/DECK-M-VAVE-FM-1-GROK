@@ -51,12 +51,22 @@ static int clip_len_of(int p, int t)
     const dk_clip_t *c = CLIP(p, t);
     return c->len ? c->len : part_len_of(p);
 }
-static float tempo_of(void) { return (float)(dk_song.tempo < 30 ? 30 : dk_song.tempo); }
+static float fol_tempo(void);              /* follow.c: the clock's tempo while the transport follows one (0 otherwise) */
+static float fol_tick_len(void);
+static void fol_cmd(int c, int a, int d);
+static int fol_local_play(void);
+static int sync_tx(void);                  /* a run sends its clock and transport to BLE (LEAD, or AUTO when it began here) */
+static void fol_started(void), fol_stopped(void), fol_block(void);
+static float tempo_of(void)
+{
+    float f = fol_tempo();
+    return f > 0.0f ? f : (float)(dk_song.tempo < 30 ? 30 : dk_song.tempo);
+}
 static void tempo_set(void)
 {
     static const float ET[4] = {0.75f, 1.0f, 0.5f, 1.5f};   /* the echo: a dotted eighth, a quarter, an eighth, a dotted quarter */
     float d, slp = (float)dk_song.sleep * 0.01f;
-    tick_len = DK_SR * 60.0f / (tempo_of() * (float)DK_PPQ);
+    tick_len = fol_tempo() > 0.0f ? fol_tick_len() : DK_SR * 60.0f / (tempo_of() * (float)DK_PPQ);
     dk_ctx.spb = DK_SR * 60.0f / tempo_of();
     d = ET[dk_song.echo_time & 3] * (1.0f + 0.6f * slp) * 60.0f / tempo_of() * (DK_SR * 0.5f);
     while (d > (float)(ECHO_N - 8))
@@ -781,6 +791,7 @@ static void play_start(void)
     }
     if (dk_midi_clock)
         dk_midi_out(0xFA, 0, 0);
+    fol_started();
 }
 static void play_stop(void)
 {
@@ -801,6 +812,7 @@ static void play_stop(void)
     motion_reset();
     if (dk_midi_clock)
         dk_midi_out(0xFC, 0, 0);
+    fol_stopped();
 }
 
 static void live_note(int t, int note, int vel, int delay)
@@ -978,8 +990,12 @@ static void seq_tick(void)
         return;
     }
     metro_tick();
-    if (dk_midi_clock && dk_ticks % (DK_PPQ / 24) == 0)
-        dk_midi_out(0xF8, 0, 0);
+    if (dk_ticks % (DK_PPQ / 24) == 0) {
+        if (dk_midi_clock)
+            dk_midi_out(0xF8, 0, 0);
+        if (sync_tx())
+            dk_midi_ble(0xF8, 0, 0);
+    }
     mods_tick();
     motion_expire();
     if (part_tick % DK_TPB == 0)
@@ -1074,7 +1090,8 @@ static void drain(void)
         case C_PLAY:
             if (a && !dk_playing && !count_left) {
                 road_from = (uint8_t)b;
-                play_start();
+                if (!fol_local_play())
+                    play_start();
             } else if (!a)
                 play_stop();
             break;
@@ -1230,6 +1247,9 @@ static void drain(void)
             break;
         case C_HOLDCLR: voices_release_track(a % DK_NTRACK, 3); dk_held_n[a % DK_NTRACK] = 0; break;
         case C_RETUNE: tempo_set(); harm_regrow(); break;
+        case C_XCLK:
+        case C_XSTART:
+        case C_XSTOP: fol_cmd(c.c, a, c.d); break;
         default: break;
         }
     }

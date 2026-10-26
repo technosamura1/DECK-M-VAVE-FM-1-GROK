@@ -273,6 +273,9 @@ void settings_save(void)
     set.metro[5] = dk_metro.on_note;
     set.midi_notes = dk_midi_notes;
     set.midi_clock = dk_midi_clock;
+    set.btrole = dk_bt_role;
+    set.btnotes = dk_bt_notes;
+    set.bttrim = dk_bt_trim;
     set.lat = (uint8_t)(dk_rec_lat + 1u);
     set.nolock = (uint8_t)!dk_lock_take;
     set.noarm_old = 0;
@@ -319,6 +322,9 @@ static void settings_load(void)
     dk_metro.on_note = set.metro[5] ? 1 : 0;
     dk_midi_notes = set.midi_notes;
     dk_midi_clock = set.midi_clock;
+    dk_bt_role = set.btrole > 2 ? 0 : set.btrole;
+    dk_bt_notes = set.btnotes ? 1 : 0;
+    dk_bt_trim = set.bttrim > 40 ? 0 : set.bttrim;
     dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
     dk_lock_take = set.nolock ? 0 : 1;
     dk_rec_arm = set.recarm == 1 ? 1 : 0;

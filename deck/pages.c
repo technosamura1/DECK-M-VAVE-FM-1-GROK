@@ -161,7 +161,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 static int seq_edit_row(void);
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 5, 1, 1, 4, 1, 1, 2, 5, 2, 1};
+    static const uint8_t ROWS[NPG] = {1, 2, 5, 1, 1, 4, 1, 1, 2, 6, 2, 1};
     if (p == PG_SEQ && ((cur_eng()->flags & EF_DRUM) || cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE))
         return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings;
                                               * STEP and LIVE: their own, the settings, the step editor */
@@ -181,11 +181,12 @@ static int page_field(int i, int home)
                                          {F_LAYOUT, F_LEAD, F_DIM, F_NONE, F_NONE}};
     static const uint8_t PROJ_F[1][5] = {{F_SLOT, F_TEMPLATE, F_SONGSTYLE, F_NONE, F_NONE}};
     /* GLOBAL (GLO): the song's time and air, the metronome, MIDI, the rest */
-    static const uint8_t GLOB_F[5][5] = {{F_TEMPO, F_SWING, F_DUST, F_SLEEP, F_SIDECHAIN},
+    static const uint8_t GLOB_F[6][5] = {{F_TEMPO, F_SWING, F_DUST, F_SLEEP, F_SIDECHAIN},
                                          {F_METRO, F_COUNT, F_CLICK, F_MVOL, F_MDIV},
                                          {F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ONNOTE, F_NEWPART},
                                          {F_RECLAT, F_ECHOTIME, F_CPU, F_VERSION, F_LOCKTAKE},
-                                         {F_RECMODE, F_RECARM, F_NONE, F_NONE, F_NONE}};
+                                         {F_RECMODE, F_RECARM, F_NONE, F_NONE, F_NONE},
+                                         {F_BT, F_BTROLE, F_BTDEV, F_BTTRIM, F_BTNOTES}};   /* the Bluetooth row */
     (void)home;
     switch (ui.page) {
     case PG_PLAY: {                          /* the garden: the track you play, its sound and its space; ALGO the mood */
@@ -281,7 +282,7 @@ static int page_field(int i, int home)
         }
     case PG_KEYS: return KEYS_F[row & 3][i];
     case PG_PROJECT: return PROJ_F[0][i];
-    case PG_GLOB: return GLOB_F[row % 5][i];
+    case PG_GLOB: return GLOB_F[row % 6][i];
     case PG_ATMO: {                          /* ATMO (SEL): the place's layers, then the noise and the tape */
         static const uint8_t F[2][5] = {{F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ALVL},
                                         {F_ATMO4, F_ATMO5, F_DUST, F_ATAPE, F_ALVL}};
@@ -321,7 +322,10 @@ static const char *hint(void)
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
-    case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
+    case PG_GLOB:
+        if (ui.row[PG_GLOB] % 6 == 5)
+            return "K1 BT K2 ROLE K3 PAIR K4 TRIM";
+        return "GLO = NEXT ROW  HOLD GLO = FILL";
     case PG_ATMO: return "SEL = NEXT ROW  KNOBS = HOW MUCH";
     case PG_REC:
         if (ui_auto_on)
@@ -416,7 +420,7 @@ static void draw_header(void)
         }
     }
 no_batt:
-    itoa_b(dk_song.tempo, s);
+    itoa_b(dk_fol && dk_fol_bpm10 ? (dk_fol_bpm10 + 5) / 10 : dk_song.tempo, s);   /* following: the clock's tempo */
     text_box(182, 4, 24, 2, &FONT_XS, &FONT_XS, s, TH_TEXT);
     for (t = 0; t < DK_NTRACK; t++) {    /* the six tracks: the one you are on bright, a muted one hollow */
         int cx = 211 + (t % 3) * 9, cy = 6 + (t / 3) * 8;
@@ -428,6 +432,15 @@ no_batt:
     }
     if (dk_beat_flash || (dk_playing && dk_metro.mode && dk_part_tick % DK_PPQ < DK_PPQ / 6))
         cv_rect(200, 9, 2, 2, TH_ENC[2]);
+    if (set.bt) {                        /* Bluetooth: a dot under the tempo: green linked, yellow looking, red a held clock, grey waiting */
+        int s = link_status();
+        uint16_t c = s == LKS_LINK || s == LKS_IN ? (dk_fol == 2 ? TH_REC : TH_ENC[0]) : s == LKS_FAIL ? TH_REC : TH_GRAY;
+        if (s == LKS_START || s == LKS_SCAN || s == LKS_CONN)
+            c = now / 250u & 1u ? TH_ENC[2] : TH_GRAY;
+        disc(194, 17, 2, c);
+        if (s == LKS_LINK && dk_fol == 1)
+            circle(194, 17, 3, TH_ENC[0]);   /* following the partner's clock */
+    }
 }
 
 /* the foot: the four knobs K1..K4 (a ring for a number, a dot for a choice; their colours), the hint */
@@ -1514,9 +1527,65 @@ static void draw_atmo(void)
 }
 
 /* GLOBAL: a wooden metronome swinging in time, the tempo big, the metronome's mode */
+/* GLOBAL's BT row: the status, the role and the sync, the list of devices around (the partner starred) */
+static void draw_bt(void)
+{
+    char s[40], nm[24];
+    int i, n, pk = link_pick_get(), st = link_status(), sx = 6;
+    uint8_t a[7];
+    int rssi;
+    link_text(s, sizeof s);
+    module("BLUETOOTH", s);
+    if (!set.bt) {
+        text_box(WX + 4, WY + 8, WW - 8, 1, &FONT_L, &FONT_B, "OFF", W_GRAY);
+        text_box(WX + 4, WY + 48, WW - 8, 1, &FONT_T, &FONT_XS, lk.crash ? "THE LAST BT RUN CRASHED" : "K1 = ON", lk.crash ? TH_REC : W_GRAY);
+        text_box(WX + 4, WY + 60, WW - 8, 1, &FONT_T, &FONT_XS, lk.crash ? "SO IT IS OFF NOW" : "THE SOUND MAY STOP FOR 1 S", W_GRAY);
+        return;
+    }
+    {                                    /* the role and what the clock does */
+        static const char *const RN[3] = {"AUTO", "LEAD", "FOLLOW"};
+        char *p = cpy(s, RN[dk_bt_role % 3]);
+        if (dk_bt_role == 1 || (dk_bt_role == 0 && !dk_fol && dk_playing && st >= LKS_LINK)) {
+            cpy(p, "  LEADING");
+        } else if (dk_fol == 3) {
+            cpy(p, "  WAITING FOR THE BAR");
+        } else if (dk_fol) {
+            p = cpy(p, dk_fol == 2 ? "  HOLD " : "  FOLLOW ");
+            if (dk_fol_bpm10) {
+                p = itoa_b(dk_fol_bpm10 / 10, p);
+                *p++ = '.';
+                *p++ = (char)('0' + dk_fol_bpm10 % 10);
+                cpy(p, " BPM");
+            }
+        }
+        text_box(WX + sx, WY + 6, WW - 12, 0, &FONT_XS, &FONT_XS, s, TH_TEXT);
+    }
+    cv_rect(WX + sx, WY + 19, WW - 12, 1, W_LINE);
+    n = lk_count();
+    if (!n && st >= LKS_IDLE && st != LKS_LINK)
+        text_box(WX + sx, WY + 26, WW - 12, 0, &FONT_XS, &FONT_XS, st == LKS_SCAN ? "LOOKING..." : "NO DEVICES. TURN K3 TO LOOK", W_GRAY);
+    for (i = 0; i < n && i < 6; i++) {
+        int y = WY + 24 + i * 12, on = pk == i + 1, ok = lk_found(i, nm, &rssi, a);
+        if (!ok)
+            break;
+        if (on)
+            cv_rect(WX + 2, y - 2, WW - 4, 11, RGB(52, 45, 39));
+        link_dev_name(i + 1, s, 24);
+        text_box(WX + sx + 8, y, 130, 0, &FONT_XS, &FONT_XS, s, on ? TH_TEXT : W_GRAY);
+        if (lk_is_partner(a))
+            cv_text(WX + sx, y, &FONT_XS, "*", TH_ENC[0]);
+        itoa_b(rssi, s);
+        text_box(WX + WW - 46, y, 40, 2, &FONT_XS, &FONT_XS, s, W_GRAY);
+    }
+}
+
 static void draw_global(void)
 {
     char s[16];
+    if (ui.row[PG_GLOB] % 6 == 5) {
+        draw_bt();
+        return;
+    }
     int px = WX + 40, py = WY + WH - 6, i;
     float a = 0.0f;
     static const uint16_t WOOD = RGB(150, 98, 58), WOOD_D = RGB(104, 66, 38);
@@ -1546,7 +1615,7 @@ static void draw_global(void)
         cv_rect(wx - 4, wy - 3, 8, 6, dk_beat_flash ? TH_ENC[2] : RGB(200, 200, 200));
         disc(px, py - 8, 2, RGB(60, 60, 60));
     }
-    itoa_b(dk_song.tempo, s);
+    itoa_b(dk_fol && dk_fol_bpm10 ? (dk_fol_bpm10 + 5) / 10 : dk_song.tempo, s);   /* following: the clock's tempo */
     text_box(WX + 90, WY + 10, 126, 1, &FONT_L, &FONT_B, s, TH_TEXT);
     text_box(WX + 90, WY + 46, 126, 1, &FONT_T, &FONT_T, "BPM", W_GRAY);
     {

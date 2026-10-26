@@ -439,6 +439,22 @@ int ble_midi_connect(int i)                      /* connect to device i of the s
     mc_create();
     return 0;
 }
+int ble_midi_addr(int i, u8 *a)                  /* device i's address: a[0] its type, a[1..6]; 0 when there is none */
+{
+    if (i < 0 || i >= mc_n)
+        return 0;
+    a[0] = mc_dev[i].addr_type;
+    memcpy(a + 1, mc_dev[i].addr, 6);
+    return 1;
+}
+int ble_midi_peer(u8 *a)                         /* the device connecting or connected */
+{
+    if (mc_state == BLE_MC_OFF || mc_state == BLE_MC_SCANNING)
+        return 0;
+    a[0] = mc_conn.peer_address_type;
+    memcpy(a + 1, mc_conn.peer_address, 6);
+    return 1;
+}
 void ble_midi_disconnect(void)
 {
     if (mc_handle)

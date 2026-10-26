@@ -1,0 +1,64 @@
+# BLUETOOTH SYNC, a long run: ten minutes of a clock that drifts 90 -> 110 BPM, ±15 ms of jitter and bursts of 2-3 clocks: the
+# follower stays locked (the phase error bounded: it sits at the link's mean delay, about 12 ms = under 2 ticks; the tempo
+# right at every minute), never drops out, never loses the run.
+wait 400
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+wait 3200
+turn K3 2
+wait 2000
+turn K2 2
+tap HOME
+wait 100
+midigen BLE 90 15 21
+wait 2000
+midigen start
+wait 6000
+expect playing 1
+expect fol 1
+midigen drift 110 600
+wait 100000
+expect fol 1
+expect fol_bpm10 >915
+expect fol_bpm10 <951
+expect fol_err >-800
+expect fol_err <800
+wait 100000
+expect fol 1
+expect fol_bpm10 >948
+expect fol_bpm10 <984
+expect fol_err >-800
+expect fol_err <800
+wait 100000
+expect fol 1
+expect fol_bpm10 >982
+expect fol_bpm10 <1018
+expect fol_err >-800
+expect fol_err <800
+wait 100000
+expect fol 1
+expect fol_bpm10 >1015
+expect fol_bpm10 <1051
+expect fol_err >-800
+expect fol_err <800
+wait 100000
+expect fol 1
+expect fol_bpm10 >1048
+expect fol_bpm10 <1084
+expect fol_err >-800
+expect fol_err <800
+wait 100000
+expect fol 1
+expect fol_bpm10 >1082
+expect fol_bpm10 <1110
+expect fol_err >-800
+expect fol_err <800
+expect playing 1
+midigen stop
+wait 400
+expect playing 0
