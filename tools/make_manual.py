@@ -437,7 +437,9 @@ def build():
                                       f"Во время записи — сотрётся то, что уже записано, а запись идёт дальше. Если дубля нет — «NO TAKE». "
                                       f"Один шаг UNDO. В режиме REPLACE ноты, которые дубль заменил, вернёт ещё один UNDO."),
         ("7", "UNDO", f"Держи {k('EDIT')} (0,7 с) — отменить. {k('HOME')} + {k('EDIT')} — вернуть (REDO). Серия поворотов одной "
-                      "ручкой — один шаг.")],
+                      "ручкой — один шаг."),
+        ("8", "Память полна", "Событий в песне до 4096. Кончилось место — самый старый дубль стирается («MEMORY FULL / OLDEST TAKE ERASED»); "
+                                 "нечего стирать — «NOTES LOST». Тихого отказа нет.")],
         after=[note("REC: тап или держать", f"Тап — запись (срабатывает при отпускании). Держишь REC и крутишь ручку — это автоматизация, "
                     f"записи нот нет. Подержал дольше 0,45 с — появится подсказка; подержал 0,6 с и ничего не крутил — "
                     f"сотрётся дубль, который ты только что записал (см. шаг 7). Остальное стирается в EDIT-списке (раздел 6).", R)])
@@ -592,16 +594,16 @@ def build():
            ["KALIMBA", "язычок, щипок, деревянный корпус", "TONE · DECAY · WOOD"],
            ["SOFTBASS", "мягкий бас: SUB, UPRIGHT, MOOG, глайд", "TONE · PLUCK · GLIDE · TYPE"],
            ["DUSTKIT", "барабаны: лоу-фай киты и эмуляции 808 / 909 / 606 / CR-78 / 707", "TUNE · DECAY · DUST · KIT"],
-           ["WORLD", "дождь, ветер, костёр, ручей, птицы, океан, гроза", "TYPE · AMOUNT · TONE"],
+           ["LEAD", "соло-лид: пила, меандр, суперпила, FM, мягкий, 8-bit, synthwave, духовой", "WAVE · CUTOFF · RESO · SWEEP"],
            ["WINDS", "флейты, окарина, кларнет, труба, валторна, медь", "BRIGHT · BREATH · VIBRATO · TYPE"],
            ["SYNTH", "чип и synthwave: SAW, PULSE, SQUARE, TRI, SUPER, фильтр", "WAVE · CUTOFF · RESO · SWEEP"],
            ["PLUCK", "щипковые: лютня, арфа, нейлон, сталь, кото", "TYPE · BRIGHT · DECAY · POSITION"]]
     story.append(table(eng, [24, 86, CW - 110], head=["ДВИЖОК", "ЧТО ЭТО", "РУЧКИ K1–K4"], pad=2))
     story.append(Spacer(1, 3 * mm))
     blk = [["AMBIENT LOFI", "132", "то, что было, и новые: SOFT SAW, DUST LEAD, DRONE-пады, пыльные ударные"],
-           ["8-16 BIT", "50", "меандр, пульс, треугольник, шум; чип-арпеджио, GAME OVER, POWER-UP, SNES STRINGS"],
-           ["SYNTHWAVE", "74", "NIGHT DRIVE, OUTRUN LEAD, SUNSET SAW, MIAMI BRASS, барабаны 808 и 909"],
-           ["CINEMATIC", "88", "дроны, хор, рога, струнные, боевые барабаны WAR, 808 SUB BOOM"]]
+           ["8-16 BIT", "58", "меандр, пульс, треугольник, шум; чип-арпеджио, GAME OVER, POWER-UP, SNES STRINGS"],
+           ["SYNTHWAVE", "82", "NIGHT DRIVE, OUTRUN LEAD, SUNSET SAW, MIAMI BRASS, барабаны 808 и 909"],
+           ["CINEMATIC", "92", "дроны, хор, рога, струнные, боевые барабаны WAR, 808 SUB BOOM"]]
     story.append(table(blk, [30, 14, CW - 44], head=["БЛОК", "ПРЕСЕТОВ", "ЧТО ВНУТРИ"], pad=2))
     story.append(Paragraph("Барабанные киты — синтез-эмуляции, а не семплы оригиналов: похожий характер, не те самые звуки. "
                            "Дорожка KEYS листает 12 пресетов из TINE, GLASS и KALIMBA.", S_SM))
@@ -651,7 +653,7 @@ def build():
                            "голосоведение и звук OVERWORLD — по мотивам AMB-1 (Charles Vestal). Лицензия MPL-2.0.", S_SM))
 
     doc = SimpleDocTemplate(OUT, pagesize=A4, leftMargin=M, rightMargin=M, topMargin=16 * mm, bottomMargin=18 * mm,
-                            title="DECK · OVERWORLD — инструкция (-11)", author="DECK")
+                            title="DECK · OVERWORLD — инструкция (-14)", author="DECK")
     doc.build(story, onFirstPage=page_bg, onLaterPages=page_bg)
     print(OUT)
 

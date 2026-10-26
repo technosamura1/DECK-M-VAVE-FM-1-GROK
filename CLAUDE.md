@@ -465,7 +465,7 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   мигрируют). Новые TYPE в старых движках: AIRPAD +SUPER CHOIR DRONE ORGAN (+STRINGS), SOFTBASS +SQUARE SAW TRI SUBDRONE, DUSTKIT киты
   707 DUSTY BRUSH CHIP SYNTH WAR 808 909 606 CR-78, WINDS +SYNBRASS DUDUK.
 - **Счёт пресетов** [блок0, 8-16, SYNTHWAVE, CINEMATIC]: FELT 12/4/4/6, TINE 12/4/8/4, AIRPAD 12/0/8/12, GLASS 12/4/6/6, SOFTBASS 12/8/12/8,
-  DUSTKIT 12/12/12/12, WORLD 12/0/0/4, KALIMBA 12/0/0/0, WINDS 12/0/6/12, SYNTH 12/12/12/12, PLUCK 12/6/6/12. Итого 344
+  DUSTKIT 12/12/12/12, WORLD 12/0/0/4 (скрыт, см. LEAD), KALIMBA 12/0/0/0, WINDS 12/0/6/12, SYNTH 12/12/12/12, PLUCK 12/6/6/12. Итого 344
   (132 / 50 / 74 / 88). FELT/TINE/GLASS в блоках 1–2 — через LOFI/хорус/эхо и параметры, не новые осцилляторы.
 - **SVF Chamberlin**: `dk_svf_f(hz)` выше ~7200 Гц неустойчив: срез ≤ 6000 Гц, `fk` ≤ 0.8 (SYNTH). Выходной одно-полюсник против
   краёв пульса/шума (`lp`, `lpk`); PLUCK — `lq` после crush.
@@ -599,3 +599,17 @@ take being recorded) of the clip with the most layers is dropped (one undo step)
 with nothing to drop (every clip has one take) what does not fit is lost WITH "MEMORY FULL / NOTES LOST" (`song_mem_dropped`,
 `song_mem_full`, said at most every 2 s). Tests: `recfull.dk`, `recfull2.dk`, `fuzz5.dk` (`gen_fuzz.py SEED N rec`; the host's `ballast N T`
 fills the pool with N events in T takes).
+
+### LEAD вместо NATURE WORLD, fx, дубли пресетов (op1-rec-14)
+- **LEAD** (`eng_lead.c`, индекс 11, моно, EF_MONO, params WAVE CUTOFF RESO SWEEP SPREAD VIBRATO GLIDE SUB; роль R_LEAD) заменил WORLD в пикерах и в
+  настроении/6-й дорожке по умолчанию (`song_mood` R_NATURE→R_LEAD). Пресетов 12/8/8/8 = 36 (+ счёт в PCOUNT: видимых 364, с
+  скрытым WORLD 380). WORLD (индекс 6, EF_CONT) остаётся для ATMO, дрона DT_NATURE демо и старых проектов; id пресетов не менялись.
+- **fx**: `fx_prev` сбрасывает `fxs[t].f[28]` (старое состояние эффекта при смене), `fxbuf_get` читает линию задержки целым индексом (float терял точность на длинной
+  линии). Тест `deck_test fxlong`.
+- **Дубли пресетов**: `tools/dup_check.py` (1/6-октавный спектр Уэлча без уровня + огибающая 6 полос по 24 кадра; SPEC_DB=0.5, ENV_DB=1.3; пары из NAMED
+  (VELVET/MELLOW и т. п.) — с повышенным порогом; параметры идентичны — всегда дубль). В `run_tests.sh` после sound_check; падает, если есть пара.
+  Нашли и разнесли ~25 пар (басовое семейство — на другие SOFTBASS TYPE; флейты, пады, колокола), трим пересчитан `calibrate.py`.
+  Ограничение метрики: не слышит глайд и короткие ноты, плохо различает редкие звуки (бас, калимба).
+- **Запись 5-го инструмента**: причина — переполнение пула событий (см. «Recording into a full pool»); сценарий `recfive.dk` — естественный поток
+  (4 дорожки по несколько проходов, потом 5-я и слой на 1-й). Таблица замороженных звуков (DK_NSND = 7 на дорожку) при переполнении не
+  блокирует запись (ноты остаются «живыми», UI говорит один раз). «11–12 из 24 голосов» — бюджет CPU (`dk_budget`/`budget_make_room`), задуман.
