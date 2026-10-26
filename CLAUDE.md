@@ -446,3 +446,26 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   MIX), fuzz `fuzz1..4.dk` (генератор `tools/gen_fuzz.py SEED N [auto]`: тысячи событий, `expect inv 0` — события в пуле, клипы
   отсортированы, длины, цели, голоса ≤ пула), `deck_test automation` (16 целей × 3 движка, резкий зуб: шаг ≤ 2× +600, пик ≤ −1 dBFS,
   DC ≤ 300). Геттеры host: `autos`, `atgt<N>`, `alive<N>`, `pval<N>`, `afirst<N>`, `alast<N>`, `autoall`, `inv`.
+
+## Новые звуки: блоки пресетов (op1-rec, 2026-10-26)
+
+- **Блоки** (`DK_NBLK 4`): AMBIENT LOFI, 8-16 BIT, SYNTHWAVE, CINEMATIC (`BLOCK_NAME`, tape_dsp.c). id пресета: 0..11 блок 0, 12..15 свои,
+  16.. = `DK_PBASE + (блок-1)*12 + i` для блоков 1..3. Старые 108 пресетов и их id не менялись; в треке хранится `preset` (uint8) + свои
+  p/env/fx, так что старые проекты грузятся как были. `PRESETS2[]` — блоки 1..3 без пустот, индекс = сумма `PCOUNT` по предыдущим
+  (движок, блок≥1) + i; `PCOUNT[11*DK_NBLK]` — сколько пресетов в блоке. Flash, не RAM.
+- **Кнопки**: HOME + FX = следующий блок, HOME + SEL = предыдущий (место i внутри блока то же, блок без пресетов пропускается);
+  ручка PRESET проходит все блоки движка и занятые свои слоты; белые 1–12 — пресет текущего блока (пусто → «NO PRESET HERE»);
+  KEYS-группа остаётся на своих 12. Имя блока — в окошке (`say_preset`) и на шапке модуля (`blk_label`).
+- **Движки**: 10-й SYNTH (`eng_synth.c`: WAVE SAW/PULSE/PULSE12/SQUARE/TRI/SUPER/NOISE/SINE, CUTOFF RESO SWEEP DETUNE CRUSH SUSTAIN MOTION),
+  11-й PLUCK (LUTE HARP NYLON STEEL KOTO DULCIMER; BRIGHT DECAY POSITION BODY CRUSH). `DK_UENG 12` (свои пресеты, v1 8 / v2 10 движков
+  мигрируют). Новые TYPE в старых движках: AIRPAD +SUPER CHOIR DRONE ORGAN (+STRINGS), SOFTBASS +SQUARE SAW TRI SUBDRONE, DUSTKIT киты
+  707 DUSTY BRUSH CHIP SYNTH WAR, WINDS +SYNBRASS DUDUK.
+- **Счёт пресетов** [блок0, 8-16, SYNTHWAVE, CINEMATIC]: FELT 12/4/4/6, TINE 12/4/8/4, AIRPAD 12/0/8/12, GLASS 12/4/6/6, SOFTBASS 12/8/12/8,
+  DUSTKIT 12/8/8/8, WORLD 12/0/0/4, KALIMBA 12/0/0/0, WINDS 12/0/6/12, SYNTH 12/12/12/12, PLUCK 12/6/6/12. Итого 332
+  (132 / 42 / 70 / 88). FELT/TINE/GLASS в блоках 1–2 — через LOFI/хорус/эхо и параметры, не новые осцилляторы.
+- **SVF Chamberlin**: `dk_svf_f(hz)` выше ~7200 Гц неустойчив: срез ≤ 6000 Гц, `fk` ≤ 0.8 (SYNTH). Выходной одно-полюсник против
+  краёв пульса/шума (`lp`, `lpk`); PLUCK — `lq` после crush.
+- **Калибровка**: `tools/calibrate.py` (11 движков; старые 108 строк не трогает без `--all`; читает PCOUNT). `sound_check.py`: детектор
+  щелчков учитывает собственные края волны (90-й перцентиль огибающей) — щелчок размером с край пилы он не увидит.
+- **Тесты**: `tests/scenarios/blocks.dk` (переключение блоков, `expect blk`, `pcnt<E>.<B>`, снимки `blk_*.png`); host-геттеры
+  `blk`, `pcnt<engine>.<block>`; `tools/make_listen.py` — блоки и новые движки.

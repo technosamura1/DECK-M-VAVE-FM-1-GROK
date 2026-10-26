@@ -541,7 +541,12 @@ def build():
                                        f"держать {k('REC')} 1 с) кривые не трогает; держать {k('REC')} 2,5 с — стирает дорожку целиком, с кривыми. "
                                        "На SOUND и MIX удержание REC не стирает (там REC + ручка — это запись кривой)."),
         ("8", "Другой инструмент", f"{k('HOME')} + ручка PRESET — сменить сам инструмент дорожки: FELT, TINE, AIRPAD, "
-                                   "GLASS, SOFTBASS, KALIMBA, WINDS. У барабанов и природы — свои, не меняются.")
+                                   "GLASS, SOFTBASS, KALIMBA, WINDS, SYNTH, PLUCK. У барабанов и природы — свои, не меняются."),
+        ("9", "Блоки звуков", f"Пресеты разложены по четырём блокам: AMBIENT LOFI (как было), 8-16 BIT, SYNTHWAVE (там NIGHT DRIVE), "
+                              f"CINEMATIC. {k('HOME')} + {k('FX')} — следующий блок, {k('HOME')} + {k('SEL')} — предыдущий, место внутри "
+                              "блока то же. Название блока видно в окошке рядом с именем пресета. Белые 1–12 и ручка PRESET работают "
+                              "внутри блока (ручка проходит все блоки по кругу); блок, где у инструмента нет пресетов, пропускается. "
+                              "Номера старых пресетов и проектов не изменились.")
         ], B, CW), Spacer(1, 3 * mm),
                note("WINDS — флейты и медь", "FLUTE, PAN FLUTE, OCARINA, SHAKUHACHI, CLARINET, TRUMPET, MUTED (с сурдиной), "
                     "HORN, BRASS (секция), FLUGEL, MORNING, OLD BAND. BRIGHT — яркость, BREATH — воздух, VIBRATO "
@@ -621,7 +626,7 @@ def build():
     story.append(PageBreak())
 
     # ---- 13 sounds
-    story += section("13", "Звуки OVERWORLD", "Девять движков по 12 пресетов, 4 своих слота на каждый.")
+    story += section("13", "Звуки OVERWORLD", "Одиннадцать движков, четыре блока пресетов (всего 332), 4 своих слота на каждый.")
     eng = [["FELT", "пианино с войлоком — главный инструмент", "TONE · FELT · DECAY · KNOCK"],
            ["TINE", "лоу-фай электропиано с тремоло", "TINE · TREMOLO · DRIFT · BARK"],
            ["AIRPAD", "тёплые пады: SWEDEN, AIR, WARM, SHIMMER, STRINGS", "BRIGHT · SWELL · AIR · TYPE"],
@@ -630,9 +635,20 @@ def build():
            ["SOFTBASS", "мягкий бас: SUB, UPRIGHT, MOOG, с глайдом", "TONE · PLUCK · GLIDE · TYPE"],
            ["DUSTKIT", "лоу-фай барабаны", "TUNE · DECAY · DUST · KIT"],
            ["WORLD", "дождь, ветер, костёр, ручей, птицы, океан, гроза", "TYPE · AMOUNT · TONE"],
-           ["WINDS", "флейты, окарина, кларнет, труба, валторна, медь", "BRIGHT · BREATH · VIBRATO · TYPE"]]
+           ["WINDS", "флейты, окарина, кларнет, труба, валторна, медь; SYNBRASS, DUDUK", "BRIGHT · BREATH · VIBRATO · TYPE"],
+           ["SYNTH", "чип и synthwave: SAW PULSE SQUARE TRI SUPER NOISE SINE, фильтр, CRUSH", "WAVE · CUTOFF · RESO · SWEEP (+4 в MORE)"],
+           ["PLUCK", "щипковые: лютня, арфа, нейлон, сталь, кото, цимбалы", "TYPE · BRIGHT · DECAY · POSITION (+2 в MORE)"]]
     story.append(table(eng, [24, 86, CW - 110], head=["ДВИЖОК", "ЧТО ЭТО", "РУЧКИ K1–K4"], pad=3))
     story.append(Spacer(1, 4 * mm))
+    blk = [["AMBIENT LOFI", "132", "то, что было, плюс новые: SOFT SAW, DUST LEAD, DRONE-пады, лоу-фай пулс, пыльные ударные"],
+           ["8-16 BIT", "42", "меандр, пульс 12,5%, треугольник, шум; чип-арпеджио, GAME OVER, POWER-UP, SNES STRINGS, 707 и CHIP-ударные"],
+           ["SYNTHWAVE", "70", "NIGHT DRIVE, OUTRUN LEAD, SUNSET SAW, NEON PLUCK, MIAMI BRASS, DARK DRIVE, MIDNIGHT, неоновые колокола"],
+           ["CINEMATIC", "88", "низкие дроны, хор (CHOIR), рога (HORN, BRASS), струнные, лютня и арфа, боевые барабаны WAR как звук"]]
+    story.append(table(blk, [30, 14, CW - 44], head=["БЛОК", "ПРЕСЕТОВ", "ЧТО ВНУТРИ"], pad=3))
+    story.append(Spacer(1, 3 * mm))
+    story.append(Paragraph("Не у каждого инструмента есть все четыре блока: у KALIMBA новых нет, у WORLD четыре кинематографических, "
+                           "у AIRPAD и WINDS нет блока 8-16 BIT. FELT, TINE и GLASS попадают в 8-16 BIT и SYNTHWAVE через "
+                           "эффекты (LOFI, хорус, эхо) и настройки, а не через новые осцилляторы.", S_P))
     story.append(Paragraph("Дорожка KEYS листает 12 пресетов из трёх движков сразу: 4 электропиано (TINE), 4 колокольчика "
                            "(GLASS), 4 калимбы.", S_P))
     moods = [["PLAINS", "76", "мажор · C418", "луг, птицы"], ["RAIN", "72", "дорийский · LOFI", "дождь"],
@@ -657,7 +673,7 @@ def build():
 
     # ---- 15 cheat sheet
     story += section("15", "Шпаргалка", "Одна страница — всё под рукой.", Y)
-    cheat = [[k("HOME"), "сад · держать: SHIFT"], [k("HOME") + " + белая", "пресет (13–16 — свои)"],
+    cheat = [[k("HOME"), "сад · держать: SHIFT"], [k("HOME") + " + белая", "пресет (13–16 — свои)"], [k("HOME") + " + " + k("FX") + " / " + k("SEL"), "блок пресетов: следующий / предыдущий"],
              [k("HOME") + " + чёрная 1–6", "дорожка"], [k("HOME") + " + чёрная 7–11", "клип: копир. · вставить · удвоить · вариация · гуманизация"],
              [k("SEL"), "ATMO: слои атмосферы, пыль, лента · ещё раз: ряд"],
              [k("SEQ") + " + чёрная 1 / 2", "COOK (чуть иначе в ладу) / RANDOM"], [k("SEQ") + " + OCT− / OCT+", "шаг назад / вперёд (UNDO / REDO)"],
