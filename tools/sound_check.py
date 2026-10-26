@@ -73,10 +73,14 @@ def check(path):
         blocks = d2[: nb * win].reshape(nb, win)
         bmax = blocks.max(axis=1)
         bmed = np.median(blocks, axis=1)
+        # a wave with edges of its own (a saw's wrap, a pulse's flank) has one in every few blocks: a click has to stand
+        # out from those too (against the 90th percentile of the blocks' own largest steps)
+        live = bmax[bmax > 0.005]
+        edge = float(np.percentile(live, 90)) if len(live) > 10 else 0.0
         for i in range(2, nb - 2):
             ctx = np.concatenate([blocks[i - 2], blocks[i - 1], blocks[i + 1], blocks[i + 2]])
             ref = np.percentile(ctx, 95) + 1e-9
-            if bmax[i] > 0.03 and bmax[i] > 12 * ref and bmax[i] > 20 * (bmed[i] + 1e-9):
+            if bmax[i] > 0.03 and bmax[i] > 12 * ref and bmax[i] > 20 * (bmed[i] + 1e-9) and bmax[i] > 2.5 * edge:
                 clicks += 1
                 where.append(round(i * win / SR, 3))
     r["clicks"] = clicks

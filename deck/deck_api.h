@@ -34,6 +34,8 @@
 #define DK_NSLOT 16
 #define DK_NP 8                         /* engine parameters (the first three on the ENGINE tab) */
 #define DK_NVOICE 24                    /* the voices' pool, shared by the tracks */
+#define DK_NBLK 4                       /* a tape's preset blocks (an engine has up to DK_NFACT presets in each) */
+#define DK_PBASE 16                     /* the preset id of block 1's first: 0..11 block 0, 12..15 the user's, then 12 a block */
 #define DK_VSTATE 76                    /* an engine's voice state, floats */
 #define DK_BLK 128
 #define DK_FXBUF 1024                   /* a track effect's delay line, 16-bit samples */
@@ -306,6 +308,9 @@ typedef struct {
     uint8_t keys_role;                  /* the role whose track browses keys_set (R_ARP: "KEYS") */
     const struct dk_atmo_s *atmo;       /* ATMO: up to six layers of the place's sound, under the music, or 0 */
     uint8_t natmo;
+    const dk_preset_t *presets2;        /* the blocks 1..DK_NBLK-1: the engines' blocks 1.. one after the other, as many as pcount says (no padding) */
+    const uint8_t *pcount;              /* presets in a block: DK_NBLK an engine (block 0: its DK_NFACT, or fewer) */
+    const char *const *block_name;      /* DK_NBLK names: AMBIENT LOFI, 8-16 BIT, SYNTHWAVE, CINEMATIC */
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 

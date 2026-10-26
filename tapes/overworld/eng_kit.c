@@ -15,13 +15,14 @@ typedef struct {
     float at, atm, an, anm;
     float lo, bp, sf, sq;
     float tone_l, tone2_l, noise_l, metal_l, sqr_l, filt, kind, rise, held;
+    float wave, nrate, nc, nv;                             /* a chip's: the tone's shape, the noise held (1 bit) */
 } drum_v;
 CHECK_SIZE(drum_v);
 
-static const char *const KIT_NAMES[] = {"707", "DUSTY", "BRUSH"};
+static const char *const KIT_NAMES[] = {"707", "DUSTY", "BRUSH", "CHIP", "SYNTH", "WAR"};
 static const dk_param_t KIT_P[] = {
     {"TUNE", 0, 100, 50, VZ_BAR, 0}, {"DECAY", 0, 100, 50, VZ_ENV, 0}, {"DUST", 0, 100, 45, VZ_DUST, 0},
-    {"KIT", 0, 2, 1, VZ_TYPE, KIT_NAMES},
+    {"KIT", 0, 5, 1, VZ_TYPE, KIT_NAMES},
 };
 static const char *const KIT_LANE[8] = {"KICK", "SNARE", "RIM", "SHAKER", "HAT", "OPEN", "CLAP", "WOOD"};
 static const uint8_t KIT_NOTE[8] = {36, 38, 37, 70, 42, 46, 39, 76};
@@ -61,6 +62,7 @@ static void drum_on(float *st, int note, float vel, const float *p, int retrig)
     d->sq = 1.0f;
     d->held = 1.0f;
     d->rise = 1.0f;
+    d->wave = d->nrate = 0.0f;
     switch (k) {
     case D_BD1:
     case D_BD2:
@@ -207,8 +209,113 @@ static void drum_on(float *st, int note, float vel, const float *p, int retrig)
             d->noise_l = 0.08f;
         } else if (k != D_SHAKER && k != D_WOOD)
             d->noise_l *= 0.4f;
+    } else if (kit == 3) {                                 /* CHIP: a triangle kick, 1-bit noise snare and hats, pulse blocks */
+        d->wave = 1.0f;
+        d->metal_l = 0.0f;
+        if (k == D_BD1 || k == D_BD2) {
+            d->wave = 2.0f;
+            d->f = (k == D_BD1 ? 135.0f : 105.0f) * sr1 * tune;
+            d->fend = 46.0f * sr1 * tune;
+            d->fmul = dk_decay(0.022f);
+            d->atm = dk_decay((k == D_BD1 ? 0.16f : 0.24f) * dec);
+            d->noise_l = 0.22f;
+            d->nrate = 0.3f;
+        } else if (k == D_SD1 || k == D_SD2 || k == D_CLAP) {
+            d->tone_l = k == D_CLAP ? 0.0f : 0.2f;
+            d->tone2_l = 0.0f;
+            d->inc2 = 0.0f;
+            d->noise_l = 1.0f;
+            d->nrate = k == D_SD1 ? 0.42f : 0.24f;
+            d->atm = dk_decay(0.03f * dec);
+            d->anm = dk_decay((k == D_CLAP ? 0.16f : k == D_SD1 ? 0.12f : 0.17f) * dec);
+            d->filt = 0.0f;
+            d->sf = dk_svf_f(4200.0f);
+            d->sq = 0.9f;
+        } else if (k == D_CH || k == D_OH || k == D_CRASH || k == D_RIDE || k == D_TAMB || k == D_SHAKER) {
+            d->noise_l = 0.42f;
+            d->nrate = k == D_CH ? 0.9f : k == D_SHAKER ? 0.6f : 0.7f;
+            d->filt = 1.0f;
+            d->sf = dk_svf_f(6000.0f);
+            d->anm = dk_decay((k == D_CH ? 0.035f : k == D_OH ? 0.22f : k == D_CRASH ? 0.7f : k == D_RIDE ? 0.5f : 0.1f) * dec);
+        } else if (k == D_LT || k == D_MT || k == D_HT) {
+            d->wave = 2.0f;
+            d->noise_l = 0.0f;
+            d->fmul = dk_decay(0.05f);
+            d->atm = dk_decay((k == D_LT ? 0.22f : k == D_MT ? 0.18f : 0.15f) * dec);
+        }
+    } else if (kit == 4) {                                /* SYNTH: the electro kit: a longer kick, zapped toms, gated snares */
+        if (k == D_BD1 || k == D_BD2) {
+            d->f = (k == D_BD1 ? 190.0f : 150.0f) * sr1 * tune;
+            d->fend = 46.0f * sr1 * tune;
+            d->fmul = dk_decay(0.05f);
+            d->atm = dk_decay((k == D_BD1 ? 0.34f : 0.5f) * dec);
+            d->noise_l = 0.45f;
+        } else if (k == D_SD1 || k == D_SD2) {
+            d->tone_l = 0.62f;
+            d->tone2_l = 0.30f;
+            d->atm = dk_decay(0.12f * dec);
+            d->anm = dk_decay((k == D_SD1 ? 0.24f : 0.32f) * dec);
+            d->noise_l *= 1.15f;
+            d->sf = dk_svf_f(k == D_SD1 ? 3600.0f : 2600.0f);
+        } else if (k == D_LT || k == D_MT || k == D_HT) {
+            float base = (k == D_LT ? 92.0f : k == D_MT ? 128.0f : 172.0f) * sr1 * tune;
+            d->f = base * 3.2f;
+            d->fend = base;
+            d->fmul = dk_decay(0.2f);
+            d->atm = dk_decay((k == D_LT ? 0.44f : k == D_MT ? 0.36f : 0.3f) * dec);
+        } else if (k == D_CLAP) {
+            d->noise_l = 1.25f;
+            d->sf = dk_svf_f(1600.0f);
+        } else if (k == D_CH || k == D_OH) {
+            d->noise_l = 0.5f;
+            d->metal_l = 0.22f;
+            d->sf = dk_svf_f(6400.0f);
+        }
+    } else if (kit == 5) {                                 /* WAR: the big skins, the low hits, a dark anvil for the metal */
+        if (k == D_BD1 || k == D_BD2) {
+            d->f = (k == D_BD1 ? 98.0f : 80.0f) * sr1 * tune;
+            d->fend = (k == D_BD1 ? 36.0f : 31.0f) * sr1 * tune;
+            d->fmul = dk_decay(0.07f);
+            d->atm = dk_decay((k == D_BD1 ? 0.8f : 1.1f) * dec);
+            d->noise_l = 0.4f;
+            d->sf = dk_svf_f(650.0f);
+        } else if (k == D_SD1 || k == D_SD2 || k == D_CLAP) {
+            d->f = d->fend = (k == D_SD1 ? 120.0f : k == D_SD2 ? 150.0f : 90.0f) * sr1 * tune;
+            d->inc2 = 0.0f;
+            d->tone_l = k == D_CLAP ? 0.35f : 0.6f;
+            d->tone2_l = 0.0f;
+            d->at = 1.0f;
+            d->atm = dk_decay(0.38f * dec);
+            d->noise_l = 0.6f;
+            d->filt = 0.0f;
+            d->sf = dk_svf_f(560.0f);
+            d->sq = 0.9f;
+            d->anm = dk_decay(0.32f * dec);
+        } else if (k == D_LT || k == D_MT || k == D_HT) {
+            float base = (k == D_LT ? 62.0f : k == D_MT ? 80.0f : 104.0f) * sr1 * tune;
+            d->f = base * 1.4f;
+            d->fend = base;
+            d->fmul = dk_decay(0.12f);
+            d->atm = dk_decay((k == D_LT ? 0.9f : k == D_MT ? 0.75f : 0.6f) * dec);
+            d->noise_l = 0.35f;
+            d->sf = dk_svf_f(500.0f);
+        } else if (k == D_CH || k == D_OH || k == D_CRASH || k == D_RIDE || k == D_TAMB) {
+            for (j = 0; j < 6; j++)
+                d->minc[j] = (uint32_t)((float)d->minc[j] * 0.42f);
+            d->noise_l *= 0.35f;
+            d->filt = 0.0f;
+            d->sf = dk_svf_f(2600.0f);
+            d->sq = 0.6f;
+            d->anm = dk_decay((k == D_CH ? 0.2f : k == D_OH ? 0.9f : k == D_CRASH ? 2.2f : k == D_RIDE ? 1.6f : 0.5f) * dec);
+        } else if (k == D_WOOD || k == D_RIM) {
+            d->f *= 0.55f;
+            d->fend *= 0.55f;
+            d->inc2 *= 0.55f;
+        }
     }
     d->ph = d->ph2 = d->lo = d->bp = 0.0f;
+    d->nc = 1.0f;
+    d->nv = 1.0f;
 }
 static void drum_off(float *st, const float *p)       /* a hit again, or a hat choked: it dies at once */
 {
@@ -233,18 +340,28 @@ static int drum_render(float *st, float *l, float *r, int n, const float *p)
         if (d->at > 1e-4f) {
             d->f = d->fend + (d->f - d->fend) * d->fmul;
             d->ph = dk_wrap1(d->ph + d->f);
-            x = dk_sinx(d->ph) * d->tone_l;
+            x = (d->wave == 0.0f ? dk_sinx(d->ph) : d->wave == 1.0f ? (d->ph < 0.5f ? 0.7f : -0.7f) :
+                 d->ph < 0.5f ? 4.0f * d->ph - 1.0f : 3.0f - 4.0f * d->ph) * d->tone_l;
             if (d->inc2 > 0.0f) {
                 d->ph2 = dk_wrap1(d->ph2 + d->inc2);
-                x += dk_sinx(d->ph2) * d->tone2_l;
+                x += (d->wave == 1.0f ? (d->ph2 < 0.5f ? 0.7f : -0.7f) : dk_sinx(d->ph2)) * d->tone2_l;
             }
             x *= d->at;
             d->at *= d->atm;
         }
         if (d->an > 1e-4f) {
             float s = 0.0f;
-            if (d->noise_l > 0.0f)
-                s = wnoise() * d->noise_l;
+            if (d->noise_l > 0.0f) {
+                if (d->nrate > 0.0f) {                     /* a chip's noise: one bit, held (a lower pitch for a lower rate) */
+                    d->nc += d->nrate;
+                    if (d->nc >= 1.0f) {
+                        d->nc -= 1.0f;
+                        d->nv = wnoise() > 0.0f ? 0.8f : -0.8f;
+                    }
+                    s = d->nv * d->noise_l;
+                } else
+                    s = wnoise() * d->noise_l;
+            }
             if (d->metal_l > 0.0f) {
                 int m;
                 float mm = 0.0f;
@@ -298,7 +415,13 @@ static float drum_level(const float *st)
 static void kit_bus(float *bs, float *l, float *r, int n, const float *p)
 {
     float g = p[2] * 0.01f, step = 1.0f / (1.0f + g * 1.8f), q = fm_exp2f(11.0f - g * 4.0f), iq = 1.0f / q,
-          k = dk_lpk(fm_maxf(1800.0f, 13000.0f * fm_exp2f(-3.0f * g) * ((int)p[3] == 1 ? 0.6f : 1.0f)));
+          k = dk_lpk(fm_maxf(1800.0f, 13000.0f * fm_exp2f(-3.0f * g) * ((int)p[3] == 1 ? 0.6f : (int)p[3] == 5 ? 0.7f : 1.0f)));
+    if ((int)p[3] == 3) {                                  /* CHIP: a coarser grain (about 6 bits), no worn top */
+        q = fm_exp2f(7.0f - g * 2.0f);
+        iq = 1.0f / q;
+        step = 1.0f / (1.0f + g * 0.8f);
+        k = dk_lpk(8500.0f);
+    }
     int j;
     for (j = 0; j < n; j++) {
         float a = l[j], b = r[j];

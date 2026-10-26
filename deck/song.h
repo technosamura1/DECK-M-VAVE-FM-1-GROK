@@ -11,8 +11,9 @@ typedef struct {
     uint8_t mt[3];
     int8_t ma[3];
 } dk_upreset_t;
-#define DK_UENG 10                       /* the engines with user presets (a tape has up to ten) */
-#define DK_UENG_V1 8                     /* the store's old size: eight */
+#define DK_UENG 12                       /* the engines with user presets (a tape has up to twelve) */
+#define DK_UENG_V1 8                     /* the store's old sizes: eight, then ten engines */
+#define DK_UENG_V2 10
 typedef struct {
     uint32_t magic;
     dk_upreset_t p[DK_UENG][4];
@@ -70,6 +71,9 @@ void takes_forget(void);
 extern uint8_t song_layers_full;         /* the table of frozen sounds was full (the UI says it once) */
 void rec_reset(void);
 const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp);
+int preset_block(int id);                   /* 0..DK_NBLK-1; the user's: -1 */
+int preset_id(int blk, int i);
+int preset_count(int eng, int blk);
 void track_preset(int t, int slot);
 void song_template(int tp);
 void song_mood(int m);

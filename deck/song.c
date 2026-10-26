@@ -1032,10 +1032,39 @@ void clip_random(int clip, uint32_t seed, const dk_engine_t *e)
 }
 
 /* ------------------------------------------------------------- the tracks --- */
+/* the preset ids: 0..11 block 0, 12..15 the user's, 16.. blocks 1..3 (twelve each) */
+int preset_block(int id)                 /* the block an id is in; the user's: -1 */
+{
+    return id < DK_NFACT ? 0 : id < DK_PBASE ? -1 : 1 + (id - DK_PBASE) / DK_NFACT;
+}
+int preset_id(int blk, int i)            /* the id of a place in a block */
+{
+    return blk <= 0 ? i : DK_PBASE + (blk - 1) * DK_NFACT + i;
+}
+int preset_count(int eng, int blk)       /* the presets of an engine in a block (0: none, it cannot) */
+{
+    if (blk < 0 || blk >= DK_NBLK || eng < 0 || eng >= TAPE.neng)
+        return 0;
+    return TAPE.pcount ? TAPE.pcount[eng * DK_NBLK + blk] : (blk ? 0 : DK_NFACT);
+}
 const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp)
 {
+    if (eng < 0 || eng >= TAPE.neng)
+        eng = 0;
     if (slot < DK_NFACT)
         return &TAPE.presets[eng * DK_NFACT + slot];
+    if (slot >= DK_PBASE) {              /* a block's: a stale id (a place that is empty) is the engine's first */
+        int b = preset_block(slot), i = (slot - DK_PBASE) % DK_NFACT;
+        if (b >= DK_NBLK || i >= preset_count(eng, b) || !TAPE.presets2)
+            return &TAPE.presets[eng * DK_NFACT];
+        {
+            int e, bb, off = 0;                  /* the table has no padding: the places before it are the counts' sum */
+            for (e = 0; e <= eng; e++)
+                for (bb = 1; bb < DK_NBLK && (e < eng || bb < b); bb++)
+                    off += TAPE.pcount[e * DK_NBLK + bb];
+            return &TAPE.presets2[off + i];
+        }
+    }
     {
         const dk_upreset_t *u = &dk_user.p[eng % DK_UENG][(slot - DK_NFACT) & 3];
         int i;

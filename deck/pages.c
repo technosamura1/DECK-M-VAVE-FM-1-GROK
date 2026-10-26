@@ -728,7 +728,7 @@ static void draw_sound(void)                /* SOUND: the source on the left, th
             hline(x, 39, text_w(&FONT_XS, TAB[i]), TH_TEXT);
         x += text_w(&FONT_XS, TAB[i]) + 7;
     }
-    module(e->name, 0);                      /* the engine's name, as if printed on it; the window */
+    module(e->name, blk_label());            /* the engine's name, as if printed on it (and the preset's block); the window */
     text_box(14, wy + 2, 212, 1, &FONT_B, &FONT_XS, preset_of(k->eng, k->preset, &tmp)->name, TH_TEXT);
     if (tab < 4) {
         int f = page_field(ui.touched >= 0 && ui.touched < 4 ? ui.touched : 0, 0), lo, hi, v, j, nm = 0;

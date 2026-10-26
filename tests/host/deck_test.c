@@ -205,24 +205,31 @@ static void play_kit(int t)
             run(s16);
         }
 }
-static void sounds(const char *dir)
+static void sounds(const char *dir, const char *only)
 {
     int e, p;
     char fn[512], cmd[600];
     for (e = 0; e < TAPE.neng; e++) {
         const dk_engine_t *eng = TAPE.eng[e];
+        if (only && strcmp(only, eng->name))
+            continue;
         MKDIR(dir);
         sprintf(cmd, "%s/%s", dir, eng->name);
         MKDIR(cmd);
-        for (p = 0; p < DK_NFACT; p++) {
-            const dk_preset_t *pr = &TAPE.presets[e * DK_NFACT + p];
+        for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+            const dk_preset_t *pr;
+            dk_preset_t tmp;
+            int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT);
             char nm[40];
+            if (p % DK_NFACT >= preset_count(e, blk))
+                continue;
+            pr = preset_of(e, id, &tmp);
             int i, t = 2;
             fresh();
             dk_lock();
             dk_song.tempo = 84;
             dk_song.dust = 0;
-            dk_track_setup(t, e, p, SQ_LIVE, eng->role);
+            dk_track_setup(t, e, id, SQ_LIVE, eng->role);
             dk_song.trk[t].vol = 80;
             dk_song.trk[t].pan = 0;
             dk_unlock();
@@ -244,7 +251,7 @@ static void sounds(const char *dir)
             for (i = 0; pr->name[i] && i < 30; i++)
                 nm[i] = pr->name[i] == ' ' ? '_' : pr->name[i];
             nm[i] = 0;
-            sprintf(fn, "%s/%s/%02d_%s.wav", dir, eng->name, p + 1, nm);
+            sprintf(fn, "%s/%s/b%d_%02d_%s.wav", dir, eng->name, blk, p % DK_NFACT + 1, nm);
             wav(fn);
             sprintf(cmd, "%s %s", eng->name, pr->name);
             report(cmd);
@@ -777,7 +784,7 @@ int main(int argc, char **argv)
     const char *m = argc > 1 ? argv[1] : "sounds";
     dk_init();
     if (!strcmp(m, "sounds"))
-        sounds(argc > 2 ? argv[2] : "out/sounds");
+        sounds(argc > 2 ? argv[2] : "out/sounds", argc > 3 ? argv[3] : 0);
     else if (!strcmp(m, "demo"))
         demo(argc > 2 ? argv[2] : "out/demo.wav");
     else if (!strcmp(m, "drive") && argc > 4) {

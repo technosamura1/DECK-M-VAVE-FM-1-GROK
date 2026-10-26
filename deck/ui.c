@@ -109,6 +109,7 @@ static void mark_dirty(void)
 
 static int held(int b) { return (int)(ui.btn >> b & 1u); }
 
+static const char *blk_label(void);   /* the block the track's preset is in (0: the engine has one only) */
 #include "pages.c"
 
 /* ------------------------------------------------------------------ actions --- */
@@ -143,10 +144,11 @@ static void track_select(int t)
 }
 
 /* the KEYS track (TAPE.keys_set): its twelve presets are on three engines */
+static int cur_blk(void);
 static int keys_group(void)              /* (the track on one of the set's engines: another one, say WINDS, its own) */
 {
     int i;
-    if (!TAPE.keys_set || (cur()->role != TAPE.keys_role && cur()->role != R_BELL))
+    if (!TAPE.keys_set || (cur()->role != TAPE.keys_role && cur()->role != R_BELL) || cur_blk() > 0)
         return 0;
     for (i = 0; i < DK_NFACT; i++)
         if (TAPE.keys_set[i][0] == cur()->eng)
@@ -161,18 +163,86 @@ static int keys_group_at(void)           /* where the track is in it, -1 off it 
             return i;
     return -1;
 }
-static void preset_select(int slot)
+/* the preset BLOCKS (AMBIENT LOFI, 8-16 BIT, SYNTHWAVE, CINEMATIC): twelve presets an engine in each, HOME + FX / SEL
+ * steps along them; a block an engine cannot do (it has no presets there) is skipped */
+static uint8_t blk_seen[DK_NTRACK];      /* the block a track's user preset was last in (a user one has none of its own) */
+static int blk_of_track(int t)
+{
+    int b = preset_block(dk_song.trk[t].preset);
+    return b >= 0 && b < DK_NBLK ? b : blk_seen[t] % DK_NBLK;
+}
+static int cur_blk(void) { return blk_of_track(dk_song.cur_track); }
+static const char *blk_name(int b) { return TAPE.block_name ? TAPE.block_name[b % DK_NBLK] : ""; }
+static int is_factory(int id) { return id < DK_NFACT || id >= DK_PBASE; }
+static const char *blk_label(void)
+{
+    int i, multi = 0, e = cur()->eng;
+    for (i = 0; i < DK_NBLK; i++)
+        multi += preset_count(e, i) > 0;
+    return multi > 1 ? blk_name(cur_blk()) : 0;
+}
+static void say_preset(int slot)
 {
     dk_preset_t tmp;
+    char sub[24];
+    int b = preset_block(slot), i = 0, multi = 0, e = cur()->eng;
+    const char *n;
+    for (i = 0; i < DK_NBLK; i++)
+        multi += preset_count(e, i) > 0;
+    n = b < 0 ? "USER" : multi > 1 ? blk_name(b) : cur_eng()->name;
+    for (i = 0; i < 22 && n[i]; i++)
+        sub[i] = n[i];
+    sub[i] = 0;
+    say(preset_of(e, slot, &tmp)->name, sub);
+}
+static void preset_apply(int slot)       /* (the take being recorded has been frozen with the old sound) */
+{
+    track_preset(dk_song.cur_track, slot);
+    if (preset_block(slot) >= 0)
+        blk_seen[dk_song.cur_track] = (uint8_t)preset_block(slot);
+    mark_dirty();
+    say_preset(slot);
+}
+static void preset_select_id(int slot)
+{
     track_sound_to(dk_song.cur_track);
+    preset_apply(slot);
+}
+static void preset_select(int slot)      /* a white key 0..15: 0..11 the block's place, 12..15 the user's */
+{
     if (slot < DK_NFACT && keys_group()) {
         keys_all_up();
+        track_sound_to(dk_song.cur_track);
         cur()->eng = TAPE.keys_set[slot][0];
-        slot = TAPE.keys_set[slot][1];
+        preset_apply(TAPE.keys_set[slot][1]);
+        return;
+    } else if (slot < DK_NFACT) {
+        int b = cur_blk();
+        if (slot >= preset_count(cur()->eng, b)) {
+            say(blk_name(b), "NO PRESET HERE");
+            return;
+        }
+        slot = preset_id(b, slot);
     }
-    track_preset(dk_song.cur_track, slot);
-    mark_dirty();
-    say(preset_of(cur()->eng, slot, &tmp)->name, slot >= DK_NFACT ? "USER" : cur_eng()->name);
+    preset_select_id(slot);
+}
+static void block_step(int d)            /* HOME + FX / SEL: the next / previous block, the same place in it */
+{
+    int e = cur()->eng, b = cur_blk(), p = cur()->preset, i, n, nb = b;
+    i = preset_block(p) >= 0 ? (p < DK_NFACT ? p : (p - DK_PBASE) % DK_NFACT) : 0;
+    for (n = 0; n < DK_NBLK; n++) {
+        nb = (nb + d + DK_NBLK) % DK_NBLK;
+        if (preset_count(e, nb) > 0)
+            break;
+    }
+    if (nb == b || preset_count(e, nb) <= 0) {
+        say(cur_eng()->name, "ONE BLOCK ONLY");
+        return;
+    }
+    keys_all_up();
+    if (i >= preset_count(e, nb))
+        i = preset_count(e, nb) - 1;
+    preset_select_id(preset_id(nb, i));
 }
 
 /* ARP -> SEQ: the arpeggio of the notes held (or latched, or the song's chord) as notes in the clip, the length of
@@ -266,20 +336,48 @@ static void arp_bake(void)
     say("ARP -> STEP", "COPIED");
 }
 
-static void preset_step(int d)          /* PRESET: the next one (the user's only where saved) */
+/* PRESET: along the engine's presets, the blocks one after the other, then the user's saved ones */
+static int pseq_len(int e)
 {
-    int s = cur()->preset, n;
+    int b, n = 0;
+    for (b = 0; b < DK_NBLK; b++)
+        n += preset_count(e, b);
+    return n;
+}
+static int pseq_id(int e, int k)         /* the k'th of the presets */
+{
+    int b, c;
+    for (b = 0; b < DK_NBLK; b++) {
+        c = preset_count(e, b);
+        if (k < c)
+            return preset_id(b, k);
+        k -= c;
+    }
+    return DK_NFACT + k;                 /* past them: a user slot */
+}
+static void preset_step(int d)
+{
+    int e = cur()->eng, s = cur()->preset, n, len = pseq_len(e), k = 0, tot = len + 4, i;
     if (keys_group()) {                  /* KEYS: along its twelve */
         int g = keys_group_at();
         preset_select(((g < 0 ? 0 : g) + d + DK_NFACT) % DK_NFACT);
         return;
     }
-    for (n = 0; n < DK_NFACT + 4; n++) {
-        s = (s + d + DK_NFACT + 4) % (DK_NFACT + 4);
-        if (s < DK_NFACT || dk_user.p[cur()->eng % DK_UENG][(s - DK_NFACT) & 3].used)
+    if (preset_block(s) < 0)
+        k = len + (s - DK_NFACT) % 4;
+    else
+        for (i = 0; i < len; i++)
+            if (pseq_id(e, i) == s) {
+                k = i;
+                break;
+            }
+    for (n = 0; n < tot; n++) {
+        k = (k + d + tot) % tot;
+        s = pseq_id(e, k);
+        if (preset_block(s) >= 0 || dk_user.p[e % DK_UENG][(s - DK_NFACT) & 3].used)
             break;
     }
-    preset_select(s);
+    preset_select_id(s);
 }
 
 /* HOME + PRESET: a melodic track onto the next melodic engine (FELT TINE AIRPAD GLASS SOFTBASS KALIMBA WINDS), its
@@ -317,7 +415,7 @@ static void preset_save(int slot)        /* SAVE held + white 13..16 */
     char s[16] = "SAVED TO 13";
     for (i = 0; i < 11 && from->name[i]; i++)
         u->name[i] = from->name[i];
-    if (k->preset < DK_NFACT && i < 9) {   /* a copy of a factory one: its name and a star */
+    if (is_factory(k->preset) && i < 9) {   /* a copy of a factory one: its name and a star */
         u->name[i++] = '*';
     }
     u->name[i] = 0;
@@ -337,6 +435,7 @@ static void preset_save(int slot)        /* SAVE held + white 13..16 */
     u->echo = k->echo;
     u->trim = k->trim;
     user_save();
+    blk_seen[dk_song.cur_track] = (uint8_t)cur_blk();
     cur()->preset = (uint8_t)(DK_NFACT + (slot & 3));
     s[10] = (char)('3' + (slot & 3));
     say(s, u->name);
@@ -615,6 +714,8 @@ static void action(int a, int b)
 {
     switch (a) {
     case A_PAGE_SOUND: page_go(PG_SOUND); break;
+    case A_BLOCK_NEXT: block_step(1); break;
+    case A_BLOCK_PREV: block_step(-1); break;
     case A_PAGE_SEQ:
         if (ui.page == PG_ARP && dk_arp_on(cur())) {   /* on the ARP's page: what it plays, written into SEQ's grid */
             arp_bake();

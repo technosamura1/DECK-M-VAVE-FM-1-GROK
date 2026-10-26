@@ -336,18 +336,19 @@ void user_save(void)
 }
 static void user_load(void)
 {
-    int n = plat_store_load(OBJ_USER, &dk_user, sizeof dk_user), old = (int)(sizeof dk_user.magic +
-                                                                               DK_UENG_V1 * sizeof dk_user.p[0]);
-    if ((n != (int)sizeof dk_user && n != old) || dk_user.magic != USER_MAGIC) {
+    uint32_t per = (uint32_t)sizeof dk_user.p[0], v1 = (uint32_t)sizeof dk_user.magic + DK_UENG_V1 * per,
+             v2 = (uint32_t)sizeof dk_user.magic + DK_UENG_V2 * per;
+    int n = plat_store_load(OBJ_USER, &dk_user, sizeof dk_user);
+    if ((n != (int)sizeof dk_user && n != (int)v1 && n != (int)v2) || dk_user.magic != USER_MAGIC) {
         uint8_t *b = (uint8_t *)&dk_user;
         uint32_t i;
         for (i = 0; i < sizeof dk_user; i++)
             b[i] = 0;
         dk_user.magic = USER_MAGIC;
-    } else if (n == old) {                       /* saved with eight engines: the new ones' places empty */
+    } else if (n != (int)sizeof dk_user) {       /* saved with eight or ten engines: the new ones' places empty */
         uint8_t *b = (uint8_t *)&dk_user;
         uint32_t i;
-        for (i = (uint32_t)old; i < sizeof dk_user; i++)
+        for (i = (uint32_t)n; i < sizeof dk_user; i++)
             b[i] = 0;
     }
 }

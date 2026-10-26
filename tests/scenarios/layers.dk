@@ -42,7 +42,7 @@ press HOME
 turn PRESET -1
 release HOME
 wait 100
-expect eng 8
+expect eng 10
 expect evsnd 1
 expect nfrozen 4
 expect sndeng 0

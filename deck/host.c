@@ -178,6 +178,13 @@ int app_expect(const char *what, int *got)
     else if (!strncmp(what, "fbank", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.fbank[what[5] - '0'];   /* the song's byte, raw */
     else if (!strcmp(what, "preset")) g = cur()->preset;
     else if (!strcmp(what, "eng")) g = cur()->eng;
+    else if (!strcmp(what, "blk")) g = cur_blk();                     /* the preset block of the track */
+    else if (!strncmp(what, "pcnt", 4)) {                              /* "pcnt<engine>.<block>": the presets there */
+        const char *d = what + 4;
+        while (*d && *d != '.')
+            d++;
+        g = preset_count(atoi(what + 4), *d ? atoi(d + 1) : 0);
+    }
     else if (!strcmp(what, "mute")) g = cur()->mute;
     else if (!strcmp(what, "proj")) g = set.proj;
     else if (!strcmp(what, "bars")) g = dk_song.part[dk_song.cur_part & 7].bars;   /* the part's */
@@ -208,8 +215,10 @@ static void host_textaudit(void)
         keep[t] = dk_song.trk[t];
     ui.fit_over = 0;
     for (e = 0; e < TAPE.neng; e++)          /* every engine's every preset on the SOUND page, every tab */
-        for (pr = 0; pr < DK_NFACT; pr++) {
-            dk_track_setup(dk_song.cur_track, e, pr, SQ_LIVE, TAPE.eng[e]->role);
+        for (pr = 0; pr < DK_NBLK * DK_NFACT; pr++) {
+            if ((pr % DK_NFACT) >= preset_count(e, pr / DK_NFACT))
+                continue;
+            dk_track_setup(dk_song.cur_track, e, preset_id(pr / DK_NFACT, pr % DK_NFACT), SQ_LIVE, TAPE.eng[e]->role);
             ui.page = PG_SOUND;
             for (tab = 0; tab < 5; tab++) {
                 ui.row[PG_SOUND] = (uint8_t)tab;
