@@ -10,12 +10,19 @@ static inline void fxbuf_put(dk_fxst_t *s, float x)
 }
 static inline float fxbuf_get(const dk_fxst_t *s, float d)   /* d samples back (fractional) */
 {
-    float rp = (float)(s->w - 1u) - d, fr;
-    int i0;
-    uint32_t a, b;
-    i0 = (int)fm_floorf(rp);
-    fr = rp - (float)i0;
-    a = (uint32_t)i0 & (DK_FXBUF - 1);
+    /* the whole samples in integers: a float holds 24 bits, and the write position runs on (a few minutes of sound)
+     * past them: its steps grew to two, four samples, and a swaying delay turned to a staircase */
+    uint32_t di, a, b;
+    float fr;
+    d = d < 0.0f ? 0.0f : d;
+    di = (uint32_t)d;
+    fr = d - (float)di;
+    a = s->w - 1u - di;                 /* the newest sample is s->w - 1; its fraction lies between a and a + 1 */
+    if (fr > 0.0f) {
+        a -= 1u;
+        fr = 1.0f - fr;
+    }
+    a &= (DK_FXBUF - 1);
     b = (a + 1u) & (DK_FXBUF - 1);
     return ((float)s->buf[a] + ((float)s->buf[b] - (float)s->buf[a]) * fr) * (1.0f / 32768.0f);
 }

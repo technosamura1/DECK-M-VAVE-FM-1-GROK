@@ -211,7 +211,7 @@ static void sounds(const char *dir, const char *only)
     char fn[512], cmd[600];
     for (e = 0; e < TAPE.neng; e++) {
         const dk_engine_t *eng = TAPE.eng[e];
-        if (only && strcmp(only, eng->name))
+        if (only && !strstr(only, eng->name))
             continue;
         MKDIR(dir);
         sprintf(cmd, "%s/%s", dir, eng->name);
@@ -253,6 +253,19 @@ static void sounds(const char *dir, const char *only)
             nm[i] = 0;
             sprintf(fn, "%s/%s/b%d_%02d_%s.wav", dir, eng->name, blk, p % DK_NFACT + 1, nm);
             wav(fn);
+            {   /* what each file is made of, for tools/dup_check.py: the engine's parameters, envelope, effects (not the name, not the level trim) */
+                FILE *tf;
+                sprintf(cmd, "%s/presets.tsv", dir);
+                tf = fopen(cmd, "a");
+                if (tf) {
+                    fprintf(tf, "%s\t%s\t%d\t%s\t", eng->name, fn + strlen(dir) + 1, id, pr->name);
+                    for (i = 0; i < DK_NP; i++)
+                        fprintf(tf, "%d,", pr->p[i]);
+                    fprintf(tf, "|%d,%d,%d|%d,%d,%d,%d|%d,%d|%d:%d,%d:%d,%d:%d|%d\n", pr->env[0], pr->env[1], pr->env[2], pr->fx, pr->fxamt,
+                            pr->fxa, pr->fxb, pr->rev, pr->echo, pr->mt[0], pr->ma[0], pr->mt[1], pr->ma[1], pr->mt[2], pr->ma[2], pr->vol);
+                    fclose(tf);
+                }
+            }
             sprintf(cmd, "%s %s", eng->name, pr->name);
             report(cmd);
         }
@@ -976,6 +989,63 @@ static int pitch_test(void)
     return bad != 0 || checked == 0;
 }
 
+/* the effects' delay lines past 2^24 samples: a float write position lost its fraction (steps of 2, then 4 samples) and a
+ * swaying delay (TAPE, CHORUS, ...) turned to a staircase after about six minutes of sound. A held LEAD note through each
+ * insert effect: its top (the second difference against the signal) a second in, and again after ~7 minutes. */
+static double hf_ratio(void)
+{
+    double a = 0.0, b = 0.0;
+    int i;
+    for (i = 2; i < frames; i++) {
+        double x = buf[2 * i], d = x - 2.0 * buf[2 * (i - 1)] + buf[2 * (i - 2)];
+        a += d * d;
+        b += x * x;
+    }
+    return a / (b + 1.0);
+}
+static int fxlong_test(void)
+{
+    int e, fx, bad = 0;
+    for (e = 0; e < TAPE.neng && strcmp(TAPE.eng[e]->name, "LEAD"); e++)
+        ;
+    if (e == TAPE.neng)
+        e = 0;
+    for (fx = 1; fx < TAPE.nfx; fx++) {
+        double early, late;
+        int i;
+        fresh();
+        dk_lock();
+        dk_song.tempo = 84;
+        dk_song.dust = 0;
+        dk_track_setup(2, e, 0, SQ_LIVE, TAPE.eng[e]->role);
+        dk_song.trk[2].vol = 80;
+        dk_song.trk[2].pan = 0;
+        dk_song.trk[2].fx = (uint8_t)fx;
+        dk_song.trk[2].fxamt = 40;
+        dk_song.trk[2].fxa = 30;
+        dk_song.trk[2].fxb = 30;
+        dk_unlock();
+        note(2, 48, 100);
+        run(1.0);
+        reset_out();
+        run(1.0);
+        early = hf_ratio();
+        for (i = 0; i < 70; i++) {                              /* 70 x 6 s: past 2^24 samples (380 s) */
+            reset_out();
+            run(6.0);
+        }
+        reset_out();
+        run(1.0);
+        late = hf_ratio();
+        if (late > 2.5 * early + 1e-6) {
+            printf("BAD   fx %s: the top after 7 minutes is %.1fx the first second's\n", TAPE.fx[fx]->name, late / (early + 1e-12));
+            bad++;
+        }
+        printf("fx %-8s top %.2e -> %.2e\n", TAPE.fx[fx]->name, early, late);
+    }
+    return bad;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "sounds";
@@ -1017,6 +1087,8 @@ int main(int argc, char **argv)
         metro();
     else if (!strcmp(m, "pitch"))
         return pitch_test();
+    else if (!strcmp(m, "fxlong"))
+        return fxlong_test();
     else if (!strcmp(m, "stress24"))
         return stress24();
     else {

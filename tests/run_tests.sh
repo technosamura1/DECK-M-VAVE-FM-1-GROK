@@ -24,6 +24,7 @@ build/test/deck_test chords out/chords.wav > /dev/null || fail=1
 build/test/deck_test bypass > build/test/bypass.txt && echo "  ok   SOUND bypass: every stage of the chain off and on again: no clicks, peak under -1 dBFS" || { echo "  FAIL bypass"; grep CLICK build/test/bypass.txt | head -5; fail=1; }
 build/test/deck_test automation > build/test/automation.txt && echo "  ok   AUTOMATION: a curve on every target, three engines: no click, peak under -1 dBFS, no DC, not silent" || { echo "  FAIL automation"; grep "BAD\|SILENT" build/test/automation.txt | head -5; fail=1; }
 build/test/deck_test pitch > build/test/pitch.txt && echo "  ok   PITCH: every BASS preset sounds C2, G2, C3 at its pitch (or a sub-octave by design), none above it" || { echo "  FAIL pitch"; grep BAD build/test/pitch.txt | head -5; fail=1; }
+build/test/deck_test fxlong > build/test/fxlong.txt && echo "  ok   FX LONG: the effects' delay lines keep their fine position past 2^24 samples (7 minutes of sound)" || { echo "  FAIL fxlong"; grep BAD build/test/fxlong.txt | head -5; fail=1; }
 build/test/deck_test metro | sed 's/^/  /'
 build/test/deck_test stress24 > build/test/stress24.txt && echo "  ok   24 voices at once (MOURNING x3 + heavy pads, the FX chain on every track): the pool fills, peak under full scale, no DC" || { echo "  FAIL stress24"; grep FAIL build/test/stress24.txt | head -3; fail=1; }
 build/test/deck_test bench | sed 's/^/  /'

@@ -702,6 +702,7 @@ static inline float metro_step(void)
 
 /* -------------------------------------------------------------- the tracks --- */
 static dk_fxst_t fxs[DK_NTRACK];
+static uint8_t fx_prev[DK_NTRACK];
 static float fx_byp[DK_NTRACK];            /* the insert's bypass, faded: 0 in, 1 out */
 static int16_t fxbuf[DK_NTRACK][DK_FXBUF] DK_POOL;
 static float bus_st[DK_NTRACK][16];
@@ -876,6 +877,13 @@ static void render_tracks(uint32_t n)
                         dl2[j] = tl[j];
                         dr2[j] = tr[j];
                     }
+                if (fx_prev[t] != (uint8_t)fx) {          /* another effect than last time: its state is not this one's (the
+                                                          * LOFI's held samples are not the TAPE's wow phases: they made the
+                                                          * delay jump about) */
+                    for (j = 0; j < 28; j++)
+                        fxs[t].f[j] = 0.0f;
+                    fx_prev[t] = (uint8_t)fx;
+                }
                 TAPE.fx[fx]->process(&fxs[t], tl, tr, (int)n, t_fxamt[t], t_fxa[t], t_fxb[t]);
                 if (fade) {
                     float g = fx_byp[t], dg = (bt - g) / (float)n;
@@ -1146,6 +1154,9 @@ void dk_init(void)
     for (t = 0; t < DK_NTRACK; t++) {
         fxs[t].buf = fxbuf[t];
         fxs[t].w = 0;
+        for (i = 0; i < 28; i++)
+            fxs[t].f[i] = 0.0f;
+        fx_prev[t] = 0;
         for (i = 0; i < T_N; i++)
             mot[t][i] = -1;
     }
