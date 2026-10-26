@@ -1474,7 +1474,7 @@ int take_erase_last(void)
     rec_flush();                         /* (what was just played is in the clips) */
     for (c = 0; c < DK_NCLIP; c++) {
         const dk_clip_t *cl = &dk_song.clip[c];
-        if (last_sess[c] != rec_sess)
+        if (!last_sess[c] || last_sess[c] != rec_sess)
             continue;
         for (i = 0; i < cl->n && !any; i++)
             any = !(dk_ev[cl->at + i].fl & EV_MOTION) && DK_L_TAKE(dk_ev[cl->at + i].layer) >= last_from[c];
@@ -1485,7 +1485,7 @@ int take_erase_last(void)
     for (c = 0; c < DK_NCLIP; c++) {
         dk_clip_t *cl = &dk_song.clip[c];
         int top = 0, k = 0;
-        if (last_sess[c] != rec_sess)
+        if (!last_sess[c] || last_sess[c] != rec_sess)
             continue;
         for (i = 0; i < cl->n && !k; i++)
             k = !(dk_ev[cl->at + i].fl & EV_MOTION) && DK_L_TAKE(dk_ev[cl->at + i].layer) >= last_from[c];

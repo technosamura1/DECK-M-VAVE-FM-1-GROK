@@ -13,6 +13,7 @@ static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
     uint32_t btn, keys, down_t[NB];
     uint8_t used[NB], held_done[NB];
+    uint16_t combo;                      /* buttons a key or knob was used with while held (their tap on release does not follow) */
     char msg[2][32];
     uint8_t msg_tag;                     /* the popup is a preset's label: msg[0] the block (green), msg[1] the name (white) */
     uint32_t msg_until;
@@ -1745,6 +1746,17 @@ static void auto_erase(void)
     mark_dirty();
     say("AUTOMATION CLEARED", "UNDO: HOLD EDIT");
 }
+/* a key or a knob used while a button is held is a combo: that button's own tap (its page) and hold (UNDO, FILL...) no longer follow */
+static void combo_used(void)
+{
+    int b;
+    for (b = 0; b < NB; b++)
+        if (held(b)) {
+            ui.combo |= (uint16_t)(1u << b);
+            if (b != B_GLO)              /* (GLO's FILL may still start: keys played over a fill are no combo of it) */
+                ui.used[b] = 1;
+        }
+}
 #define HOLD_ERASE_MS 600u               /* REC held this long (the hint comes at 450 ms) */
 /* hold REC: the notes of the last take (the latest REC press, all its passes and tracks) erased; automation and older notes stay */
 static void take_erase_ui(void)
@@ -1773,6 +1785,7 @@ static void input(void)
             if (!v)
                 v = 88;
             v = 24 + v * 3 / 4;
+            combo_used();
             key_down((int)k, v);
         } else if (!(keys & bit) && (ui.keys & bit))
             key_up((int)k);
@@ -1786,6 +1799,7 @@ static void input(void)
         if ((btn & bit) && !(ui.btn & bit)) {                    /* down */
             ui.down_t[k] = now;
             ui.used[k] = 0;
+            ui.combo &= (uint16_t)~(1u << k);
             ui.held_done[k] = 0;
             ui.btn |= bit;
             if (k != B_HOME && (btn >> B_HOME & 1u) && m->home != A_NONE) {
@@ -1812,7 +1826,7 @@ static void input(void)
                 action(A_FILL, 0);
             else if (m->hold == A_FILL && ui.used[k])   /* GLO held: the FILL ends with it */
                 action(A_FILL, 0);
-            else if (!ui.used[k] && m->tap != A_PLAY &&
+            else if (!ui.used[k] && !(ui.combo >> k & 1u) && m->tap != A_PLAY &&
                      !(k == B_REC && now - ui.down_t[k] >= HOLD_HINT_MS && !dk_recording && !dk_counting && !ui.armed && !ui_auto_on))
                 action(m->tap, 1);       /* (REC held past the hint, nothing else done: let go = nothing, no take) */
         }
@@ -1837,14 +1851,22 @@ static void input(void)
     au_poll(now);
     /* K1..K4: the page's four; ALGO its extra (PLAY: the MOOD); SELECT the track, PRESET the preset */
     for (k = 0; k < 4; k++)
-        if ((e = plat_enc(EN_K1 + (int)k)) != 0)
+        if ((e = plat_enc(EN_K1 + (int)k)) != 0) {
+            combo_used();
             turn((int)k, e);
-    if ((e = plat_enc(EN_ALGO)) != 0)
+        }
+    if ((e = plat_enc(EN_ALGO)) != 0) {
+        combo_used();
         turn(4, e);
-    if ((e = plat_enc(EN_SELECT)) != 0)
+    }
+    if ((e = plat_enc(EN_SELECT)) != 0) {
+        combo_used();
         enc_side(1, e);
-    if ((e = plat_enc(EN_PRESET)) != 0)
+    }
+    if ((e = plat_enc(EN_PRESET)) != 0) {
+        combo_used();
         enc_side(0, e);
+    }
     lights();
 }
 
