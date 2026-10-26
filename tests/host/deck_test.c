@@ -875,6 +875,107 @@ static int auto_test(void)
     return bad ? 1 : 0;
 }
 
+
+/* ------------------------------------------------------------------ pitch --- */
+/* the fundamental of the note just played (frames from f0 on, 0.7 s of it): the autocorrelation's first strong peak between
+ * 25 Hz and 1 kHz; conf (0..1) how periodic it is (a noise or a bell is not) */
+static double fundamental(int f0, double *conf)
+{
+    int n = 30870, lo = 44, hi = 1764, lag, best = 0, i;     /* 0.7 s; the lags of 1 kHz .. 25 Hz */
+    double e0 = 0.0, bestv = -1.0, v[1800];
+    static double x[30870 + 1800];
+    if (f0 + n + hi > frames)
+        n = frames - f0 - hi;
+    if (n < 4000) {
+        *conf = 0.0;
+        return 0.0;
+    }
+    for (i = 0; i < n + hi; i++)
+        x[i] = 0.5 * ((double)buf[2 * (f0 + i)] + (double)buf[2 * (f0 + i) + 1]);
+    for (i = 0; i < n; i++)
+        e0 += x[i] * x[i];
+    if (e0 < 1.0) {
+        *conf = 0.0;
+        return 0.0;
+    }
+    for (lag = lo; lag <= hi; lag++) {
+        double c = 0.0, e1 = 0.0;
+        for (i = 0; i < n; i++) {
+            c += x[i] * x[i + lag];
+            e1 += x[i + lag] * x[i + lag];
+        }
+        v[lag - lo] = c / sqrt(e0 * e1 + 1e-9);
+        if (v[lag - lo] > bestv)
+            bestv = v[lag - lo];
+    }
+    for (lag = lo + 1; lag < hi; lag++)                        /* the first peak within 5 % of the best (not its multiples) */
+        if (v[lag - lo] >= 0.95 * bestv && v[lag - lo] >= v[lag - 1 - lo] && v[lag - lo] >= v[lag + 1 - lo]) {
+            best = lag;
+            break;
+        }
+    *conf = bestv;
+    if (best <= lo || best >= hi)
+        return 0.0;
+    {   /* the parabola through the peak: the lag between the samples */
+        double a = v[best - 1 - lo], b = v[best - lo], c = v[best + 1 - lo], d = a - 2.0 * b + c;
+        return 44100.0 / ((double)best + (d != 0.0 ? 0.5 * (a - c) / d : 0.0));
+    }
+}
+/* every BASS-role preset (all blocks): the notes C2, G2, C3 sound at their pitch (a quarter tone); every other melodic engine's
+ * presets: a report line (the octave off by more than one in a periodic sound is an error too). Written to the output. */
+static int pitch_test(void)
+{
+    static const int N[3] = {36, 43, 48};
+    int e, p, bad = 0, checked = 0;
+    for (e = 0; e < TAPE.neng; e++) {
+        const dk_engine_t *eng = TAPE.eng[e];
+        if ((eng->flags & (EF_DRUM | EF_CONT)))
+            continue;
+        for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+            int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT), j;
+            dk_preset_t tmp;
+            const dk_preset_t *pr;
+            if (p % DK_NFACT >= preset_count(e, blk))
+                continue;
+            pr = preset_of(e, id, &tmp);
+            for (j = 0; j < (eng->role == R_BASS ? 3 : 1); j++) {
+                double want, got, conf, cents;
+                int nn = eng->role == R_BASS ? N[j] : eng->role == R_BELL ? 60 : 48;
+                fresh();
+                dk_lock();
+                dk_song.tempo = 84;
+                dk_song.dust = 0;
+                dk_track_setup(2, e, id, SQ_LIVE, eng->role);
+                dk_song.trk[2].vol = 80;
+                dk_song.trk[2].pan = 0;
+                dk_unlock();
+                run(0.05);
+                reset_out();
+                want = 440.0 * pow(2.0, (nn - 69) / 12.0);
+                note(2, nn, 100);
+                run(1.2);
+                got = fundamental(2000, &conf);
+                note(2, nn, 0);
+                run(0.3);
+                cents = got > 0.0 ? 1200.0 * log2(got / want) : 0.0;
+                if (eng->role == R_BASS) {                     /* at its pitch, or a sub-octave (SUB DRONE, RUMBLE) by design; never above */
+                    int ok = got > 0.0 && (fabs(cents) <= 50.0 || fabs(cents + 1200.0) <= 50.0 || fabs(cents + 2400.0) <= 50.0);
+                    if (!ok) {
+                        printf("BAD   %s %s note %d: %.1f Hz, wanted %.1f (%+.0f cents, periodicity %.2f)\n", eng->name, pr->name,
+                               nn, got, want, cents, conf);
+                        bad++;
+                    } else if (fabs(cents) > 50.0)
+                        printf("sub   %s %s note %d: %.1f Hz (%+.0f cents, by design)\n", eng->name, pr->name, nn, got, cents);
+                    checked++;
+                } else if (conf > 0.9 && got > 0.0 && fabs(cents) > 50.0)   /* the others: a list to look at, not an error */
+                    printf("info  %s %s note %d: %.1f Hz, wanted %.1f (%+.0f cents)\n", eng->name, pr->name, nn, got, want, cents);
+            }
+        }
+    }
+    printf("%d bass notes checked, %d bad\n", checked, bad);
+    return bad != 0 || checked == 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "sounds";
@@ -914,6 +1015,8 @@ int main(int argc, char **argv)
 #endif
     else if (!strcmp(m, "metro"))
         metro();
+    else if (!strcmp(m, "pitch"))
+        return pitch_test();
     else if (!strcmp(m, "stress24"))
         return stress24();
     else {

@@ -32,7 +32,13 @@ static int black_of(int k)
             return i;
     return -1;
 }
-static int trk_oct(int t) { return dk_song.trk[t].oct + (int8_t)dk_song.koct; }
+/* a bass (the track's role, or the engine's): its keys play low and one note at a time (the engine is one voice: a chord on it
+ * would keep only its top note, two octaves above the key) */
+static int is_bass(int t)
+{
+    return dk_song.trk[t].role == R_BASS || TAPE.eng[dk_song.trk[t].eng % TAPE.neng]->role == R_BASS;
+}
+static int trk_oct(int t) { return dk_song.trk[t].oct + (int8_t)dk_song.koct - (is_bass(t) ? 2 : 0); }
 
 /* SCALE transposed, as a keyboard's TRANSPOSE: the C key plays the key's tonic, the D key its second, ... the B key its
  * seventh (F minor: the C key F, the D key G, the E key A flat). On five- and six-note scales the scale's note nearest
@@ -151,7 +157,16 @@ static int chord_build(int d, int base, int *out)
 
 static void notes_post(int k, int t, const int *nt, int n, int vel, int strum)
 {
-    int i;
+    int i, one[1];
+    if (n > 1 && is_bass(t)) {               /* a chord on a bass: its lowest note (the root) */
+        one[0] = nt[0];
+        for (i = 1; i < n; i++)
+            if (nt[i] < one[0])
+                one[0] = nt[i];
+        nt = one;
+        n = 1;
+        strum = 0;
+    }
     kh[k].trk = (int8_t)t;
     kh[k].kind = 0;
     kh[k].n = 0;
