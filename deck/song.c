@@ -1443,6 +1443,8 @@ void song_mood(int m)
         track_sound_to(t);
         if (md->eng[t] >= 0 && md->eng[t] != dk_song.trk[t].eng)   /* (the track keeps its role: PIANO, KEYS ...) */
             dk_song.trk[t].eng = (uint8_t)md->eng[t];
+        if (dk_song.trk[t].role == R_NATURE && md->eng[t] >= 0 && md->eng[t] < TAPE.neng && TAPE.eng[md->eng[t]]->role == R_LEAD)
+            dk_song.trk[t].role = R_LEAD;     /* (an older project's NATURE track becomes the LEAD) */
         if (md->preset[t] >= 0)
             track_preset(t, md->preset[t]);
         dk_song.trk[t].drv[1] = md->style;

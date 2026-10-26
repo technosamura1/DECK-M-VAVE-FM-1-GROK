@@ -4,15 +4,16 @@
 number of its line in tapes/NAME/tape_dsp.c) moved so that it sits at its engine's target loudness.
 The twelve of each engine's first block (PRESETS) and the others (PRESETS2: the blocks 1..3, as many as PCOUNT
 says) are both read; the first 108 (the nine old engines' first block) are left as they are unless --all is given.
-  python tools/calibrate.py build/test/check.json tapes/overworld/tape_dsp.c [--all]"""
+  python tools/calibrate.py build/test/check.json tapes/overworld/tape_dsp.c [--all] [--only ENGINE]
+(--only: just that engine's presets are touched, the others' trims stay as they are)"""
 import json
 import re
 import sys
 
 # each engine's loudness (gated, K-weighted, dB): the piano the reference, the pads a little under, the world behind
 TARGET = {"FELT": -20.5, "TINE": -21.5, "KALIMBA": -21.5, "GLASS": -21.5, "AIRPAD": -23.0, "SOFTBASS": -23.5,
-          "DUSTKIT": -24.0, "WORLD": -33.0, "WINDS": -22.0, "SYNTH": -22.5, "PLUCK": -22.0}
-ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "SOFTBASS", "DUSTKIT", "WORLD", "KALIMBA", "WINDS", "SYNTH", "PLUCK"]
+          "DUSTKIT": -24.0, "WORLD": -33.0, "WINDS": -22.0, "SYNTH": -22.5, "PLUCK": -22.0, "LEAD": -22.5}
+ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "SOFTBASS", "DUSTKIT", "WORLD", "KALIMBA", "WINDS", "SYNTH", "PLUCK", "LEAD"]
 OLD = 9 * 12  # the presets the first release shipped: their trims stay put
 RX = re.compile(r'^(\s*\{"[^"]*", \d+, .*, )(-?\d+)\},\s*$')
 
@@ -26,6 +27,9 @@ def pcount(src):
     return nums
 
 
+only = None
+
+
 def walk(src, name, rows, res, order_of_row, keep):
     """rows: the lines of one array; order_of_row(k) -> (engine, file index); returns the new text and a count."""
     a = src.index(name)
@@ -36,7 +40,7 @@ def walk(src, name, rows, res, order_of_row, keep):
         m = RX.match(ln)
         if m:
             eng, fi = order_of_row(k)
-            if not keep(k):
+            if not keep(k) and (only is None or eng == only):
                 r = res[eng][fi]
                 new = int(m.group(2)) + int(round((TARGET[eng] - r["loud_db"]) * 2))
                 ln = f"{m.group(1)}{max(-24, min(24, new))}}},"
@@ -46,7 +50,9 @@ def walk(src, name, rows, res, order_of_row, keep):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    global only
+    only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else None
+    args = [a for a in sys.argv[1:] if not a.startswith("--") and a != only]
     every = "--all" in sys.argv
     res = json.load(open(args[0]))
     path = args[1]
