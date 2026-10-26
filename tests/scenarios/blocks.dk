@@ -1,0 +1,72 @@
+# the preset BLOCKS: AMBIENT LOFI, 8-16 BIT, SYNTHWAVE, CINEMATIC; HOME + FX next, HOME + SEL previous;
+# the old ids (0..15) mean what they did, the blocks are 16.. ; the counts an engine has in each
+wait 300
+press HOME
+turn PRESET -2
+release HOME
+wait 100
+expect eng 0
+expect blk 0
+expect preset <16
+# the counts (engine.block): FELT, TINE, AIRPAD, GLASS, SOFTBASS, DUSTKIT, WORLD, KALIMBA, WINDS, SYNTH, PLUCK
+expect pcnt0.0 12
+expect pcnt0.1 4
+expect pcnt0.2 4
+expect pcnt0.3 6
+expect pcnt2.1 0
+expect pcnt2.3 12
+expect pcnt4.1 8
+expect pcnt4.2 12
+expect pcnt6.3 4
+expect pcnt7.1 0
+expect pcnt9.1 12
+expect pcnt9.3 12
+expect pcnt10.1 6
+expect pcnt10.3 12
+# next block: 8-16 BIT, the same place, an id from 16 up
+press HOME
+tap FX
+release HOME
+wait 50
+expect blk 1
+expect preset >15
+press HOME
+tap FX
+release HOME
+wait 50
+expect blk 2
+press HOME
+tap FX
+release HOME
+wait 50
+expect blk 3
+press HOME
+tap FX
+release HOME
+wait 50
+expect blk 0
+expect preset <16
+# previous: from AMBIENT LOFI to CINEMATIC
+press HOME
+tap SEL
+release HOME
+wait 50
+expect blk 3
+expect preset >15
+press HOME
+tap SEL
+release HOME
+wait 50
+expect blk 2
+# another engine (HOME + PRESET): SOFTBASS starts in its first block, has all four
+press HOME
+turn PRESET 4
+release HOME
+wait 50
+expect eng 4
+expect blk 0
+press HOME
+tap FX
+release HOME
+wait 50
+expect blk 1
