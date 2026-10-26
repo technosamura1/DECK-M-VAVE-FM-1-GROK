@@ -41,6 +41,7 @@ static int auto_edge(int tgt, int last)
     }
     return v;
 }
+static int host_oldck;                    /* the last old-format check (projv1, userold): 0 = it loaded as it should */
 /* the song's invariants, 0 = all hold (fuzz); the bits: 1 events within the pool, 2 each clip inside it and sorted, 4 lengths sane,
  * 8 motion targets and velocities valid, 16 voices within the pool, 32 every parameter a track hears inside its range, 64 every
  * track's engine exists and its preset id is a place that engine has, 128 the clips follow one another in the pool in the table's order */
@@ -115,6 +116,7 @@ int app_expect(const char *what, int *got)
             g += auto_count(c, 0);
     }
     else if (!strcmp(what, "inv")) g = invariants();
+    else if (!strcmp(what, "oldck")) g = host_oldck;
     else if (!strcmp(what, "nev")) g = dk_song.nev;
     else if (!strcmp(what, "autos")) g = auto_count(cur_clip(), 0);                      /* AUTOMATION: the curve points of the track in this part */
     else if (!strncmp(what, "atgt", 4)) g = auto_count(cur_clip(), atoi(what + 4));      /* ... of one target (T_*) */
@@ -382,6 +384,92 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_unlock();
         project_save(set.proj);
         project_load(set.proj);
+        return 1;
+    }
+    if (!strcmp(cmd, "projv1")) {               /* projv1: the song saved in the OLD format (an older, shorter song: no lanes, atmo, frozen sounds; no tail), loaded: it must come back whole, the new fields zero */
+        static uint8_t img[DK_PROJ_SPAN];
+        static phead_t h;
+        uint32_t at = DK_PROJ_AT + (uint32_t)set.proj * DK_PROJ_SPAN, len, o, nev = dk_song.nev;
+        uint8_t eng[DK_NTRACK], pre[DK_NTRACK], sv[DK_NTRACK];
+        uint32_t n0 = 0, i;
+        dk_lock();
+        for (i = 0; i < DK_NTRACK; i++)
+            eng[i] = dk_song.trk[i].eng, pre[i] = dk_song.trk[i].preset, sv[i] = dk_song.trk[i].seq;
+        h.magic = PROJ_HEAD_MAGIC;
+        h.format = DK_FORMAT;
+        h.nsong = DK_SONG_V1;
+        h.nev = nev;
+        h.sum = song_sum_n(DK_SONG_V1);
+        len = (uint32_t)sizeof h + DK_SONG_V1 + nev * (uint32_t)sizeof(dk_ev_t);
+        for (i = 0; i < DK_PROJ_SPAN; i++)
+            img[i] = 0xFF;
+        for (i = 0; i < DK_SONG_V1; i++)
+            img[sizeof h + i] = ((const uint8_t *)&dk_song)[i];
+        for (i = 0; i < nev * sizeof(dk_ev_t); i++)
+            img[sizeof h + DK_SONG_V1 + i] = ((const uint8_t *)dk_ev)[i];
+        for (o = 0; o < len; o += 0x1000u) {
+            uint32_t end = o + 0x1000u < len ? o + 0x1000u : len, from = o ? o : (uint32_t)sizeof h;
+            if (plat_data_erase(at + o) || plat_data_write(at + from, img + from, end - from))
+                host_oldck |= 1;
+        }
+        if (plat_data_write(at, &h, sizeof h))
+            host_oldck |= 1;
+        dk_unlock();
+        host_oldck = host_oldck & 1;
+        if (project_load(set.proj) != 0)
+            host_oldck |= 2;
+        if (dk_song.nev != nev)
+            host_oldck |= 4;
+        for (i = 0; i < DK_NTRACK; i++)               /* (the load may put the tracks in their role order: the same engines and presets, once each) */
+            n0 += (uint32_t)(dk_song.trk[i].eng + 31 * dk_song.trk[i].preset);
+        {
+            uint32_t m0 = 0;
+            for (i = 0; i < DK_NTRACK; i++)
+                m0 += (uint32_t)(eng[i] + 31 * pre[i]);
+            if (m0 != n0)
+                host_oldck |= 8;
+        }
+        for (i = 0; i < DK_NTRACK * 8 * sizeof(dk_lane_t); i++)
+            if (((const uint8_t *)dk_song.lane)[i])
+                host_oldck |= 16;
+        for (i = 0; i < 8; i++)
+            if (dk_song.atmo[i])
+                host_oldck |= 32;
+        for (i = 0; i < DK_NCLIP; i++)
+            if (dk_song.lmute[i])
+                host_oldck |= 64;
+        for (i = 0; i < DK_NTRACK; i++)
+            if (dk_song.trk[i].seq != SQ_LIVE && sv[i] == SQ_LIVE)
+                host_oldck |= 128;
+        return 1;
+    }
+    if (!strcmp(cmd, "userold")) {              /* userold N: the user store saved as an old one (N engines: 8 or 10); every engine has its first place filled; loaded again */
+        static dk_user_t keep;
+        uint32_t per = (uint32_t)sizeof dk_user.p[0], n = (uint32_t)atoi(a), i, e;
+        if (n > DK_UENG)
+            n = DK_UENG;
+        for (i = 0; i < sizeof keep; i++)
+            ((uint8_t *)&keep)[i] = 0;
+        keep.magic = USER_MAGIC;
+        for (e = 0; e < DK_UENG; e++) {
+            keep.p[e][0].used = 1;
+            keep.p[e][0].name[0] = (char)('A' + e);
+            keep.p[e][0].p[0] = (int8_t)(10 + e);
+        }
+        plat_store_save(OBJ_USER, &keep, (uint32_t)sizeof keep.magic + n * per);
+        for (i = 0; i < sizeof dk_user; i++)      /* (what the RAM held before: the tail of an old store must not keep it) */
+            ((uint8_t *)&dk_user)[i] = 0x5A;
+        user_load();
+        host_oldck = 0;
+        for (e = 0; e < DK_UENG; e++) {
+            int want = e < n;
+            if (dk_user.p[e][0].used != want || (want && dk_user.p[e][0].p[0] != (int8_t)(10 + e)) || (!want && dk_user.p[e][0].p[0]))
+                host_oldck |= 1;
+            if (dk_user.p[e][1].used || dk_user.p[e][3].used)
+                host_oldck |= 2;
+        }
+        if (dk_user.magic != USER_MAGIC)
+            host_oldck |= 4;
         return 1;
     }
     if (!strcmp(cmd, "roundtrip")) {            /* roundtrip: the project saved and loaded again (the fuzz: the song stays the same, the invariants hold) */

@@ -1,0 +1,22 @@
+# REGRESSION: the old formats still load. A project saved with the older, shorter song (before lanes, ATMO, frozen sounds) and the
+# user store saved with eight or ten engines (a tape has twelve now): both come back whole, the new parts zero / empty
+wait 300
+demo
+wait 100
+expect inv 0
+projv1
+wait 100
+expect oldck 0
+expect inv 0
+expect nev >100
+tap PLAY
+wait 600
+tap PLAY
+wait 100
+expect inv 0
+userold 8
+expect oldck 0
+userold 10
+expect oldck 0
+userold 12
+expect oldck 0
