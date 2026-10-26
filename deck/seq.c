@@ -1185,14 +1185,25 @@ static void drain(void)
             break;
         case C_PART:
             a &= 7;
-            if (!dk_playing || b) {            /* stopped (or at once): now */
+            if (!dk_playing || b) {            /* stopped, or at once (b 2: the loop stays, the take goes on) */
+                int keep = b == 2 && dk_playing;
+                if (keep)
+                    rec_close_all();           /* a note still held is closed into this part, before the part changes */
                 cur_part = (uint8_t)a;
                 dk_song.cur_part = (uint8_t)a;
                 queued = 0xFF;
                 dk_next_part = 0xFF;
-                if (dk_playing)
-                    part_tick = 0;
-                block_enter();
+                if (keep) {
+                    int len = part_len_of(cur_part);
+                    if (len > 0 && part_tick >= (uint16_t)len)
+                        part_tick = (uint16_t)(part_tick % (uint16_t)len);
+                    dk_cur_part = cur_part;
+                    dk_part_len = (uint16_t)len;
+                } else {
+                    if (dk_playing)
+                        part_tick = 0;
+                    block_enter();
+                }
             } else {
                 queued = (uint8_t)a;
                 dk_next_part = (uint8_t)a;

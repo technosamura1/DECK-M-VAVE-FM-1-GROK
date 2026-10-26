@@ -124,6 +124,43 @@ static int part_go(int p)
         dk_song.cur_part = (uint8_t)p;
     return r;
 }
+/* While REC is running (PART, not SONG): ENV held and SELECT turned. An empty part gets this part's copy now
+ * (the same copy as NEW PART: notes, takes, frozen sounds, bars, mutes) and the loop stays where it is, so the
+ * take continues on top of the copy. A part that already has notes is left alone. */
+static int part_branch(int p)
+{
+    int r = 0;
+    char s[16] = "A->B";
+    p &= 7;
+    if (!dk_recording || !dk_playing)
+        return 0;
+    if (dk_song.play_mode) {
+        say("SONG", "PARTS FOLLOW ROAD");
+        return 0;
+    }
+    if (p == (dk_cur_part & 7))
+        return 0;
+    s[0] = (char)('A' + (dk_cur_part & 7));
+    s[3] = (char)('A' + p);
+    if (part_has_events(p)) {
+        s[5] = 0;
+        s[4] = (char)('A' + p);
+        say(s + 4, "HAS NOTES");
+        return 0;
+    }
+    if (part_has_events(dk_cur_part)) {
+        r = part_copy(dk_cur_part, p);
+        if (r > 0)
+            say(s, "COPIED");
+        else if (r < 0) {
+            say("NO ROOM", s);
+            return -1;
+        }
+    } else
+        say(s + 3, "");
+    dk_cmd(C_PART, p, 2, 0);             /* now, and the loop does not restart */
+    return r;
+}
 static void mark_dirty(void);
 static char *cpy(char *d, const char *s);
 static uint8_t se_pitch;                 /* the note K2 puts in: the last one written or moved (0: the tonic) */

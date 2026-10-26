@@ -103,6 +103,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "rowof")) g = ui.row[ui.page];
     else if (!strcmp(what, "track")) g = dk_song.cur_track;
     else if (!strcmp(what, "part")) g = dk_playing ? dk_cur_part : dk_song.cur_part;
+    else if (!strcmp(what, "ptick")) g = dk_part_tick;             /* where the loop is (a part branched while recording does not go back to 0) */
     else if (!strcmp(what, "next")) g = dk_next_part == 0xFF ? -1 : dk_next_part;
     else if (!strcmp(what, "tempo")) g = dk_song.tempo;
     else if (!strcmp(what, "byp")) g = (int)DK_BYP(dk_song.cur_track);                /* SOUND: the chain's stages off (1 insert, 2 echo, 4 reverb) */

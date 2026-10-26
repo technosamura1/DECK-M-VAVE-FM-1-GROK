@@ -1582,6 +1582,14 @@ static void enc_side(int sel, int e)     /* SELECT (sel 1): the track; PRESET: t
         engine_step(e > 0 ? 1 : -1);
         return;
     }
+    if (sel && held(B_ENV) && dk_recording) {   /* ENV + SELECT while recording: another part, this one copied into an empty one */
+        int curp = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7;
+        int n = e > 0 ? e : -e, step = e > 0 ? 1 : -1;
+        if (n > 7)
+            n = 7;
+        part_branch((curp + step * n) & 7);
+        return;
+    }
     if (sel && ui.page == PG_TRACKS && ui.lay == 2) {   /* LAYERS: SELECT moves the cursor */
         int n = lay_count();
         ui.lay_cur = (uint8_t)(n ? ((int)ui.lay_cur + n + (e > 0 ? 1 : -1)) % n : 0);
