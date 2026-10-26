@@ -65,6 +65,9 @@ extern volatile uint8_t dk_open_n;                      /* notes held while reco
 extern volatile uint16_t dk_open_pos[8];
 extern volatile uint8_t dk_open_note[8];
 extern volatile uint8_t dk_voices_on;
+extern volatile uint8_t dk_trk_voices[];
+extern volatile uint8_t dk_live_voices;
+void dk_budget_force(int b);
 extern volatile uint8_t dk_voices_frozen;   /* (of them, with a frozen sound) */
 extern volatile uint8_t dk_fill;
 extern volatile uint32_t dk_rec_hits;                   /* notes recorded (the head blinks) */

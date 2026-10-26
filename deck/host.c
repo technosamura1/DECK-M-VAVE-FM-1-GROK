@@ -172,6 +172,9 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "recmode")) g = dk_rec_mode;            /* 0 OVERDUB, 1 REPLACE */
     else if (!strcmp(what, "dirty")) g = ui.dirty;
     else if (!strcmp(what, "voices")) g = dk_voices_on;
+    else if (!strncmp(what, "tlevel", 6) && what[6] >= '1' && what[6] <= '6') g = (int)(dk_level[what[6] - '1'] * 1000.0f);   /* the track's output level now (thousandths): audible */
+    else if (!strcmp(what, "livev")) g = dk_live_voices;      /* the hand's notes still held and sounding */
+    else if (!strncmp(what, "tvoices", 7) && what[7] >= '1' && what[7] <= '6') g = dk_trk_voices[what[7] - '1'];   /* voices sounding on track N */
     else if (!strcmp(what, "clicks")) g = (int)dk_metro_clicks;
     else if (!strcmp(what, "metro")) g = dk_metro.mode;
     else if (!strcmp(what, "snap")) g = snapshot_part() + 1;      /* the snapshot's part + 1 (0 none) */
@@ -325,6 +328,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     (void)d;
     if (!strcmp(cmd, "mark")) {
         host_mark = host_clip_hash();
+        return 1;
+    }
+    if (!strcmp(cmd, "budget")) {               /* budget N: the voice budget held at N (0: the load moves it again) */
+        dk_budget_force(atoi(a));
         return 1;
     }
     if (!strcmp(cmd, "qnt")) {                  /* qnt N: the track's QUANT (the latency scenario wants none) */

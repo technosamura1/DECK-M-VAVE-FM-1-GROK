@@ -125,6 +125,8 @@ volatile uint8_t dk_open_n;
 volatile uint16_t dk_open_pos[8];
 volatile uint8_t dk_open_note[8];
 volatile uint8_t dk_voices_on;
+volatile uint8_t dk_live_voices;             /* (voices of the hand's notes, still held) */
+volatile uint8_t dk_trk_voices[DK_NTRACK];   /* (voices sounding per track) */
 volatile uint8_t dk_voices_frozen;       /* (of them, the ones with a frozen sound: layers) */
 volatile uint8_t dk_fill;
 volatile uint32_t dk_rec_hits;
@@ -315,12 +317,12 @@ static void voice_release(voice_t *v)
     midi(0x80u | ch_of(v->trk), v->note, 0);
 }
 
-static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *retrig, int note)
+static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *retrig, int note, int src)
 {
     int i, cnt = 0;
     voice_t *best = 0;
     float lo = 1e9f;
-    uint32_t oldest = 0;
+    int32_t oldest = -0x7fffffff;
     *retrig = 0;
     if (e->flags & EF_MONO) {                  /* one voice: played again while held (legato glides); a sound that
                                                 * goes on (the world) whenever it still sounds */
@@ -343,7 +345,7 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
     if (cnt >= e->max_voices) {                /* the track's own: its quietest let go, else its oldest */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f);
+                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);   /* (the hand's held note is not the sequencer's to take) */
                 if (l < lo) {
                     lo = l;
                     best = &vc[i];
@@ -360,10 +362,10 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
                 best = &vc[i];
             }
         }
-        if (!best)
+        if (!best)                             /* the sequencer's oldest first: the hand's voices are the last to go */
             for (i = 0; i < DK_NVOICE; i++)
-                if (age_ctr - vc[i].age >= oldest) {
-                    oldest = age_ctr - vc[i].age;
+                if ((int32_t)(age_ctr - vc[i].age) + (vc[i].src ? 0x40000000 : 0) >= oldest) {
+                    oldest = (int32_t)(age_ctr - vc[i].age) + (vc[i].src ? 0x40000000 : 0);
                     best = &vc[i];
                 }
     }
@@ -382,9 +384,18 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
 #define DK_BUDGET_MAX 130
 #define DK_BUDGET_MIN 50
 static volatile int dk_budget = 100;     /* (the device's crackles were the flash's erases, not the load: 3.7 of 5.8 ms) */
+static volatile int dk_budget_hold;      /* (the host's scenarios: a device that holds its budget low, as a CPU load of 45-62% does) */
+void dk_budget_force(int b)
+{
+    dk_budget_hold = b;
+    if (b)
+        dk_budget = b;
+}
 void dk_set_load(int pct)
 {
     int b = dk_budget;
+    if (dk_budget_hold)
+        return;
     if (pct > 62)
         b -= pct > 80 ? 14 : 5;
     else if (pct < 45)
@@ -392,26 +403,54 @@ void dk_set_load(int pct)
     dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
 }
 int dk_get_budget(void) { return dk_budget; }
-static void budget_make_room(int want)
+/* a voice younger than this (samples) is still in its attack: it is never the one given up (a chord's own first notes, the
+ * note the hand has just played: the live note that "did not sound" was the quietest voice of all, at its start) */
+#define BUDGET_YOUNG (DK_SR / 2)
+/* over the budget, voices go: the tails first (the quietest), then a quiet held voice of the sequencer past its attack, from the
+ * track that has the most; for a LIVE note (live: the hand's) the sequencer gives up a loud held voice too: what the hand plays
+ * always has a voice. A voice the hand holds is never taken by the sequencer. */
+static void budget_make_room(int want, int live)
 {
     int guard = DK_NVOICE;
     while (guard--) {
-        int i, total = want, best = -1;
+        int i, total = want, best = -1, most = 0, cnt[DK_NTRACK];
         float lo = 1e9f;
-        for (i = 0; i < DK_NVOICE; i++)
-            if (vc[i].on)
-                total += TAPE.eng[vc[i].eng]->cost;
-        if (total <= dk_budget)
-            return;
+        for (i = 0; i < DK_NTRACK; i++)
+            cnt[i] = 0;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 1.0f : 0.0f);
+                total += TAPE.eng[vc[i].eng]->cost;
+                if (vc[i].trk < DK_NTRACK)
+                    cnt[vc[i].trk]++;
+            }
+        if (total <= dk_budget)
+            return;
+        for (i = 0; i < DK_NVOICE; i++)          /* 1: a tail (let go) - the quietest */
+            if (vc[i].on && !vc[i].held) {
+                float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
                 if (l < lo) {
                     lo = l;
                     best = i;
                 }
             }
-        if (best < 0 || lo > 1.15f)              /* only loud held notes left: they stay */
+        if (best < 0) {                          /* 2: a held voice of the sequencer past its attack, from the track with the most */
+            int pass;
+            for (pass = 0; pass < 1 + live && best < 0; pass++) {   /* (the quiet ones; for a live note, any) */
+                most = 0;
+                lo = 1e9f;
+                for (i = 0; i < DK_NVOICE; i++)
+                    if (vc[i].on && vc[i].src && vc[i].trk < DK_NTRACK &&
+                        (int32_t)(age_ctr - vc[i].age) >= (int32_t)BUDGET_YOUNG) {
+                        float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+                        if ((pass || l <= 0.15f) && (cnt[vc[i].trk] > most || (cnt[vc[i].trk] == most && l < lo))) {
+                            most = cnt[vc[i].trk];
+                            lo = l;
+                            best = i;
+                        }
+                    }
+            }
+        }
+        if (best < 0)                            /* only loud, young or the hand's notes left: they stay */
             return;
         if (vc[best].held)
             midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
@@ -437,8 +476,8 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t && (vc[i].note == 42 || vc[i].note == 44 || vc[i].note == 46))
                 TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);   /* (drums are never frozen) */
-    budget_make_room(e->cost);
-    v = voice_get(t, e, eng, snd, &retrig, note);
+    budget_make_room(e->cost, !src);
+    v = voice_get(t, e, eng, snd, &retrig, note, src);
     if (!v)
         return 0;
     if (!retrig)
@@ -453,7 +492,7 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
     v->snd = (uint8_t)snd;
     v->gate = gate;
     v->delay = delay > 0 ? delay : 0;
-    v->age = age_ctr++;
+    v->age = age_ctr + (uint32_t)(delay > 0 ? delay : 0);
     v->lane = 0;
     v->ch_c = 0.0f;
     if ((e->flags & EF_DRUM) && e->nlanes) {          /* a drum sound: its own tune and decay (the kit's p[0], p[1]) */
@@ -992,6 +1031,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
     float pk = 0.0f, dust = (float)dk_song.dust * 0.01f, slp = (float)dk_song.sleep * 0.01f;
+    age_ctr += n;                               /* (the voices' age: samples) */
     if (dk_perform == PF_SLEEP)
         slp = 1.0f;
     if (dk_perform == PF_VINYLSTOP || dk_perform == PF_REWIND)
@@ -1128,12 +1168,18 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         n -= k;
     }
     {
-        int fz = 0;
+        int fz = 0, lv = 0;
+        for (i = 0; i < DK_NTRACK; i++)
+            dk_trk_voices[i] = 0;
         for (i = 0; i < DK_NVOICE; i++) {
+            if (vc[i].on && vc[i].trk < DK_NTRACK)
+                dk_trk_voices[vc[i].trk]++;
+            lv += vc[i].on && vc[i].held && !vc[i].src;
             vo += vc[i].on;
             fz += vc[i].on && vc[i].snd;
         }
         dk_voices_frozen = (uint8_t)fz;
+        dk_live_voices = (uint8_t)lv;
     }
     dk_voices_on = (uint8_t)vo;
     shed = 0;
