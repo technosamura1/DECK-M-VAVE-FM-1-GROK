@@ -459,10 +459,10 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
 - **Движки**: 10-й SYNTH (`eng_synth.c`: WAVE SAW/PULSE/PULSE12/SQUARE/TRI/SUPER/NOISE/SINE, CUTOFF RESO SWEEP DETUNE CRUSH SUSTAIN MOTION),
   11-й PLUCK (LUTE HARP NYLON STEEL KOTO DULCIMER; BRIGHT DECAY POSITION BODY CRUSH). `DK_UENG 12` (свои пресеты, v1 8 / v2 10 движков
   мигрируют). Новые TYPE в старых движках: AIRPAD +SUPER CHOIR DRONE ORGAN (+STRINGS), SOFTBASS +SQUARE SAW TRI SUBDRONE, DUSTKIT киты
-  707 DUSTY BRUSH CHIP SYNTH WAR, WINDS +SYNBRASS DUDUK.
+  707 DUSTY BRUSH CHIP SYNTH WAR 808 909 606 CR-78, WINDS +SYNBRASS DUDUK.
 - **Счёт пресетов** [блок0, 8-16, SYNTHWAVE, CINEMATIC]: FELT 12/4/4/6, TINE 12/4/8/4, AIRPAD 12/0/8/12, GLASS 12/4/6/6, SOFTBASS 12/8/12/8,
-  DUSTKIT 12/8/8/8, WORLD 12/0/0/4, KALIMBA 12/0/0/0, WINDS 12/0/6/12, SYNTH 12/12/12/12, PLUCK 12/6/6/12. Итого 332
-  (132 / 46 / 70 / 84). FELT/TINE/GLASS в блоках 1–2 — через LOFI/хорус/эхо и параметры, не новые осцилляторы.
+  DUSTKIT 12/12/12/12, WORLD 12/0/0/4, KALIMBA 12/0/0/0, WINDS 12/0/6/12, SYNTH 12/12/12/12, PLUCK 12/6/6/12. Итого 344
+  (132 / 50 / 74 / 88). FELT/TINE/GLASS в блоках 1–2 — через LOFI/хорус/эхо и параметры, не новые осцилляторы.
 - **SVF Chamberlin**: `dk_svf_f(hz)` выше ~7200 Гц неустойчив: срез ≤ 6000 Гц, `fk` ≤ 0.8 (SYNTH). Выходной одно-полюсник против
   краёв пульса/шума (`lp`, `lpk`); PLUCK — `lq` после crush.
 - **Калибровка**: `tools/calibrate.py` (11 движков; старые 108 строк не трогает без `--all`; читает PCOUNT). `sound_check.py`: детектор
@@ -477,3 +477,19 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
 - Одна поправка DSP: `dk_svf_fmax(q)` (core.c) — предел устойчивости SVF; `fx_filter` режет коэффициент по нему, readout показывает то же
   (на RES 0 верх ≈ 6 кГц, на макс. RES ≈ 11 кГц; выше ручка звук не меняет). Раньше выше ~7.5 кГц фильтр расходился.
 - Сценарий `tests/scenarios/cutoff.dk`, снимки `fx_cutoff*.png`.
+
+## Roland-киты в DUSTKIT (op1-rec, -7)
+
+- Киты 6..9 = **808 909 606 CR-78** (KIT_P max 9), плюс кит 0 (**707**) теперь тоже идёт по этой таблице. Это синтез, не семплы:
+  `RK[5][14]` в `eng_kit.c` — строка на голос (BD SD RIM CLAP CH OH TOM COW TAMB CRASH RIDE SHAKER WOOD CONGA), поля `rk_t`: тон (старт,
+  конец, время падения, затухание, уровень), второй тон, шум, шесть квадратов (`METAL[]` — настоящие частоты 808), два квадрата коровьего
+  колокола, фильтр (Гц, демпфинг, HP), драйв тона (`drv`), тремоло (тамбурин), всплески клэпа (`cn/cg/ct`), форма тона. `rk_voice` кладёт
+  строку в `drum_v` (`drv amph aminc amd cb cc cgap ctail` — в пределах DK_VSTATE, RAM не вырос). Срез фильтра голоса не выше
+  1.05·`dk_svf_fmax(q)` (иначе SVF разносит). Тома: высота по GM-ноте 41..50; конги — GM 62/63/64 (`D_CONGA`, только киты ≥ 6).
+- Пресеты (12 новых, только свободные слоты, id старых не менялись): блок 1 — 606 TIGHT, 606 FUNK, CR-78 SOFT, CR-78 DISCO;
+  блок 2 — 808 CLASSIC, 808 LONG, 909 TECHNO, 909 HOUSE; блок 3 — 808 SUB BOOM, 808 DIRTY, 909 HARD, 707 PUNCH.
+  Старые «707», CRISP, TINY теперь звучат по таблице 707 (ближе к настоящей; ожидаемо изменились).
+- Шина кита: LPF 17 кГц для китов ≥ 6 (909 — ×0.65, иначе «harsh top»).
+- Проверка: `deck_test kitvoices DIR` рендерит каждый голос каждой машины (DIR/МАШИНА/NN_голос.wav), `tools/kit_analyse.py DIR` печатает
+  пик/затухание/центроид. **calibrate.py**: «старые не трогает» считает старыми первые N строк PRESETS2 — после вставки строк в середину
+  он пересчитал все 236; для вставок правь триммы новых строк вручную по `build/test/check.json`.

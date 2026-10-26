@@ -259,6 +259,41 @@ static void sounds(const char *dir, const char *only)
     }
 }
 
+/* each drum machine's voices, one at a time (out/kits/MACHINE/NN_VOICE.wav): to look at a kit's sounds one by one */
+static void kitvoices(const char *dir)
+{
+    static const struct { const char *n; int blk, i; } M[5] = {{"808", 2, 8}, {"909", 2, 10}, {"606", 1, 8}, {"CR-78", 1, 10}, {"707", 0, 1}};
+    static const struct { const char *n; int note; } V[] = {
+        {"kick", 36}, {"kick2", 35}, {"snare", 38}, {"snare2", 40}, {"rim", 37}, {"clap", 39}, {"hat", 42}, {"open", 46},
+        {"tomlo", 41}, {"tommid", 45}, {"tomhi", 50}, {"cowbell", 56}, {"tamb", 54}, {"crash", 49}, {"ride", 51},
+        {"shaker", 70}, {"wood", 76}, {"congahi", 62}, {"congamid", 63}, {"congalo", 64}};
+    int m, v;
+    char fn[512], cmd[600];
+    MKDIR(dir);
+    for (m = 0; m < 5; m++) {
+        sprintf(cmd, "%s/%s", dir, M[m].n);
+        MKDIR(cmd);
+        for (v = 0; v < (int)(sizeof V / sizeof V[0]); v++) {
+            int id = preset_id(M[m].blk, M[m].i);
+            fresh();
+            dk_lock();
+            dk_song.tempo = 84;
+            dk_song.dust = 0;
+            dk_track_setup(2, 5, id, SQ_LIVE, R_DRUM);
+            dk_song.trk[2].vol = 80;
+            dk_song.trk[2].pan = 0;
+            dk_unlock();
+            run(0.05);
+            reset_out();
+            note(2, V[v].note, 100);
+            run(2.0);
+            tail(5.0);
+            sprintf(fn, "%s/%s/%02d_%s.wav", dir, M[m].n, v, V[v].n);
+            wav(fn);
+        }
+    }
+}
+
 /* -------------------------------------------------------------------- songs --- */
 static void demo(const char *out)
 {
@@ -785,6 +820,8 @@ int main(int argc, char **argv)
     dk_init();
     if (!strcmp(m, "sounds"))
         sounds(argc > 2 ? argv[2] : "out/sounds", argc > 3 ? argv[3] : 0);
+    else if (!strcmp(m, "kitvoices"))
+        kitvoices(argc > 2 ? argv[2] : "out/kits");
     else if (!strcmp(m, "demo"))
         demo(argc > 2 ? argv[2] : "out/demo.wav");
     else if (!strcmp(m, "drive") && argc > 4) {

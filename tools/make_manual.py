@@ -626,14 +626,14 @@ def build():
     story.append(PageBreak())
 
     # ---- 13 sounds
-    story += section("13", "Звуки OVERWORLD", "Одиннадцать движков, четыре блока пресетов (всего 332), 4 своих слота на каждый.")
+    story += section("13", "Звуки OVERWORLD", "Одиннадцать движков, четыре блока пресетов (всего 344), 4 своих слота на каждый.")
     eng = [["FELT", "пианино с войлоком — главный инструмент", "TONE · FELT · DECAY · KNOCK"],
            ["TINE", "лоу-фай электропиано с тремоло", "TINE · TREMOLO · DRIFT · BARK"],
            ["AIRPAD", "тёплые пады: SWEDEN, AIR, WARM, SHIMMER, STRINGS", "BRIGHT · SWELL · AIR · TYPE"],
            ["GLASS", "колокольчики: стекло, челеста, маримба, шкатулка", "TYPE · DECAY · SHINE · OCTAVE"],
            ["KALIMBA", "язычок, щипок, деревянный корпус", "TONE · DECAY · WOOD"],
            ["SOFTBASS", "мягкий бас: SUB, UPRIGHT, MOOG, с глайдом", "TONE · PLUCK · GLIDE · TYPE"],
-           ["DUSTKIT", "лоу-фай барабаны", "TUNE · DECAY · DUST · KIT"],
+           ["DUSTKIT", "барабаны: лоу-фай киты и синтез-эмуляции Roland 808 / 909 / 606 / CR-78 / 707", "TUNE · DECAY · DUST · KIT (10 китов)"],
            ["WORLD", "дождь, ветер, костёр, ручей, птицы, океан, гроза", "TYPE · AMOUNT · TONE"],
            ["WINDS", "флейты, окарина, кларнет, труба, валторна, медь; SYNBRASS, DUDUK", "BRIGHT · BREATH · VIBRATO · TYPE"],
            ["SYNTH", "чип и synthwave: SAW PULSE SQUARE TRI SUPER NOISE SINE, фильтр, CRUSH", "WAVE · CUTOFF · RESO · SWEEP (+4 в MORE)"],
@@ -641,11 +641,20 @@ def build():
     story.append(table(eng, [24, 86, CW - 110], head=["ДВИЖОК", "ЧТО ЭТО", "РУЧКИ K1–K4"], pad=3))
     story.append(Spacer(1, 4 * mm))
     blk = [["AMBIENT LOFI", "132", "то, что было, плюс новые: SOFT SAW, DUST LEAD, DRONE-пады, лоу-фай пулс, пыльные ударные"],
-           ["8-16 BIT", "46", "меандр, пульс 12,5%, треугольник, шум; чип-арпеджио, GAME OVER, POWER-UP, SNES STRINGS, 707 и CHIP-ударные"],
-           ["SYNTHWAVE", "70", "NIGHT DRIVE, OUTRUN LEAD, SUNSET SAW, NEON PLUCK, MIAMI BRASS, DARK DRIVE, MIDNIGHT, неоновые колокола"],
-           ["CINEMATIC", "84", "низкие дроны, хор (CHOIR), рога (HORN, BRASS), струнные, лютня и арфа, боевые барабаны WAR как звук"]]
+           ["8-16 BIT", "50", "меандр, пульс 12,5%, треугольник, шум; чип-арпеджио, GAME OVER, POWER-UP, SNES STRINGS, 707, CHIP и Roland 606 / CR-78"],
+           ["SYNTHWAVE", "74", "NIGHT DRIVE, OUTRUN LEAD, SUNSET SAW, NEON PLUCK, MIAMI BRASS, DARK DRIVE, MIDNIGHT, неоновые колокола, барабаны 808 и 909"],
+           ["CINEMATIC", "88", "низкие дроны, хор (CHOIR), рога (HORN, BRASS), струнные, лютня и арфа, боевые барабаны WAR, 808 SUB BOOM, 909 HARD"]]
     story.append(table(blk, [30, 14, CW - 44], head=["БЛОК", "ПРЕСЕТОВ", "ЧТО ВНУТРИ"], pad=3))
     story.append(Spacer(1, 3 * mm))
+    kits = [["808", "808 CLASSIC · 808 LONG · 808 SUB BOOM · 808 DIRTY", "длинная синусная бочка с падением тона, снейр из двух тонов и шума, хэты из шести прямоугольников, клэп из нескольких всплесков, коровий колокол, клавес, конга"],
+            ["909", "909 TECHNO · 909 HOUSE · 909 HARD", "бочка с щелчком и жёстким краем, резкий снейр, яркие хэты, открытый хэт, крэш, райд"],
+            ["606", "606 TIGHT · 606 FUNK", "маленькие и сухие: короткая бочка, тонкий снейр, тикающие хэты"],
+            ["CR-78", "CR-78 SOFT · CR-78 DISCO", "мягкая аналоговая коробка: деревянная бочка, глухой снейр, хэты-тики, клавес и гуиро"],
+            ["707", "707 · CRISP · TINY · 707 PUNCH", "ближе к настоящей 707: плотная бочка, короткий снейр, яркие хэты"]]
+    story.append(table(kits, [14, 60, CW - 74], head=["КИТ", "ПРЕСЕТЫ", "ЗВУК"], pad=3))
+    story.append(Paragraph("Это синтез-эмуляции (генераторы, а не записи оригинальных семплов): похожий характер, но не те самые звуки. "
+                           "Кит выбирается ручкой KIT (K4) или пресетом; дорожки KICK SNARE RIM SHAKER HAT OPEN CLAP WOOD те же, "
+                           "а MIDI-ноты GM дают ещё томы, кубелл, тамбурин, крэш, райд и конги (ноты 62-64 у 808/909/606/CR-78).", S_P))
     story.append(Paragraph("Не у каждого инструмента есть все четыре блока: у KALIMBA новых нет, у WORLD четыре кинематографических, "
                            "у AIRPAD и WINDS нет блока 8-16 BIT. FELT, TINE и GLASS попадают в 8-16 BIT и SYNTHWAVE через "
                            "эффекты (LOFI, хорус, эхо) и настройки, а не через новые осцилляторы.", S_P))

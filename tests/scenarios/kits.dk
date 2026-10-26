@@ -1,0 +1,35 @@
+# the Roland-style kits in DUSTKIT: pick the engine (HOME + PRESET), a block (HOME + FX), a kit preset (HOME + white key)
+wait 300
+press HOME
+tapkey b4
+release HOME
+wait 2500
+press HOME
+tap FX
+release HOME
+press HOME
+tap FX
+release HOME
+wait 50
+expect blk 2
+press HOME
+tapkey w8
+release HOME
+wait 500
+expect eng 5
+expect blk 2
+shot kit_808.png
+press HOME
+tapkey w10
+release HOME
+wait 500
+shot kit_909.png
+press HOME
+tap SEL
+release HOME
+press HOME
+tapkey w8
+release HOME
+wait 500
+expect blk 1
+shot kit_606.png

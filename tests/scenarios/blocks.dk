@@ -17,6 +17,9 @@ expect pcnt2.1 0
 expect pcnt2.3 12
 expect pcnt4.1 8
 expect pcnt4.2 12
+expect pcnt5.1 12
+expect pcnt5.2 12
+expect pcnt5.3 12
 expect pcnt6.3 4
 expect pcnt7.1 0
 expect pcnt9.1 12
