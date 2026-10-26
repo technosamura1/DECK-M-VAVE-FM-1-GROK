@@ -31,6 +31,9 @@ APP_DIR holds the app (app.h, app.c, its sources) and its fm1.toml:
                              an #if would fail it)
   words = "words.tsv"        the screen reader's words (fm1-reader), relative to APP_DIR
   ble_central = true         and the FM-1 connects to Bluetooth MIDI devices too (FM1B_BLE_CENTRAL), beside a computer
+  cpu1 = true                the second core's start stub (felucca-bsp chip/fm1_cpu1.S, EXPERIMENTAL) is linked; the app
+                             provides void fm1_cpu1_main(void) and #includes fm1_cpu1.h. Its stacks are fixed at
+                             0x01C71000 (supervisor, 4 KiB) and 0x01C71300 (user): the pool must end below 0x01C71000
   usb_audio_in = true        the FM-1 recordable over USB (FM1B_UAC; the default: true)
   usb_audio_out = true       a computer plays through the FM-1 over USB (FM1B_UAC_OUT; the default: true)
 Optional parts: only what an fm1.toml asks for is built in (Bluetooth, USB audio; an app's lib/touch by APP_TOUCH in
@@ -451,6 +454,9 @@ def build_app():
              ("cc", "-c", BSP / "chip" / "fm1_isr.S", "-o", OUT / "fm1_isr.o"),
              ("cc", *flags, "-c", SRC / "device" / "unity.c", "-o", OUT / "unity.o")]
     objs = [OUT / "crt0.o", OUT / "fm1_vec.o", OUT / "fm1_isr.o", OUT / "unity.o"]
+    if CONF.get("cpu1"):
+        units.append(("cc", "-c", BSP / "chip" / "fm1_cpu1.S", "-o", OUT / "fm1_cpu1.o"))
+        objs.append(OUT / "fm1_cpu1.o")
     (OUT / "o2").mkdir(parents=True, exist_ok=True)
     o2_more = [*CONF.get("o2_cflags", []),
                *[a for h in CONF.get("o2_include", []) for a in ("-include", str((APP / h).resolve().relative_to(ROOT)))]]
@@ -468,7 +474,8 @@ def build_app():
     lto = ["--plugin", "/opt/jieli/pi32v2/bin/LLVMgold.so" if use_docker() else str(toolchain() / "pi32v2/bin/LLVMgold.so"),
            "--plugin-opt=mcpu=r3", "--plugin-opt=-pi32v2-large-program=true"] if BLE or WIFI else []
     ld = SRC / "device" / ("app_wifi.ld" if WIFI else "app.ld")
-    tc("pi32v2/bin/ld", *lto, "--gc-sections", "-e", "_start", "-T", ld, *objs, *b_objs,
+    cpu1_ld = ["--defsym=_cpu1_sstack_top=0x01C71000", "--defsym=_cpu1_ustack_top=0x01C71300"] if CONF.get("cpu1") else []
+    tc("pi32v2/bin/ld", *lto, "--gc-sections", "-e", "_start", "-T", ld, *cpu1_ld, *objs, *b_objs,
        *b_libs, "-o", elf)
     for sect in ("text.bin", "data.bin", "ramtext.bin"):
         (OUT / sect).unlink(missing_ok=True)
@@ -598,6 +605,8 @@ def check(img, syms, dis, rt):
         errors.append("RAM region overflow")
     if pool_max - pool < spare:                   # keep some of the pool spare
         errors.append(f"pool headroom {pool_max - pool} B < {spare} B")
+    if CONF.get("cpu1") and pool > 0x51000:       # the second core's stacks (--defsym above) sit at 0x01C71000..
+        errors.append(f"cpu1: the pool ({pool} B) reaches the second core's stacks at 0x01C71000")
     return errors, notes
 
 

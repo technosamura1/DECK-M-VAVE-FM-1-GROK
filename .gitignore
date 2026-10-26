@@ -4,3 +4,7 @@ deck/fm1.toml
 *.wav
 *.exe
 __pycache__/
+bench/web/
+dist-bench/
+bench_result.txt
+bench_selftest.txt

@@ -73,6 +73,37 @@ jobs:
           done
           ls -la dist
 
+      - name: BENCH (замер CPU, bench/) - тесты и сборка
+        env:
+          JIELI_TOOLCHAIN: /home/runner/.jieli/toolchain
+          AC79_SDK: ${{ github.workspace }}/ci/ac79-sdk
+        run: |
+          set -e
+          mkdir -p /tmp/dxo /tmp/bh
+          # математика голоса (звук в норме, int = float) на хосте
+          cc -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Ibase/include -Ibench bench/tests/dx_test.c bench/dx.c -lm -o /tmp/dx_test
+          /tmp/dx_test /tmp/dxo | tee /tmp/dx_test.log | tail -3
+          grep -q "DX TEST OK" /tmp/dx_test.log
+          # ПК-сторона на выдуманной FM-1
+          python3 tools/deck_bench.py --selftest | tail -1
+          # симулятор: весь замер, CPU1 inline (на хосте нет второго ядра, проверяется логика и контрольные суммы)
+          printf '#!/bin/sh\nexec cc -D_POSIX_C_SOURCE=200809L "$@"\n' > /tmp/ccx && chmod +x /tmp/ccx
+          CC=/tmp/ccx python3 base/tools/build.py bench --host
+          bench/build/host/bench_host bench/tests/basic.txt /tmp/bh | tail -4
+          # прошивка (build.py сам проверяет RAM/пул, 64-битные умножения у загрузок, доступ к регистрам)
+          python3 base/tools/build.py bench 2>&1 | tee build-bench.log | tail -12
+          sh bench/pack.sh "cpu2-bench-${GITHUB_SHA::7}"
+          echo "::notice::bench.fwsc md5 $(md5sum bench/build/bench.fwsc | cut -c1-32)"
+
+      - name: BENCH в Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpu2-bench-${{ github.sha }}
+          path: |
+            dist-bench/*.zip
+            dist-bench/*.sha256
+          retention-days: 30
+
       - name: Архив в Artifacts
         uses: actions/upload-artifact@v4
         with:

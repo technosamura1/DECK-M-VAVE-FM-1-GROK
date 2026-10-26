@@ -1,0 +1,14 @@
+# BENCH build settings (tools/build.py): a CPU benchmark firmware, not a product
+name = "BENCH"              # APP_NAME is in app.h; this names the build's files
+id_prefix = "FM-1_66"
+usb_manufacturer = "fm1-bench"
+usb_product = "BENCH FM-1"
+o2 = ["dx.c"]                   # the voice math, -O2
+words = "words.tsv"
+ble = false
+# the site (tools/make_site.py, tools/publish_site.sh)
+tagline = "a CPU benchmark for the FM-1: FM operators on CPU0 and CPU1"
+repo = "https://github.com/charlesvestal/fm1-base"
+licence = "MPL-2.0"
+credits = ""                   # a sentence for the installer's footer: what your firmware is built from
+cpu1 = true                    # link the BSP's second-core entry (fm1_cpu1.S), EXPERIMENTAL: the bench starts it only on request

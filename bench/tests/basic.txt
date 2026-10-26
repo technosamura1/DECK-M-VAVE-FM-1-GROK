@@ -1,0 +1,35 @@
+# BENCH in the host simulator: tools/build.py bench --host, then
+#   bench/build/host/bench_host bench/tests/basic.txt bench/build/host
+# (the host has no second core: CPU1 rows run inline, which tests the bench's own logic and checksums)
+wait 300
+shot boot.png
+expect st 0
+expect sysex 1
+tap PLAY
+wait 3000
+expect st 2
+expect ok0 1
+shot cpu0.png
+# REC: the first press arms (the host clock is under 31 s: refused, "CPU1 WAIT"), so only the safe path is tested here
+tap REC
+wait 100
+expect st 2
+expect c1st 0
+tap HOME
+wait 100
+expect st 0
+expect rows 0
+# after 31 s: REC twice starts CPU1 (inline on the host): every row measured, every checksum equal to CPU0's
+tap PLAY
+wait 3000
+wait 28000
+tap REC
+wait 100
+expect st 2
+tap REC
+wait 3000
+expect st 4
+expect c1st 1
+expect ok1 1
+expect rows 82
+shot all.png
