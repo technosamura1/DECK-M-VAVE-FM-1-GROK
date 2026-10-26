@@ -1,0 +1,95 @@
+# a hold past the hint (0.45 s: the hint, or HOME's load box, is up) is a look: letting go does not do the button's tap.
+# A short press still does. Holds with an action of their own keep it (EDIT undo, GLO fill, ENV garage)
+wait 300
+tap FX
+wait 3500
+expect page 2
+press FX
+wait 700
+release FX
+wait 100
+expect page 2
+press LFO
+wait 700
+release LFO
+wait 100
+expect page 2
+press SAVE
+wait 700
+release SAVE
+wait 100
+expect page 2
+press ARP
+wait 700
+release ARP
+wait 100
+expect page 2
+press GLO
+wait 700
+release GLO
+wait 100
+expect page 2
+press EDIT
+wait 550
+release EDIT
+wait 100
+expect page 2
+press ENV
+wait 520
+release ENV
+wait 100
+expect page 2
+press SEL
+wait 700
+release SEL
+wait 100
+# the short taps
+tap LFO
+wait 100
+expect page 3
+tap SAVE
+wait 100
+expect page 6
+tap GLO
+wait 100
+expect page 9
+tap EDIT
+wait 100
+expect page 5
+tap FX
+wait 100
+expect page 2
+tap ENV
+wait 100
+expect page 4
+# HOME: a look at the load box on PLAY does not open TRACKS; a tap does
+tap FX
+wait 100
+tap HOME
+wait 100
+expect page 0
+press HOME
+wait 900
+shot long_home.png
+release HOME
+wait 100
+expect page 0
+tap HOME
+wait 100
+expect page 11
+tap HOME
+wait 100
+expect page 0
+# holds with their own action
+tap FX
+press GLO
+wait 400
+expect fill 1
+release GLO
+wait 100
+expect page 2
+press ENV
+wait 800
+expect garage 1
+release ENV
+wait 100

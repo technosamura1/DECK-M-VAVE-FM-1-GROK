@@ -1200,6 +1200,14 @@ static void key_down(int k, int vel)
             say("ROAD", "BLOCK ADDED");
             return;
         }
+        if (w == 8) {                    /* COPY (white 9): the block on the cursor into the clipboard, kept; PASTE (black 11) puts it in */
+            if (dk_song.nroad) {
+                ui.road_clip = dk_song.road[ui_road_cur];
+                ui.road_clip_ok = 1;
+                say("BLOCK", "COPIED");
+            }
+            return;
+        }
         if (b >= 0) {
             static const uint8_t TR[6] = {TR_HALF, TR_DOUBLE, TR_REVERSE, TR_UP, TR_DOWN, TR_STOP};
             static const char *const TN[6] = {"HALF", "DOUBLE", "REVERSE", "UP 12", "DOWN 12", "TAPESTOP"};
@@ -1827,8 +1835,10 @@ static void input(void)
             else if (m->hold == A_FILL && ui.used[k])   /* GLO held: the FILL ends with it */
                 action(A_FILL, 0);
             else if (!ui.used[k] && !(ui.combo >> k & 1u) && m->tap != A_PLAY &&
-                     !(k == B_REC && now - ui.down_t[k] >= HOLD_HINT_MS && !dk_recording && !dk_counting && !ui.armed && !ui_auto_on))
-                action(m->tap, 1);       /* (REC held past the hint, nothing else done: let go = nothing, no take) */
+                     !(now - ui.down_t[k] >= HOLD_HINT_MS &&
+                       !(k == B_REC && (dk_recording || dk_counting || ui.armed || ui_auto_on))))
+                action(m->tap, 1);       /* a tap is a short press: held past the hint (its hint or HOME's load box was up) = a look, letting go does nothing
+                                            (REC while it records / counts / arms keeps its stop) */
         }
     }
     ui.btn = btn;

@@ -176,6 +176,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "snap")) g = snapshot_part() + 1;      /* the snapshot's part + 1 (0 none) */
     else if (!strncmp(what, "tswing", 6)) g = dk_song.trk[atoi(what + 6) % DK_NTRACK].swing;
     else if (!strcmp(what, "fill")) g = dk_fill;
+    else if (!strcmp(what, "garage")) g = ui.garage;                /* the garage open (hold ENV) */
     else if (!strcmp(what, "perform")) g = dk_perform;
     else if (!strcmp(what, "harmroot")) g = dk_harm_pcs[0];
     else if (!strcmp(what, "textfit")) g = (int)ui.fit_over;

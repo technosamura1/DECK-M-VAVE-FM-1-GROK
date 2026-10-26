@@ -1,0 +1,32 @@
+# ROAD: white 9 = COPY the block on the cursor (it stays); black 11 PASTE puts a copy in; black 10 CUT takes it out (PASTE brings it back)
+wait 300
+tap ENV
+wait 200
+expect page 4
+listen
+# nothing copied yet: PASTE does nothing (the song starts with 8 blocks)
+tapkey b10
+wait 100
+expect nroad 8
+tapkey w0
+tapkey w2
+wait 100
+expect nroad 10
+shot road_copy_footer.png
+expect textfit 0
+tapkey w8
+wait 100
+said COPIED
+expect nroad 10
+tapkey b10
+wait 100
+said PASTED
+expect nroad 11
+tapkey b9
+wait 100
+said CUT
+expect nroad 10
+tapkey b10
+wait 100
+said PASTED
+expect nroad 11

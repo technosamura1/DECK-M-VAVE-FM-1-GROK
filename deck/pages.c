@@ -351,7 +351,7 @@ static const char *hint(void)
         return "FX = ROW  HOLD FX+WHITE 1-4 = BYPASS";
     case PG_MIX: return "WHITE TRACK  BLACK MUTE  B7 SOLO  B8 ARM";
     case PG_ROAD:
-        return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
+        return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "W1-8 ADD  W9 COPY  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
     case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
