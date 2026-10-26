@@ -1376,10 +1376,11 @@ static void draw_keys(void)
         cv_rect(x, ky, 12, kh_, lit ? TH_ENC[0] : CS_LABEL);
         vline(x + 11, ky, kh_, CS_BODY_D);
         if (!drum && dk_song.layout) {       /* SCALE: each key's note (or the chord's degree), the tonic marked */
-            int nt = key_note_of(k, dk_song.cur_track), ton = nt % 12 == dk_song.root % 12 && !dk_song.white,
+            int nt = (key_note_of(k, dk_song.cur_track) % 12 + 12) % 12,       /* (a note below zero, a low octave: its pitch class) */
+                ton = nt == dk_song.root % 12 && !dk_song.white,
                 dgi = white_degree(i) >= 0 ? white_degree(i) : i % 7;
             char dg[2] = {(char)('1' + dgi), 0};
-            const char *lb = dk_song.white ? dg : DK_NOTE_NAME[nt % 12];
+            const char *lb = dk_song.white ? dg : DK_NOTE_NAME[nt];
             if (dk_song.white && dgi == 0)
                 ton = 1;
             text_box(x, ky + kh_ - 12, 11, 1, &FONT_T, &FONT_T, lb, lit ? TH_BG : ton ? RGB(200, 140, 30) : CS_INK);

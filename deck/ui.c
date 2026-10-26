@@ -1672,7 +1672,7 @@ static void lights(void)
         int root = dk_song.root % 12;
         uint32_t pool = DK_MODE_POOL[dk_song.mode % DK_NMODES] | 1u;
         for (k = 0; k < NKEYS; k++) {
-            int pc = ((dk_song.layout && white_of(k) >= 0 ? key_note_of(k, dk_song.cur_track) : 53 + k + key_shift()) - root + 120) % 12;
+            int pc = ((dk_song.layout && white_of(k) >= 0 ? key_note_of(k, dk_song.cur_track) : 53 + k + key_shift()) - root + 1200) % 12;
             if (dk_song.layout && white_of(k) >= 0)
                 dimk |= 1u << k;
             else if (!dk_song.layout && (pool >> pc & 1u))

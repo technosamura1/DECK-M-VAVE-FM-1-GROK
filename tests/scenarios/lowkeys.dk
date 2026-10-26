@@ -1,0 +1,44 @@
+# REGRESSION: the KEYS page with the keys' octave all the way down (a note below zero named a key by a negative index into the
+# note names: a read before the table, a hard fault on the device). Both octaves down (the keys' and the track's), every layout.
+wait 300
+tap EDIT
+wait 100
+expect page 5
+tap OCT-
+tap OCT-
+tap OCT-
+row 2
+turn K4 -1 8
+wait 150
+turn K4 -1 8
+wait 150
+turn K4 -1 8
+wait 150
+turn K4 -1 8
+wait 150
+key w0 down 90
+wait 150
+key w0 up
+wait 100
+key w2 down 90
+wait 150
+key w2 up
+wait 100
+expect inv 0
+turn K1 1 5
+wait 150
+turn K2 1 5
+wait 150
+turn K3 1 5
+wait 150
+turn K4 1 5
+wait 150
+turn K1 -1 5
+wait 150
+turn K2 -1 5
+wait 150
+turn K3 -1 5
+wait 150
+turn K4 -1 5
+wait 150
+expect inv 0

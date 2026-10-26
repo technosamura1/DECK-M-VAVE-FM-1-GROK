@@ -472,6 +472,12 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             host_oldck |= 4;
         return 1;
     }
+    if (!strcmp(cmd, "trkoct")) {               /* trkoct N: the current track's octave (SOUND's OCTAVE knob: -3..3) */
+        dk_lock();
+        dk_song.trk[dk_song.cur_track % DK_NTRACK].oct = (int8_t)atoi(a);
+        dk_unlock();
+        return 1;
+    }
     if (!strcmp(cmd, "roundtrip")) {            /* roundtrip: the project saved and loaded again (the fuzz: the song stays the same, the invariants hold) */
         project_save(set.proj);
         project_load(set.proj);
