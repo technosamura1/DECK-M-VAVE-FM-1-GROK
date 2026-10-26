@@ -31,6 +31,8 @@ else:                                                        # Linux (the cloud)
     FONTS = "/usr/share/fonts/truetype/dejavu"
     FF = {"Light": "DejaVuSans-ExtraLight.ttf", "Body": "DejaVuSans.ttf", "Semi": "DejaVuSans-Bold.ttf",
           "Bold": "DejaVuSans-Bold.ttf", "Mono": "DejaVuSansMono.ttf", "MonoB": "DejaVuSansMono-Bold.ttf"}
+    if not os.path.exists(os.path.join(FONTS, FF["Light"])):   # no ExtraLight in this image: the plain face
+        FF["Light"] = "DejaVuSans.ttf"
 for _n, _f in FF.items():
     pdfmetrics.registerFont(TTFont(_n, os.path.join(FONTS, _f)))
 registerFontFamily("Body", normal="Body", bold="Semi", italic="Body", boldItalic="Semi")
@@ -527,6 +529,8 @@ def build():
                                   "без щелчка), ещё раз — снова включена. 1 эффект, 2 эхо, 3 ревер, 4 тейп (общий на всю песню). "
                                   f"Просто {k('FX')} без белой — следующий ряд, как раньше. {k('LFO')} + ручка на FAV/MORE — модулятор прямо на неё."),
         ("5", "Сохранить свой", f"Держи {k('SAVE')} + белая 13–16 — пресет в свой слот. Позвать: {k('HOME')} + белая 13–16."),
+        ],
+        after=[steps([
         ("6", "Автоматизация ручки", f"Пока играет музыка, держи {k('REC')} и крути ручку на SOUND (или громкость/панораму/ревер/эхо на MIX) — "
                                     "движение запишется плавной кривой в клип этой дорожки в этой части и будет повторяться по кругу; "
                                     "на ручке появится волнистая метка, а сама ручка на экране едет за кривой. Крутнул ручку рукой сам — "
@@ -537,8 +541,9 @@ def build():
                                        f"держать {k('REC')} 1 с) кривые не трогает; держать {k('REC')} 2,5 с — стирает дорожку целиком, с кривыми. "
                                        "На SOUND и MIX удержание REC не стирает (там REC + ручка — это запись кривой)."),
         ("8", "Другой инструмент", f"{k('HOME')} + ручка PRESET — сменить сам инструмент дорожки: FELT, TINE, AIRPAD, "
-                                   "GLASS, SOFTBASS, KALIMBA, WINDS. У барабанов и природы — свои, не меняются.")],
-        after=[note("WINDS — флейты и медь", "FLUTE, PAN FLUTE, OCARINA, SHAKUHACHI, CLARINET, TRUMPET, MUTED (с сурдиной), "
+                                   "GLASS, SOFTBASS, KALIMBA, WINDS. У барабанов и природы — свои, не меняются.")
+        ], B, CW), Spacer(1, 3 * mm),
+               note("WINDS — флейты и медь", "FLUTE, PAN FLUTE, OCARINA, SHAKUHACHI, CLARINET, TRUMPET, MUTED (с сурдиной), "
                     "HORN, BRASS (секция), FLUGEL, MORNING, OLD BAND. BRIGHT — яркость, BREATH — воздух, VIBRATO "
                     "(вступает не сразу, как у духовика), TYPE, SWELL — как медленно раздувается нота. Звучит лучше "
                     "одноголосно, с долгими нотами.", B),
