@@ -310,7 +310,12 @@ static const char *hint(void)
         if (k->seq == SQ_DRIVE)
             return "PLAY = IT PLAYS  HOME+SEQ = TO STEP";
         return "SEQ+B1 COOK  B2 RANDOM  OCT-/+ UNDO/REDO";
-    case PG_SOUND: return "FX = ROW  HOLD FX+WHITE 1-4 = BYPASS";
+    case PG_SOUND:
+        if (plat_ms() / 3000u % 3u == 1u)
+            return "HOLD REC + KNOB = AUTOMATION";
+        if (plat_ms() / 3000u % 3u == 2u && auto_count(cur_clip(), 0))
+            return "REC + FX = ERASE AUTOMATION";
+        return "FX = ROW  HOLD FX+WHITE 1-4 = BYPASS";
     case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
     case PG_ROAD:
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
@@ -663,6 +668,13 @@ static void knob_row(int y)
         knob(cx, y, 15, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, knob_col(i), lit);
         if (ui.page == PG_SOUND && macro_moves(f))   /* the preset's MACRO moves this one: a dot */
             cv_rect(cx + 23, y - 28, 4, 4, TH_ENC[0]);
+        if ((ui.page == PG_SOUND || ui.page == PG_MIX) && field_target(f) && auto_count(cur_clip(), field_target(f))) {
+            /* a curve is recorded on this knob (this track, this part): a small wave; bright while it is what you hear */
+            uint16_t ac = dk_auto_live(dk_song.cur_track, field_target(f)) >= 0 ? TH_REC : dimc(TH_REC, 9);
+            cv_line(cx - 28, y - 12, cx - 25, y - 17, ac);
+            cv_line(cx - 25, y - 17, cx - 22, y - 12, ac);
+            cv_line(cx - 22, y - 12, cx - 19, y - 17, ac);
+        }
         text_box(cx - 28, y + 21, 56, 1, &FONT_XS, &FONT_T, t, RGB(28, 20, 12));
     }
 }
@@ -1847,6 +1859,7 @@ static void draw_tracks(void)
 /* -------------------------------------------------------------------- frame --- */
 static void draw_body(void)
 {
+    fg_live = (uint8_t)(dk_playing && (ui.page == PG_SOUND || ui.page == PG_MIX));   /* a curve's value on the knobs */
     switch (ui.page) {
     case PG_SEQ: draw_seq(); break;
     case PG_SOUND: draw_sound(); break;
@@ -1863,6 +1876,7 @@ static void draw_body(void)
     }
     if (ui.page != PG_PLAY && ui.page != PG_REC && ui.page != PG_TRACKS)
         knob_row(KNOB_Y);                    /* the module's four knobs, on its plate */
+    fg_live = 0;
 }
 
 /* over the PLAY page's art, before each of its bands goes out: the message (in the band's rows y0 .. y0+h) */

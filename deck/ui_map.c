@@ -20,7 +20,7 @@ static const ui_map_t UI_MAP[] = {
     {B_ENV, A_PAGE_ROAD, A_GARAGE, A_NONE, 600, "ROAD | hold: the garage (white 1-8: copy part to)"},
     {B_LFO, A_PAGE_MIX, A_NONE, A_NONE, HOLD_MOD, "MIX (white 1-6: mute the track IN THIS PART; playing: at the bar end; hold 1 s: clear its clip); again: MASTER | hold + turn a SOUND knob: MOD 1 on it"},
     {B_PLAY, A_PLAY, A_PLAYMODE, A_TAP_TEMPO, 800, "play/stop | hold: PART/SONG | HOME+: tap tempo"},
-    {B_REC, A_REC, A_CLEAR, A_METRO, 1000, "record at once (count-in, or ON NOTE; optional REC ARM: arm, then PLAY); while recording: punch-out (the tape plays on) | hold 1 s: clear the clip, 2.5 s: the track in all parts | SEQ+: clear the clip | HOME+: metronome"},
+    {B_REC, A_REC, A_CLEAR, A_METRO, 1000, "record at once (count-in, or ON NOTE; optional REC ARM: arm, then PLAY); while recording: punch-out (the tape plays on) | hold 1 s: clear the notes of the clip (the automation stays), 2.5 s: the track in all parts, automation too (not on SOUND/MIX) | hold + a SOUND/MIX knob: AUTOMATION (a smooth curve of the knob, per track) | hold + FX: erase this track's automation (undo: hold EDIT) | SEQ+: clear the notes | HOME+: metronome"},
     {B_SEL, A_PAGE_ATMO, A_NONE, A_NONE, 0, "ATMO: rain, fire, birds, ocean, wind, crickets, the dust, the tape; again: its row"},
     {B_ARP, A_ARP, A_NONE, A_ARP_OFF, HOLD_MOD, "ARP on (over the sequencer); again: LATCH on/off | HOME+: ARP off | hold + white A-H: a part (an empty one gets a COPY of this part, NEW PART on GLOBAL)"},
     {B_GLO, A_PAGE_GLOBAL, A_FILL, A_NONE, 250, "GLOBAL (tempo, swing, dust, metronome, MIDI); again: its row | hold: FILL (FINGER: its fill patterns 14-16 of the bank on a drum track)"},

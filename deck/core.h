@@ -47,6 +47,8 @@ extern volatile uint8_t dk_rec_mask;     /* the tracks being recorded (bit t): t
 extern uint8_t dk_rec_mode;              /* REC MODE: 0 OVERDUB (default), 1 REPLACE (the take erases the armed tracks' old notes it passes over) */
 extern volatile uint8_t dk_cur_part, dk_next_part, dk_road_i, dk_road_rep, dk_stems;
 extern volatile uint16_t dk_part_tick, dk_part_len;
+void dk_auto_hold(int t, int target);                  /* AUTOMATION: a knob turned by hand: its value is heard till the bar's end */
+int dk_auto_live(int t, int target);                   /* the curve's value now, tenths of a percent of the range (-1 none) */
 extern volatile uint32_t dk_ticks;                      /* since the transport started */
 extern volatile uint32_t dk_clock;                      /* ticks since boot (the free clock) */
 extern volatile uint8_t dk_beat_flash;                  /* the metronome's beat: 2 the bar's first, 1 the others */

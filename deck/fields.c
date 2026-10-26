@@ -532,7 +532,30 @@ static void field_range(int f, int *lo, int *hi)
 }
 static dk_lane_t *cur_lane(void) { return &dk_song.lane[dk_song.cur_track % DK_NTRACK][ui_lane & 7]; }
 
+/* AUTOMATION: the gesture being recorded (REC held and a knob turned: ui.c), and while the screen is drawn (fg_live) a knob
+ * whose target has a curve playing shows the curve's value, not the knob's own */
+static struct {
+    uint8_t on, t, tgt, clip;            /* a gesture is on: the track, the target, the clip */
+    int16_t start, last, pp;             /* the gesture's first point, the last written, the pending (newest) one: clip ticks */
+    int8_t lastv, pv;                    /* ... and the last written value and the pending one (percent) */
+    uint32_t ms;                         /* the last turn */
+} au;
+static uint8_t fg_live;
+static int field_target(int f);
+static int field_get_raw(int f);
 static int field_get(int f)
+{
+    int v = field_get_raw(f);
+    if (fg_live) {
+        int tgt = field_target(f), m, lo, hi;
+        if (tgt && !(au.on && au.t == dk_song.cur_track && au.tgt == tgt) && (m = dk_auto_live(dk_song.cur_track, tgt)) >= 0) {
+            field_range(f, &lo, &hi);
+            return lo + (m * (hi - lo) + 500) / 1000;
+        }
+    }
+    return v;
+}
+static int field_get_raw(int f)
 {
     dk_track_t *k = cur();
     dk_ev_t *e;

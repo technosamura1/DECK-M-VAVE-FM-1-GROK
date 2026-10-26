@@ -1242,6 +1242,101 @@ static void key_up(int k)
 }
 
 /* -------------------------------------------------------------- the knobs --- */
+/* AUTOMATION: a knob turned while REC is held (playing), or during a take on this track, goes into the clip as a curve:
+ * a point at least a 1/16 apart (12 ticks), the value in a straight line between; where the knob has passed, the older
+ * points of this knob are replaced. A gesture (a target, turns less than 0.4 s apart) is one undo step and ends thinned
+ * (au_end). Not recording: turning a knob that has a curve takes over till the bar's end. */
+#define AU_GAP 12
+static int au_dist(int from, int to, int len) { return (to - from + len) % len; }
+static void au_write(int pos, int val)
+{
+    int r;
+    dk_lock();
+    r = auto_point(au.clip, au.tgt, pos, val, au.last, 0);
+    dk_unlock();
+    if (r < 0) {
+        au.on = 0;
+        say("MEMORY FULL", "AUTOMATION STOPPED");
+        return;
+    }
+    au.last = (int16_t)pos;
+    au.lastv = (int8_t)val;
+    mark_dirty();
+}
+static void au_end(void)
+{
+    int len;
+    if (!au.on)
+        return;
+    len = clip_len(au.clip);
+    if (au.pp != au.last)
+        au_write(au.pp, au.pv);
+    if (au.on) {
+        dk_lock();
+        if (au.start <= au.last)
+            auto_thin(au.clip, au.tgt, au.start, au.last, 2);
+        else {
+            auto_thin(au.clip, au.tgt, au.start, len - 1, 2);
+            auto_thin(au.clip, au.tgt, 0, au.last, 2);
+        }
+        dk_unlock();
+    }
+    au.on = 0;
+}
+static void au_poll(uint32_t now)
+{
+    if (au.on && (now - au.ms > 400u || au.t != dk_song.cur_track ||
+                  !(held(B_REC) || (dk_recording && dk_rec_trk == au.t))))
+        au_end();
+}
+static void auto_turn(int f, int tgt, int before, uint32_t now)
+{
+    int lo, hi, rec, clip, len, pos, pct, v;
+    if (!tgt)
+        return;
+    rec = (held(B_REC) && !dk_recording && !dk_counting) || (dk_recording && dk_rec_trk == dk_song.cur_track);
+    if (held(B_REC)) {
+        ui.used[B_REC] = 1;                  /* (let go now: no recording of notes, no erase) */
+        if (!ui.erase_on)
+            ui.erase_ok = 0;
+    }
+    if (!rec || !dk_playing) {
+        if (held(B_REC) && !dk_playing)
+            say("PLAY FIRST", "THEN REC + KNOB");
+        else
+            dk_auto_hold(dk_song.cur_track, tgt);      /* a hand on a curve's knob: the hand wins till the bar's end */
+        return;
+    }
+    field_range(f, &lo, &hi);
+    clip = cur_clip();
+    len = clip_len(clip);
+    pos = dk_part_tick % len;
+    v = field_get(f);
+    pct = hi > lo ? (v - lo) * 100 / (hi - lo) : 0;
+    dk_auto_hold(dk_song.cur_track, tgt);
+    if (au.on && (au.tgt != tgt || au.t != dk_song.cur_track || au.clip != clip))
+        au_end();
+    if (!au.on) {                            /* a new gesture: one undo step; the knob's old value is where the curve starts */
+        undo_push(clip);
+        au.on = 1;
+        au.t = (uint8_t)dk_song.cur_track;
+        au.tgt = (uint8_t)tgt;
+        au.clip = (uint8_t)clip;
+        au.start = au.last = au.pp = (int16_t)pos;
+        au.lastv = au.pv = (int8_t)(hi > lo ? (before - lo) * 100 / (hi - lo) : 0);
+        au.last = -1;
+        au_write(pos, au.lastv);
+        if (!au.on)
+            return;
+        say("AUTOMATION", field_label(f));
+    }
+    au.ms = now;
+    au.pp = (int16_t)pos;
+    au.pv = (int8_t)pct;
+    if (au_dist(au.last, pos, len) >= AU_GAP)
+        au_write(pos, pct);
+}
+
 static void turn(int i, int e)
 {
     int f, lo, hi, step = 1;
@@ -1303,7 +1398,14 @@ static void turn(int i, int e)
         ui.touch_until = now + 800u;
         return;
     }
-    field_set(f, field_get(f) + e * step);
+    {
+        int tgt = ui.page == PG_SOUND || ui.page == PG_MIX ? field_target(f) : 0, before;
+        if (tgt && !(au.on && au.t == dk_song.cur_track && au.tgt == tgt) && dk_auto_live(dk_song.cur_track, tgt) >= 0)
+            field_set(f, lo + (dk_auto_live(dk_song.cur_track, tgt) * (hi - lo) + 500) / 1000);   /* from where the curve is */
+        before = field_get(f);
+        field_set(f, before + e * step);
+        auto_turn(f, tgt, before, now);
+    }
     if (f == F_ROOT)
         ui.root_until = now + 3000u;
     if (f == F_MOOD)
@@ -1315,25 +1417,6 @@ static void turn(int i, int e)
         char t[24];
         field_text(f, t);
         say(field_label(f), t);
-    }
-    /* recording LIVE: the knob's move into the clip */
-    if (dk_recording && dk_rec_trk == dk_song.cur_track && ui.page == PG_SOUND) {
-        int tgt = f >= F_P0 && f <= F_P5 ? T_P0 + (f - F_P0) : f == F_ATT ? T_ATT : f == F_DEC ? T_DEC :
-                  f == F_REL ? T_REL : f == F_FXAMT ? T_FXAMT : 0;
-        if (tgt) {
-            dk_ev_t ev;
-            int clip = cur_clip(), len = clip_len(clip), v = field_get(f);
-            field_range(f, &lo, &hi);
-            ev.pos = (uint16_t)(dk_part_tick % len);
-            ev.dur = 0;
-            ev.note = (uint8_t)tgt;
-            ev.vel = (uint8_t)(hi > lo ? (v - lo) * 100 / (hi - lo) : 0);
-            ev.fl = EV_MOTION | EV_FRESH;
-            ev.layer = DK_L_MAKE(dk_pass, 0);
-            dk_lock();
-            dk_song_insert(clip, &ev);
-            dk_unlock();
-        }
     }
 }
 
@@ -1505,6 +1588,22 @@ static void lights(void)
 /* ERASE: REC held (not recording). On the screen from 0.35 s with what goes: at 1 s the track's clip in this part,
  * held on to 2.5 s the track in all eight parts. In the garage the part (all six tracks), on ROAD the road. Let go
  * before 1 s: nothing. One undo step (HOLD EDIT) brings all of it back */
+/* AUTOMATION ERASE: REC held + FX: every curve of this track in this part (the notes stay); one undo step */
+static void auto_erase(void)
+{
+    int clip = cur_clip();
+    au_end();
+    if (!auto_count(clip, 0)) {
+        say("NO AUTOMATION", "ON THIS TRACK");
+        return;
+    }
+    undo_push(clip);
+    dk_lock();
+    auto_clear(clip, 0);
+    dk_unlock();
+    mark_dirty();
+    say("AUTOMATION CLEARED", "UNDO: HOLD EDIT");
+}
 static void erase_do(int stage)
 {
     int t = dk_song.cur_track, p, c;
@@ -1532,8 +1631,20 @@ static void erase_do(int stage)
                 continue;
             undo_push(c);
             dk_lock();
-            clip_clear(c);
+            if (stage == 2)                  /* the 2.5 s hold confirms: the automation goes too */
+                clip_clear_all(c);
+            else
+                clip_clear(c);
             dk_unlock();
+        }
+        if (stage == 2) {                    /* ... also this part's (its notes went at stage 1) */
+            c = dk_song.cur_part % DK_NPART * DK_NTRACK + t;
+            if (auto_count(c, 0)) {
+                undo_push(c);
+                dk_lock();
+                auto_clear(c, 0);
+                dk_unlock();
+            }
         }
     }
     mark_dirty();
@@ -1596,7 +1707,16 @@ static void input(void)
             ui.held_done[k] = 0;
             ui.btn |= bit;
             if (k == B_REC)                  /* ERASE by holding it, when not recording (nor with SEQ / HOME) */
-                ui.erase_ok = (uint8_t)(!ui.armed && !dk_recording && !dk_counting && !held(B_SEQ) && !held(B_HOME) && !ui.road_rec);
+                ui.erase_ok = (uint8_t)(!ui.armed && !dk_recording && !dk_counting && !held(B_SEQ) && !held(B_HOME) && !ui.road_rec &&
+                                        ui.page != PG_SOUND && ui.page != PG_MIX);   /* (there REC + a knob is AUTOMATION) */
+            if (k == B_FX && held(B_REC) && !dk_recording) {   /* REC held + FX: this track's automation in this part erased */
+                ui.used[B_REC] = 1;
+                ui.used[B_FX] = 1;
+                if (!ui.erase_on)
+                    ui.erase_ok = 0;
+                auto_erase();
+                continue;
+            }
             if ((k == B_OCTDN || k == B_OCTUP) && held(B_SEQ)) {   /* SEQ held + OCT-/OCT+: undo / redo, step by step */
                 ui.used[B_SEQ] = 1;
                 ui.used[k] = 1;
@@ -1663,6 +1783,7 @@ static void input(void)
         say(s, "CLEARED");
     }
     midi_in();
+    au_poll(now);
     /* K1..K4: the page's four; ALGO its extra (PLAY: the MOOD); SELECT the track, PRESET the preset */
     for (k = 0; k < 4; k++)
         if ((e = plat_enc(EN_K1 + (int)k)) != 0)

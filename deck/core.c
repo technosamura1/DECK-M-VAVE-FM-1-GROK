@@ -142,7 +142,7 @@ static void seen(int note, int trk, int vel, int src)
 static float tp[DK_NTRACK][PX_N];
 static float t_fxamt[DK_NTRACK], t_fxa[DK_NTRACK], t_fxb[DK_NTRACK], t_rev[DK_NTRACK], t_echo[DK_NTRACK];
 static float t_vol[DK_NTRACK], t_pan[DK_NTRACK], t_swing[DK_NTRACK];
-static int16_t mot[DK_NTRACK][T_N];           /* the clip's motion: the value (-1 none) */
+static int16_t mot[DK_NTRACK][T_N];           /* the clip's motion: the value in tenths of a percent of the range, 0..1000 (-1 none) */
 static uint32_t mot_until[DK_NTRACK][T_N];    /* a p-lock's end (dk_ticks), 0: a move (stays) */
 static float modv[DK_NTRACK][2];              /* the modulators now, -1..1 (PEDAL, FOLLOW: 0..1) */
 static float dice_v[DK_NTRACK][2], pedal_v[DK_NTRACK][2];
@@ -191,8 +191,8 @@ static int param_value(int t, int target, int live)
     const dk_track_t *k = &dk_song.trk[t];
     int lo, hi, v = base_value(t, target, &lo, &hi), i;
     float f;
-    if (live && mot[t][target] >= 0)          /* the clip's motion: 0..100 of the range */
-        v = lo + (mot[t][target] * (hi - lo) + 50) / 100;
+    if (live && mot[t][target] >= 0)          /* the clip's motion: 0..1000 of the range */
+        v = lo + (mot[t][target] * (hi - lo) + 500) / 1000;
     f = (float)v;
     for (i = 0; i < 3; i++)                    /* MACRO: amount % of the range at full */
         if (k->mt[i] == target && k->ma[i])

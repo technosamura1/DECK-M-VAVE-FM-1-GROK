@@ -103,8 +103,9 @@ typedef struct {
 enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_RSV7, SQ_N };
 
 /* an event: a note, or (EV_MOTION) a knob's move: note = its target (T_*), vel = the value 0..100, dur 0 a move,
- * dur > 0 a p-lock held that long */
-enum { EV_PROB = 3, EV_RATCH = 3 << 2, EV_SLIDE = 1 << 4, EV_MOTION = 1 << 6, EV_FRESH = 1 << 7 };
+ * dur > 0 a p-lock held that long. EV_MOTION|EV_RAMP (dur 0): a point of an AUTOMATION curve: the value moves in a straight line
+ * to the next point of the same target in the clip (the last holds), see seq.c auto_tick */
+enum { EV_PROB = 3, EV_RATCH = 3 << 2, EV_SLIDE = 1 << 4, EV_RAMP = 1 << 4, EV_MOTION = 1 << 6, EV_FRESH = 1 << 7 };
 typedef struct {
     uint16_t pos, dur;                  /* ticks into the clip; length */
     uint8_t note, vel, fl, layer;       /* fl: probability 0..3 (100 75 50 25 %), ratchet (x1..x4), slide; layer: see below */

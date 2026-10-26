@@ -24,7 +24,12 @@ int clip_len(int clip);
 int clip_len_raw(int clip);
 int clip_find(int clip, int pos, int note, int tol);
 void ev_delete(int clip, int k);
-void clip_clear(int clip);
+void clip_clear(int clip);                 /* the notes out; the automation stays */
+void clip_clear_all(int clip);             /* every event */
+int auto_count(int clip, int target);      /* AUTOMATION points of a target (0: all) */
+int auto_clear(int clip, int target);      /* ... removed */
+int auto_point(int clip, int target, int pos, int val, int from, int len);
+void auto_thin(int clip, int target, int from, int to, int tol);
 void clip_copy(int clip);
 int clip_paste(int clip);
 void clip_double(int clip);

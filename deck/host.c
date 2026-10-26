@@ -27,6 +27,20 @@ static uint32_t host_clip_hash(void)
     return h;
 }
 
+static int auto_edge(int tgt, int last)
+{
+    const dk_clip_t *c = &dk_song.clip[cur_clip()];
+    int i, v = -1;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if ((e->fl & (EV_MOTION | EV_RAMP)) == (EV_MOTION | EV_RAMP) && e->note == tgt) {
+            v = e->vel;
+            if (!last)
+                break;
+        }
+    }
+    return v;
+}
 int app_expect(const char *what, int *got)
 {
     int g = 0;
@@ -45,6 +59,12 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "mode")) g = dk_song.mode;
     else if (!strcmp(what, "seq")) g = cur()->seq;
     else if (!strcmp(what, "nev")) g = dk_song.nev;
+    else if (!strcmp(what, "autos")) g = auto_count(cur_clip(), 0);                      /* AUTOMATION: the curve points of the track in this part */
+    else if (!strncmp(what, "atgt", 4)) g = auto_count(cur_clip(), atoi(what + 4));      /* ... of one target (T_*) */
+    else if (!strncmp(what, "alive", 5)) g = dk_auto_live(dk_song.cur_track, atoi(what + 5));   /* the curve's value now (tenths of %), -1 none */
+    else if (!strncmp(what, "pval", 4)) g = dk_param_value(dk_song.cur_track, atoi(what + 4));  /* what the voices hear */
+    else if (!strncmp(what, "afirst", 6)) g = auto_edge(atoi(what + 6), 0);              /* the target's first / last point's value (percent) */
+    else if (!strncmp(what, "alast", 5)) g = auto_edge(atoi(what + 5), 1);
     else if (!strcmp(what, "events")) g = dk_song.clip[cur_clip()].n;
     else if (!strcmp(what, "same")) g = host_clip_hash() == host_mark;
     else if (!strncmp(what, "events", 6) && what[6] && what[7]) g = host_events(what[6] - 'A', what[7] - '1');

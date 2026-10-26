@@ -96,13 +96,169 @@ static int clip_put(int clip, const dk_ev_t *src, int n)
     return n;
 }
 
-void clip_clear(int clip)
+/* every event of the clip, the automation too (the 2.5 s track erase, a part wiped, CLEAR ALL) */
+void clip_clear_all(int clip)
 {
     clip_put(clip, 0, 0);
     dk_song.clip[clip].layers = 0;
     dk_song.lmute[clip] = 0;
     if (dk_lsolo_clip == clip)
         dk_lsolo_clip = 0xFF;
+}
+/* AUTOMATION: a curve's point is a motion event with EV_RAMP; `target` 0: all of them. One pass over the pool, so the lock is short. */
+static int ev_is_ramp(const dk_ev_t *e, int target)
+{
+    return (e->fl & (EV_MOTION | EV_RAMP)) == (EV_MOTION | EV_RAMP) && (!target || e->note == target);
+}
+int auto_count(int clip, int target)
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, n = 0;
+    for (i = 0; i < c->n; i++)
+        n += ev_is_ramp(&dk_ev[c->at + i], target);
+    return n;
+}
+/* the clip's first w events kept (the rest were dropped by compacting them out): the pool closed up behind them */
+static void clip_close(int clip, int w)
+{
+    dk_clip_t *c = &dk_song.clip[clip];
+    int i, gone = c->n - w;
+    for (i = c->at + c->n; i < dk_song.nev; i++)
+        dk_ev[i - gone] = dk_ev[i];
+    c->n = (uint16_t)w;
+    for (i = clip + 1; i < DK_NCLIP; i++)
+        dk_song.clip[i].at = (uint16_t)(dk_song.clip[i].at - gone);
+    dk_song.nev = (uint16_t)(dk_song.nev - gone);
+    song_edits++;
+}
+/* events dropped in one pass: the ramps of `target` (0: all) when drop_notes is 0, else everything that is not a ramp */
+static int clip_filter(int clip, int drop_notes, int target)
+{
+    dk_clip_t *c = &dk_song.clip[clip];
+    int i, w = 0, gone, n = c->n;
+    for (i = 0; i < n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        int ramp = ev_is_ramp(e, target);
+        if (drop_notes ? ramp : !ramp)
+            dk_ev[c->at + w++] = *e;
+    }
+    gone = n - w;
+    if (gone)
+        clip_close(clip, w);
+    return gone;
+}
+/* the automation of a target (0: all) out of the clip */
+int auto_clear(int clip, int target)
+{
+    return clip_filter(clip, 0, target);
+}
+/* the notes (and the other motion) out of the clip; the automation stays: the REC hold erase, CLEAR (SEQ+REC), BAKE, the arp */
+void clip_clear(int clip)
+{
+    dk_clip_t *c = &dk_song.clip[clip];
+    if (!auto_count(clip, 0)) {
+        clip_clear_all(clip);
+        return;
+    }
+    clip_filter(clip, 1, 0);
+    c->layers = 0;
+    dk_song.lmute[clip] = 0;
+    if (dk_lsolo_clip == clip)
+        dk_lsolo_clip = 0xFF;
+}
+
+/* a point of a curve: the target's value `val` (0..100) at `pos`. The target's older points the knob has passed (after `from`,
+ * the gesture's last point, up to pos; round the clip's end if pos < from) are dropped: what is turned replaces what was
+ * there. Returns 0, or -1 when the pool is (nearly) full. */
+int auto_point(int clip, int target, int pos, int val, int from, int len)
+{
+    dk_clip_t *c = &dk_song.clip[clip];
+    dk_ev_t e;
+    int i, w = 0, n = c->n, gone;
+    (void)len;
+    for (i = 0; i < n; i++) {
+        const dk_ev_t *o = &dk_ev[c->at + i];
+        int p = o->pos, del = 0;
+        if (ev_is_ramp(o, target))
+            del = from < 0 || from == pos ? p == pos : from < pos ? (p > from && p <= pos) : (p > from || p <= pos);
+        if (!del)
+            dk_ev[c->at + w++] = *o;
+    }
+    gone = n - w;
+    if (gone)
+        clip_close(clip, w);
+    if (dk_song.nev + 64 > DK_NEV)
+        return -1;
+    e.pos = (uint16_t)pos;
+    e.dur = 0;
+    e.note = (uint8_t)target;
+    e.vel = (uint8_t)(val < 0 ? 0 : val > 100 ? 100 : val);
+    e.fl = EV_MOTION | EV_RAMP;
+    e.layer = 0;
+    return dk_song_insert(clip, &e) < 0 ? -1 : 0;
+}
+/* a gesture's points thinned: the Douglas-Peucker way, a point stays only if the curve without it would be more than `tol`
+ * % of the range off; the first and last stay. Over a long gesture the tolerance grows till at most 24 points a bar remain
+ * (the pool is shared: 4096 events). Points of `target` with pos in [from, to]. */
+void auto_thin(int clip, int target, int from, int to, int tol)
+{
+    enum { MAXP = 96 };
+    dk_clip_t *c = &dk_song.clip[clip];
+    int idx[MAXP], np = 0, i, maxn, keepn;
+    uint8_t keep[MAXP];
+    for (i = 0; i < c->n && np < MAXP; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (ev_is_ramp(e, target) && e->pos >= from && e->pos <= to)
+            idx[np++] = i;
+    }
+    if (np < 3)
+        return;
+    maxn = 24 * ((to - from) / DK_TPB + 1);
+    for (;;) {
+        int stack[MAXP][2], sp = 0;
+        for (i = 0; i < np; i++)
+            keep[i] = 0;
+        keep[0] = keep[np - 1] = 1;
+        stack[sp][0] = 0;
+        stack[sp++][1] = np - 1;
+        while (sp) {
+            int a = stack[--sp][0], b = stack[sp][1], worst = -1, wd = tol, k;
+            const dk_ev_t *ea = &dk_ev[c->at + idx[a]], *eb = &dk_ev[c->at + idx[b]];
+            for (k = a + 1; k < b; k++) {
+                const dk_ev_t *ek = &dk_ev[c->at + idx[k]];
+                int span = eb->pos - ea->pos, ip = span > 0 ? ea->vel + (eb->vel - ea->vel) * (ek->pos - ea->pos) / span : ea->vel;
+                int d = ek->vel > ip ? ek->vel - ip : ip - ek->vel;
+                if (d > wd) {
+                    wd = d;
+                    worst = k;
+                }
+            }
+            if (worst >= 0) {
+                keep[worst] = 1;
+                stack[sp][0] = a;
+                stack[sp++][1] = worst;
+                stack[sp][0] = worst;
+                stack[sp++][1] = b;
+            }
+        }
+        for (i = keepn = 0; i < np; i++)
+            keepn += keep[i];
+        if (keepn <= maxn || tol >= 50)
+            break;
+        tol *= 2;
+    }
+    {
+        int w = 0, j = 0, n = c->n;
+        for (i = 0; i < n; i++) {
+            if (j < np && idx[j] == i) {
+                if (!keep[j++])
+                    continue;
+            }
+            dk_ev[c->at + w++] = dk_ev[c->at + i];
+        }
+        if (w != n)
+            clip_close(clip, w);
+    }
 }
 
 /* the events sorted by position (after an edit that moved them) */
@@ -590,7 +746,7 @@ int part_copy_x(int from, int to, int wipe)
     if (wipe)
         for (t = 0; t < DK_NTRACK; t++)
             if (dk_song.clip[to * DK_NTRACK + t].n)
-                clip_clear(to * DK_NTRACK + t);
+                clip_clear_all(to * DK_NTRACK + t);
     for (t = 0; t < DK_NTRACK; t++) {
         int c = to * DK_NTRACK + t, src = from * DK_NTRACK + t, n = dk_song.clip[src].n;
         if (n) {                           /* `c` is empty: its place opened (the events behind move up), the events copied in */

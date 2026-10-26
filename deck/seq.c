@@ -338,7 +338,7 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
     float vel = (float)e->vel * (1.0f / 127.0f);
     if (e->fl & EV_MOTION) {                    /* a knob's move, or a p-lock held */
         if (e->note < T_N) {
-            mot[t][e->note] = (int16_t)(e->vel > 100 ? 100 : e->vel);
+            mot[t][e->note] = (int16_t)((e->vel > 100 ? 100 : e->vel) * 10);
             mot_until[t][e->note] = e->dur ? dk_ticks + e->dur : 0u;
             params_update();                   /* the notes on this tick hear it */
         }
@@ -370,6 +370,81 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
     ev_snd = 0;
 }
 
+/* AUTOMATION: the clip's curves. A point (EV_MOTION|EV_RAMP) holds its value till the next point of its target, between two
+ * the value moves in a straight line (tenths of a percent, so a slow turn is smooth). Before the first point the loop's
+ * last value goes on. A knob turned by hand wins till the bar's end (auto_hold), then the curve takes over again. A
+ * target that has no curve in this clip (another part, erased) is let go. Evaluated every tick, whatever the tricks. */
+static uint32_t ramp_own[DK_NTRACK];            /* the targets (bit) whose motion value is a curve's */
+static uint32_t auto_hold_t[DK_NTRACK][T_N];    /* hand wins while dk_ticks is below this */
+static uint8_t auto_dirty;                      /* a curve moved: the tick's end updates the voices' parameters once */
+static void auto_tick(int t)
+{
+    const dk_clip_t *c = CLIP(cur_part, t);
+    int clen = clip_len_of(cur_part, t), ct = part_tick % clen, i, g, n = c->n, at = c->at;
+    int16_t last[T_N], next[T_N];
+    uint32_t seen = 0;
+    if (!n && !ramp_own[t])
+        return;
+    for (g = 0; g < T_N; g++)
+        last[g] = next[g] = -1;
+    for (i = 0; i < n; i++) {
+        const dk_ev_t *e = &dk_ev[at + i];
+        if ((e->fl & (EV_MOTION | EV_RAMP)) != (EV_MOTION | EV_RAMP) || e->note >= T_N || !e->note)
+            continue;
+        g = e->note;
+        seen |= 1u << g;
+        if (e->pos <= ct)
+            last[g] = (int16_t)i;
+        else if (next[g] < 0)
+            next[g] = (int16_t)i;
+    }
+    for (g = 1; g < T_N; g++) {
+        const dk_ev_t *a, *b;
+        int v;
+        if (!(seen >> g & 1u)) {
+            if (ramp_own[t] >> g & 1u) {
+                ramp_own[t] &= ~(1u << g);
+                mot[t][g] = -1;
+                mot_until[t][g] = 0;
+                auto_dirty = 1;
+            }
+            continue;
+        }
+        if (dk_ticks < auto_hold_t[t][g] || last[g] < 0)
+            continue;
+        a = &dk_ev[at + last[g]];
+        v = a->vel > 100 ? 1000 : a->vel * 10;
+        if (next[g] >= 0) {
+            b = &dk_ev[at + next[g]];
+            v += ((b->vel > 100 ? 1000 : b->vel * 10) - v) * (ct - a->pos) / (b->pos - a->pos);
+        }
+        ramp_own[t] |= 1u << g;
+        mot_until[t][g] = 0;
+        if (mot[t][g] != v) {
+            mot[t][g] = (int16_t)v;
+            auto_dirty = 1;
+        }
+    }
+}
+/* the UI: a knob turned by hand (target of the track): its own value is heard till the bar's end */
+void dk_auto_hold(int t, int target)
+{
+    if ((unsigned)t >= DK_NTRACK || target <= 0 || target >= T_N)
+        return;
+    auto_hold_t[t][target] = dk_playing ? dk_ticks + (uint32_t)(DK_TPB - part_tick % DK_TPB) : 0u;
+    if (ramp_own[t] >> target & 1u) {           /* (a curve not begun yet has nothing to let go; its first point waits too) */
+        mot[t][target] = -1;
+        auto_dirty = 1;
+    }
+}
+/* the value a curve gives now (tenths of a percent of the range), -1 none: the knob's display follows it */
+int dk_auto_live(int t, int target)
+{
+    if ((unsigned)t >= DK_NTRACK || target <= 0 || target >= T_N || !dk_playing || !(ramp_own[t] >> target & 1u))
+        return -1;
+    return mot[t][target];
+}
+
 static void clip_tick(int t, uint32_t *harm_pcs)
 {
     dk_clip_t *c = CLIP(cur_part, t);
@@ -395,6 +470,8 @@ static void clip_tick(int t, uint32_t *harm_pcs)
             const dk_ev_t *e = &dk_ev[at + i];
             int p = e->pos;
             if (e->fl & EV_FRESH)
+                continue;
+            if ((e->fl & (EV_MOTION | EV_RAMP)) == (EV_MOTION | EV_RAMP))   /* a curve's point: auto_tick */
                 continue;
             if (rev && !(e->fl & EV_MOTION))
                 p = ((clen - e->pos - (e->dur < clen ? e->dur : 1)) % clen + clen) % clen;
@@ -654,7 +731,10 @@ static void motion_reset(void)
         for (k = 0; k < T_N; k++) {
             mot[t][k] = -1;
             mot_until[t][k] = 0;
+            auto_hold_t[t][k] = 0;
         }
+    for (t = 0; t < DK_NTRACK; t++)
+        ramp_own[t] = 0;
 }
 
 /* --------------------------------------------------------------- transport --- */
@@ -919,10 +999,15 @@ static void seq_tick(void)
                 drive_tick(t);
         } else
             clip_tick(t, t == dk_song.harm_track ? &hp : 0);
+        auto_tick(t);
         if (dk_arp_on(k))
             arp_tick(t);
         if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
             finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
+    }
+    if (auto_dirty) {
+        auto_dirty = 0;
+        params_update();
     }
     {
         int n = 0, i;
