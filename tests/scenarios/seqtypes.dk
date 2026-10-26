@@ -13,9 +13,11 @@ release HOME
 wait 50
 expect track 1
 expect seq 1
-# ARP over LIVE on the keys
+# ARP over LIVE on the keys (the button opens the page; K4 there switches it on)
 tap ARP
 wait 100
+turn K4 1
+wait 50
 expect seq 1
 key w0 down 90
 key w2 down 90

@@ -862,16 +862,9 @@ static void action(int a, int b)
             say("ARP", "NOT ON DRUMS");
             break;
         }
-        if (!dk_arp_on(k)) {
-            keys_all_up();
-            k->arp_opt |= ARPO_ON;
-            mark_dirty();
+        if (ui.page != PG_ARP && !dk_arp_on(k))   /* the button only opens the page (ARP is K4 there); off: the first row */
             ui.row[PG_ARP] = 0;
-            if (ui.page != PG_ARP)
-                page_go(PG_ARP);
-            say("ARP", "ON");
-        } else
-            page_go(PG_ARP);
+        page_go(PG_ARP);
         break;
     }
     case A_ARP_OFF: {

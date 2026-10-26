@@ -1,0 +1,48 @@
+# ARP button: only opens the ARP page (the arp stays off). Page row 1: K1 MODE, K2 RATE, K3 GATE, K4 ARP on/off; row 2 (ARP again): OCT, LATCH, PLAYS.
+# HOME+ARP = off. Keys with the ARP off play as always
+wait 300
+tap FX
+wait 100
+tap ARP
+wait 200
+expect page 8
+expect arp 0
+shot arp_page_off.png
+key w0 down 90
+wait 400
+expect voices >0
+key w0 up
+wait 800
+expect arpstep 0
+turn K4 1
+wait 100
+expect arp 1
+shot arp_page_on.png
+key w0 down 90
+wait 600
+expect arpstep >1
+key w0 up
+wait 200
+# turning it off on the page
+turn K4 -1
+wait 100
+expect arp 0
+# on again, and HOME+ARP = off
+turn K4 1
+wait 50
+expect arp 1
+press HOME
+tap ARP
+release HOME
+wait 100
+expect arp 0
+# the button again (the page is open): the next row, still off
+tap ARP
+wait 100
+expect arp 0
+shot arp_row2.png
+tap FX
+wait 100
+tap ARP
+wait 100
+expect arp 0

@@ -52,6 +52,10 @@ tap ARP
 wait 50
 turn K4 1
 wait 50
+tap ARP
+wait 50
+turn K2 1
+wait 50
 key w0 down 90
 key w2 down 90
 key w4 down 90

@@ -110,6 +110,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "root")) g = dk_song.root;
     else if (!strcmp(what, "mode")) g = dk_song.mode;
     else if (!strcmp(what, "seq")) g = cur()->seq;
+    else if (!strcmp(what, "arp")) g = dk_arp_on(cur());           /* the ARP on this track */
     else if (!strcmp(what, "autoall")) {                                                  /* ... in the whole song */
         int c;
         for (c = 0; c < DK_NCLIP; c++)

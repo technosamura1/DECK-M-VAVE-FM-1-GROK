@@ -230,8 +230,8 @@ static int page_field(int i, int home)
         return F[i];
     }
     case PG_ARP: {                           /* the arpeggiator's own page */
-        static const uint8_t F[2][5] = {{F_ARPMODE, F_ARPDIV, F_ARPRHY, F_ARPLATCH, F_ARPOCT},
-                                        {F_ARPOCT, F_ARPGATE, F_ARPSRC, F_ARPON, F_NONE}};
+        static const uint8_t F[2][5] = {{F_ARPMODE, F_ARPDIV, F_ARPGATE, F_ARPON, F_ARPRHY},   /* K1-K4: MODE RATE GATE ARP (on/off: the page switches it) */
+                                        {F_ARPOCT, F_ARPLATCH, F_ARPSRC, F_NONE, F_NONE}};
         return F[row & 1][i];
     }
     case PG_SOUND: {
@@ -364,7 +364,7 @@ static const char *hint(void)
         if (ui.lay)
             return "HOLD EDIT = UNDO  HOME = BACK";
         return "EDIT = EDIT LIST  K3 MODE  HOME = BACK";
-    case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
+    case PG_ARP: return "K4 ON/OFF  ARP=ROW  HOME+ARP=OFF";
     default: return "";
     }
 }
@@ -486,7 +486,7 @@ static const char *hold_hint(uint32_t now)
         "ENV: ROAD  HOLD = GARAGE", "LFO: MIX  +SOUND KNOB = MOD 1",
         "EDIT: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
         0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
-        "ARP: AGAIN LATCH  +WHITE PART", 0,
+        "ARP: PAGE  K4 ON/OFF  +WHITE PART", 0,
         "PLAY/STOP  HOLD PART/SONG", "REC: HOLD = ERASE TAKE  +KNOB = AUTO",
         "OCT-: OCTAVE  HOME+ SCALE STEP", "OCT+: OCTAVE  HOME+ SCALE STEP"};
     int b, best = -1;

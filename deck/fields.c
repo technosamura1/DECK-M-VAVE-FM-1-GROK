@@ -778,6 +778,8 @@ static void field_set(int f, int v)
     case F_ARPGATE: k->arp_opt = (uint8_t)((k->arp_opt & ~3u) | ARPG_ORDER[v % ARPG_N]); break;
     case F_ARPSRC: k->arp_opt = (uint8_t)((k->arp_opt & ~4u) | (v ? 4u : 0u)); break;
     case F_ARPON:
+        if ((v != 0) != dk_arp_on(k))
+            keys_all_up();               /* (the keys down change hands: no note stays sounding) */
         k->arp_opt = (uint8_t)(v ? k->arp_opt | ARPO_ON : k->arp_opt & ~ARPO_ON);
         if (!v)
             dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
