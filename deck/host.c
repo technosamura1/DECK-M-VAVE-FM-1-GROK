@@ -7,7 +7,7 @@
  *   note)
  *   parts: pmask (the part's track mutes, the one now) pmaskA..H pmpend (a mute waiting for the bar's end) newpart (NEW PART 1 COPY, 0 EMPTY)
  *   barsA..H psndA1 (the first event's frozen sound, part A track 1) clenA1 (clip length) pmgen
- *   commands: seed P T N SND (N events into part P (A=0) track T (1..6), sound id SND), setbars P N, setpmask P MASK, newpart N,
+ *   commands: seed P T N SND (N events into part P (A=0) track T (1..6), sound id SND), holdseed P T N DUR, setbars P N, setpmask P MASK, newpart N,
  *   ballast N (N events into part H's track 6: the pool nearly full), demo (the tape's demo song), export FILE (the song's SysEx stream to a .syx file), textaudit (every page,
  *   row, track and engine drawn: the texts that did not fit counted), page N, track N, wavsolo T */
 static int host_events(int part, int trk) { return dk_song.clip[(part & 7) * DK_NTRACK + (trk % DK_NTRACK)].n; }
@@ -378,6 +378,25 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             e.note = (uint8_t)(48 + i % 12);
             e.vel = 90;
             e.layer = DK_L_MAKE(snd ? 1 : 0, snd);
+            dk_song_insert(pt * DK_NTRACK + t, &e);
+        }
+        dk_unlock();
+        return 1;
+    }
+    if (!strcmp(cmd, "holdseed")) {             /* holdseed P T N DUR: N notes together at the start, DUR ticks, the track's own sound */
+        int pt = atoi(a) & 7, t = (atoi(b) - 1 + DK_NTRACK) % DK_NTRACK, n = atoi(c), dur = atoi(d), i;
+        if (dur < 1)
+            dur = DK_T16;
+        if (n > 8)
+            n = 8;
+        dk_lock();
+        for (i = 0; i < n; i++) {
+            dk_ev_t e = {0};
+            e.pos = 0;
+            e.dur = (uint16_t)dur;
+            e.note = (uint8_t)(60 + i * 3);
+            e.vel = 100;
+            e.layer = DK_L_MAKE(1, 0);
             dk_song_insert(pt * DK_NTRACK + t, &e);
         }
         dk_unlock();

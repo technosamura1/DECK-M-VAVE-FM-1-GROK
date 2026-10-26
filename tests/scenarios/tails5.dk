@@ -1,0 +1,33 @@
+# four AIRPAD chords, let go. one pad keeps its release (under the line). four together sit over the
+# budget, so the quiet tails are cut and a fifth instrument has room. a chord still held is not cut.
+budget 100
+listen
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+trkset 1 2 0 0
+holdseed 0 1 4 200
+tap PLAY
+wait 400
+expect voices >2
+wait 1400
+expect voices >2
+expect voices <8
+tap PLAY
+wait 300
+expect playing 0
+trkset 2 2 0 0
+trkset 3 2 0 0
+trkset 4 2 0 0
+holdseed 0 2 4 200
+holdseed 0 3 4 200
+holdseed 0 4 4 200
+tap PLAY
+wait 400
+expect voices >14
+wait 1400
+expect voices <14
+expect voices >4

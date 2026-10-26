@@ -345,7 +345,9 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
     if (cnt >= e->max_voices) {                /* the track's own: its quietest let go, else its oldest */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);   /* (the hand's held note is not the sequencer's to take) */
+                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);
+                if ((int32_t)(age_ctr - vc[i].age) < (int32_t)(DK_SR / 10))
+                    l += 40.0f;                /* a note just begun is quiet: it is not the one given up */
                 if (l < lo) {
                     lo = l;
                     best = &vc[i];
@@ -454,6 +456,40 @@ static void budget_make_room(int want, int live)
             return;
         if (vc[best].held)
             midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
+        voice_fade(&vc[best]);
+        vc[best].on = 0;
+    }
+}
+
+/* between notes the tails stay on and over the budget, so the next instrument has no room. once a chunk, if the
+ * mix is heavy, the quietest tails (already let go) fade out: at most NFADE of them. a sparse song is left alone
+ * (six felt voices sit under the line). a loud tail stays unless the mix is actually over the budget, or the pool
+ * is nearly full. */
+static void tails_trim(void)
+{
+    int guard = NFADE;
+    while (guard--) {
+        int i, total = 0, nv = 0, best = -1;
+        float lo = 1e9f;
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on) {
+                total += TAPE.eng[vc[i].eng]->cost;
+                nv++;
+            }
+        if (total <= dk_budget - 14 && nv <= 18)
+            return;
+        for (i = 0; i < DK_NVOICE; i++)
+            if (vc[i].on && !vc[i].held) {
+                float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+                if (l > 0.5f && total <= dk_budget && nv <= 20)
+                    continue;
+                if (l < lo) {
+                    lo = l;
+                    best = i;
+                }
+            }
+        if (best < 0)
+            return;
         voice_fade(&vc[best]);
         vc[best].on = 0;
     }
@@ -1032,6 +1068,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     uint32_t j;
     float pk = 0.0f, dust = (float)dk_song.dust * 0.01f, slp = (float)dk_song.sleep * 0.01f;
     age_ctr += n;                               /* (the voices' age: samples) */
+    tails_trim();
     if (dk_perform == PF_SLEEP)
         slp = 1.0f;
     if (dk_perform == PF_VINYLSTOP || dk_perform == PF_REWIND)

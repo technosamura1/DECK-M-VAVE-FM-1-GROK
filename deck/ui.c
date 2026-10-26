@@ -158,10 +158,13 @@ static void page_go(int p)
 static void track_select(int t)
 {
     keys_all_up();
-    dk_song.cur_track = (uint8_t)(t % DK_NTRACK);
+    t %= DK_NTRACK;
+    dk_song.cur_track = (uint8_t)t;
     ui_step_ev = -1;
     ui.trk_until = plat_ms() + 1400u;    /* the track bar instead of a message */
     ui.msg_until = 0;
+    if (dk_recording || dk_counting)     /* the hand follows the track: a new one records too, not only the one REC began on */
+        dk_cmd(C_RECTRK, t, 1, 0);
 }
 
 /* the KEYS track (TAPE.keys_set): its twelve presets are on three engines */

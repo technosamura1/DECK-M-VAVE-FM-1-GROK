@@ -1192,6 +1192,10 @@ static void drain(void)
                 rec_stop();
             break;
         case C_RECTRK:
+            if (b) {                           /* SELECT while recording: this track records too; the take's own track stays */
+                dk_rec_mask = (uint8_t)(dk_rec_mask | 1u << (a % DK_NTRACK));
+                break;
+            }
             if (dk_recording)
                 rec_close_all();
             dk_rec_trk = (uint8_t)(a % DK_NTRACK);

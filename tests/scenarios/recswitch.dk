@@ -1,0 +1,33 @@
+# SELECT while REC records the track you land on. before: the hand was heard, the notes were not written.
+listen
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+qnt 0
+press HOME
+tapkey b0
+release HOME
+wait 80
+expect track 0
+tap PLAY
+wait 400
+expect playing 1
+tap REC
+wait 250
+expect recording 1
+expect recmask 1
+turn SELECT 1
+wait 120
+expect track 1
+expect recmask 3
+expect eventsA1 0
+expect eventsA2 0
+key w0 down 90
+wait 350
+key w0 up
+wait 400
+expect eventsA2 >0
+expect eventsA1 0
+expect recording 1
