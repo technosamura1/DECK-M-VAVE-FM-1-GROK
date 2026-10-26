@@ -652,6 +652,67 @@ static void bench(void)
     printf("bench: every voice busy: worst %.1f us/128 (voices %d)\n", worst, dk_voices_on);
 }
 
+
+/* 24 voices at once: all six tracks on the heaviest presets, the FX chain on every track, held chords with long releases.
+   Checks the pool really fills (24), nothing goes NaN/inf (the output would clip hard or sit on a rail), the peak stays
+   under full scale, no DC, and prints the worst block cost. Returns 1 on a failure. */
+static int stress24(void)
+{
+    static const int ENG[6] = {10, 10, 10, 0, 2, 1};            /* MOURNING plucks on three tracks, the rest heavy pads */
+    int bad = 0, pass, i, t, fxn = TAPE.nfx;
+    for (pass = 0; pass < 3; pass++) {
+        double worst = 0.0;
+        int maxv = 0, hold, dc_bad = 0;
+        long dc = 0;
+        fresh();
+        dk_lock();
+        for (t = 0; t < 6; t++) {
+            int eng = pass == 0 ? 10 : ENG[t];
+            int pre = eng == 10 ? DK_PBASE + 2 * 12 + 11 : DK_PBASE + ((t + pass) % 3) * 12 + (t * 5 + pass) % 4;
+            dk_track_setup(t, eng, pre, SQ_LIVE, t == 0 ? R_DRUM : R_KEYS);
+            dk_song.trk[t].fx = (uint8_t)(fxn ? 1 + (t + pass) % (fxn > 1 ? fxn - 1 : 1) : 0);
+            dk_song.trk[t].fxamt = 80;
+            dk_song.trk[t].rev = 100;
+            dk_song.trk[t].echo = 60;
+        }
+        dk_song.space = 3;
+        dk_song.dust = 80;
+        dk_song.tapesim = 100;
+        dk_unlock();
+        run(0.1);
+        reset_out();
+        for (hold = 0; hold < 30; hold++) {
+            for (t = 0; t < 6; t++)
+                for (i = 0; i < 5; i++)
+                    note(t, 36 + (hold * 3 + t * 7 + i * 4) % 48, 110);
+            run(0.12);
+            {
+                double us = cost_s * 1e6 / (double)frames * 128.0;
+                if (us > worst)
+                    worst = us;
+            }
+            if (dk_voices_on > maxv)
+                maxv = dk_voices_on;
+            for (t = 0; t < 6; t++)
+                for (i = 0; i < 5; i++)
+                    note(t, 36 + (hold * 3 + t * 7 + i * 4) % 48, 0);
+        }
+        for (i = 0; i < 2 * frames; i++)
+            dc += buf[i];
+        dc /= frames ? frames : 1;
+        dc_bad = labs(dc) > 600;
+        report(pass == 0 ? "stress24: 6 x MOURNING + fx" : pass == 1 ? "stress24: mixed heavy + fx" : "stress24: mixed 2 + fx");
+        printf("   voices max %d, worst %.1f us/128, dc %ld\n", maxv, worst, dc);
+        if (maxv < 24 || peak >= 32767 || dc_bad) {
+            printf("   FAIL stress24 pass %d (voices %d, peak %d, dc %ld)\n", pass, maxv, peak, dc);
+            bad = 1;
+        }
+        quiet_all();
+        tail(8.0);
+    }
+    return bad;
+}
+
 #ifdef DK_PROF
 static void engbench(void)
 {
@@ -853,6 +914,8 @@ int main(int argc, char **argv)
 #endif
     else if (!strcmp(m, "metro"))
         metro();
+    else if (!strcmp(m, "stress24"))
+        return stress24();
     else {
         fprintf(stderr, "deck_test sounds|demo|drive|mood|chords|phrase|fingerbank|bench|metro\n");
         return 2;
