@@ -15,7 +15,7 @@ typedef struct {
     const char *what;                    /* for CLAUDE.md and the hints */
 } ui_map_t;
 static const ui_map_t UI_MAP[] = {
-    {B_FX, A_PAGE_SOUND, A_NONE, A_NONE, 0, "SOUND; again: ENGINE ENV FX MOD"},
+    {B_FX, A_PAGE_SOUND, A_NONE, A_NONE, HOLD_MOD, "SOUND; again: FAV (the preset's 4 main knobs, K5 MACRO) MORE FX (K1 tone, K2 depth, K3 reverb, K4 echo) TYPE (effect and its 2nd knob) MOD | hold + white 1-4: BYPASS the chain's stage at once: 1 effect, 2 echo, 3 reverb, 4 tape (again = back on)"},
     {B_SEQ, A_PAGE_SEQ, A_NONE, A_BAKE, HOLD_MOD, "SEQ; again: its next row | hold + black 1-5: COOK, RANDOM, QUANTIZE the clip (by the track QUANT), COPY BAR, PASTE BAR (on TRACKS: black 1-6 = SOLO) | hold + white 1-5: the sequencer (in MIX: white 1-6 = TEMP mute of the track; on TRACKS: white 1-6 = ARM the track for REC, black 1-6 = SOLO) | HOME+: BAKE (DRIVE to STEP) | FINGER: K1 of its row = BANK of the track: LOFI, 8BIT, SYNTH (night drive), CINEMA (the north); white = 16 patterns simple to dense (last 3 fills), black = variations"},
     {B_ENV, A_PAGE_ROAD, A_GARAGE, A_NONE, 600, "ROAD | hold: the garage (white 1-8: copy part to)"},
     {B_LFO, A_PAGE_MIX, A_NONE, A_NONE, HOLD_MOD, "MIX (white 1-6: mute the track IN THIS PART; playing: at the bar end; hold 1 s: clear its clip); again: MASTER | hold + turn a SOUND knob: MOD 1 on it"},

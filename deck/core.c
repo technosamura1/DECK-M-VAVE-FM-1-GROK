@@ -697,6 +697,7 @@ static inline float metro_step(void)
 
 /* -------------------------------------------------------------- the tracks --- */
 static dk_fxst_t fxs[DK_NTRACK];
+static float fx_byp[DK_NTRACK];            /* the insert's bypass, faded: 0 in, 1 out */
 static int16_t fxbuf[DK_NTRACK][DK_FXBUF] DK_POOL;
 static float bus_st[DK_NTRACK][16];
 static float g_cur[DK_NTRACK][2];             /* the gain now (left, right): glides to the knob */
@@ -753,7 +754,9 @@ static void render_tracks(uint32_t n)
         const dk_engine_t *e = dk_engine(t);
         const dk_track_t *k = &dk_song.trk[t];
         int any = 0, fx = k->fx;
-        float gt, gl, gr, dl_, dr_, pk = 0.0f, rv = t_rev[t], ec = t_echo[t] + (perf_echo ? 0.9f : 0.0f);
+        unsigned byp = DK_BYP(t);              /* SOUND's chain: the stages switched off (FX held + WHITE 1-4) */
+        float gt, gl, gr, dl_, dr_, pk = 0.0f, rv = (byp & DK_BYP_REV) ? 0.0f : t_rev[t],
+              ec = ((byp & DK_BYP_ECHO) ? 0.0f : t_echo[t]) + (perf_echo ? 0.9f : 0.0f);
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t) {
                 any = 1;
@@ -856,8 +859,29 @@ static void render_tracks(uint32_t n)
         if (e->bus)
             e->bus(bus_st[t], tl, tr, (int)n, tp[t]);
         PROF_T(2);
-        if (fx > 0 && fx < TAPE.nfx && TAPE.fx[fx]->process)
-            TAPE.fx[fx]->process(&fxs[t], tl, tr, (int)n, t_fxamt[t], t_fxa[t], t_fxb[t]);
+        if (fx > 0 && fx < TAPE.nfx && TAPE.fx[fx]->process) {
+            /* the insert, with its bypass: a fade between the dry and the wet over the block (no click), nothing
+             * processed once fully bypassed */
+            float bt = (byp & DK_BYP_FX) ? 1.0f : 0.0f;
+            if (bt < 1.0f || fx_byp[t] < 1.0f) {
+                static float dl2[DK_BLK], dr2[DK_BLK];
+                int fade = fx_byp[t] != bt;
+                if (fade)
+                    for (j = 0; j < n; j++) {
+                        dl2[j] = tl[j];
+                        dr2[j] = tr[j];
+                    }
+                TAPE.fx[fx]->process(&fxs[t], tl, tr, (int)n, t_fxamt[t], t_fxa[t], t_fxb[t]);
+                if (fade) {
+                    float g = fx_byp[t], dg = (bt - g) / (float)n;
+                    for (j = 0; j < n; j++, g += dg) {
+                        tl[j] += (dl2[j] - tl[j]) * g;
+                        tr[j] += (dr2[j] - tr[j]) * g;
+                    }
+                    fx_byp[t] = bt;
+                }
+            }
+        }
         PROF_T(3);
         /* the gain: VOL's square, its trim, the modulators' tremolo, the sidechain on the pads */
         gt = track_audible(t) ? t_vol[t] * t_vol[t] * 2.0f * fm_db2lin((float)k->trim * 0.5f) : 0.0f;
@@ -882,8 +906,8 @@ static void render_tracks(uint32_t n)
             esend[j] += (l + r) * ec;
             if (any_x) {                       /* the drum sounds' own sends, at the track's level */
                 float g = (g_cur[t][0] + g_cur[t][1]) * 0.5f;
-                rsend[j] += xrev[j] * g;
-                esend[j] += xecho[j] * g;
+                rsend[j] += (byp & DK_BYP_REV) ? 0.0f : xrev[j] * g;
+                esend[j] += (byp & DK_BYP_ECHO) ? 0.0f : xecho[j] * g;
             }
             pk = fm_maxf(pk, fm_fabsf(l) + fm_fabsf(r));
         }
@@ -965,6 +989,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     render_tracks(n);
     atmo_render(n);
     dk_ctx.tape = (float)dk_song.tapesim * 0.01f;
+    dk_ctx.tape_off = (uint8_t)DK_BYP_TAPE();
     PROF_T(4);
     for (j = 0; j < n; j++) {
         float wl, wr, e, l, r, rin;

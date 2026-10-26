@@ -1,0 +1,55 @@
+# SOUND page: five rows, the readout under, the chain with its one-press bypass
+wait 300
+tap FX
+expect page 2
+expect rowof 0
+wait 120
+shot fx_fav.png
+turn K1 3
+wait 120
+shot fx_fav_turn.png
+tap FX
+expect rowof 1
+wait 120
+shot fx_more.png
+tap FX
+expect rowof 2
+turn K3 20
+turn K4 15
+wait 120
+shot fx_fx.png
+tap FX
+expect rowof 3
+wait 120
+shot fx_type.png
+tap FX
+expect rowof 4
+wait 120
+shot fx_mod.png
+tap FX
+expect rowof 0
+# bypass: FX held + white 1..4 (and a tap of FX alone still moves on)
+press FX
+tapkey w0
+release FX
+expect rowof 0
+expect byp 1
+press FX
+tapkey w1
+tapkey w2
+tapkey w3
+release FX
+expect byp 7
+expect bypt 1
+tap FX
+tap FX
+wait 120
+shot fx_bypass.png
+press FX
+tapkey w0
+tapkey w1
+tapkey w2
+tapkey w3
+release FX
+expect byp 0
+expect bypt 0

@@ -647,6 +647,60 @@ static void metro(void)
            dk_song.tempo, (int)(10.0 * dk_song.tempo / 60.0), dk_metro_err_max);
 }
 
+/* SOUND's BYPASS: every stage of the chain switched off and on again under a held chord must not click (the biggest step between
+ * two samples around the switch against the same sound's own steps just before; the tail's peak is the end of the reverb) */
+static int stepmax(int f0, int f1)
+{
+    int i, m = 0;
+    for (i = 2 * f0 + 2; i < 2 * f1; i++) {
+        int d = abs((int)buf[i] - (int)buf[i - 2]);
+        m = d > m ? d : m;
+    }
+    return m;
+}
+static int bypass_test(void)
+{
+    int bad = 0, st, fx, n = 0;
+    for (st = 0; st < 4; st++)
+        for (fx = st ? 0 : 1; fx < (st ? 1 : 8); fx++) {
+            int t = 2, k, sw[2] = {44100 * 2, 44100 * 4}, ref, jmp[2];
+            fresh();
+            dk_lock();
+            dk_song.trk[t].fx = (uint8_t)fx;
+            dk_song.trk[t].fxamt = 80;
+            dk_song.trk[t].fxa = 60;
+            dk_song.trk[t].fxb = 50;
+            dk_song.trk[t].echo = 70;
+            dk_song.trk[t].rev = 70;
+            dk_song.tapesim = 70;
+            dk_unlock();
+            reset_out();
+            for (k = 0; k < 4; k++)
+                note(t, 48 + 4 * k, 96);
+            run(1.9);
+            ref = stepmax(44100 / 2, 44100 * 19 / 10);
+            run(0.1);
+            dk_lock();
+            if (st == 3) dk_song.rsv[DK_NTRACK] |= 1; else dk_song.rsv[t] |= (uint8_t)(1u << st);
+            dk_unlock();
+            run(1.9);
+            jmp[0] = stepmax(sw[0] - 64, sw[0] + 2048);
+            run(0.1);
+            dk_lock();
+            if (st == 3) dk_song.rsv[DK_NTRACK] = 0; else dk_song.rsv[t] = 0;
+            dk_unlock();
+            run(1.9);
+            jmp[1] = stepmax(sw[1] - 64, sw[1] + 2048);
+            n++;
+            if (jmp[0] > 2 * ref + 300 || jmp[1] > 2 * ref + 300 || peak > 29200) {
+                printf("CLICK stage %d fx %d: step %d / %d (own %d) peak %d\n", st, fx, jmp[0], jmp[1], ref, peak);
+                bad++;
+            }
+        }
+    printf("bypass: %d stage/effect pairs switched off and on, %d clicks\n", n, bad);
+    return bad ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "sounds";
@@ -672,6 +726,8 @@ int main(int argc, char **argv)
         atmo_demo(argc > 2 ? argv[2] : "out/atmo.wav");
     else if (!strcmp(m, "fingerbank"))
         return fingerbank(argc > 2 ? argv[2] : "out/fingerbanks");
+    else if (!strcmp(m, "bypass"))
+        return bypass_test();
     else if (!strcmp(m, "bench"))
         bench();
 #ifdef DK_PROF

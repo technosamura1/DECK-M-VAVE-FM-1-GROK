@@ -161,7 +161,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 static int seq_edit_row(void);
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 4, 1, 1, 4, 1, 1, 2, 5, 2, 1};
+    static const uint8_t ROWS[NPG] = {1, 2, 5, 1, 1, 4, 1, 1, 2, 5, 2, 1};
     if (p == PG_SEQ && ((cur_eng()->flags & EF_DRUM) || cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE))
         return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings;
                                               * STEP and LIVE: their own, the settings, the step editor */
@@ -201,23 +201,27 @@ static int page_field(int i, int home)
                                         {F_ARPOCT, F_ARPGATE, F_ARPSRC, F_ARPON, F_NONE}};
         return F[row & 1][i];
     }
-    case PG_SOUND:
-        switch (row & 3) {
-        case 0:                              /* the engine: its first four, ALGO the fifth (or the drift) */
-            if (i < 4)
-                return i < e->nparams ? F_P0 + i : i == 3 ? F_DRIFT : F_NONE;
-            return e->nparams > 4 ? F_P4 : e->nparams < 4 ? F_NONE : F_DRIFT;
-        case 1: {
-            static const uint8_t F[5] = {F_ATT, F_DEC, F_REL, F_VOL, F_MACRO};
+    case PG_SOUND: {
+        int fav[4], more[5], drum = (e->flags & EF_DRUM) != 0;
+        switch (row % 5) {
+        case 0:                              /* FAVORITES: the preset's four that matter (what its MACRO moves first); the fifth, MACRO */
+            sound_lists(fav, more);
+            return i < 4 ? fav[i] : F_MACRO;
+        case 1:                              /* MORE: the rest of the sound's own */
+            sound_lists(fav, more);
+            return more[i];
+        case 2: {                            /* FX: always TONE, DEPTH, SPACE (reverb), SEND (echo); on a drum track: the kit's, or one sound's */
+            static const uint8_t F[5] = {F_FXA, F_FXAMT, F_REV, F_ECHO, F_NONE};
+            static const uint8_t ONE[5] = {F_LCRUSH, F_LLEVEL, F_LREV, F_LECHO, F_FXFOR};
+            if (drum)
+                return ui_fx_for ? ONE[i] : i == 4 ? F_FXFOR : F[i];
             return F[i];
         }
-        case 2: {
-            static const uint8_t F[5] = {F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_REV};
-            if (e->flags & EF_DRUM) {        /* drums: K1 FOR the whole kit, or one of its sounds */
-                static const uint8_t KIT[5] = {F_FXFOR, F_FXTYPE, F_FXAMT, F_FXA, F_FXB};
-                static const uint8_t ONE[5] = {F_FXFOR, F_LREV, F_LECHO, F_LCRUSH, F_LLEVEL};
-                return ui_fx_for ? ONE[i] : KIT[i];
-            }
+        case 3: {                            /* FX TYPE: the effect, its second knob (a drum sound: its pan, tune, decay) */
+            static const uint8_t F[5] = {F_FXTYPE, F_FXB, F_NONE, F_NONE, F_NONE};
+            static const uint8_t ONE[5] = {F_FXFOR, F_LPAN, F_LTUNE, F_LDECAY, F_NONE};
+            if (drum)
+                return ui_fx_for ? ONE[i] : i == 2 ? F_FXFOR : F[i];
             return F[i];
         }
         default: {
@@ -225,6 +229,7 @@ static int page_field(int i, int home)
             return F[i];
         }
         }
+    }
     case PG_SEQ: {
         int drum = (e->flags & EF_DRUM) != 0;
         if (drum && row == 1) {              /* the kit's sounds, each its own: kick quieter, snare up */
@@ -305,7 +310,7 @@ static const char *hint(void)
         if (k->seq == SQ_DRIVE)
             return "PLAY = IT PLAYS  HOME+SEQ = TO STEP";
         return "SEQ+B1 COOK  B2 RANDOM  OCT-/+ UNDO/REDO";
-    case PG_SOUND: return "FX = TAB  HOME+PRESET = INSTRUMENT";
+    case PG_SOUND: return "FX = ROW  HOLD FX+WHITE 1-4 = BYPASS";
     case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
     case PG_ROAD:
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
@@ -656,6 +661,8 @@ static void knob_row(int y)
         field_text(f, t);
         text_box(cx - 28, y - 31, 56, 1, &FONT_T, &FONT_T, field_label(f), lit ? RGB(20, 14, 8) : W_INK);
         knob(cx, y, 15, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, knob_col(i), lit);
+        if (ui.page == PG_SOUND && macro_moves(f))   /* the preset's MACRO moves this one: a dot */
+            cv_rect(cx + 23, y - 28, 4, 4, TH_ENC[0]);
         text_box(cx - 28, y + 21, 56, 1, &FONT_XS, &FONT_T, t, RGB(28, 20, 12));
     }
 }
@@ -678,74 +685,102 @@ static void module(const char *left, const char *right)
     hline(WX, WY, WW, RGB(14, 12, 10));      /* the window set into the plate: a shadow on top */
 }
 
-static void draw_sound(void)                /* a synth module: the preset in its window, the tab's picture, 4 knobs */
+/* the sound's chain, in the order the audio takes it: the insert effect, the echo, the reverb, the tape (the whole song's) */
+static int chain_state(int st, int *val, const char **name)
 {
-    static const char *const TAB[4] = {"ENG", "ENV", "FX", "MOD"};
+    const dk_track_t *k = cur();
+    unsigned by = DK_BYP(dk_song.cur_track);
+    switch (st) {
+    case 0: *val = k->fx ? k->fxamt : 0; *name = TAPE.fx[k->fx % TAPE.nfx]->name; return (by & DK_BYP_FX) != 0;
+    case 1: *val = k->echo; *name = "ECHO"; return (by & DK_BYP_ECHO) != 0;
+    case 2: *val = k->rev; *name = "REVERB"; return (by & DK_BYP_REV) != 0;
+    default: *val = dk_song.tapesim; *name = "TAPE"; return DK_BYP_TAPE() != 0;
+    }
+}
+
+static void draw_sound(void)                /* SOUND: the source on the left, the effect chain on the right, the knob you touched big under */
+{
+    static const char *const TAB[5] = {"FAV", "MORE", "FX", "TYPE", "MOD"};
     const dk_track_t *k = cur();
     const dk_engine_t *e = cur_eng();
     dk_preset_t tmp;
-    int tab = ui.row[PG_SOUND] & 3, i, x = 132, wy = WY, wh = WH;
+    int tab = ui.row[PG_SOUND] % 5, i, x = 100, wy = WY, wh = WH;
     uint32_t now = plat_ms();
-    for (i = 0; i < 4; i++) {            /* the tabs */
+    for (i = 0; i < 5; i++) {            /* the tabs */
         uint16_t c = i == tab ? TH_TEXT : W_GRAY;
         cv_text(x, 26, &FONT_XS, TAB[i], c);
         if (i == tab)
             hline(x, 39, text_w(&FONT_XS, TAB[i]), TH_TEXT);
-        x += text_w(&FONT_XS, TAB[i]) + 10;
+        x += text_w(&FONT_XS, TAB[i]) + 7;
     }
     module(e->name, 0);                      /* the engine's name, as if printed on it; the window */
-    text_box(14, wy + 4, 212, 1, &FONT_B, &FONT_XS, preset_of(k->eng, k->preset, &tmp)->name, TH_TEXT);
+    text_box(14, wy + 2, 212, 1, &FONT_B, &FONT_XS, preset_of(k->eng, k->preset, &tmp)->name, TH_TEXT);
+    if (tab < 4) {
+        int f = page_field(ui.touched >= 0 && ui.touched < 4 ? ui.touched : 0, 0), lo, hi, v, j, nm = 0;
+        char num[24];
+        const char *unit[1], *st_name;
+        static const char *const STG[4] = {"1", "2", "3", "4"};
+        /* left: the source and its MACRO, and what the MACRO moves */
+        cv_text(14, wy + 20, &FONT_XS, "MACRO", W_GRAY);
+        {
+            char t[8];
+            cpy(itoa_b(k->macro, t), "%");
+            text_box(64, wy + 20, 46, 2, &FONT_XS, &FONT_XS, t, TH_ENC[0]);
+        }
+        cv_rect(14, wy + 34, 96, 4, W_LINE);
+        cv_rect(14, wy + 34, k->macro * 96 / 100, 4, TH_ENC[0]);
+        for (i = 0; i < 3; i++)
+            if (k->ma[i] && k->mt[i] && nm < 3) {
+                char t[24], *q;
+                q = cpy(t, target_label(k->mt[i]));
+                *q++ = ' ';
+                if (k->ma[i] > 0)
+                    *q++ = '+';
+                itoa_b(k->ma[i], q);
+                text_box(14, wy + 40 + nm * 12, 98, 0, &FONT_XS, &FONT_XS, t, TH_ENC[1]);
+                nm++;
+            }
+        if (!nm)
+            cv_text(14, wy + 40, &FONT_XS, "NO MACRO", W_LINE);
+        vline(116, wy + 22, 58, W_LINE);
+        /* right: the chain */
+        cv_text(122, wy + 20, &FONT_XS, "CHAIN", W_GRAY);
+        for (i = 0; i < 4; i++) {
+            int val, off = chain_state(i, &val, &st_name), live = tab == 2 || (tab == 3 && i == 0);
+            uint16_t c = off ? W_LINE : live ? TH_TEXT : W_GRAY;
+            int y = wy + 32 + i * 12;
+            cv_text(122, y, &FONT_XS, STG[i], W_LINE);
+            text_box(132, y, 56, 0, &FONT_XS, &FONT_XS, st_name, c);
+            cv_rect(190, y + 4, 36, 4, W_LINE);
+            if (!off && val > 0)
+                cv_rect(190, y + 4, val * 36 / 100, 4, i == 0 ? TH_ENC[1] : TH_ENC[2]);
+            if (off)
+                hline(130, y + 6, 96, W_GRAY);
+        }
+        /* under: the knob you touched, its number big, its unit, its bar (the MACRO's range on it) */
+        if (f != F_NONE) {
+            int mm = macro_moves(f);
+            field_range(f, &lo, &hi);
+            v = field_get(f);
+            field_big(f, num, unit);
+            text_box(14, wy + 82, 54, 0, &FONT_XS, &FONT_XS, field_label(f), TH_ENC[ui.touched >= 0 && ui.touched < 4 ? ui.touched : 0]);
+            text_box(66, wy + 82, 60, 2, &FONT_B, &FONT_S, num, TH_TEXT);
+            text_box(128, wy + 84, 28, 0, &FONT_XS, &FONT_XS, unit[0], W_GRAY);
+            cv_rect(158, wy + 87, 66, 5, W_LINE);
+            if (hi > lo)
+                cv_rect(158, wy + 87, (v - lo) * 66 / (hi - lo), 5, TH_TEXT);
+            if (mm) {                    /* the MACRO's reach: a tick where full MACRO takes it */
+                int at = v - lo + mm * (hi - lo) / 100;
+                at = at < 0 ? 0 : at > hi - lo ? hi - lo : at;
+                cv_rect(158 + (hi > lo ? at * 64 / (hi - lo) : 0), wy + 84, 2, 11, TH_ENC[0]);
+            }
+        }
+        (void)j;
+        (void)wh;
+        (void)now;
+        return;
+    }
     switch (tab) {
-    case 0: {                            /* the engine's first knob's picture, small, under the name */
-        if (e->nparams) {
-            const dk_param_t *pp = &e->params[0];
-            float v = pp->hi > pp->lo ? (float)(k->p[0] - pp->lo) / (float)(pp->hi - pp->lo) : 0.0f;
-            if (pp->viz == VZ_TYPE && pp->names)
-                text_box(14, wy + 32, 212, 1, &FONT_XS, &FONT_T, pp->names[k->p[0] - pp->lo], TH_ENC[0]);
-            else
-                for (i = 0; i < 200; i += 4)   /* a strip that brightens with it */
-                    cv_rect(20 + i, wy + 40, 3, 6, (float)i < v * 200.0f ? TH_ENC[0] : W_LINE);
-        }
-        break;
-    }
-    case 1: {                            /* ENV: one envelope, its three parts coloured */
-        int a = 6 + k->env[0] * 50 / 100, d = 10 + k->env[1] * 60 / 100, r = 6 + k->env[2] * 50 / 100;
-        int x0 = 20, yb = wy + wh - 4, yt = wy + 26, ys = wy + 38;
-        cv_line(x0, yb, x0 + a, yt, TH_ENC[0]);
-        cv_line(x0 + a, yt, x0 + a + d, ys, TH_ENC[1]);
-        hline(x0 + a + d, ys, 40, TH_TEXT);
-        cv_line(x0 + a + d + 40, ys, x0 + a + d + 40 + r, yb, TH_ENC[2]);
-        break;
-    }
-    case 2: {                            /* FX: the sound before (grey) and after (its colours) */
-        int px = 16, py = wy + 40, py2 = wy + 40, mid = wy + 40;
-        if ((e->flags & EF_DRUM) && ui_fx_for && e->nlanes) {   /* one drum sound: its name, its sends, its crush */
-            const dk_lane_t *ln = &dk_song.lane[dk_song.cur_track][(ui_fx_for - 1) & 7];
-            static const char *const NM[3] = {"REV", "ECHO", "CRUSH"};
-            int v3[3] = {ln->rev, ln->echo, ln->crush};
-            text_box(14, wy + 26, 80, 0, &FONT_XS, &FONT_T, e->lane_name[(ui_fx_for - 1) % e->nlanes], TH_ENC[0]);
-            for (i = 0; i < 3; i++) {
-                text_box(100 + i * 42, wy + 26, 40, 0, &FONT_T, &FONT_T, NM[i], W_GRAY);
-                cv_rect(100 + i * 42, wy + 42, 36, 4, W_LINE);
-                cv_rect(100 + i * 42, wy + 42, v3[i] * 36 / 100, 4, knob_col(i + 1));
-            }
-            break;
-        }
-        float amt = (float)k->fxamt * 0.01f, fa = (float)k->fxa * 0.01f;
-        for (i = 0; i <= 208; i += 2) {
-            float sv = fm_sinf((float)i * 0.09f), y2;
-            int y = mid - (int)(sv * 12.0f);
-            y2 = sv * (1.0f - 0.4f * amt) + (k->fx ? amt * 0.35f * fm_sinf((float)i * (0.6f + fa) + (float)now * 0.003f) : 0.0f);
-            if (i) {
-                cv_line(px, py, 16 + i, y, W_LINE);
-                cv_line(px, py2, 16 + i, mid - (int)(y2 * 12.0f), TH_ENC[1]);
-            }
-            px = 16 + i;
-            py = y;
-            py2 = mid - (int)(y2 * 12.0f);
-        }
-        break;
-    }
     default: {                           /* MOD: its shape, its depth, its rate */
         const uint8_t *m = k->mod[ui_mod_slot];
         int px = 16, py = wy + 40, cyc = 1 + m[2] / 20, mid = wy + 40;

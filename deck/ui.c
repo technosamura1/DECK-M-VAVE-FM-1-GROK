@@ -121,8 +121,9 @@ static void page_go(int p)
     if (ui.page == p) {                  /* again: its next tab or row */
         ui.row[p] = (uint8_t)((ui.row[p] + 1) % page_rows(p));
         if (p == PG_SOUND) {
-            static const char *const TAB[4] = {"ENGINE", "ENV", "FX", "MOD"};
-            say("SOUND", TAB[ui.row[p] & 3]);
+            static const char *const TAB[5] = {"FAVORITES", "MORE", "FX", "FX TYPE", "MOD"};
+            ui.touched = -1;
+            say("SOUND", TAB[ui.row[p] % 5]);
         }
     } else {
         if (p != PG_REC)
@@ -937,6 +938,19 @@ static void key_down(int k, int vel)
             part_mute_toggle(b, 0);
         return;
     }
+    if (ui.page == PG_SOUND && held(B_FX) && w >= 0 && w < 4) {   /* FX held + white 1-4: a stage of the chain off / on, at once */
+        int val;
+        const char *nm;
+        int was = chain_state(w, &val, &nm);
+        ui.used[B_FX] = 1;
+        if (w == 3)
+            dk_song.rsv[DK_NTRACK] ^= 1u;
+        else
+            dk_song.rsv[dk_song.cur_track] ^= (uint8_t)(1u << w);
+        mark_dirty();
+        say(nm, was ? "ON" : "BYPASSED");
+        return;
+    }
     if (held(B_HOME)) {
         ui.used[B_HOME] = 1;
         if (w >= 0)
@@ -1232,12 +1246,12 @@ static void turn(int i, int e)
 {
     int f, lo, hi, step = 1;
     uint32_t now = plat_ms();
-    if (ui.page == PG_SOUND && held(B_LFO) && ui.row[PG_SOUND] == 0 && i < 4) {   /* LFO held: MOD 1 onto this knob */
+    if (ui.page == PG_SOUND && held(B_LFO) && ui.row[PG_SOUND] < 4 && i < 4 && field_target(page_field(i, 0))) {   /* LFO held: MOD 1 onto this knob */
         dk_track_t *k = cur();
         ui.used[B_LFO] = 1;
         if (k->mod[0][0] == MOD_OFF)
             k->mod[0][0] = MOD_SWING;
-        k->mod[0][3] = (uint8_t)(T_P0 + i);
+        k->mod[0][3] = (uint8_t)field_target(page_field(i, 0));
         k->mod[0][1] = (uint8_t)clamp(k->mod[0][1] + e * 3, 0, 100);
         {
             char s[8];

@@ -260,9 +260,27 @@ static void tape_sim(float *l, float *r, int n, float a)
 static void tape_master_dust(float *l, float *r, int n, float dust, float sleep);
 static void tape_master(float *l, float *r, int n, float dust, float sleep)
 {
+    static float on = 1.0f, dl[DK_BLK], dr[DK_BLK];
+    float tgt = dk_ctx.tape_off ? 0.0f : 1.0f;
     tape_master_dust(l, r, n, dust, sleep);
-    if (dk_ctx.tape > 0.0f)
+    if (dk_ctx.tape > 0.0f && (on > 0.0f || tgt > 0.0f)) {
+        int j;
+        if ((on >= 1.0f && tgt >= 1.0f) || n > DK_BLK) {
+            tape_sim(l, r, n, dk_ctx.tape);
+            return;
+        }
+        for (j = 0; j < n; j++) {               /* switched: the tape's wet eased in or out (bypass, one press) */
+            dl[j] = l[j];
+            dr[j] = r[j];
+        }
         tape_sim(l, r, n, dk_ctx.tape);
+        for (j = 0; j < n; j++) {
+            on += on < tgt ? 0.002f : on > tgt ? -0.002f : 0.0f;
+            on = on < 0.0f ? 0.0f : on > 1.0f ? 1.0f : on;
+            l[j] = dl[j] + (l[j] - dl[j]) * on;
+            r[j] = dr[j] + (r[j] - dr[j]) * on;
+        }
+    }
 }
 static void tape_master_dust(float *l, float *r, int n, float dust, float sleep)
 {

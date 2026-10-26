@@ -1236,3 +1236,175 @@ static void field_text(int f, char *b)
     default: itoa_b(v, b); break;
     }
 }
+
+/* ---------------------------------------------------------- the SOUND page's lists --- */
+/* The sound's own knobs: the engine's (up to five), ATTACK, DECAY, RELEASE, DRIFT. FAVORITES (SOUND row 1) are the four that
+ * matter most for the preset: first what its MACRO moves, then the engine's in their order; MORE (row 2) is the rest. */
+#define NPOOL 9
+static int pool_n(const dk_engine_t *e) { return (e->nparams < 5 ? e->nparams : 5) + 4; }
+static int pool_f(const dk_engine_t *e, int i)
+{
+    static const uint8_t X[4] = {F_ATT, F_DEC, F_REL, F_DRIFT};
+    int np = e->nparams < 5 ? e->nparams : 5;
+    return i < np ? F_P0 + i : X[(i - np) & 3];
+}
+/* the target (T_*) a field is, for MACRO and the automation; 0 for the rest */
+static int field_target(int f)
+{
+    switch (f) {
+    case F_P0: case F_P1: case F_P2: case F_P3: case F_P4: case F_P5: return T_P0 + (f - F_P0);
+    case F_ATT: return T_ATT;
+    case F_DEC: return T_DEC;
+    case F_REL: return T_REL;
+    case F_FXAMT: return T_FXAMT;
+    case F_FXA: return T_FXA;
+    case F_FXB: return T_FXB;
+    case F_REV: return T_REV;
+    case F_ECHO: return T_ECHO;
+    case F_VOL: return T_VOL;
+    case F_PAN: return T_PAN;
+    default: return 0;
+    }
+}
+/* how far (-100..100 %, of the range) the track's MACRO moves a field at its full; 0: not at all */
+static int macro_moves(int f)
+{
+    const dk_track_t *k = cur();
+    int i, t = field_target(f), a = 0;
+    if (!t)
+        return 0;
+    for (i = 0; i < 3; i++)
+        if (k->mt[i] == t)
+            a += k->ma[i];
+    return a;
+}
+static void sound_lists(int fav[4], int more[5])
+{
+    const dk_track_t *k = cur();
+    const dk_engine_t *e = cur_eng();
+    int n = pool_n(e), nf = 0, nm = 0, i, j, used[NPOOL];
+    for (i = 0; i < NPOOL; i++)
+        used[i] = 0;
+    for (i = 0; i < 3 && nf < 4; i++)                /* what MACRO moves, first */
+        if (k->ma[i] && k->mt[i])
+            for (j = 0; j < n; j++)
+                if (!used[j] && field_target(pool_f(e, j)) == k->mt[i]) {
+                    used[j] = 1;
+                    fav[nf++] = pool_f(e, j);
+                    break;
+                }
+    for (j = 0; j < n && nf < 4; j++)                /* then in the engine's order */
+        if (!used[j]) {
+            used[j] = 1;
+            fav[nf++] = pool_f(e, j);
+        }
+    for (j = 0; j < n && nm < 5; j++)
+        if (!used[j])
+            more[nm++] = pool_f(e, j);
+    while (nf < 4)
+        fav[nf++] = F_NONE;
+    while (nm < 5)
+        more[nm++] = F_NONE;
+}
+
+/* a value in its unit, big: the number and the unit apart ("-6" "DB", "1.2" "HZ", "40" "%"); a named value: the name, no unit */
+static char *fix1(char *b, int v10)               /* v10 / 10 with one decimal */
+{
+    if (v10 < 0)
+        *b++ = '-', v10 = -v10;
+    b = itoa_b(v10 / 10, b);
+    *b++ = '.';
+    *b++ = (char)('0' + v10 % 10);
+    *b = 0;
+    return b;
+}
+static void field_big(int f, char *num, const char *unit_out[1])
+{
+    const dk_track_t *k = cur();
+    int v = field_get(f), lo, hi, i;
+    float fl;
+    field_range(f, &lo, &hi);
+    unit_out[0] = "%";
+    num[0] = 0;
+    switch (f) {
+    case F_VOL:                                        /* the gain: VOL squared, times two, in dB */
+        if (v <= 0) {
+            cpy(num, "-INF");
+        } else {
+            fl = 6.0206f * fm_log2f((float)v * (float)v * 0.0002f);
+            i = (int)(fl * (fl < 0.0f ? -1.0f : 1.0f) + 0.5f);
+            if (fl < 0.0f)
+                *num++ = '-';
+            else if (i)
+                *num++ = '+';
+            itoa_b(i, num);
+        }
+        unit_out[0] = "DB";
+        return;
+    case F_TEMPO: itoa_b(v, num); unit_out[0] = "BPM"; return;
+    case F_ECHOTIME: {                                 /* the division in ms at this tempo */
+        static const uint8_t BEATS4[4] = {3, 4, 2, 6};
+        itoa_b((int)((float)BEATS4[v & 3] * 15000.0f / (float)(dk_song.tempo ? dk_song.tempo : 90) + 0.5f), num);
+        unit_out[0] = "MS";
+        return;
+    }
+    case F_PAN:
+        field_text(f, num);
+        unit_out[0] = "";
+        return;
+    case F_FXAMT:
+        if (k->fx == 5) {                              /* FILTER: the cutoff */
+            fl = 60.0f * fm_exp2f((float)v * 0.01f * 8.2f);
+            itoa_b((int)fl, num);
+            unit_out[0] = "HZ";
+            return;
+        }
+        break;
+    case F_FXA:
+    case F_FXB: {
+        float x = (float)v * 0.01f;
+        int a = f == F_FXA;
+        switch (k->fx) {
+        case 2:                                        /* TAPE: wow in ms, saturation in dB */
+            if (a) { itoa_b((int)((8.0f + 60.0f * x) / (DK_SR * 0.001f) + 0.5f), num); unit_out[0] = "MS"; return; }
+            fl = 20.0f * 0.30103f * fm_log2f(1.0f + 2.5f * x);
+            itoa_b((int)(fl + 0.5f), num);
+            unit_out[0] = "DB";
+            return;
+        case 4:                                        /* CHORUS: rate in Hz, depth in ms */
+            if (a) { fix1(num, (int)((0.15f + 2.2f * x * x) * 10.0f + 0.5f)); unit_out[0] = "HZ"; return; }
+            itoa_b((int)((30.0f + 220.0f * x) / (DK_SR * 0.001f) + 0.5f), num);
+            unit_out[0] = "MS";
+            return;
+        case 7:                                        /* SPRING: decay %, tone in Hz */
+            if (!a) { itoa_b((int)(1800.0f + 5000.0f * x), num); unit_out[0] = "HZ"; return; }
+            break;
+        case 6:                                        /* TREMOLO: rate as a division */
+            if (a) { static const char *const D[5] = {"1/2", "1/4", "1/8", "1/12", "1/16"}; cpy(num, D[(int)(x * 4.99f)]); unit_out[0] = ""; return; }
+            break;
+        case 5:                                        /* FILTER: mode */
+            if (!a) { cpy(num, x < 0.33f ? "LOW" : x < 0.66f ? "BAND" : "HIGH"); unit_out[0] = ""; return; }
+            break;
+        default: break;
+        }
+        break;
+    }
+    case F_FXTYPE:
+    case F_FBANK:
+    case F_MODTYPE:
+    case F_MODTGT:
+        field_text(f, num);
+        unit_out[0] = "";
+        return;
+    default: break;
+    }
+    if ((f >= F_P0 && f <= F_P5) || f == F_MODRATE) {
+        const dk_engine_t *e = cur_eng();
+        if (f != F_MODRATE && f - F_P0 < e->nparams && e->params[f - F_P0].names) {
+            field_text(f, num);
+            unit_out[0] = "";
+            return;
+        }
+    }
+    itoa_b(v, num);
+}

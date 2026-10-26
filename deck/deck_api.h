@@ -205,6 +205,14 @@ typedef struct {
 } dk_song_t;
 #define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
 
+/* SOUND's effect chain, a stage off (FX held + WHITE 1-4): a bit each in dk_song.rsv[track] (older projects: 0, all on),
+ * the tape's (global) in rsv[DK_NTRACK] */
+#define DK_BYP_FX 1u
+#define DK_BYP_ECHO 2u
+#define DK_BYP_REV 4u
+#define DK_BYP(t) ((unsigned)dk_song.rsv[(t)] & 7u)
+#define DK_BYP_TAPE() (dk_song.rsv[DK_NTRACK] & 1u)
+
 extern dk_song_t dk_song;
 extern dk_ev_t dk_ev[DK_NEV];
 #define CLIP(part, trk) (&dk_song.clip[(part) * DK_NTRACK + (trk)])
@@ -313,6 +321,7 @@ typedef struct {
     float trem;                         /* tremolo phase, 4.6 Hz */
     float spb;                          /* samples a beat */
     uint8_t pedal;                      /* the sustain pedal */
+    uint8_t tape_off;                   /* SOUND's BYPASS of the tape: the master's tape eased out (not cut: it is a delay line) */
     float tape;                         /* ATMO's TAPE: the master's tape emulation 0..1 (the tape's master reads it) */
 } dk_ctx_t;
 extern dk_ctx_t dk_ctx;

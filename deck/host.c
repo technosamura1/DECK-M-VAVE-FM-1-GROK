@@ -34,10 +34,13 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "recording")) g = dk_recording;
     else if (!strcmp(what, "counting")) g = dk_counting;
     else if (!strcmp(what, "page")) g = ui.page;
+    else if (!strcmp(what, "rowof")) g = ui.row[ui.page];
     else if (!strcmp(what, "track")) g = dk_song.cur_track;
     else if (!strcmp(what, "part")) g = dk_playing ? dk_cur_part : dk_song.cur_part;
     else if (!strcmp(what, "next")) g = dk_next_part == 0xFF ? -1 : dk_next_part;
     else if (!strcmp(what, "tempo")) g = dk_song.tempo;
+    else if (!strcmp(what, "byp")) g = (int)DK_BYP(dk_song.cur_track);                /* SOUND: the chain's stages off (1 insert, 2 echo, 4 reverb) */
+    else if (!strcmp(what, "bypt")) g = (int)DK_BYP_TAPE();                            /* ... and the tape (the song's) */
     else if (!strcmp(what, "root")) g = dk_song.root;
     else if (!strcmp(what, "mode")) g = dk_song.mode;
     else if (!strcmp(what, "seq")) g = cur()->seq;
@@ -148,7 +151,7 @@ static void host_textaudit(void)
         for (pr = 0; pr < DK_NFACT; pr++) {
             dk_track_setup(dk_song.cur_track, e, pr, SQ_LIVE, TAPE.eng[e]->role);
             ui.page = PG_SOUND;
-            for (tab = 0; tab < 4; tab++) {
+            for (tab = 0; tab < 5; tab++) {
                 ui.row[PG_SOUND] = (uint8_t)tab;
                 for (r = 0; r < 3; r++)
                     draw_page_band(r);
