@@ -1,4 +1,4 @@
-# LAYERS (EDIT on TRACKS): the track's clip as a list of takes; white 1 MUTE, 2 SOLO, 3 DELETE, 4 MERGE; SELECT moves the cursor.
+# LAYERS (TRACKS, EDIT = the EDIT list, white 11 = LAYERS): the track's clip as a list of takes; white 1 MUTE, 2 SOLO, 3 DELETE, 4 MERGE; SELECT moves the cursor.
 # Muted layers do not play; solo plays only one; delete and merge are one undo step each.
 wait 300
 tap SAVE
@@ -18,11 +18,14 @@ expect page 11
 tapkey w0
 wait 100
 expect track 0
-# EDIT on TRACKS: the list (not KEYS)
+# EDIT on TRACKS: the EDIT list (not KEYS); its white 11 opens the layers
 tap EDIT
 wait 100
 expect page 11
 expect layview 1
+tapkey w10
+wait 100
+expect layview 2
 expect nlay 3
 expect laycur 0
 wait 2500
@@ -103,7 +106,10 @@ release EDIT
 wait 100
 expect nlay 3
 expect nfrozen 4
-# EDIT again: back to the six tracks, then KEYS from PLAY
+# EDIT again: back to the EDIT list, again: the six tracks, then KEYS from PLAY
+tap EDIT
+wait 100
+expect layview 1
 tap EDIT
 wait 100
 expect layview 0

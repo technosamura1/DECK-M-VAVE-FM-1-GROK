@@ -6,13 +6,11 @@ turn K4 9 10
 wait 20
 turn K4 1 40
 wait 60
-tapkey w1
+tapkey w0
 wait 20
-turn K4 1 40
-wait 60
-tap FX
-wait 60
-tapkey b3
+tapkey w7
+wait 20
+tap LFO
 wait 60
 wait 200
 wait 5
@@ -56,25 +54,21 @@ tap SEQ
 wait 60
 turn K2 -1 80
 wait 20
-tapkey w10
+tapkey b9
 wait 60
-key w0 down 69
+turn K4 9 80
+wait 60
+press LFO
+tapkey w0
+wait 120
+tapkey w6
+wait 120
+wait 50
+wait 300
+wait 50
+wait 30
 wait 400
-key w4 up
-wait 60
-tap LFO
-wait 20
-wait 800
-wait 20
-key w6 down 84
-wait 100
-key w15 up
-wait 20
-tapkey w8
-wait 60
-tap PLAY
-wait 20
-tapkey w3
+release LFO
 wait 60
 turn K2 -3 10
 wait 60
@@ -100,14 +94,12 @@ tap EDIT
 wait 5
 turn K3 2 10
 wait 60
-tapkey w3
-wait 5
-tapkey w2
+tapkey w0
 wait 20
-tap REC
+turn K3 -3 40
+wait 60
+key w13 down 89
 wait 20
-key w7 down 100
-wait 400
 key w14 up
 wait 5
 key w0 down 70
@@ -164,12 +156,12 @@ release HOME
 wait 20
 turn SELECT 1 10
 wait 5
-tapkey b9
-wait 20
-turn K2 -3 80
-wait 5
-wait 200
-wait 20
+tapkey w1
+wait 60
+key w2 down 54
+wait 100
+key w9 up
+wait 60
 key w3 down 78
 wait 100
 key w3 up
@@ -190,29 +182,31 @@ tap FX
 wait 5
 turn PRESET 4 80
 wait 20
-tapkey w6
-wait 5
-turn PRESET 2 40
+tapkey w1
+wait 20
+wait 800
 wait 5
 turn K4 2 80
 wait 60
+tapkey w8
+wait 5
 tapkey w4
 wait 5
-key w9 down 45
-wait 20
-key w11 up
+wait 800
 wait 5
-press REC
-tapkey w3
-wait 30
-tapkey w5
-wait 30
-turn PRESET -5 60
-wait 30
-wait 400
-release REC
+tap REC
 wait 20
-turn K2 9 10
+wait 800
+wait 20
+turn ALGO -1 80
+wait 20
+turn SELECT 2 80
+wait 60
+press REC
+turn ALGO -5 60
+wait 120
+wait 100
+release REC
 wait 60
 turn K3 -6 40
 wait 20
@@ -224,48 +218,38 @@ key w5 down 42
 wait 20
 key w4 up
 wait 20
-tapkey b8
-wait 60
-turn ALGO -3 80
-wait 60
-turn PRESET 9 80
-wait 60
-press FX
-turn PRESET 5 60
-wait 300
-wait 400
-release FX
-wait 20
-tap REC
-wait 20
-press LFO
-turn K2 5 60
-wait 120
-tapkey w2
-wait 120
-wait 100
-release LFO
-wait 60
-wait 2000
+tapkey b4
 wait 5
-turn PRESET 2 10
+press REC
+tap EDIT
+wait 300
+tapkey w2
+wait 300
+turn ALGO -5 60
+wait 300
+tapkey w4
+wait 300
+wait 2700
+release REC
+wait 5
+tapkey w7
+wait 5
+tap HOME
 wait 60
-turn PRESET 9 40
-wait 20
-expect inv 0
-expect voices <25
-key w5 down 98
-wait 20
-key w7 up
-wait 20
-turn K2 -1 80
+turn K3 -1 80
+wait 5
+key w4 down 53
+wait 100
+key w12 up
 wait 60
+tapkey w7
+wait 5
+turn PRESET 2 80
+wait 20
 wait 50
 wait 5
-tapkey b7
-wait 5
-tap GLO
-wait 60
+tapkey w6
+wait 20
 key w8 down 102
 wait 20
 key w1 up
@@ -274,21 +258,23 @@ tap REC
 wait 20
 turn K4 9 10
 wait 20
+expect inv 0
+expect voices <25
 turn PRESET 9 80
 wait 20
 turn K3 4 40
 wait 60
 turn SELECT 2 80
 wait 60
-tapkey w4
-wait 20
-turn K2 4 10
-wait 20
-tap OCT-
+tapkey w3
 wait 60
-tapkey b2
-wait 60
-tap FX
+tap OCT+
+wait 5
+tapkey b5
+wait 20
+key w5 down 89
+wait 400
+key w1 up
 wait 60
 wait 200
 wait 60
@@ -318,45 +304,38 @@ turn K2 9 40
 wait 60
 tapkey w8
 wait 20
-tapkey w3
-wait 60
-press FX
-turn K4 -5 60
-wait 300
-wait 50
-wait 300
-wait 400
-release FX
+tapkey w9
+wait 20
+turn K4 -6 10
+wait 5
+key w0 down 89
+wait 100
+key w4 up
 wait 5
 key w9 down 75
 wait 400
 key w11 up
 wait 60
-tapkey w7
-wait 60
-tapkey w8
+tapkey b7
 wait 20
 tapkey b10
 wait 60
-tapkey b6
-wait 20
-turn SELECT -1 80
-wait 60
-tap OCT-
-wait 60
-key w14 down 96
+tapkey w6
+wait 5
+key w8 down 101
 wait 400
-key w13 up
-wait 60
-tap EDIT
+key w6 up
+wait 20
+key w13 down 115
+wait 400
+key w9 up
 wait 60
 turn K2 4 80
 wait 5
-tapkey w10
-wait 20
-key w12 down 63
-wait 400
-key w2 up
+page 11
+tap EDIT
+tapkey w6
+tapkey b1
 wait 20
 wait 50
 wait 60
@@ -381,98 +360,100 @@ wait 5
 turn K3 -3 80
 wait 5
 tapkey b4
-wait 60
-tapkey b3
 wait 5
-press EDIT
+key w7 down 62
 wait 100
-release EDIT
+key w2 up
+wait 5
+tap SEQ
 wait 60
-press LFO
-turn PRESET 5 60
-wait 120
-wait 50
-wait 300
-turn ALGO 5 60
-wait 120
-wait 50
+tapkey b0
+wait 5
+turn K3 4 80
+wait 20
+tapkey w8
+wait 20
+turn K4 -1 80
+wait 20
+tap EDIT
+wait 60
+tap REC
+wait 5
+press GLO
+tapkey w3
 wait 30
 wait 50
-wait 120
-wait 1200
-release LFO
-wait 20
+wait 300
 wait 50
-wait 20
-turn K3 4 10
-wait 60
-tapkey b2
-wait 60
-wait 800
-wait 60
-turn K4 -3 80
-wait 20
-tapkey w3
+wait 30
+wait 400
+release GLO
 wait 5
-tap OCT-
-wait 60
-tapkey w3
+press ENV
+turn PRESET 5 60
+wait 300
+turn ALGO 2 60
+wait 30
+wait 2700
+release ENV
 wait 20
-tapkey w2
+page 11
+tap EDIT
+tapkey w12
 wait 5
-turn K2 -6 10
+tap ARP
 wait 60
-turn K3 2 80
-wait 60
-tapkey b4
+key w14 down 63
+wait 400
+key w8 up
 wait 5
 key w5 down 32
 wait 20
 key w12 up
 wait 5
-tapkey w2
-wait 5
-turn PRESET 1 80
-wait 60
-tapkey w4
-wait 20
 tapkey w3
 wait 5
-turn K4 -6 40
-wait 20
-press GLO
+press ENV
+tapkey w3
+wait 300
 wait 50
 wait 30
-tapkey w0
+turn ALGO -5 60
 wait 30
-wait 100
-release GLO
+tapkey w5
+wait 300
+wait 1200
+release ENV
+wait 5
+tapkey b2
+wait 5
+turn ALGO 4 80
+wait 5
+key w8 down 36
+wait 20
+key w14 up
 wait 60
-tapkey w1
-wait 20
-tap EDIT
-wait 5
-turn SELECT 2 10
-wait 5
-wait 5
-wait 20
-turn SELECT 1 80
-wait 5
-tap REC
-wait 5
-tap HOME
-wait 20
-tap EDIT
-wait 60
-tap LFO
-wait 5
-key w5 down 64
+press REC
 wait 100
-key w1 up
+release REC
+wait 60
+press REC
+turn K4 -5 60
+wait 30
+turn K1 -2 60
+wait 300
+wait 2700
+release REC
 wait 20
-key w6 down 111
-wait 400
-key w13 up
+tapkey w10
+wait 60
+turn SELECT 2 80
+wait 5
+tapkey b10
+wait 60
+wait 200
+wait 60
+tapkey b6
 wait 60
 turn PRESET 4 80
 wait 60
@@ -480,57 +461,53 @@ wait 5
 wait 20
 turn SELECT -3 10
 wait 5
-expect inv 0
-expect voices <25
 press REC
 wait 100
 release REC
 wait 60
-tapkey w1
-wait 20
-turn K2 -6 40
-wait 60
-turn K1 9 80
-wait 20
-turn K2 -1 10
-wait 20
-press REC
 tapkey w0
-wait 120
-turn K3 -2 60
+wait 5
+key w14 down 105
+wait 20
+key w12 up
+wait 60
+press ENV
+wait 1200
+release ENV
+wait 5
+turn PRESET -6 40
+wait 5
+press REC
+tapkey w2
+wait 30
+turn K4 2 60
 wait 300
+tap SEQ
+wait 120
+tap FX
+wait 120
+turn K2 -5 60
+wait 30
 wait 1200
 release REC
-wait 5
-tapkey w8
-wait 60
-turn PRESET 2 40
-wait 60
-tapkey w10
 wait 20
-key w0 down 126
+key w3 down 72
 wait 100
-key w5 up
-wait 5
-tapkey b5
-wait 5
-tapkey w9
-wait 5
-turn K4 9 80
+key w4 up
 wait 60
-tapkey w5
+turn PRESET 9 80
+wait 60
+tapkey w4
 wait 20
-turn K3 4 80
+tap SEQ
 wait 60
 turn SELECT -3 40
 wait 60
-tapkey w9
-wait 5
 tapkey w7
 wait 20
-press SEQ
-wait 100
-release SEQ
+tapkey b6
+wait 5
+wait 5
 wait 5
 turn K1 2 40
 wait 5
@@ -538,17 +515,17 @@ tap OCT-
 wait 20
 tapkey b5
 wait 20
-tapkey b5
+tapkey w8
 wait 60
-key w0 down 38
+turn ALGO -1 80
+wait 5
+expect inv 0
+expect voices <25
+key w3 down 43
 wait 100
-key w7 up
-wait 60
-turn SELECT -3 40
-wait 60
-key w3 down 89
-wait 400
-key w8 up
+key w1 up
+wait 5
+wait 200
 wait 60
 turn PRESET -6 80
 wait 60
@@ -569,46 +546,48 @@ wait 2700
 release REC
 wait 5
 tapkey b9
-wait 60
-tapkey w7
+wait 20
+turn K4 1 10
 wait 5
-turn PRESET 4 80
+wait 5
 wait 60
-turn SELECT 9 40
+turn PRESET 2 80
+wait 20
+wait 2000
 wait 60
-press HOME
-wait 50
-wait 300
-tapkey w7
-wait 30
-wait 50
-wait 30
-wait 50
-wait 300
+key w9 down 87
 wait 100
-release HOME
+key w13 up
+wait 60
+tap EDIT
+wait 20
+tapkey b2
+wait 60
+tap ENV
+wait 20
+tap HOME
+wait 60
+tap FX
+wait 20
+tapkey b10
+wait 5
+press REC
+wait 2700
+release REC
 wait 20
 tapkey w10
 wait 60
-turn SELECT -6 10
-wait 20
-turn PRESET 9 40
-wait 60
-tap ARP
-wait 20
+press HOME
 tapkey w7
-wait 20
-turn ALGO -6 10
-wait 20
-tapkey w9
-wait 20
-wait 800
-wait 20
-wait 200
+wait 30
+turn K1 -2 60
+wait 120
+tapkey w4
+wait 120
+wait 1200
+release HOME
 wait 60
-tapkey w6
-wait 20
-tap ARP
+tapkey w7
 wait 5
 tap ARP
 wait 20
@@ -672,37 +651,29 @@ key w4 up
 wait 20
 turn K1 4 40
 wait 20
-tapkey w5
+tapkey b7
+wait 5
+tapkey w9
 wait 60
-tapkey w2
+tapkey b5
 wait 60
-tap OCT-
-wait 60
-tap SEQ
+tap REC
 wait 5
-turn PRESET 2 80
+tapkey w1
 wait 5
-tap OCT+
-wait 5
-tapkey w7
-wait 20
-turn ALGO 4 40
-wait 5
-turn K2 9 80
-wait 5
-key w3 down 48
-wait 400
-key w6 up
-wait 60
-key w9 down 74
-wait 100
-key w0 up
-wait 5
-press GLO
+press EDIT
 wait 50
-wait 300
-wait 1200
-release GLO
+wait 30
+wait 400
+release EDIT
+wait 60
+turn K2 4 40
+wait 20
+tapkey w9
+wait 5
+turn ALGO -1 80
+wait 60
+wait 200
 wait 20
 key w12 down 22
 wait 20
@@ -714,31 +685,26 @@ key w11 down 29
 wait 20
 key w3 up
 wait 20
-expect inv 0
-expect voices <25
-tapkey w8
+tapkey w5
 wait 5
-tapkey w2
-wait 20
-tapkey b10
+turn K1 -1 80
 wait 60
-turn K3 -1 40
-wait 5
-key w10 down 34
-wait 100
-key w4 up
+tap SEL
+wait 60
+page 11
+wait 20
+tapkey w1
+tapkey b2
 wait 60
 wait 200
 wait 20
 turn K2 2 80
 wait 60
-tapkey w8
-wait 20
-tapkey w10
-wait 20
-key w1 down 96
-wait 400
-key w3 up
+tapkey w4
+wait 5
+tap SEQ
+wait 5
+turn K2 -6 10
 wait 5
 turn K1 -1 80
 wait 5
@@ -770,59 +736,58 @@ turn K1 2 80
 wait 20
 turn PRESET 1 40
 wait 60
-tapkey w7
-wait 5
-tap OCT-
-wait 5
-press REC
+page 11
 tap EDIT
-wait 120
-turn K4 5 60
+tapkey w11
+tapkey b0
+wait 5
+key w11 down 90
+wait 100
+key w11 up
+wait 20
+press FX
+turn ALGO -5 60
 wait 30
-turn K2 2 60
-wait 300
-tap SEQ
-wait 300
-wait 100
-release REC
-wait 60
 tapkey w5
-wait 20
-tap GLO
-wait 20
-tap LFO
+wait 300
+wait 50
+wait 120
+tapkey w5
+wait 120
+wait 2700
+release FX
 wait 60
-key w4 down 27
-wait 100
-key w3 up
-wait 60
-turn K3 4 40
+turn K2 2 10
+wait 5
+page 3
+tap EDIT
+tapkey w10
 wait 20
 tap SEL
 wait 60
 turn ALGO 1 80
 wait 5
-tapkey w1
-wait 5
-tapkey w10
-wait 5
-tap ARP
+tapkey w5
+wait 20
+expect inv 0
+expect voices <25
+tap OCT+
 wait 60
 tapkey w10
 wait 60
 tap LFO
 wait 20
-tapkey b1
-wait 60
-tapkey w2
-wait 5
-turn K1 -6 10
-wait 60
-turn ALGO 1 40
-wait 60
-key w9 down 39
+tapkey b7
 wait 20
-key w3 up
+press REC
+wait 2700
+release REC
+wait 20
+turn SELECT 4 10
+wait 5
+tapkey b4
+wait 5
+turn K2 9 10
 wait 20
 turn K1 9 80
 wait 60
@@ -838,45 +803,40 @@ release SEQ
 wait 60
 wait 50
 wait 5
-tapkey w8
-wait 5
-tapkey w8
+page 11
+tap EDIT
+tapkey w12
+tapkey b3
 wait 60
-turn K2 4 80
-wait 60
-wait 5
-wait 5
-tapkey w1
-wait 60
-tap HOME
-wait 5
-key w15 down 25
-wait 400
-key w7 up
-wait 5
-turn K4 -1 40
-wait 20
-tap ENV
-wait 60
-turn K2 4 40
-wait 60
-tap SEQ
-wait 20
-key w12 down 109
+key w2 down 51
 wait 100
-key w6 up
+key w14 up
+wait 5
+key w1 down 69
 wait 20
-press HOME
-wait 50
+key w3 up
+wait 60
+press REC
+tapkey w0
+wait 120
+turn K3 5 60
 wait 300
-wait 100
-release HOME
+tapkey w7
+wait 300
+tapkey w6
+wait 120
+wait 1200
+release REC
+wait 5
+turn PRESET 9 10
 wait 60
+tap OCT-
+wait 20
 tapkey w4
 wait 20
-turn K1 -1 80
-wait 20
-turn ALGO -1 10
+tapkey w2
+wait 5
+wait 50
 wait 5
 turn K2 2 80
 wait 5
@@ -930,19 +890,15 @@ tap SEQ
 wait 60
 turn K1 -1 80
 wait 20
-tapkey w1
-wait 60
-press REC
-tapkey w7
-wait 30
-wait 2700
-release REC
-wait 60
-key w10 down 51
+tapkey b2
+wait 5
+key w14 down 116
 wait 20
-key w2 up
-wait 60
-tap HOME
+key w15 up
+wait 5
+tapkey w3
+wait 5
+turn K3 -6 40
 wait 20
 turn ALGO 2 80
 wait 5
@@ -962,19 +918,15 @@ turn PRESET 1 10
 wait 60
 wait 800
 wait 5
-expect inv 0
-expect voices <25
-tapkey b5
-wait 5
+tapkey w2
+wait 60
 key w8 down 28
 wait 400
 key w11 up
 wait 20
-tapkey b0
+tapkey w9
 wait 60
-key w1 down 93
-wait 400
-key w0 up
+turn K2 2 10
 wait 5
 press HOME
 wait 50
@@ -992,9 +944,9 @@ release HOME
 wait 20
 wait 200
 wait 60
-tapkey b1
-wait 60
-turn K4 -1 40
+tapkey b3
+wait 20
+tap HOME
 wait 60
 turn K4 2 10
 wait 5
@@ -1004,49 +956,41 @@ turn PRESET 2 80
 wait 60
 turn ALGO -6 40
 wait 60
-tapkey b8
-wait 20
-tap OCT+
+tapkey w3
+wait 60
+turn PRESET -1 40
+wait 60
+turn K1 9 40
+wait 60
+turn PRESET 1 80
 wait 5
 press REC
-turn PRESET 2 60
+turn K2 5 60
 wait 30
-tapkey w0
+tapkey w1
 wait 120
-tap EDIT
+tapkey w5
 wait 300
-turn K3 5 60
+turn K3 2 60
 wait 30
-wait 400
+tap SEQ
+wait 30
+wait 100
 release REC
+wait 5
+tap SEL
 wait 60
-key w8 down 78
-wait 20
-key w1 up
-wait 20
-wait 200
-wait 60
-tap LFO
-wait 60
-turn K1 -6 10
-wait 20
 press REC
-wait 400
+turn ALGO -2 60
+wait 120
+tap SEQ
+wait 30
+tap EDIT
+wait 120
+turn K2 5 60
+wait 120
+wait 100
 release REC
-wait 5
-key w5 down 24
-wait 400
-key w6 up
-wait 5
-tapkey w7
-wait 60
-tapkey w10
-wait 5
-turn ALGO -3 80
-wait 60
-turn K2 1 80
-wait 20
-tapkey w0
 wait 5
 tap PLAY
 wait 60
@@ -1068,71 +1012,67 @@ wait 120
 wait 400
 release GLO
 wait 60
-tapkey b7
+tapkey w10
+wait 5
+tapkey b1
 wait 20
+press REC
+turn K4 -5 60
+wait 120
+tap FX
+wait 30
+wait 1200
+release REC
+wait 5
 tap REC
-wait 5
-tapkey w0
-wait 60
-turn K4 9 10
-wait 20
-tap OCT-
-wait 5
-tapkey w5
-wait 20
-tapkey w3
-wait 60
-turn SELECT 4 80
 wait 5
 turn K3 -1 40
 wait 60
-tapkey w10
-wait 60
-tap OCT+
+page 3
+wait 20
+tapkey w2
 wait 60
 tap REC
 wait 20
-tapkey w6
-wait 60
+tapkey b7
 wait 5
+wait 800
 wait 5
-tapkey w9
-wait 5
-key w7 down 51
-wait 400
-key w12 up
+key w7 down 100
 wait 20
-turn ALGO 4 40
+key w7 up
+wait 60
+tapkey w4
 wait 60
 tap GLO
 wait 5
 tap REC
 wait 20
-tapkey w10
-wait 5
-turn PRESET 1 80
-wait 20
-press LFO
-wait 50
-wait 300
 tapkey w0
+wait 20
+expect inv 0
+expect voices <25
+tapkey b7
+wait 20
+wait 5
+wait 60
+tap OCT+
+wait 60
+tap HOME
+wait 5
+press REC
+tap EDIT
+wait 300
+turn K3 2 60
 wait 30
-wait 50
+turn SELECT -2 60
+wait 30
+tap SEQ
+wait 300
+turn K4 -5 60
 wait 30
 wait 1200
-release LFO
-wait 20
-tapkey w0
-wait 5
-key w5 down 36
-wait 100
-key w1 up
-wait 5
-turn K3 -6 40
-wait 60
-tap FX
-wait 5
-turn SELECT 2 40
+release REC
 wait 20
 tap PLAY
 wait 5
@@ -1170,10 +1110,8 @@ turn K4 9 80
 wait 5
 wait 200
 wait 60
-tapkey w0
-wait 60
-turn ALGO -1 40
-wait 20
+tapkey w4
+wait 5
 tapkey b9
 wait 20
 press SEQ
@@ -1188,111 +1126,103 @@ wait 120
 wait 2700
 release ENV
 wait 20
-tapkey w7
-wait 60
-turn ALGO -1 10
-wait 20
-key w4 down 41
-wait 100
-key w4 up
+tapkey w8
 wait 5
-turn K4 2 40
+tapkey w9
+wait 5
+press REC
+turn K1 -2 60
+wait 300
+wait 1200
+release REC
+wait 5
+tapkey w7
+wait 20
+turn ALGO 2 40
+wait 20
+press REC
+tap SEQ
+wait 30
+tapkey w5
+wait 300
+tap SEQ
+wait 30
+tap SEQ
+wait 300
+tapkey w0
+wait 120
+wait 2700
+release REC
+wait 5
+page 11
+tap EDIT
+tapkey w0
+tapkey b2
 wait 5
 tapkey w2
-wait 20
-press EDIT
-wait 2700
-release EDIT
 wait 5
-key w14 down 33
+turn K2 2 80
+wait 60
+key w13 down 76
+wait 400
+key w15 up
+wait 5
+key w11 down 45
+wait 100
+key w2 up
+wait 20
+turn K4 -3 10
+wait 5
+turn K1 -1 10
+wait 5
+tap SEL
+wait 60
+turn K3 9 10
+wait 5
+tapkey b5
+wait 5
+key w0 down 47
+wait 100
+key w15 up
+wait 60
+turn SELECT 9 40
+wait 20
+key w4 down 82
 wait 20
 key w10 up
-wait 5
-tap ARP
 wait 60
-expect inv 0
-expect voices <25
-turn SELECT 4 10
+tap PLAY
 wait 60
-tapkey w8
+wait 2000
 wait 20
-press LFO
-wait 50
-wait 30
-tapkey w0
-wait 300
-turn K3 -2 60
-wait 120
-tapkey w3
-wait 30
-turn ALGO 2 60
-wait 30
-wait 400
-release LFO
-wait 5
-tapkey w2
-wait 5
-turn PRESET 2 80
-wait 60
-press LFO
-wait 50
-wait 300
-turn K1 -2 60
-wait 120
-turn K4 -5 60
-wait 30
-turn K4 -2 60
-wait 30
-wait 400
-release LFO
+press GLO
+wait 2700
+release GLO
 wait 20
-tapkey w5
-wait 5
-key w6 down 31
-wait 100
-key w6 up
-wait 60
-tapkey b10
-wait 60
-wait 5
-wait 5
-tapkey w8
-wait 5
-press HOME
-tapkey w2
-wait 30
-wait 50
-wait 120
-tapkey w7
-wait 120
-wait 100
-release HOME
+page 11
 wait 20
-turn K3 4 40
+tapkey w10
 wait 5
 wait 200
 wait 5
 tapkey w4
 wait 20
-tapkey w4
-wait 5
-tap FX
-wait 5
-tapkey b3
+page 11
+tap EDIT
+tapkey w0
+tapkey b6
+wait 60
+turn PRESET 9 80
+wait 60
+key w9 down 97
+wait 100
+key w5 up
 wait 20
-tapkey b9
-wait 20
-key w8 down 106
-wait 20
-key w10 up
-wait 5
-tapkey w5
+turn SELECT 1 40
 wait 60
 tap OCT-
 wait 5
-tapkey w2
-wait 20
-wait 50
+tapkey w3
 wait 5
 tap LFO
 wait 5
@@ -1304,13 +1234,13 @@ key w5 up
 wait 60
 tap HOME
 wait 5
+tapkey b7
+wait 5
+key w11 down 26
+wait 400
+key w11 up
+wait 20
 tapkey b8
-wait 60
-tapkey b9
-wait 20
-turn K3 -1 40
-wait 20
-turn K3 4 80
 wait 20
 press ENV
 tapkey w2
@@ -1354,11 +1284,11 @@ key w4 down 76
 wait 100
 key w5 up
 wait 20
-tapkey b0
-wait 60
-turn K2 1 40
+tapkey w9
+wait 5
+wait 2000
 wait 20
-turn PRESET 9 10
+tapkey w2
 wait 60
 turn K4 -6 80
 wait 5
@@ -1382,10 +1312,8 @@ tap ENV
 wait 5
 tap HOME
 wait 5
-tapkey w8
+tapkey b5
 wait 20
-wait 800
-wait 5
 tapkey b7
 wait 20
 tap EDIT
@@ -1394,11 +1322,11 @@ key w10 down 116
 wait 100
 key w5 up
 wait 5
-tapkey w2
-wait 20
-turn SELECT 2 40
-wait 20
-wait 800
+tapkey w1
+wait 60
+expect inv 0
+expect voices <25
+turn PRESET -1 40
 wait 60
 key w10 down 112
 wait 400
@@ -1414,25 +1342,23 @@ wait 300
 wait 100
 release REC
 wait 20
-tapkey w5
-wait 20
-tapkey b10
+page 11
+tap EDIT
+tapkey w9
 wait 20
 turn K4 -1 10
 wait 20
-tapkey b6
-wait 60
-tap FX
-wait 20
-tap GLO
-wait 60
-tap PLAY
+tapkey b2
 wait 5
-turn K4 2 40
-wait 20
-turn K4 -1 10
-wait 20
-turn PRESET -6 40
+tapkey w9
+wait 60
+press FX
+turn SELECT 2 60
+wait 300
+wait 1200
+release FX
+wait 5
+tapkey w6
 wait 5
 turn K4 4 10
 wait 20
@@ -1444,91 +1370,85 @@ wait 50
 wait 5
 turn K2 -3 10
 wait 5
-tapkey b2
+tapkey w2
 wait 20
-turn PRESET 2 80
-wait 60
-tap PLAY
-wait 5
-expect inv 0
-expect voices <25
-turn K4 -3 10
+key w10 down 96
+wait 20
+key w0 up
+wait 20
+tap LFO
 wait 5
 tap PLAY
 wait 20
 turn K3 -6 10
 wait 60
+tapkey w5
+wait 60
+turn K3 -1 10
+wait 20
 tapkey w3
-wait 20
+wait 5
+tap OCT+
+wait 5
 tap EDIT
-wait 60
+wait 5
+turn K2 -3 10
+wait 5
+press REC
+tap EDIT
+wait 300
+tapkey w4
+wait 120
 tapkey w6
-wait 20
-turn K1 -3 80
-wait 5
-turn K4 -6 80
-wait 60
-tapkey w8
-wait 5
-turn SELECT 9 10
-wait 20
-tapkey w9
-wait 60
-tap ARP
-wait 60
-turn K1 -1 80
-wait 20
-wait 800
-wait 20
-tapkey b3
+wait 120
+wait 400
+release REC
 wait 5
 turn ALGO -3 10
 wait 5
 tap ARP
 wait 60
-tapkey w0
-wait 5
-press LFO
-wait 100
-release LFO
+page 11
 wait 20
-press EDIT
-tapkey w5
-wait 120
-turn K2 -5 60
+tapkey w13
+wait 5
+tapkey w2
+wait 5
+tap REC
+wait 20
+press HOME
+turn K3 -5 60
 wait 300
 tapkey w0
 wait 30
-wait 400
-release EDIT
-wait 60
-tap HOME
+tapkey w1
+wait 30
+turn K4 -5 60
+wait 30
+wait 1200
+release HOME
 wait 5
+page 11
+wait 20
+tapkey w9
+wait 20
+key w3 down 36
+wait 400
+key w12 up
+wait 60
+key w13 down 50
+wait 400
+key w12 up
+wait 20
 press HOME
-tapkey w0
+wait 50
+wait 300
+turn K4 2 60
+wait 120
+wait 50
 wait 300
 wait 100
 release HOME
-wait 20
-turn K4 2 40
-wait 5
-tapkey b8
-wait 5
-turn K4 4 80
-wait 20
-tap SEQ
-wait 20
-turn K2 1 40
-wait 60
-tapkey w1
-wait 5
-key w11 down 33
-wait 20
-key w11 up
-wait 5
-press FX
-wait 100
-release FX
 wait 5
 key w7 down 31
 wait 100
@@ -1562,11 +1482,9 @@ turn K4 -1 80
 wait 20
 turn K2 -3 40
 wait 5
-tapkey b9
+tapkey w8
 wait 20
-key w4 down 111
-wait 20
-key w6 up
+turn SELECT 2 10
 wait 20
 tap SEL
 wait 20
@@ -1592,59 +1510,58 @@ key w5 up
 wait 60
 turn K4 -3 10
 wait 60
-tapkey b9
+tapkey b6
 wait 20
-turn ALGO -1 80
-wait 5
-turn K2 -1 10
-wait 5
-tapkey w7
+key w9 down 93
 wait 20
-tapkey w2
-wait 5
-tap FX
+key w2 up
 wait 60
-wait 800
+turn SELECT 1 80
 wait 20
-tapkey w8
-wait 5
-wait 50
-wait 5
-press REC
-turn SELECT 5 60
-wait 120
-tap SEQ
+press SEQ
+turn K4 -5 60
 wait 300
+tapkey w6
+wait 120
+turn K2 -2 60
+wait 30
 wait 100
-release REC
+release SEQ
 wait 20
+turn K1 -1 10
+wait 5
+turn K3 4 80
+wait 20
+turn K3 4 80
+wait 5
 tapkey b4
 wait 5
 tap OCT-
 wait 60
-tapkey w6
+page 11
+tap EDIT
+tapkey w13
+tapkey b3
 wait 20
-key w0 down 36
-wait 20
-key w15 up
+tap EDIT
 wait 60
-turn PRESET 4 80
-wait 20
-turn PRESET -6 10
+tap LFO
+wait 60
+tapkey w9
 wait 5
-tapkey w2
-wait 20
-tapkey b9
+turn PRESET 4 80
 wait 60
-press SEQ
+tap PLAY
+wait 20
+tapkey w10
+wait 20
 wait 50
-wait 120
-turn K4 -2 60
-wait 30
-wait 50
-wait 30
-wait 400
-release SEQ
+wait 20
+turn PRESET 1 80
+wait 20
+expect inv 0
+expect voices <25
+tap LFO
 wait 60
 turn K2 1 40
 wait 60
@@ -1674,37 +1591,31 @@ key w11 down 59
 wait 20
 key w15 up
 wait 60
+tapkey w10
+wait 20
+press FX
+wait 50
+wait 300
+wait 50
+wait 120
+wait 1200
+release FX
+wait 60
+turn K1 -1 80
+wait 5
+turn ALGO 9 10
+wait 5
+turn ALGO -3 10
+wait 60
+wait 2000
+wait 5
 tapkey w2
-wait 60
-tapkey b3
-wait 20
-expect inv 0
-expect voices <25
-key w7 down 101
-wait 400
-key w6 up
-wait 20
-wait 200
-wait 60
-tapkey w9
+wait 5
+tapkey w4
 wait 5
 tap EDIT
 wait 60
-tap ENV
-wait 5
-press REC
-tap FX
-wait 300
-turn SELECT 2 60
-wait 30
-wait 100
-release REC
-wait 20
-turn K4 -6 80
-wait 20
-tap OCT-
-wait 60
-turn K4 4 40
+wait 800
 wait 20
 turn SELECT 9 10
 wait 5
@@ -1712,9 +1623,9 @@ key w14 down 21
 wait 400
 key w5 up
 wait 20
+page 11
+tap EDIT
 tapkey w3
-wait 5
-turn ALGO 2 80
 wait 20
 press EDIT
 turn PRESET 2 60
@@ -1732,27 +1643,27 @@ turn K3 -3 80
 wait 60
 tap REC
 wait 5
-tapkey b0
-wait 60
-turn K1 -3 80
+tapkey b3
+wait 20
+turn K2 -6 10
 wait 5
-turn SELECT -6 10
-wait 20
-press REC
-turn K2 2 60
-wait 300
-tapkey w4
-wait 120
-turn K2 5 60
-wait 120
-turn K2 5 60
-wait 300
-wait 100
-release REC
+turn K4 -3 40
 wait 60
-turn PRESET -3 10
+turn K2 -1 10
 wait 20
-tapkey w9
+turn PRESET -1 40
+wait 60
+tapkey b8
+wait 20
+turn ALGO 9 40
+wait 60
+tapkey w8
+wait 5
+key w10 down 38
+wait 20
+key w10 up
+wait 20
+turn K1 4 80
 wait 20
 press REC
 tapkey w6
@@ -1772,41 +1683,35 @@ tap HOME
 wait 20
 wait 50
 wait 60
-tapkey b1
-wait 60
-tapkey w1
-wait 5
-tapkey w7
-wait 60
-tap HOME
+tapkey w10
+wait 20
+press REC
+tap EDIT
+wait 120
+wait 2700
+release REC
 wait 60
 turn K1 -1 40
 wait 20
-tapkey b3
-wait 20
+tapkey w6
+wait 60
 press REC
 tapkey w1
 wait 300
-wait 2700
-release REC
-wait 5
-wait 800
-wait 5
-tap OCT+
-wait 5
-tapkey b1
-wait 20
+tap FX
+wait 300
+tap SEQ
+wait 30
 tap EDIT
+wait 300
+turn K4 2 60
+wait 120
+wait 1200
+release REC
 wait 60
-key w10 down 36
-wait 400
-key w5 up
-wait 20
-tap OCT-
-wait 20
-tap ARP
-wait 60
-tapkey b4
+tapkey b6
+wait 5
+wait 200
 wait 5
 turn SELECT 2 10
 wait 20
@@ -1814,83 +1719,82 @@ tap REC
 wait 5
 turn K3 -6 10
 wait 20
-tapkey b7
-wait 60
-tapkey b1
-wait 60
 tapkey w10
-wait 5
-turn PRESET -6 40
+wait 20
+tap SEL
+wait 60
+page 3
+tap EDIT
+tapkey w0
+tapkey b4
 wait 20
 turn K1 2 80
 wait 60
-tapkey w5
+tapkey w3
+wait 5
+tapkey b0
+wait 5
+tapkey w2
+wait 5
+turn SELECT -3 40
+wait 5
+tapkey b2
 wait 5
 press FX
-tapkey w0
-wait 300
-turn ALGO 5 60
-wait 30
-wait 100
-release FX
-wait 20
-turn PRESET -6 40
-wait 60
-press LFO
-tapkey w3
-wait 300
-wait 2700
-release LFO
-wait 5
-press GLO
-wait 50
-wait 120
-wait 50
-wait 30
-turn SELECT 5 60
-wait 120
-tapkey w4
-wait 300
-wait 50
-wait 120
-wait 2700
-release GLO
-wait 60
-tapkey w5
-wait 60
-key w7 down 53
-wait 20
-key w2 up
-wait 20
-tap HOME
-wait 5
-turn K4 9 80
-wait 20
-tapkey w7
-wait 5
-turn SELECT 1 10
-wait 5
-turn K1 2 80
-wait 60
-tapkey w0
-wait 20
-turn K1 4 80
-wait 5
-tapkey w1
-wait 20
-press SEQ
-turn K1 2 60
+turn K3 5 60
 wait 300
 tapkey w6
 wait 300
-turn K3 5 60
-wait 30
-tapkey w5
+wait 2700
+release FX
+wait 20
+tapkey w1
+wait 20
+press SEQ
+tapkey w2
 wait 120
-turn SELECT 2 60
-wait 300
-wait 100
+wait 2700
 release SEQ
+wait 20
+wait 800
+wait 20
+key w9 down 50
+wait 100
+key w7 up
+wait 20
+turn K3 -6 40
+wait 60
+press REC
+turn K4 2 60
+wait 120
+tapkey w2
+wait 30
+wait 400
+release REC
+wait 5
+turn K2 4 80
+wait 20
+tap FX
+wait 20
+turn K1 4 80
+wait 5
+tapkey w5
+wait 20
+wait 800
+wait 20
+turn K4 4 40
+wait 60
+tapkey b6
+wait 60
+turn ALGO 9 10
+wait 20
+wait 800
+wait 5
+tap OCT+
+wait 20
+key w5 down 38
+wait 400
+key w3 up
 wait 60
 turn K3 -3 40
 wait 60
@@ -1920,47 +1824,45 @@ key w8 down 109
 wait 400
 key w8 up
 wait 60
-tapkey w6
+page 11
+tap EDIT
+tapkey w1
 wait 20
-turn K3 4 40
-wait 5
-tap FX
-wait 60
-tap REC
-wait 5
-turn K4 4 10
-wait 60
-tap GLO
-wait 60
-turn K2 -1 80
-wait 20
-tap OCT+
-wait 60
 expect inv 0
 expect voices <25
-turn K4 4 40
+turn K2 -6 80
 wait 60
-tap SEL
+page 11
 wait 20
-tapkey w9
+tapkey w13
 wait 5
-turn K4 2 80
+tap ARP
 wait 20
-tap GLO
-wait 5
-tapkey w2
-wait 20
-key w13 down 125
-wait 400
-key w5 up
+key w10 down 113
+wait 100
+key w1 up
 wait 60
-tapkey w9
-wait 60
-turn K3 -6 40
-wait 60
-wait 800
-wait 5
+press ENV
 tapkey w6
+wait 300
+wait 50
+wait 300
+tapkey w2
+wait 300
+wait 50
+wait 300
+wait 50
+wait 120
+wait 1200
+release ENV
+wait 60
+press GLO
+wait 50
+wait 300
+turn K1 -2 60
+wait 120
+wait 2700
+release GLO
 wait 60
 wait 2000
 wait 60
@@ -1968,27 +1870,23 @@ turn K3 -6 80
 wait 60
 wait 800
 wait 20
-tapkey b0
-wait 60
-tap ENV
-wait 60
-wait 800
-wait 20
-turn SELECT -6 80
+tapkey b4
 wait 5
-tapkey w7
-wait 5
-tap FX
-wait 5
-turn K4 -6 80
-wait 5
-key w3 down 25
+press EDIT
+turn PRESET -5 60
+wait 30
+turn K4 -5 60
+wait 120
+turn ALGO -2 60
+wait 30
 wait 100
-key w13 up
+release EDIT
 wait 5
-press REC
-wait 2700
-release REC
+tap PLAY
+wait 60
+turn PRESET 1 10
+wait 20
+turn K4 9 40
 wait 60
 tap LFO
 wait 5
@@ -2004,16 +1902,16 @@ press REC
 wait 1200
 release REC
 wait 5
-tapkey w10
-wait 5
-tap SEQ
+page 3
+tap EDIT
+tapkey w4
+wait 60
+wait 200
 wait 20
-key w8 down 78
-wait 100
-key w3 up
-wait 60
-turn K3 4 10
-wait 60
+tapkey b3
+wait 20
+tap OCT+
+wait 5
 key w0 down 66
 wait 400
 key w14 up
@@ -2050,9 +1948,9 @@ wait 50
 wait 5
 turn PRESET 9 80
 wait 20
-tapkey w9
+tapkey w0
 wait 5
-turn PRESET 1 80
+turn K1 9 80
 wait 60
 turn SELECT 9 10
 wait 60
@@ -2064,43 +1962,39 @@ tap OCT+
 wait 5
 turn SELECT 1 40
 wait 60
-tapkey w5
+tapkey w9
 wait 60
-tap EDIT
+turn K1 9 80
 wait 20
-tap EDIT
-wait 20
-key w13 down 48
-wait 400
-key w15 up
-wait 20
-tap OCT-
+tap PLAY
 wait 5
-turn K2 -6 10
-wait 60
-tap OCT+
-wait 60
-tapkey w6
-wait 20
-tap SEL
-wait 20
-turn K2 -3 40
-wait 60
 wait 800
 wait 5
-tapkey b2
+key w11 down 118
+wait 100
+key w0 up
+wait 5
+key w1 down 41
+wait 400
+key w7 up
 wait 60
-tap LFO
-wait 60
-tapkey b0
-wait 20
-turn ALGO -1 80
-wait 60
-tapkey w6
-wait 20
-key w6 down 55
-wait 20
-key w9 up
+tapkey w9
+wait 5
+turn ALGO 4 80
+wait 5
+press ENV
+tapkey w1
+wait 300
+wait 50
+wait 120
+tapkey w4
+wait 30
+turn PRESET 2 60
+wait 120
+tapkey w3
+wait 30
+wait 1200
+release ENV
 wait 60
 press GLO
 turn K1 2 60
@@ -2124,22 +2018,18 @@ wait 30
 wait 100
 release ENV
 wait 5
-tapkey b7
-wait 5
-turn K4 4 40
+tapkey w2
 wait 60
-key w6 down 121
-wait 100
-key w9 up
-wait 60
-turn SELECT 1 40
-wait 60
-tap REC
-wait 5
-tapkey w0
-wait 5
-tapkey b9
+turn K3 2 10
 wait 20
+turn ALGO -6 10
+wait 20
+tapkey b10
+wait 5
+tapkey w3
+wait 20
+tapkey b3
+wait 60
 key w2 down 63
 wait 400
 key w12 up
@@ -2162,13 +2052,10 @@ release SEQ
 wait 60
 turn K2 -1 10
 wait 60
-expect inv 0
-expect voices <25
-tapkey w4
-wait 5
-key w6 down 29
-wait 20
-key w12 up
+page 11
+tap EDIT
+tapkey w3
+tapkey b6
 wait 60
 key w0 down 48
 wait 100
@@ -2198,21 +2085,25 @@ turn K4 -3 80
 wait 60
 turn ALGO -1 10
 wait 60
-tapkey w10
+tapkey b0
 wait 60
-turn ALGO 1 40
-wait 20
-turn PRESET 1 10
+turn PRESET -1 10
+wait 60
+turn SELECT 9 10
 wait 5
-press ENV
-tapkey w6
-wait 300
-tapkey w4
-wait 120
-turn K2 -2 60
-wait 120
+tap HOME
+wait 20
+wait 200
+wait 20
+tap GLO
+wait 60
+expect inv 0
+expect voices <25
+turn PRESET 9 40
+wait 20
+key w11 down 38
 wait 100
-release ENV
+key w1 up
 wait 5
 turn K4 1 10
 wait 20
@@ -2276,105 +2167,100 @@ key w3 up
 wait 20
 tap GLO
 wait 5
-tapkey b6
-wait 20
-tap ENV
-wait 5
-tap FX
-wait 20
-press ENV
 tapkey w5
+wait 60
+key w5 down 26
+wait 20
+key w11 up
+wait 60
+tapkey w9
+wait 20
+tapkey b7
+wait 60
+turn ALGO -3 80
+wait 5
+turn K4 4 10
+wait 60
+turn K1 2 10
+wait 60
+press ENV
+wait 50
+wait 300
+wait 50
 wait 30
+tapkey w7
+wait 120
+wait 50
+wait 30
+turn K3 5 60
+wait 300
 wait 2700
 release ENV
-wait 5
-key w9 down 96
 wait 20
-key w4 up
+tapkey w10
 wait 60
-turn SELECT 9 80
-wait 5
 tap HOME
-wait 60
-turn K4 -1 40
-wait 60
-turn ALGO 4 80
 wait 5
-tapkey w9
-wait 5
-tapkey w5
-wait 20
-turn SELECT -3 80
-wait 5
-tap ENV
-wait 5
-key w15 down 67
+key w0 down 91
 wait 400
-key w13 up
-wait 5
-wait 2000
+key w1 up
 wait 60
-tapkey w8
-wait 5
-key w1 down 103
-wait 20
-key w10 up
-wait 5
+press ARP
 wait 50
-wait 20
-press REC
-tapkey w4
-wait 300
-tapkey w1
-wait 120
-tapkey w0
 wait 30
+tapkey w2
+wait 300
 wait 2700
-release REC
-wait 5
-turn ALGO 2 80
+release ARP
+wait 60
+turn SELECT -6 80
 wait 20
-tap EDIT
-wait 20
-press GLO
+press HOME
 tapkey w3
 wait 30
-wait 50
-wait 120
-wait 50
-wait 30
-wait 50
-wait 30
-wait 1200
-release GLO
+wait 400
+release HOME
+wait 5
+turn K3 -1 80
 wait 60
+turn K1 9 80
+wait 60
+press FX
+turn PRESET -5 60
+wait 300
+wait 1200
+release FX
+wait 5
+tap REC
+wait 5
+page 3
+tap EDIT
+tapkey w8
+tapkey b2
+wait 20
 wait 200
 wait 20
 wait 50
 wait 20
-tapkey w6
-wait 20
-turn ALGO 2 40
-wait 20
-press ARP
-wait 100
-release ARP
-wait 20
-tap OCT+
-wait 20
-tapkey w4
-wait 60
-wait 50
-wait 60
-tapkey w3
+tapkey w5
 wait 5
-turn SELECT 4 10
+turn K2 -1 40
 wait 60
-tapkey b0
+turn K1 9 40
 wait 20
-tap SEQ
-wait 20
+tap EDIT
+wait 60
 wait 50
+wait 60
+tapkey w0
+wait 5
+tap PLAY
+wait 20
+tapkey w9
+wait 60
+press EDIT
+wait 400
+release EDIT
 wait 5
 turn K4 1 40
 wait 20
@@ -2383,34 +2269,38 @@ wait 2700
 release ENV
 wait 5
 tapkey w3
-wait 5
-key w13 down 92
-wait 100
-key w0 up
-wait 5
-press ENV
-turn K4 -2 60
-wait 300
-turn K4 -2 60
-wait 120
-turn ALGO 2 60
-wait 30
-turn K2 -5 60
-wait 300
-turn PRESET 2 60
-wait 30
-wait 100
-release ENV
-wait 5
-tap OCT-
-wait 20
-tap EDIT
 wait 60
-turn K1 9 40
+key w8 down 21
 wait 20
-tapkey w2
+key w4 up
 wait 20
-turn ALGO 4 10
+tap ENV
+wait 20
+turn K2 9 10
+wait 60
+tap SEQ
+wait 5
+wait 800
+wait 5
+key w10 down 44
+wait 20
+key w4 up
+wait 60
+press REC
+tapkey w4
+wait 30
+wait 400
+release REC
+wait 60
+press REC
+tap SEQ
+wait 30
+tapkey w5
+wait 120
+tapkey w4
+wait 30
+wait 100
+release REC
 wait 20
 turn SELECT -6 80
 wait 20
@@ -2418,8 +2308,6 @@ turn K4 4 10
 wait 5
 tap OCT+
 wait 60
-expect inv 0
-expect voices <25
 key w12 down 48
 wait 400
 key w8 up
@@ -2466,29 +2354,29 @@ key w7 down 79
 wait 100
 key w1 up
 wait 5
+tapkey b4
+wait 60
+page 11
+tap EDIT
+tapkey w11
+wait 20
 tapkey w8
-wait 20
-tap SEL
 wait 60
+turn K3 -3 10
+wait 5
 tapkey b8
-wait 5
-tapkey w9
 wait 60
-press HOME
-wait 50
-wait 30
-turn ALGO -5 60
-wait 30
-turn K3 5 60
-wait 30
-wait 50
-wait 30
-wait 100
-release HOME
+tapkey w0
 wait 5
-turn PRESET -3 40
-wait 20
-wait 50
+expect inv 0
+expect voices <25
+wait 2000
+wait 5
+tap SEQ
+wait 5
+tap ENV
+wait 60
+turn PRESET -1 80
 wait 5
 turn K1 -1 80
 wait 5
@@ -2504,35 +2392,35 @@ tap PLAY
 wait 60
 tap OCT-
 wait 5
+tapkey b0
+wait 5
+page 11
+wait 20
+tapkey w3
+wait 20
+press ENV
+tapkey w7
+wait 30
 tapkey w1
-wait 60
-turn K1 -6 10
-wait 20
-turn PRESET -1 40
-wait 20
-tap PLAY
-wait 60
-key w14 down 68
-wait 20
-key w0 up
+wait 300
+wait 50
+wait 120
+wait 50
+wait 300
+wait 50
+wait 120
+wait 400
+release ENV
 wait 5
-wait 2000
-wait 20
-turn PRESET 9 40
 wait 5
-tap REC
 wait 20
-tapkey b7
+turn K1 9 40
 wait 5
-turn K1 -6 40
+key w3 down 47
+wait 400
+key w14 up
 wait 20
-tapkey w1
-wait 60
-tap REC
-wait 5
-turn K1 1 10
-wait 20
-turn K3 9 10
+turn SELECT 4 10
 wait 60
 tap HOME
 wait 20
@@ -2580,31 +2468,25 @@ turn K1 -1 10
 wait 20
 wait 5
 wait 60
-tapkey b10
-wait 20
-tap SEQ
-wait 5
-tap REC
-wait 5
-turn K4 -3 80
-wait 20
-press REC
-wait 1200
-release REC
+tapkey w6
 wait 60
-tapkey w4
-wait 20
-turn PRESET 2 80
+turn K3 4 10
 wait 5
-turn K3 -1 10
-wait 20
-wait 200
-wait 60
 press REC
-tapkey w5
+tapkey w1
+wait 300
+tapkey w0
 wait 30
-wait 1200
+tap SEQ
+wait 120
+turn ALGO 2 60
+wait 300
+wait 100
 release REC
+wait 5
+wait 800
+wait 20
+tapkey w4
 wait 5
 tap EDIT
 wait 5
@@ -2632,11 +2514,9 @@ turn K1 -3 40
 wait 5
 turn PRESET -6 80
 wait 60
-tapkey b1
-wait 5
-key w5 down 40
-wait 100
-key w2 up
+tapkey w9
+wait 20
+turn ALGO -1 10
 wait 5
 tap EDIT
 wait 60
@@ -2644,39 +2524,31 @@ key w2 down 82
 wait 400
 key w14 up
 wait 60
-expect inv 0
-expect voices <25
-tapkey w8
-wait 60
-key w15 down 123
+tapkey b8
 wait 20
-key w4 up
-wait 5
-turn ALGO 4 80
-wait 5
-turn K4 -3 80
+press ARP
+turn SELECT -2 60
+wait 300
+wait 400
+release ARP
 wait 5
 press REC
+tapkey w2
+wait 300
+tap EDIT
+wait 300
+tapkey w7
+wait 30
+tapkey w6
+wait 300
+turn K4 -2 60
+wait 120
 wait 2700
 release REC
 wait 60
-key w12 down 98
-wait 400
-key w13 up
-wait 60
-wait 2000
-wait 60
-tap ARP
-wait 20
-tapkey b10
 wait 5
-tapkey w9
-wait 5
-tapkey w6
 wait 20
 tap REC
-wait 5
-tapkey w10
 wait 5
 turn K4 4 80
 wait 20
@@ -2698,11 +2570,11 @@ key w10 up
 wait 60
 turn PRESET -3 80
 wait 5
-tapkey w1
+tapkey w7
 wait 20
-tapkey w8
-wait 5
-wait 5
+key w3 down 21
+wait 400
+key w1 up
 wait 5
 tapkey b3
 wait 5
@@ -2712,37 +2584,45 @@ turn K3 9 80
 wait 20
 tap OCT+
 wait 5
-tapkey w4
-wait 5
-tap FX
-wait 60
-tapkey w4
-wait 5
-turn K4 4 80
-wait 20
-tapkey w2
-wait 20
-press ARP
-wait 50
-wait 300
-wait 2700
-release ARP
-wait 5
-turn K4 -3 80
-wait 20
-tap ENV
-wait 20
-press REC
-turn ALGO 5 60
-wait 120
-tap SEQ
-wait 30
-wait 400
-release REC
+page 11
 wait 20
 tapkey w0
+wait 5
+press EDIT
+wait 400
+release EDIT
 wait 20
-tapkey b0
+tap PLAY
+wait 20
+tapkey w4
+wait 5
+tap LFO
+wait 5
+tap ENV
+wait 5
+key w14 down 33
+wait 20
+key w6 up
+wait 60
+tapkey w1
+wait 5
+tapkey w8
+wait 5
+expect inv 0
+expect voices <25
+wait 50
+wait 20
+press LFO
+wait 1200
+release LFO
+wait 60
+turn K4 -3 40
+wait 20
+tap SEL
+wait 5
+wait 800
+wait 20
+wait 5
 wait 20
 tap ARP
 wait 20
@@ -2752,33 +2632,27 @@ key w7 down 37
 wait 100
 key w6 up
 wait 60
-tapkey w0
-wait 5
-press HOME
-wait 100
-release HOME
-wait 5
-tapkey b6
+tapkey w1
 wait 20
-tapkey w10
-wait 60
-tap REC
-wait 60
-tapkey w3
-wait 60
-turn K4 2 80
-wait 5
-tap HOME
-wait 5
-tapkey w10
-wait 5
-turn K3 9 40
-wait 5
-tapkey w10
+turn SELECT -3 40
 wait 20
+tap ARP
+wait 20
+press ARP
+turn K3 5 60
+wait 30
 wait 50
+wait 300
+tapkey w3
+wait 30
+turn K4 -5 60
+wait 300
+wait 2700
+release ARP
 wait 5
-tap LFO
+tapkey b5
+wait 5
+wait 50
 wait 60
 turn ALGO 9 80
 wait 60
@@ -2800,100 +2674,90 @@ wait 30
 wait 100
 release ENV
 wait 20
-tapkey w0
-wait 60
-press LFO
-tapkey w7
-wait 300
-turn K1 5 60
-wait 300
-turn SELECT 5 60
-wait 120
-wait 400
-release LFO
-wait 60
-turn ALGO 1 40
-wait 60
-turn K3 -3 10
-wait 20
-turn PRESET 2 10
-wait 20
-press REC
-turn PRESET -2 60
-wait 120
-wait 2700
-release REC
-wait 60
-wait 5
-wait 20
-turn K4 4 40
-wait 20
 tapkey b8
 wait 20
-press SEQ
-wait 1200
-release SEQ
-wait 60
-turn PRESET -1 80
-wait 5
-turn SELECT -3 40
-wait 60
-turn PRESET 4 40
-wait 60
-tap ENV
-wait 5
-wait 800
-wait 60
-turn PRESET 4 10
+turn K1 -1 80
 wait 20
-tapkey w10
-wait 20
-tapkey b1
-wait 60
-turn K3 -6 10
-wait 60
-key w11 down 81
-wait 400
-key w4 up
-wait 5
-press REC
-tap SEQ
-wait 300
-tapkey w4
-wait 120
-tapkey w6
-wait 120
-wait 1200
-release REC
-wait 60
-expect inv 0
-expect voices <25
-tap ENV
-wait 5
-tap EDIT
-wait 60
-press EDIT
-tapkey w0
-wait 300
-tapkey w5
-wait 30
-turn K1 -2 60
-wait 30
-wait 1200
-release EDIT
-wait 5
 tap PLAY
 wait 60
+press FX
+tapkey w6
+wait 30
+wait 1200
+release FX
+wait 5
+tap PLAY
+wait 5
+tapkey b2
+wait 5
+turn K3 -1 80
+wait 5
+tapkey w4
+wait 60
+turn K1 -6 40
+wait 60
+press ENV
+turn K3 -5 60
+wait 300
+tapkey w6
+wait 30
+turn K3 5 60
+wait 120
+tapkey w4
+wait 120
+wait 100
+release ENV
+wait 5
+key w6 down 60
+wait 400
+key w3 up
+wait 5
+tapkey w1
+wait 60
+tapkey w6
+wait 20
 wait 50
-wait 20
-tap EDIT
-wait 20
-turn SELECT 9 80
 wait 20
 tapkey w7
 wait 60
-tapkey w6
+turn ALGO -6 80
+wait 5
+press FX
+wait 50
+wait 30
+tapkey w2
+wait 30
+wait 50
+wait 120
+tapkey w5
+wait 120
+wait 2700
+release FX
 wait 20
+tapkey b6
+wait 5
+tap OCT-
+wait 20
+turn K3 -1 40
+wait 60
+page 3
+wait 20
+tapkey w5
+wait 20
+turn K3 4 40
+wait 5
+press FX
+turn K4 -5 60
+wait 120
+tapkey w4
+wait 30
+wait 100
+release FX
+wait 60
+page 11
+tap EDIT
+tapkey w6
+wait 5
 tapkey w5
 wait 5
 turn K1 -6 10
@@ -2936,25 +2800,19 @@ key w8 up
 wait 60
 tap ARP
 wait 20
-tapkey w1
-wait 5
 tapkey w5
 wait 5
-tap SEQ
-wait 60
-tap GLO
-wait 5
-press REC
-tapkey w7
-wait 300
-tap EDIT
-wait 300
-wait 100
-release REC
-wait 60
-key w4 down 73
+tapkey b7
 wait 20
-key w4 up
+turn ALGO -6 40
+wait 20
+press ENV
+wait 50
+wait 120
+tapkey w2
+wait 30
+wait 400
+release ENV
 wait 20
 turn K3 2 10
 wait 5
@@ -2970,83 +2828,76 @@ tapkey b7
 wait 20
 tap HOME
 wait 20
-tapkey b9
-wait 5
-tapkey w6
-wait 5
-tapkey b2
-wait 20
-wait 5
-wait 5
-tap ENV
+tapkey w7
 wait 60
-tap FX
-wait 20
-tapkey w6
-wait 20
-key w0 down 75
-wait 400
-key w12 up
-wait 5
-press SEQ
-wait 100
-release SEQ
-wait 5
-turn K4 2 40
+tapkey w4
 wait 60
-tapkey w2
-wait 20
+press EDIT
+wait 50
+wait 300
+tapkey w5
+wait 30
+wait 50
+wait 30
+wait 50
+wait 120
+turn SELECT -5 60
+wait 300
+wait 2700
+release EDIT
+wait 60
+tapkey w9
+wait 5
 key w4 down 90
 wait 20
 key w4 up
 wait 60
 turn K4 -3 10
 wait 5
-tapkey w5
-wait 20
-tap SEQ
-wait 5
-wait 50
+tapkey w7
 wait 60
-tapkey w9
+page 11
+wait 20
+tapkey w11
+tapkey b4
+wait 60
 wait 5
-tap GLO
-wait 5
-press FX
-wait 50
+wait 60
+press REC
+turn K4 -2 60
 wait 300
-wait 50
+tap FX
 wait 300
 tapkey w5
 wait 120
-wait 1200
+tap SEQ
+wait 30
+wait 100
+release REC
+wait 20
+press FX
+wait 100
 release FX
 wait 20
-press LFO
-turn K1 5 60
-wait 120
-turn K4 2 60
-wait 30
+turn ALGO 4 40
+wait 5
+turn K1 4 10
+wait 5
+expect inv 0
+expect voices <25
+tap OCT+
+wait 20
+press HOME
 wait 50
 wait 120
-wait 100
-release LFO
-wait 5
-turn K3 -6 10
+wait 2700
+release HOME
 wait 60
-turn K1 4 40
-wait 5
-turn PRESET 4 40
-wait 60
-key w14 down 96
-wait 100
-key w7 up
-wait 5
-tapkey w3
-wait 5
-turn SELECT -1 10
+turn ALGO -6 40
 wait 20
-tap OCT+
+turn ALGO -3 40
+wait 5
+turn ALGO 1 80
 wait 60
 press EDIT
 tapkey w7
@@ -3092,75 +2943,67 @@ turn PRESET -3 10
 wait 5
 turn ALGO -6 80
 wait 20
-tapkey b9
-wait 60
-tapkey b1
-wait 5
-turn K3 4 10
+tapkey b7
+wait 20
+key w6 down 42
+wait 100
+key w2 up
 wait 20
 turn ALGO 1 40
 wait 20
-expect inv 0
-expect voices <25
-tapkey b1
+tapkey w3
 wait 5
-turn ALGO -6 80
-wait 20
-key w2 down 35
-wait 400
-key w11 up
+turn SELECT 4 40
+wait 60
+tapkey b5
 wait 5
 key w9 down 123
 wait 20
 key w5 up
 wait 60
-tapkey w2
+tapkey w3
 wait 5
-press SEQ
-wait 2700
-release SEQ
-wait 5
-key w9 down 52
-wait 400
-key w15 up
+tapkey b3
 wait 20
-turn K3 -1 40
+turn K2 4 80
 wait 20
-tap HOME
-wait 5
-key w4 down 100
-wait 100
-key w10 up
+press REC
+wait 1200
+release REC
+wait 20
+tapkey w9
+wait 20
+wait 200
+wait 20
+wait 50
 wait 60
-turn K2 -6 80
+turn K3 1 40
 wait 20
-turn K4 -6 80
-wait 5
-turn PRESET 1 80
-wait 20
-key w1 down 110
+press ARP
+wait 50
+wait 120
 wait 100
-key w4 up
+release ARP
+wait 5
+tap ENV
 wait 20
 tapkey w4
+wait 60
+turn SELECT -1 10
 wait 20
-key w9 down 35
-wait 100
-key w7 up
+tapkey w3
 wait 20
-tapkey w6
-wait 5
-tapkey w8
+tap SEQ
 wait 60
 turn K1 -6 40
 wait 5
-tapkey b8
+tapkey b6
+wait 60
+turn K3 -6 80
+wait 60
+turn ALGO 1 40
 wait 20
-key w2 down 117
-wait 400
-key w7 up
-wait 5
-tapkey w5
+tap GLO
 wait 20
 key w0 down 87
 wait 400
@@ -3194,27 +3037,19 @@ tap GLO
 wait 20
 tap HOME
 wait 5
-tapkey w1
-wait 5
-press ENV
-tapkey w1
-wait 300
-wait 2700
-release ENV
+tapkey w3
 wait 20
-tap SEL
+turn K3 -1 10
 wait 20
-tapkey w4
-wait 60
-wait 5
-wait 60
-tapkey w5
+key w13 down 68
+wait 100
+key w2 up
+wait 20
+tapkey b0
 wait 60
 tapkey w7
-wait 60
-tap ENV
-wait 60
-tap OCT+
+wait 20
+tapkey w3
 wait 60
 turn PRESET -1 10
 wait 60
@@ -3222,167 +3057,157 @@ turn K1 -1 40
 wait 60
 turn K3 -3 40
 wait 60
-tapkey b8
-wait 60
-tapkey b4
+tapkey b9
 wait 20
-turn SELECT 2 40
-wait 60
-tapkey w6
+tapkey w0
+wait 5
+key w9 down 123
+wait 20
+key w13 up
 wait 60
 key w6 down 51
 wait 100
 key w2 up
 wait 20
-tapkey b4
-wait 20
-wait 800
-wait 5
-tapkey b3
-wait 20
-turn PRESET 9 80
+tapkey w4
 wait 60
-turn SELECT -1 10
-wait 20
+tapkey w6
+wait 5
+tap ARP
+wait 5
+key w11 down 92
+wait 400
+key w2 up
+wait 5
+turn ALGO 9 40
+wait 5
 turn SELECT 1 10
 wait 5
 tap SEL
 wait 5
 turn ALGO 4 40
 wait 20
-tapkey w9
-wait 20
-key w3 down 96
-wait 20
-key w11 up
-wait 5
-turn K2 4 80
-wait 5
-press SEQ
-wait 400
-release SEQ
-wait 20
-tap SEQ
-wait 5
-key w14 down 59
-wait 100
-key w6 up
-wait 20
-wait 5
-wait 20
-wait 200
-wait 5
-tap REC
-wait 5
-tapkey w9
-wait 60
+page 11
+tap EDIT
 tapkey w1
-wait 60
-key w7 down 28
-wait 100
-key w14 up
-wait 60
+wait 5
 press LFO
-wait 400
+turn K4 2 60
+wait 300
+tapkey w0
+wait 30
+wait 50
+wait 30
+tapkey w4
+wait 30
+wait 2700
 release LFO
 wait 20
-tapkey w2
+turn K4 -1 10
 wait 60
-turn PRESET 2 10
+tap SEL
 wait 20
-tap PLAY
-wait 20
-turn PRESET 1 40
-wait 20
-press ENV
-wait 50
-wait 300
-turn K2 -5 60
-wait 300
-tapkey w5
-wait 300
-turn K4 -5 60
-wait 30
-wait 1200
-release ENV
-wait 5
 tap LFO
 wait 60
-turn SELECT 2 10
-wait 5
-tapkey w9
-wait 60
-tap GLO
-wait 20
-tapkey w0
-wait 60
-key w4 down 42
-wait 100
-key w0 up
-wait 5
 expect inv 0
 expect voices <25
+key w0 down 70
+wait 20
+key w2 up
+wait 5
+turn K4 9 80
+wait 20
+key w9 down 84
+wait 20
+key w4 up
+wait 20
+tapkey b1
+wait 5
+turn K4 -6 40
+wait 60
+tap ARP
+wait 5
+turn K1 1 40
+wait 60
+wait 2000
+wait 20
+tap HOME
+wait 60
+key w2 down 22
+wait 20
+key w7 up
+wait 5
+key w11 down 75
+wait 400
+key w3 up
+wait 5
+turn ALGO 9 80
+wait 20
+turn ALGO 2 10
+wait 60
+turn ALGO -6 40
+wait 60
+turn K3 4 40
+wait 20
+tapkey w9
+wait 60
+tapkey w0
+wait 5
 turn PRESET 9 10
 wait 20
 tap OCT+
 wait 5
-tapkey b9
+tapkey w6
+wait 60
+tapkey w10
+wait 5
+turn PRESET -3 80
+wait 20
+key w5 down 95
+wait 400
+key w5 up
+wait 5
+press REC
+tapkey w7
+wait 120
+tap EDIT
+wait 30
+turn K3 -2 60
+wait 300
+wait 2700
+release REC
+wait 60
+tap OCT-
+wait 5
+tapkey w6
 wait 5
 tapkey w0
 wait 5
-key w0 down 124
-wait 400
-key w6 up
-wait 5
-turn ALGO 2 40
+turn ALGO 1 10
 wait 60
-tapkey b10
-wait 5
-turn K2 9 10
+turn K1 1 80
 wait 20
-press REC
-tapkey w4
-wait 30
-turn K2 -5 60
-wait 120
-turn ALGO 5 60
-wait 120
-wait 2700
-release REC
+key w3 down 121
 wait 20
-press ENV
-turn K3 2 60
+key w1 up
+wait 20
+turn K3 -3 40
+wait 60
+press LFO
+wait 50
 wait 30
-turn K2 -2 60
+tapkey w5
+wait 30
+turn K4 5 60
+wait 30
+tapkey w1
 wait 300
 wait 50
 wait 120
-turn K2 5 60
-wait 30
-wait 2700
-release ENV
-wait 5
-key w6 down 75
-wait 400
-key w15 up
+wait 100
+release LFO
 wait 20
-tap SEL
-wait 20
-tap REC
-wait 20
-key w11 down 60
-wait 20
-key w13 up
-wait 60
-tap LFO
-wait 5
-turn ALGO -6 40
-wait 60
-tapkey w7
-wait 60
-turn SELECT 1 40
-wait 20
-wait 800
+tapkey w3
 wait 5
 turn ALGO -3 10
 wait 20
@@ -3394,9 +3219,7 @@ key w14 up
 wait 20
 tap GLO
 wait 60
-tapkey w7
-wait 20
-wait 200
+tapkey w5
 wait 5
 key w6 down 122
 wait 400
@@ -3424,95 +3247,91 @@ tap SEQ
 wait 5
 turn SELECT -1 10
 wait 60
-tapkey w6
-wait 5
-press FX
 tapkey w3
-wait 120
-wait 50
-wait 300
-turn K4 5 60
-wait 30
-wait 50
-wait 30
-wait 400
-release FX
 wait 60
-turn PRESET 2 10
+turn SELECT -1 10
 wait 20
-turn PRESET 2 10
+turn ALGO 2 40
 wait 60
-tapkey w9
+tap SEQ
+wait 20
+press REC
+turn SELECT 2 60
+wait 30
+wait 100
+release REC
+wait 20
+turn ALGO -1 10
 wait 5
-key w1 down 46
+press LFO
+wait 50
+wait 30
 wait 400
-key w12 up
+release LFO
+wait 60
+turn K2 1 40
 wait 20
-wait 800
+tap OCT+
 wait 5
 tap SEL
 wait 5
-tapkey w4
+tapkey w2
 wait 5
-turn K1 1 40
+tap ARP
 wait 20
 tapkey b8
-wait 60
-wait 50
-wait 60
-turn K1 9 80
 wait 5
-wait 200
+tap ENV
+wait 5
+tapkey w4
 wait 20
 key w14 down 62
 wait 400
 key w14 up
 wait 5
-tapkey w2
-wait 5
-tapkey w4
-wait 60
-tap LFO
-wait 60
-tap OCT+
-wait 60
-tap LFO
-wait 60
-tapkey w5
+tapkey w0
 wait 20
-tapkey w8
-wait 20
-turn SELECT -1 40
+tapkey b6
 wait 5
-press GLO
-turn K3 -5 60
-wait 120
-turn K1 5 60
-wait 120
-tapkey w3
-wait 120
-turn ALGO -5 60
+press ARP
+wait 50
 wait 120
 tapkey w7
-wait 120
+wait 30
+turn K4 -5 60
+wait 30
 wait 100
-release GLO
-wait 60
-tapkey w5
+release ARP
 wait 20
-press LFO
-tapkey w3
-wait 120
-tapkey w0
-wait 120
-wait 100
-release LFO
-wait 5
-tapkey w0
-wait 5
-tap REC
+tapkey b10
 wait 60
+turn SELECT -6 40
+wait 20
+press SEQ
+turn K1 -2 60
+wait 120
+wait 1200
+release SEQ
+wait 5
+turn ALGO 1 80
+wait 20
+press EDIT
+tapkey w2
+wait 120
+turn K4 2 60
+wait 120
+wait 400
+release EDIT
+wait 20
+tapkey b3
+wait 5
 tapkey w6
+wait 20
+turn ALGO 4 80
+wait 60
+key w11 down 120
+wait 100
+key w12 up
 wait 5
 press REC
 turn K4 2 60
@@ -3546,6 +3365,8 @@ key w9 up
 wait 20
 wait 50
 wait 5
+expect inv 0
+expect voices <25
 tap SEQ
 wait 60
 turn K2 2 80
@@ -3572,39 +3393,35 @@ release REC
 wait 5
 turn K1 -6 40
 wait 20
-expect inv 0
-expect voices <25
 key w4 down 68
 wait 400
 key w3 up
 wait 60
-tapkey b0
+tapkey w3
 wait 20
-turn K1 2 10
+key w13 down 96
+wait 400
+key w12 up
+wait 5
+tapkey w7
 wait 20
-press GLO
-turn SELECT 2 60
-wait 120
-turn K1 5 60
-wait 30
-wait 50
-wait 30
-wait 1200
-release GLO
+tapkey w9
+wait 20
+key w5 down 108
+wait 20
+key w10 up
 wait 5
 turn K1 -1 10
 wait 20
-tapkey w1
-wait 20
-turn K3 -6 10
+tapkey w6
 wait 5
-tap EDIT
-wait 20
-turn ALGO -3 10
-wait 20
-wait 50
+tap FX
 wait 5
-tapkey w5
+turn PRESET -1 40
+wait 5
+turn ALGO -3 40
+wait 5
+tap ARP
 wait 5
 tapkey b2
 wait 20
@@ -3634,163 +3451,163 @@ key w4 up
 wait 60
 wait 5
 wait 20
-tapkey b0
-wait 60
-press ARP
-wait 50
-wait 120
-wait 50
-wait 120
-wait 50
-wait 30
-wait 100
-release ARP
-wait 20
-turn K2 4 10
-wait 5
-tap FX
-wait 60
-key w1 down 28
-wait 400
-key w11 up
-wait 20
-turn K4 2 80
-wait 60
-key w14 down 78
-wait 400
-key w0 up
-wait 20
-tapkey w5
-wait 5
-turn K4 2 10
-wait 60
-tapkey b10
-wait 5
-wait 800
-wait 5
 tapkey b7
 wait 60
-turn K4 2 80
-wait 60
-turn PRESET -6 40
-wait 5
-press GLO
-wait 1200
-release GLO
-wait 60
-tapkey b9
+page 3
 wait 20
-tapkey b7
-wait 60
-tapkey w4
-wait 60
-turn K4 -6 80
+tapkey w2
 wait 20
-turn K4 1 80
-wait 5
-tapkey b5
-wait 60
-turn SELECT 2 40
-wait 20
-turn K1 2 80
-wait 5
-tapkey w4
-wait 5
-tap OCT+
-wait 5
-tapkey w6
-wait 5
-turn K1 -1 40
+turn K4 -1 10
 wait 20
 tap SEQ
-wait 60
-tapkey w6
-wait 5
-tapkey b10
 wait 20
-key w4 down 37
-wait 100
-key w1 up
-wait 5
-wait 5
-wait 20
-turn K2 9 40
-wait 20
-wait 50
-wait 60
-tap LFO
-wait 60
-tapkey w10
-wait 5
-press HOME
-turn K1 2 60
-wait 120
-wait 50
+press REC
+turn K3 -5 60
 wait 300
+turn K3 -2 60
+wait 300
+tap FX
+wait 120
+tapkey w1
+wait 300
+wait 100
+release REC
+wait 20
+page 11
+tap EDIT
+tapkey w12
+wait 60
+tapkey w2
+wait 20
+turn K2 9 80
+wait 20
+key w5 down 84
+wait 100
+key w3 up
+wait 20
+turn K2 -6 80
+wait 20
+key w9 down 76
+wait 100
+key w14 up
+wait 60
+tapkey b4
+wait 5
+press EDIT
+wait 2700
+release EDIT
+wait 60
+turn K2 4 80
+wait 60
+tapkey w9
+wait 20
+tapkey b9
+wait 5
+tapkey w10
+wait 20
+tap GLO
+wait 5
+press SEQ
+wait 400
+release SEQ
+wait 5
+wait 200
+wait 20
+page 3
+tap EDIT
+tapkey w0
+wait 20
+key w8 down 98
+wait 400
+key w4 up
+wait 5
+press SEQ
+wait 100
+release SEQ
+wait 60
+press ENV
+wait 1200
+release ENV
+wait 60
+press HOME
+wait 50
+wait 30
+wait 400
+release HOME
+wait 20
+tapkey w4
+wait 20
+turn K3 -6 80
+wait 60
+key w15 down 93
+wait 400
+key w7 up
+wait 5
+tapkey b2
+wait 5
+tap REC
+wait 20
+key w12 down 94
+wait 20
+key w3 up
+wait 20
+turn K4 9 10
+wait 20
+turn K2 -1 10
+wait 20
+key w12 down 51
+wait 100
+key w4 up
+wait 60
+key w2 down 80
+wait 100
+key w13 up
+wait 60
+press LFO
 tapkey w1
 wait 30
-wait 50
-wait 300
-wait 50
+turn K4 2 60
 wait 30
-wait 2700
-release HOME
-wait 5
-turn K4 -6 40
-wait 20
-key w9 down 125
-wait 20
-key w10 up
-wait 60
-press SEQ
-turn K1 -2 60
-wait 120
+tapkey w1
+wait 300
+tapkey w2
+wait 30
 wait 1200
-release SEQ
+release LFO
 wait 20
-tap OCT+
+tap HOME
+wait 20
+turn K3 -3 80
+wait 5
+turn K1 -3 10
 wait 60
-key w2 down 110
-wait 20
-key w12 up
-wait 5
-press SEQ
-wait 100
-release SEQ
-wait 60
-tapkey w10
-wait 20
-wait 50
-wait 20
-turn K1 4 40
-wait 20
-tapkey b10
-wait 5
-key w2 down 83
-wait 100
-key w6 up
-wait 5
 press ENV
 turn K1 5 60
 wait 120
 wait 100
 release ENV
 wait 5
-tapkey w2
+tapkey b2
 wait 60
-turn ALGO 2 40
+turn K1 9 40
+wait 5
+key w13 down 110
 wait 20
-press REC
-turn SELECT 5 60
-wait 120
-tap FX
-wait 300
-turn PRESET 2 60
-wait 30
-tapkey w7
-wait 30
-wait 2700
-release REC
+key w14 up
+wait 5
+turn K3 -1 80
+wait 20
+turn K2 -1 40
+wait 5
+expect inv 0
+expect voices <25
+tapkey b10
+wait 60
+tap HOME
+wait 60
+tap EDIT
+wait 20
+tap HOME
 wait 5
 turn SELECT -1 10
 wait 20
@@ -3812,8 +3629,6 @@ key w10 up
 wait 20
 tap SEQ
 wait 60
-expect inv 0
-expect voices <25
 tap ENV
 wait 20
 press REC
@@ -3832,21 +3647,19 @@ tapkey b3
 wait 20
 tap HOME
 wait 20
-tapkey b0
+tapkey w2
+wait 60
+tapkey w10
+wait 60
+tapkey w10
+wait 60
+tap GLO
 wait 5
-wait 800
-wait 60
-tap ARP
-wait 60
-tap EDIT
-wait 20
-turn K3 9 80
-wait 60
-tap SEL
-wait 20
-press HOME
-wait 1200
-release HOME
+tap HOME
+wait 5
+wait 200
+wait 5
+wait 200
 wait 5
 tap GLO
 wait 60
@@ -3882,75 +3695,65 @@ key w14 up
 wait 60
 turn K1 -1 10
 wait 20
-tapkey w1
-wait 60
-key w10 down 21
-wait 100
-key w14 up
-wait 60
-turn SELECT 2 40
-wait 20
-turn K4 -6 10
+tapkey b9
 wait 5
-wait 50
+tapkey b3
+wait 5
+turn PRESET 1 10
+wait 5
+turn K2 4 10
 wait 5
 tap OCT-
 wait 60
-tapkey b0
-wait 60
-key w14 down 24
-wait 20
-key w5 up
-wait 20
-turn K3 9 40
-wait 60
-press FX
-wait 1200
-release FX
+tapkey b8
 wait 5
-press LFO
+tapkey w6
+wait 5
+press ENV
+tapkey w0
+wait 30
+wait 50
+wait 30
 tapkey w3
+wait 300
+tapkey w0
+wait 120
+wait 400
+release ENV
+wait 60
+turn PRESET 2 40
+wait 60
+press REC
+tapkey w0
+wait 30
+tap SEQ
+wait 300
+tap EDIT
+wait 30
+tap EDIT
+wait 30
+tap EDIT
+wait 120
+wait 100
+release REC
+wait 5
+press ARP
+wait 50
 wait 120
 wait 50
 wait 30
-tapkey w5
-wait 300
-tapkey w6
-wait 300
-turn PRESET -5 60
+wait 50
+wait 120
+tapkey w0
+wait 120
+wait 50
 wait 120
 wait 2700
-release LFO
+release ARP
 wait 5
-turn SELECT 9 40
-wait 60
-tap HOME
-wait 20
-key w6 down 116
-wait 100
-key w3 up
-wait 60
-tap OCT+
-wait 60
-turn PRESET 2 80
-wait 20
-turn K4 9 80
-wait 60
-tapkey w8
-wait 20
-turn K2 -3 40
-wait 60
-turn SELECT 1 80
-wait 20
-tapkey b0
-wait 20
-tapkey b3
-wait 20
-key w15 down 24
-wait 400
-key w6 up
+tap SEQ
 wait 5
-tapkey b4
+turn K4 4 40
 wait 20
 tap LFO
 wait 60
@@ -3972,59 +3775,57 @@ turn K3 1 80
 wait 60
 wait 200
 wait 60
-tapkey b1
-wait 60
-turn K1 1 40
-wait 60
+tapkey w9
+wait 5
+turn K1 -1 80
+wait 20
+turn K1 -6 10
+wait 5
 press REC
-tapkey w0
+tap FX
 wait 30
-wait 400
+wait 2700
 release REC
-wait 20
-key w7 down 102
-wait 20
-key w13 up
 wait 20
 turn K4 2 10
 wait 60
-tapkey w1
+tapkey w10
 wait 20
-tap LFO
-wait 20
-tap OCT+
-wait 5
-tap PLAY
-wait 5
-turn K3 2 10
-wait 5
-wait 800
-wait 5
-tapkey b4
-wait 5
-turn K3 4 80
+turn K2 4 10
 wait 60
-tapkey b6
+press FX
+wait 50
+wait 120
+wait 100
+release FX
 wait 20
-turn PRESET -3 40
+key w8 down 42
 wait 20
-key w5 down 79
+key w9 up
 wait 20
-key w12 up
+key w12 down 28
+wait 100
+key w10 up
+wait 5
+turn PRESET 2 40
+wait 5
+wait 50
 wait 20
-turn K1 4 10
+tapkey b1
 wait 60
 turn PRESET 9 40
 wait 20
 tap EDIT
 wait 5
-tapkey b2
+tapkey b9
+wait 5
+key w3 down 125
+wait 100
+key w6 up
+wait 20
+tap SEQ
 wait 60
-press GLO
-turn K2 -5 60
-wait 120
-wait 400
-release GLO
+tap LFO
 wait 5
 tap OCT+
 wait 60
@@ -4034,8 +3835,6 @@ turn K4 1 40
 wait 60
 tap FX
 wait 60
-expect inv 0
-expect voices <25
 press GLO
 turn SELECT 2 60
 wait 300
@@ -4046,20 +3845,20 @@ turn K4 9 80
 wait 60
 turn K2 9 80
 wait 60
+expect inv 0
+expect voices <25
 tap FX
 wait 60
-tapkey b0
-wait 60
-press LFO
-tapkey w5
-wait 30
-wait 100
-release LFO
-wait 60
-key w9 down 65
+tapkey w8
+wait 5
+key w7 down 104
 wait 20
-key w14 up
+key w10 up
 wait 20
+turn K4 2 80
+wait 20
+page 11
+tap EDIT
 tapkey w7
 wait 20
 tap ENV
@@ -4070,29 +3869,29 @@ key w0 down 69
 wait 20
 key w15 up
 wait 5
-tapkey b9
-wait 60
-tapkey w8
+tapkey b7
 wait 5
-press REC
-tap FX
-wait 300
-turn K1 -5 60
-wait 30
-turn K3 5 60
-wait 300
-wait 2700
-release REC
-wait 20
-turn SELECT -3 40
-wait 20
-tap REC
-wait 20
-key w9 down 75
-wait 100
-key w5 up
+turn SELECT 9 80
+wait 5
+tapkey b0
+wait 5
+turn K2 1 10
 wait 60
-turn K2 2 10
+key w0 down 38
+wait 20
+key w12 up
+wait 20
+turn K3 1 40
+wait 5
+key w6 down 64
+wait 100
+key w1 up
+wait 60
+tapkey w4
+wait 60
+key w5 down 115
+wait 20
+key w4 up
 wait 60
 press REC
 tapkey w3
@@ -4156,33 +3955,29 @@ key w1 down 42
 wait 400
 key w0 up
 wait 60
-tapkey b6
-wait 60
-turn PRESET 1 10
-wait 60
-key w8 down 35
-wait 400
-key w9 up
-wait 5
-turn K2 9 10
+tapkey b2
 wait 20
-turn PRESET -1 10
-wait 60
-key w8 down 110
+tapkey b9
 wait 20
-key w1 up
-wait 60
-wait 200
-wait 20
-turn PRESET 9 40
+press LFO
+turn PRESET -5 60
+wait 120
+turn K3 -5 60
+wait 30
+wait 50
+wait 300
+turn K1 2 60
+wait 300
+turn PRESET 2 60
+wait 120
+wait 2700
+release LFO
 wait 20
 tap SEL
 wait 5
-tapkey w2
-wait 60
-tapkey w3
+tapkey b6
 wait 20
-tap REC
+tapkey b10
 wait 5
 tap HOME
 wait 20
@@ -4244,44 +4039,43 @@ wait 300
 wait 1200
 release HOME
 wait 20
-tapkey w7
-wait 60
-tapkey b1
+page 3
+tap EDIT
+tapkey w9
 wait 20
 key w5 down 102
 wait 20
 key w3 up
 wait 5
-tapkey w10
+tapkey w2
 wait 20
-turn K4 9 80
-wait 5
-tap OCT+
+press ARP
+wait 400
+release ARP
 wait 60
-tapkey w8
-wait 5
-tapkey w1
-wait 5
-tapkey b8
-wait 5
-tapkey b2
-wait 5
-tapkey b9
+tapkey b3
 wait 20
-wait 2000
+turn SELECT -3 40
+wait 20
+tap SEL
+wait 20
+turn K3 -3 10
+wait 20
+turn K2 1 10
 wait 60
-turn K3 -3 80
-wait 60
-tapkey b2
+tap OCT-
+wait 5
+turn ALGO 2 80
+wait 20
+turn K4 4 10
 wait 5
 tapkey w5
 wait 5
 tap REC
 wait 60
-tapkey w0
-wait 60
-tap OCT+
-wait 5
+page 3
+wait 20
+tapkey w12
 tapkey b4
 wait 5
 turn K2 -6 10
@@ -4310,8 +4104,6 @@ key w11 up
 wait 60
 tap HOME
 wait 20
-expect inv 0
-expect voices <25
 press HOME
 turn SELECT -5 60
 wait 120
@@ -4348,13 +4140,15 @@ tap EDIT
 wait 20
 wait 50
 wait 20
+expect inv 0
+expect voices <25
 turn ALGO -3 10
 wait 5
 turn K3 9 40
 wait 20
-tapkey b3
+tapkey w1
 wait 20
-turn K3 -1 40
+tap GLO
 wait 5
 wait 800
 wait 60
@@ -4364,43 +4158,38 @@ turn PRESET -1 10
 wait 5
 wait 800
 wait 20
-tapkey b9
-wait 20
-tapkey b1
+tapkey w7
+wait 60
+wait 5
 wait 60
 key w1 down 101
 wait 20
 key w10 up
 wait 5
-tapkey b10
-wait 5
-turn SELECT 9 40
-wait 60
-wait 800
+tapkey w0
 wait 20
-key w9 down 29
-wait 100
-key w15 up
-wait 5
-turn SELECT 2 10
-wait 5
-press FX
-tapkey w6
+turn PRESET 2 10
+wait 20
+page 11
+tap EDIT
+tapkey w7
+tapkey b0
+wait 60
+turn K4 -3 40
+wait 60
+turn K1 1 80
+wait 60
+press ARP
+tapkey w7
 wait 300
-tapkey w5
+wait 50
+wait 300
+tapkey w7
 wait 120
-wait 1200
-release FX
-wait 60
-tapkey w2
-wait 60
-tap SEQ
-wait 5
-tap GLO
-wait 20
-tap ENV
-wait 60
-turn K1 4 10
+turn K3 -2 60
+wait 120
+wait 100
+release ARP
 wait 20
 turn K2 4 10
 wait 5
@@ -4424,15 +4213,14 @@ turn K3 -6 10
 wait 60
 tap ARP
 wait 5
-tapkey b6
+tapkey w10
 wait 5
-wait 5
+page 11
 wait 20
-turn PRESET 1 10
+tapkey w0
+tapkey b3
 wait 5
-key w6 down 46
-wait 400
-key w5 up
+tap ENV
 wait 5
 turn K1 4 10
 wait 20
@@ -4450,15 +4238,15 @@ turn SELECT 4 10
 wait 20
 tap SEL
 wait 5
-tapkey b6
-wait 60
-turn K2 1 10
+tapkey b1
 wait 20
-turn K2 -6 80
-wait 60
-press SEQ
-wait 1200
-release SEQ
+key w1 down 121
+wait 100
+key w6 up
+wait 5
+key w9 down 73
+wait 20
+key w10 up
 wait 20
 press GLO
 turn SELECT 2 60
@@ -4480,54 +4268,48 @@ tap LFO
 wait 60
 tap OCT-
 wait 5
-tapkey w2
+tapkey b10
+wait 5
+press REC
+turn ALGO -2 60
+wait 300
+tapkey w1
+wait 120
+turn ALGO -2 60
+wait 120
+tap FX
+wait 300
+tap EDIT
+wait 300
+wait 2700
+release REC
+wait 20
+turn K4 -6 40
 wait 60
-tap LFO
-wait 5
-tap LFO
-wait 5
-tap SEL
-wait 5
+tapkey b9
+wait 60
 tap ENV
 wait 60
-turn K4 9 40
-wait 20
-turn ALGO 2 10
-wait 20
-turn K2 2 10
-wait 5
-tap REC
-wait 5
-turn SELECT 2 80
-wait 60
-press SEQ
-wait 50
-wait 120
-wait 1200
-release SEQ
-wait 5
-tap EDIT
-wait 20
-tapkey w8
-wait 60
-key w3 down 26
-wait 20
-key w2 up
-wait 20
-key w13 down 102
-wait 100
-key w11 up
-wait 20
-key w4 down 126
+key w9 down 82
 wait 400
-key w14 up
+key w10 up
 wait 60
-tapkey b4
-wait 60
-tapkey b4
+tap HOME
 wait 5
-expect inv 0
-expect voices <25
+turn K4 -6 40
+wait 60
+wait 800
+wait 20
+page 11
+wait 20
+tapkey w13
+wait 60
+wait 800
+wait 60
+tapkey w6
+wait 20
+tap ENV
+wait 5
 turn K3 -6 40
 wait 5
 tap OCT+
@@ -4540,11 +4322,9 @@ key w14 down 113
 wait 400
 key w2 up
 wait 20
-tapkey w5
-wait 5
-tap SEQ
-wait 5
-tapkey w5
+tapkey w1
+wait 60
+turn ALGO 1 40
 wait 5
 turn K4 -6 10
 wait 20
@@ -4568,15 +4348,11 @@ release REC
 wait 5
 turn K1 -6 40
 wait 60
-tapkey w6
-wait 5
-wait 2000
+tapkey w2
+wait 60
+tapkey w4
 wait 20
-tap OCT-
-wait 5
-tap GLO
-wait 20
-turn K2 -1 80
+tapkey w10
 wait 5
 wait 2000
 wait 20
@@ -4600,15 +4376,17 @@ key w4 down 92
 wait 400
 key w3 up
 wait 20
+expect inv 0
+expect voices <25
 turn K4 4 40
 wait 60
-tapkey b7
-wait 5
-turn PRESET 2 40
+tapkey w0
 wait 20
-tapkey w1
-wait 5
-tapkey b5
+tapkey w5
+wait 20
+wait 50
+wait 60
+turn K1 4 40
 wait 5
 tap HOME
 wait 5
@@ -4618,25 +4396,25 @@ tap PLAY
 wait 5
 turn PRESET -1 10
 wait 20
-tapkey b2
-wait 5
-tapkey w0
-wait 5
-turn K1 4 80
+tapkey w7
 wait 60
-turn PRESET -6 10
-wait 5
-key w12 down 55
-wait 400
-key w11 up
+tapkey b6
 wait 60
+wait 2000
+wait 5
+key w9 down 20
+wait 20
+key w7 up
+wait 60
+press ARP
+turn PRESET 2 60
+wait 300
 wait 50
-wait 60
-press SEQ
-turn K3 5 60
+wait 120
+wait 50
 wait 300
 wait 1200
-release SEQ
+release ARP
 wait 60
 turn K4 9 10
 wait 20
@@ -4660,37 +4438,41 @@ wait 30
 wait 400
 release EDIT
 wait 60
-tapkey w1
-wait 20
-key w2 down 77
-wait 400
-key w13 up
-wait 5
-key w3 down 79
-wait 400
-key w15 up
+tapkey w8
+wait 60
+turn K2 1 10
+wait 60
+key w14 down 96
+wait 100
+key w8 up
 wait 20
 tapkey w6
 wait 20
-turn PRESET 9 80
-wait 60
-turn ALGO 9 40
-wait 20
-press REC
-tap FX
-wait 300
-tapkey w2
-wait 300
-tapkey w3
-wait 120
-tap EDIT
-wait 30
-tap SEQ
-wait 30
-wait 1200
-release REC
+tap OCT-
 wait 5
-tapkey w5
+turn K4 1 40
+wait 5
+turn K1 4 80
+wait 60
+tapkey w8
+wait 60
+turn K3 9 80
+wait 5
+tapkey w8
+wait 60
+key w6 down 74
+wait 100
+key w15 up
+wait 20
+tap REC
+wait 60
+turn K3 4 80
+wait 60
+key w5 down 118
+wait 100
+key w4 up
+wait 20
+turn K3 -3 40
 wait 60
 tap REC
 wait 5
@@ -4716,71 +4498,67 @@ tap PLAY
 wait 60
 tap OCT-
 wait 60
-tapkey b8
-wait 5
-key w7 down 42
-wait 100
+tapkey w8
+wait 60
+tap ENV
+wait 20
+tapkey w5
+wait 60
+tap GLO
+wait 60
+turn PRESET 9 10
+wait 60
+key w1 down 111
+wait 400
 key w13 up
 wait 60
-tap FX
-wait 20
-tap FX
-wait 20
-tap ENV
+turn K2 -3 80
 wait 5
-tapkey w10
+tapkey b8
 wait 60
-press SEQ
-wait 50
+tap OCT+
+wait 60
+press FX
+tapkey w3
 wait 30
-wait 50
+wait 2700
+release FX
+wait 5
+turn K4 -6 80
+wait 5
+turn K4 2 10
+wait 60
+tapkey w7
+wait 20
+turn K3 1 40
+wait 5
+press EDIT
+turn K1 5 60
 wait 300
-turn K2 5 60
-wait 300
-turn SELECT -2 60
+turn ALGO -5 60
+wait 30
+turn PRESET 2 60
 wait 120
+turn PRESET -2 60
+wait 300
 wait 50
 wait 30
 wait 100
-release SEQ
-wait 60
-press GLO
-tapkey w0
-wait 120
-tapkey w6
-wait 30
-wait 50
-wait 120
-wait 2700
-release GLO
-wait 5
-turn ALGO -6 80
-wait 60
-tap LFO
-wait 5
-tapkey w2
-wait 5
-tapkey w1
-wait 5
-tap LFO
-wait 20
-turn K3 -6 10
+release EDIT
 wait 20
 key w12 down 47
 wait 100
 key w2 up
 wait 20
-expect inv 0
-expect voices <25
-tapkey b4
-wait 20
-tap SEQ
+tapkey w10
+wait 60
+turn K2 -6 10
 wait 5
-press REC
-turn ALGO -5 60
-wait 300
-wait 2700
-release REC
+turn K4 -6 10
+wait 5
+tap OCT-
+wait 60
+tap HOME
 wait 20
 tap SEL
 wait 20
@@ -4798,45 +4576,43 @@ wait 120
 wait 2700
 release EDIT
 wait 5
-tapkey w7
-wait 20
-tapkey w7
-wait 20
-tap REC
-wait 20
 tapkey w6
 wait 60
-key w15 down 82
-wait 400
-key w9 up
 wait 5
-key w7 down 31
-wait 400
-key w9 up
-wait 60
-turn ALGO -1 10
+wait 20
+tapkey w5
+wait 5
+tapkey b9
 wait 60
 tapkey w0
+wait 60
+page 11
+wait 20
+tapkey w2
+wait 20
+turn PRESET 4 40
 wait 5
-key w15 down 21
+turn K2 1 10
+wait 20
+tap OCT-
+wait 20
+tap EDIT
+wait 5
+expect inv 0
+expect voices <25
+press SEQ
 wait 100
-key w8 up
-wait 60
-turn K4 1 10
-wait 60
-key w1 down 45
-wait 400
-key w15 up
+release SEQ
 wait 5
-tapkey w7
-wait 60
-key w8 down 97
-wait 20
-key w12 up
-wait 20
-tapkey b3
+tap OCT+
 wait 5
-tapkey w1
+tapkey b8
+wait 20
+tap EDIT
+wait 60
+turn K1 1 80
+wait 5
+turn K2 1 10
 wait 60
 tap FX
 wait 5
@@ -4872,27 +4648,25 @@ wait 300
 wait 400
 release SEQ
 wait 5
-tapkey b9
-wait 20
-press EDIT
-tapkey w0
+tapkey w4
+wait 5
+key w3 down 21
+wait 100
+key w6 up
+wait 5
+tap SEQ
+wait 5
+press HOME
+tapkey w1
+wait 30
+wait 50
+wait 30
+wait 50
 wait 30
 wait 400
-release EDIT
-wait 5
-key w6 down 83
-wait 100
-key w12 up
+release HOME
 wait 60
-tapkey w5
-wait 5
-tapkey w0
-wait 5
-tapkey b0
-wait 5
-key w1 down 70
-wait 20
-key w7 up
+turn K1 -6 10
 wait 5
 turn PRESET -6 10
 wait 20
@@ -4904,13 +4678,11 @@ key w14 up
 wait 60
 turn PRESET 4 40
 wait 20
-tapkey b7
-wait 20
-tapkey w2
-wait 20
-tapkey w2
+tapkey w6
 wait 60
-tap HOME
+turn PRESET -1 10
+wait 5
+turn K3 -1 40
 wait 60
 key w9 down 116
 wait 400
@@ -4938,37 +4710,35 @@ wait 2000
 wait 60
 wait 5
 wait 20
-tapkey b10
+tapkey w2
 wait 20
-turn SELECT -3 10
-wait 60
-tapkey b3
-wait 5
-tapkey w7
-wait 60
-press SEQ
-turn K4 -2 60
-wait 30
+turn ALGO -3 80
+wait 20
+press LFO
+tapkey w5
+wait 300
 wait 2700
-release SEQ
-wait 60
-tap ARP
-wait 20
-tapkey b1
+release LFO
 wait 5
-tapkey w10
-wait 20
+press ARP
+wait 100
+release ARP
+wait 5
+tap PLAY
+wait 60
+turn PRESET 1 10
+wait 60
+turn PRESET -3 10
+wait 60
 tapkey w8
 wait 60
 wait 800
 wait 20
 turn K3 4 10
 wait 20
-tapkey w4
-wait 20
-tap ENV
-wait 5
-tap GLO
+tapkey w7
+wait 60
+tapkey w5
 wait 60
 tap PLAY
 wait 20
@@ -4980,15 +4750,13 @@ wait 2000
 wait 20
 turn K4 2 80
 wait 20
-tapkey w6
-wait 20
-press HOME
-wait 400
-release HOME
+tapkey w5
 wait 5
-key w15 down 100
-wait 100
-key w6 up
+turn ALGO 2 40
+wait 60
+tap REC
+wait 20
+tap LFO
 wait 5
 tapkey b0
 wait 20
@@ -4998,8 +4766,6 @@ turn ALGO 1 10
 wait 60
 turn K4 4 10
 wait 60
-expect inv 0
-expect voices <25
 tap LFO
 wait 5
 turn K1 4 40
@@ -5024,11 +4790,11 @@ key w5 down 74
 wait 400
 key w9 up
 wait 20
-tapkey w6
-wait 5
-key w10 down 51
+tapkey w2
+wait 60
+wait 2000
 wait 20
-key w4 up
+turn ALGO 9 10
 wait 20
 tap SEL
 wait 60
@@ -5060,6 +4826,8 @@ wait 120
 wait 400
 release GLO
 wait 5
+expect inv 0
+expect voices <25
 tapkey b2
 wait 60
 turn K3 -3 80
@@ -5068,87 +4836,74 @@ tap OCT-
 wait 5
 turn SELECT 2 40
 wait 5
-tapkey b4
-wait 60
-turn SELECT -6 10
+tapkey b2
+wait 5
+turn SELECT -1 40
+wait 5
+turn PRESET 9 80
 wait 20
-tapkey w10
+tap GLO
+wait 5
+turn ALGO -3 40
 wait 20
-press GLO
-turn K4 2 60
+press ARP
+turn PRESET 2 60
+wait 30
+wait 50
 wait 120
-tapkey w5
+tapkey w7
+wait 120
+wait 50
 wait 300
-wait 1200
-release GLO
-wait 20
-press REC
-tapkey w6
-wait 30
-wait 100
-release REC
-wait 20
-tapkey w10
-wait 20
-press GLO
 wait 50
-wait 30
-wait 50
-wait 120
-wait 50
-wait 30
-tapkey w0
 wait 30
 wait 2700
-release GLO
-wait 5
-tapkey b9
+release ARP
 wait 20
-tap FX
-wait 60
-tap LFO
+wait 800
 wait 5
-tap ENV
+tapkey b1
+wait 20
+turn SELECT 9 40
+wait 5
+tapkey w4
+wait 5
+key w6 down 48
+wait 400
+key w4 up
 wait 60
 tap OCT+
 wait 5
 tap GLO
 wait 5
-tapkey w10
+page 11
+tap EDIT
+tapkey w6
+tapkey b2
+wait 60
+turn K1 9 80
 wait 20
-turn K1 -6 10
-wait 5
-wait 50
-wait 5
-tapkey b7
-wait 5
-tap LFO
-wait 5
-tap HOME
-wait 60
-wait 2000
-wait 60
-tapkey w1
-wait 60
-tap LFO
-wait 5
-turn K4 -1 40
-wait 60
-wait 200
+turn SELECT -3 10
 wait 20
-turn PRESET 4 10
+key w11 down 67
+wait 20
+key w7 up
+wait 5
+turn K2 9 40
+wait 20
+tap OCT-
+wait 20
+tapkey b3
 wait 5
 tapkey w10
-wait 20
-tap SEQ
-wait 60
-press FX
-wait 50
-wait 30
+wait 5
+press GLO
+tapkey w4
+wait 300
 wait 50
 wait 300
 wait 1200
-release FX
+release GLO
 wait 20
 turn ALGO 4 40
 wait 60
@@ -5158,22 +4913,22 @@ key w15 up
 wait 20
 turn SELECT -1 10
 wait 60
-tapkey w8
-wait 60
-turn PRESET 1 40
-wait 60
-tap ENV
+tapkey b2
 wait 20
-turn K1 4 80
+tapkey b10
+wait 60
+turn PRESET -3 10
 wait 20
+tap GLO
+wait 60
 key w1 down 58
 wait 100
 key w11 up
 wait 60
 wait 50
 wait 20
-tapkey w0
-wait 20
+tapkey w6
+wait 60
 tap HOME
 wait 60
 press REC
@@ -5182,13 +4937,11 @@ wait 120
 wait 2700
 release REC
 wait 5
-tapkey b10
+tapkey w2
 wait 5
-wait 5
-wait 60
-tapkey w3
-wait 5
-tapkey b9
+tap OCT+
+wait 20
+turn K1 4 80
 wait 20
 tap GLO
 wait 5
@@ -5252,21 +5005,20 @@ wait 120
 wait 1200
 release REC
 wait 20
-expect inv 0
-expect voices <25
-tapkey w2
-wait 20
-turn PRESET -6 10
+page 11
+tap EDIT
+tapkey w10
+tapkey b0
 wait 60
-tapkey w2
-wait 20
-press EDIT
-tapkey w3
-wait 120
 tapkey w6
-wait 300
-wait 2700
-release EDIT
+wait 5
+press HOME
+wait 400
+release HOME
+wait 5
+turn PRESET 1 40
+wait 20
+tap ARP
 wait 20
 turn K1 1 80
 wait 20
@@ -5276,17 +5028,15 @@ key w13 down 41
 wait 20
 key w14 up
 wait 60
-tapkey b0
-wait 5
-wait 5
+tapkey w1
 wait 20
 tap REC
 wait 60
-tapkey w10
-wait 5
-turn PRESET -3 80
-wait 5
-tapkey w5
+tapkey w1
+wait 60
+wait 50
+wait 60
+turn ALGO -3 40
 wait 5
 turn K2 1 80
 wait 5
@@ -5306,103 +5056,101 @@ release HOME
 wait 5
 tapkey w2
 wait 20
-tapkey b2
-wait 5
-tap ENV
-wait 20
-tap FX
-wait 5
-turn ALGO -3 80
-wait 60
-turn K4 -3 10
-wait 20
-tapkey w0
-wait 20
-turn SELECT 4 80
-wait 5
-turn PRESET -1 10
+tapkey w3
 wait 60
 press HOME
 turn K3 -5 60
+wait 30
+turn ALGO -5 60
+wait 30
+turn PRESET 5 60
+wait 30
+turn K1 -2 60
 wait 300
 wait 50
 wait 120
-turn K3 5 60
+wait 1200
+release HOME
+wait 5
+key w10 down 107
+wait 400
+key w3 up
+wait 60
+tapkey b0
+wait 5
+key w11 down 108
+wait 100
+key w3 up
+wait 5
+turn K4 -6 80
+wait 60
+press REC
+tap EDIT
 wait 30
-tapkey w1
+turn K4 2 60
 wait 300
+wait 400
+release REC
+wait 5
+turn K3 -6 80
+wait 20
+turn K3 4 80
+wait 20
+expect inv 0
+expect voices <25
+turn ALGO -3 10
+wait 5
+press REC
+tap FX
+wait 120
+tapkey w2
+wait 120
+tap EDIT
+wait 120
+wait 2700
+release REC
+wait 5
+press HOME
+turn K1 5 60
+wait 120
+tapkey w5
+wait 30
 wait 50
 wait 300
 wait 400
 release HOME
-wait 60
-key w8 down 112
 wait 20
-key w1 up
+tap ENV
 wait 5
-key w6 down 42
+key w1 down 85
 wait 400
-key w3 up
-wait 60
-tapkey b10
-wait 60
-tapkey b2
-wait 5
-turn ALGO -3 40
-wait 60
-turn ALGO -6 80
+key w10 up
 wait 20
-wait 5
-wait 5
-tapkey w7
-wait 60
 tap OCT-
 wait 20
-key w14 down 73
-wait 20
-key w11 up
-wait 20
-tapkey w3
-wait 20
-turn K4 -1 40
+key w8 down 87
+wait 400
+key w12 up
 wait 5
-tap OCT-
-wait 5
-turn K2 -3 40
+key w7 down 63
+wait 100
+key w8 up
 wait 60
 tapkey w9
-wait 5
-key w10 down 124
-wait 100
-key w9 up
 wait 60
-turn PRESET 2 80
-wait 20
-wait 2000
-wait 5
-tapkey w4
+turn K1 -3 40
 wait 60
-tapkey w4
-wait 5
-key w2 down 103
-wait 100
-key w5 up
-wait 20
-wait 2000
-wait 5
-key w2 down 76
-wait 100
-key w11 up
-wait 20
-turn K2 2 10
-wait 5
-tap OCT-
-wait 5
-tapkey b8
+tap ENV
 wait 60
-key w5 down 101
-wait 20
-key w6 up
+press REC
+tap FX
+wait 300
+tapkey w2
+wait 300
+turn K2 -2 60
+wait 300
+wait 400
+release REC
 wait 5
 key w13 down 44
 wait 100
@@ -5430,29 +5178,24 @@ key w14 down 100
 wait 400
 key w8 up
 wait 5
-tapkey w7
+page 3
+tap EDIT
+tapkey w6
+tapkey b5
+wait 5
+tapkey b0
+wait 5
+turn K2 1 10
+wait 5
+tapkey w9
 wait 60
-tap HOME
+turn SELECT 2 40
 wait 20
-tapkey w4
-wait 5
-turn K3 -6 10
-wait 5
-turn K1 9 10
-wait 5
-tapkey b4
+turn SELECT -3 80
 wait 20
-tap ENV
+turn K2 -1 40
 wait 20
-press GLO
-turn PRESET -2 60
-wait 30
-turn K3 5 60
-wait 300
-turn PRESET 2 60
-wait 30
-wait 400
-release GLO
+turn K2 9 10
 wait 5
 turn ALGO 2 10
 wait 20
@@ -5464,19 +5207,17 @@ tapkey w6
 wait 20
 turn K3 -6 40
 wait 60
-tapkey w8
+tapkey w7
+wait 5
+turn PRESET -6 40
 wait 20
-tapkey w4
-wait 60
-turn SELECT -1 40
+turn K2 9 10
 wait 5
-tap PLAY
-wait 5
-turn SELECT 2 80
+wait 2000
 wait 60
-expect inv 0
-expect voices <25
-turn K4 1 40
+key w5 down 124
+wait 100
+key w9 up
 wait 60
 turn SELECT -3 80
 wait 5
@@ -5530,95 +5271,89 @@ release FX
 wait 20
 tap SEQ
 wait 60
-tapkey w4
-wait 5
-wait 800
-wait 5
-tapkey w10
-wait 60
-press GLO
-wait 2700
-release GLO
-wait 20
-key w5 down 101
-wait 400
-key w4 up
-wait 60
-turn K2 4 40
-wait 5
-turn K3 1 80
-wait 5
-turn ALGO -3 40
-wait 60
-tapkey w10
-wait 5
-turn K4 1 10
-wait 20
-turn SELECT 4 10
-wait 5
-tapkey w9
-wait 20
-key w10 down 75
-wait 400
-key w12 up
-wait 20
-tap HOME
-wait 5
-turn PRESET -1 40
-wait 20
-turn PRESET 9 80
-wait 5
-turn SELECT -3 40
+page 11
 wait 20
 tapkey w7
-wait 5
-press ENV
-tapkey w2
-wait 30
-wait 50
-wait 30
-wait 2700
-release ENV
+tapkey b3
 wait 60
-press HOME
-turn K3 -2 60
-wait 120
-tapkey w3
+press REC
+turn SELECT 5 60
 wait 30
-turn K2 -2 60
-wait 120
-wait 50
+tap SEQ
 wait 300
-tapkey w2
-wait 30
-wait 100
-release HOME
-wait 60
-press ARP
-tapkey w0
+tap SEQ
+wait 120
+turn K2 -2 60
 wait 30
 wait 2700
-release ARP
+release REC
+wait 60
+tapkey b1
 wait 5
-tap GLO
-wait 5
-key w11 down 75
+tap OCT+
 wait 20
-key w11 up
+turn SELECT -6 10
+wait 60
+press REC
+tapkey w1
+wait 300
+turn K4 5 60
+wait 120
+tapkey w5
+wait 120
+wait 1200
+release REC
+wait 5
+tapkey b2
+wait 5
+turn ALGO 9 40
+wait 20
+page 11
+wait 20
+tapkey w7
+tapkey b6
+wait 5
+tapkey w6
 wait 60
 turn K1 2 40
-wait 5
-tap EDIT
-wait 5
-wait 200
+wait 20
+tap OCT-
 wait 60
-turn SELECT -6 80
-wait 60
-key w12 down 96
+press ARP
+wait 50
+wait 30
 wait 400
-key w3 up
+release ARP
+wait 20
+turn K2 4 10
 wait 5
-tap EDIT
+turn K3 9 10
+wait 60
+turn K3 9 10
+wait 60
+press ENV
+turn SELECT -5 60
+wait 30
+wait 100
+release ENV
+wait 20
+turn ALGO 4 10
+wait 20
+turn K2 -1 40
+wait 5
+press HOME
+wait 50
+wait 120
+turn ALGO 5 60
+wait 120
+turn K3 2 60
+wait 300
+wait 50
+wait 300
+wait 50
+wait 30
+wait 1200
+release HOME
 wait 60
 wait 5
 wait 20
@@ -5629,26 +5364,26 @@ wait 5
 tap ENV
 wait 5
 tapkey w2
-wait 5
-key w10 down 93
-wait 20
-key w3 up
-wait 20
-turn SELECT -3 10
-wait 5
-key w7 down 26
-wait 100
-key w4 up
 wait 60
-turn K3 -3 40
+turn K2 -3 80
 wait 5
-tapkey w2
+page 11
+tap EDIT
+tapkey w0
+wait 60
+turn PRESET -3 80
+wait 5
+expect inv 0
+expect voices <25
+tap ENV
+wait 20
+turn SELECT -6 10
 wait 5
 turn SELECT -1 40
 wait 60
-tapkey w7
-wait 60
-press LFO
+tapkey w8
+wait 5
+press ARP
 tapkey w3
 wait 300
 tapkey w0
@@ -5657,46 +5392,38 @@ turn K3 5 60
 wait 300
 turn K3 5 60
 wait 30
-tapkey w3
-wait 300
 wait 100
-release LFO
-wait 5
-tapkey w8
+release ARP
 wait 20
-tap LFO
-wait 5
-turn K2 -1 10
-wait 60
-press HOME
+press ENV
 wait 50
 wait 30
-wait 2700
-release HOME
-wait 20
-tapkey w4
-wait 5
-wait 200
-wait 5
-tapkey b2
-wait 60
-key w8 down 124
-wait 20
-key w8 up
-wait 60
-turn K3 1 10
-wait 60
-tap REC
-wait 20
-tap REC
-wait 20
+turn K2 2 60
+wait 30
+wait 50
+wait 120
+wait 50
+wait 30
 tapkey w5
+wait 120
+wait 400
+release ENV
 wait 20
-turn SELECT 2 80
+turn K2 4 80
+wait 5
+tap ENV
 wait 20
-tap EDIT
-wait 60
-wait 200
+press LFO
+wait 50
+wait 120
+wait 50
+wait 300
+tapkey w2
+wait 120
+tapkey w6
+wait 120
+wait 1200
+release LFO
 wait 5
 press ARP
 turn SELECT -5 60
@@ -5710,12 +5437,10 @@ wait 300
 wait 2700
 release ARP
 wait 5
-tapkey b1
+tapkey w5
 wait 20
-tapkey w6
-wait 20
-tap ARP
-wait 20
+turn K1 9 40
+wait 60
 tapkey w5
 wait 60
 tap HOME
@@ -5726,8 +5451,6 @@ key w3 up
 wait 5
 tap OCT-
 wait 5
-expect inv 0
-expect voices <25
 turn K1 9 40
 wait 20
 press SEQ
@@ -5762,25 +5485,23 @@ key w10 up
 wait 5
 turn K1 4 80
 wait 20
-tapkey w9
+page 3
+wait 20
+tapkey w13
 wait 60
-tapkey w3
-wait 20
-turn K3 -1 40
-wait 20
-tap HOME
-wait 20
-tapkey w9
-wait 20
-tapkey w1
+tapkey w6
 wait 5
-tap SEL
+wait 200
+wait 20
+tapkey w7
+wait 20
+wait 2000
+wait 20
+tapkey w10
+wait 5
+turn K3 4 80
 wait 60
-tap SEQ
-wait 20
-tap OCT+
-wait 20
-tap ENV
+tapkey w2
 wait 5
 press SEQ
 wait 50
@@ -5800,8 +5521,8 @@ key w9 up
 wait 20
 turn K1 1 10
 wait 20
-tapkey w0
-wait 20
+tapkey w3
+wait 60
 press REC
 wait 100
 release REC
@@ -5816,69 +5537,71 @@ release SEQ
 wait 5
 turn K4 9 10
 wait 20
-tapkey w3
-wait 20
-turn PRESET -6 40
-wait 60
-turn PRESET 9 80
-wait 20
-turn PRESET 4 40
-wait 60
-press EDIT
-turn PRESET 5 60
-wait 30
-turn PRESET 5 60
-wait 300
-tapkey w5
-wait 120
-wait 50
-wait 30
-wait 50
-wait 120
-wait 1200
-release EDIT
-wait 60
-turn K4 -1 40
-wait 20
-tap PLAY
-wait 60
-tapkey w8
+tapkey w6
+wait 5
+turn SELECT -1 80
+wait 5
+tap OCT+
 wait 60
 wait 200
 wait 5
-key w7 down 52
+turn K4 -1 80
 wait 20
-key w12 up
+press ARP
+turn K3 5 60
+wait 30
+turn PRESET 5 60
+wait 300
+wait 100
+release ARP
+wait 20
+tapkey w10
+wait 5
+tap LFO
 wait 60
-turn K4 1 40
+key w11 down 120
+wait 100
+key w10 up
 wait 20
-turn K2 2 80
-wait 5
-tap SEQ
+press EDIT
+wait 1200
+release EDIT
 wait 20
-turn K4 1 80
+tapkey b6
 wait 5
-tapkey w5
-wait 5
-turn K4 9 40
+key w8 down 24
+wait 400
+key w7 up
 wait 20
-turn K2 4 80
-wait 5
-tap OCT-
-wait 20
-turn K2 2 80
-wait 20
-turn PRESET -6 10
-wait 5
-turn SELECT -3 80
+press SEQ
+tapkey w7
+wait 120
+turn PRESET -5 60
+wait 300
+tapkey w0
+wait 300
+tapkey w2
+wait 30
+turn ALGO 5 60
+wait 120
+wait 100
+release SEQ
 wait 20
 tap ENV
-wait 20
-tapkey w7
-wait 5
-tapkey b7
 wait 60
-tapkey b7
+key w11 down 33
+wait 100
+key w2 up
+wait 5
+turn ALGO -6 10
+wait 60
+tapkey w6
+wait 20
+press ENV
+wait 50
+wait 120
+wait 2700
+release ENV
 wait 20
 press REC
 wait 1200
@@ -5886,35 +5609,37 @@ release REC
 wait 60
 turn K1 9 40
 wait 5
-tapkey w5
-wait 5
-turn SELECT 4 80
+page 11
+tap EDIT
+tapkey w10
+tapkey b6
 wait 20
-turn K2 4 40
-wait 60
-wait 5
+tap OCT-
+wait 20
+tap REC
 wait 5
 turn K4 9 10
 wait 60
 turn K1 4 80
 wait 20
-tapkey w9
-wait 20
-turn SELECT -6 10
-wait 60
-press REC
-tapkey w1
-wait 120
-wait 400
-release REC
-wait 60
-key w7 down 45
-wait 100
-key w14 up
-wait 60
 tapkey w0
+wait 5
+turn K4 4 80
+wait 5
+turn SELECT 9 10
+wait 5
+wait 800
 wait 20
-turn K3 -3 40
+key w7 down 90
+wait 400
+key w7 up
+wait 5
+wait 800
+wait 60
+page 11
+tap EDIT
+tapkey w11
+tapkey b4
 wait 20
 press GLO
 tapkey w1
@@ -5928,67 +5653,67 @@ wait 300
 wait 100
 release GLO
 wait 60
-tapkey w1
-wait 5
-tapkey b4
+tapkey w4
 wait 60
-tapkey b10
-wait 5
-key w12 down 34
-wait 100
+tap OCT-
+wait 20
+key w11 down 111
+wait 400
 key w7 up
 wait 60
-turn K4 2 80
+wait 2000
 wait 20
-press EDIT
-wait 50
-wait 30
-turn ALGO 2 60
-wait 300
-wait 50
-wait 120
-tapkey w2
-wait 120
-wait 100
-release EDIT
-wait 60
-key w6 down 44
-wait 100
-key w14 up
+wait 200
 wait 5
-tapkey w0
-wait 60
-turn K4 4 10
-wait 5
-press GLO
-wait 50
-wait 120
-wait 2700
-release GLO
-wait 5
-turn K1 -1 10
-wait 5
-tapkey b2
-wait 20
 expect inv 0
 expect voices <25
-tapkey w4
-wait 5
-tapkey w5
-wait 60
-turn SELECT 4 40
-wait 5
 tap HOME
+wait 60
+key w8 down 91
 wait 20
+key w6 up
+wait 60
+wait 2000
 wait 5
+turn K3 9 10
 wait 5
-press FX
-turn K1 2 60
-wait 300
-tapkey w1
-wait 300
+tap LFO
+wait 5
+key w6 down 39
 wait 400
-release FX
+key w4 up
+wait 20
+page 3
+tap EDIT
+tapkey w3
+wait 5
+tapkey w10
+wait 5
+key w4 down 46
+wait 400
+key w4 up
+wait 60
+tap ARP
+wait 5
+key w14 down 49
+wait 20
+key w2 up
+wait 20
+turn SELECT -1 80
+wait 60
+turn PRESET 1 40
+wait 20
+turn PRESET -1 80
+wait 5
+tapkey w3
+wait 60
+tapkey w3
+wait 60
+turn K1 -1 10
+wait 5
+tap GLO
+wait 5
+wait 50
 wait 60
 tap SEL
 wait 5
@@ -6006,65 +5731,63 @@ wait 120
 wait 100
 release HOME
 wait 5
-tapkey w6
-wait 20
-key w12 down 114
-wait 400
-key w15 up
-wait 20
-wait 50
-wait 5
-tap REC
-wait 5
-turn SELECT 1 40
-wait 5
-tap PLAY
+tapkey w7
 wait 60
-tap PLAY
-wait 60
-turn K1 9 40
-wait 20
 tap OCT-
 wait 60
-press EDIT
-turn ALGO -2 60
-wait 120
-turn PRESET -2 60
-wait 300
-wait 50
-wait 120
-wait 50
-wait 300
-turn K1 -2 60
-wait 120
-wait 1200
-release EDIT
-wait 20
-tapkey b6
-wait 60
-turn K3 1 10
-wait 60
-wait 800
-wait 5
-tap HOME
-wait 60
-turn K3 1 40
-wait 20
-turn K2 1 40
-wait 20
 press SEQ
+turn K2 5 60
+wait 30
+turn K3 -5 60
+wait 30
+wait 50
+wait 30
+tapkey w0
+wait 120
+turn PRESET 2 60
+wait 300
+wait 2700
+release SEQ
+wait 5
+tapkey w2
+wait 60
+wait 5
+wait 5
+tap SEQ
+wait 5
+tap OCT+
+wait 60
+press SEQ
+tapkey w6
+wait 120
+wait 2700
+release SEQ
+wait 60
+key w13 down 97
+wait 20
+key w14 up
+wait 5
+press LFO
+tapkey w0
+wait 300
+tapkey w6
+wait 30
+tapkey w7
+wait 300
 wait 50
 wait 300
 wait 50
 wait 30
-turn K1 -2 60
-wait 120
+wait 2700
+release LFO
+wait 5
+press FX
 tapkey w3
 wait 120
 turn K3 -2 60
 wait 30
 wait 1200
-release SEQ
+release FX
 wait 20
 tap HOME
 wait 60
@@ -6106,27 +5829,31 @@ tap LFO
 wait 5
 turn K3 4 40
 wait 20
-tapkey w7
-wait 20
-key w13 down 45
+tapkey w5
+wait 60
+press SEQ
+wait 50
+wait 30
 wait 100
-key w12 up
-wait 20
-key w2 down 20
-wait 20
-key w11 up
-wait 60
-turn ALGO 2 40
-wait 60
-tapkey b3
-wait 20
-tapkey b7
+release SEQ
 wait 5
-turn K4 -3 80
+press GLO
+wait 100
+release GLO
 wait 5
-tapkey b3
+key w15 down 69
+wait 400
+key w7 up
+wait 20
+tapkey w3
 wait 5
-turn K3 2 10
+key w5 down 102
+wait 20
+key w14 up
+wait 5
+key w3 down 26
+wait 100
+key w1 up
 wait 60
 turn ALGO 2 80
 wait 5
@@ -6152,31 +5879,31 @@ key w4 down 86
 wait 100
 key w4 up
 wait 20
-tapkey w6
-wait 5
-tapkey b4
+tapkey w0
+wait 20
+tap EDIT
 wait 20
 tap FX
 wait 60
 tap REC
 wait 20
-tapkey w0
+tapkey b0
 wait 60
 tap SEQ
 wait 60
 turn PRESET -3 10
 wait 20
-tapkey w8
+tapkey b0
 wait 5
-turn K4 -1 40
+turn PRESET 1 10
 wait 5
+turn K2 -3 10
+wait 20
 turn K4 2 10
-wait 5
-tapkey w9
-wait 5
-tapkey w0
-wait 5
-turn K4 -3 80
+wait 20
+turn SELECT -3 10
+wait 20
+tap SEQ
 wait 20
 turn K3 1 10
 wait 60
@@ -6184,9 +5911,7 @@ wait 50
 wait 60
 turn PRESET 2 10
 wait 60
-tapkey w9
-wait 5
-tap SEL
+tapkey w1
 wait 60
 tap PLAY
 wait 20
@@ -6202,22 +5927,22 @@ wait 30
 wait 100
 release SEQ
 wait 20
-tapkey w0
-wait 20
-wait 800
+tapkey w7
 wait 5
-tapkey b4
+page 3
 wait 20
-turn K1 2 80
+tapkey w4
 wait 20
-turn K3 -3 80
-wait 5
-tap SEL
-wait 5
-tap GLO
+key w8 down 25
+wait 100
+key w6 up
 wait 60
 expect inv 0
 expect voices <25
+wait 50
+wait 5
+turn SELECT 9 40
+wait 60
 turn K3 1 80
 wait 20
 turn K3 9 40
@@ -6264,69 +5989,63 @@ key w2 down 21
 wait 20
 key w10 up
 wait 60
-tapkey w3
-wait 5
 tapkey b3
 wait 5
-key w4 down 95
-wait 20
-key w2 up
+tapkey w3
 wait 60
-turn SELECT -1 10
+tap PLAY
+wait 5
+turn PRESET -3 10
 wait 20
-tapkey w0
-wait 60
-press LFO
-wait 50
-wait 30
-tapkey w4
-wait 30
-turn ALGO 2 60
-wait 30
-wait 1200
-release LFO
-wait 20
-key w12 down 116
-wait 400
-key w15 up
-wait 20
-key w14 down 116
+turn PRESET 1 10
+wait 5
+key w0 down 91
 wait 100
 key w0 up
 wait 5
-press HOME
-tapkey w6
+tap SEQ
+wait 60
+press REC
+tap SEQ
 wait 120
+tap SEQ
+wait 300
+wait 2700
+release REC
+wait 60
+tap EDIT
+wait 60
+turn K4 1 40
+wait 5
+turn K4 -1 40
+wait 5
+tapkey w8
+wait 5
+key w7 down 50
+wait 100
+key w7 up
+wait 5
+wait 800
+wait 60
+press SEQ
 wait 50
 wait 30
-wait 400
-release HOME
-wait 20
-turn SELECT 1 80
-wait 20
-tapkey b10
-wait 20
-turn SELECT -1 80
-wait 20
-tapkey b6
+tapkey w5
+wait 300
+wait 50
+wait 120
+tapkey w5
+wait 30
+wait 2700
+release SEQ
 wait 5
-key w1 down 37
-wait 400
-key w10 up
-wait 20
-turn K1 9 10
-wait 20
-tap SEQ
-wait 20
-tap SEL
+tapkey w10
 wait 60
-turn PRESET -6 10
+turn ALGO -1 10
 wait 5
-key w1 down 115
-wait 100
-key w10 up
-wait 5
-tap OCT-
+turn K2 4 10
+wait 60
+turn SELECT 4 80
 wait 20
 press REC
 wait 100
@@ -6354,39 +6073,37 @@ release FX
 wait 5
 tap GLO
 wait 20
-tapkey w9
-wait 20
-turn K3 2 10
-wait 60
-tapkey w2
-wait 20
-tapkey w1
-wait 5
+page 11
+tap EDIT
 tapkey w10
 wait 5
-tapkey b1
+tap GLO
 wait 5
-tap OCT+
+turn PRESET -1 10
+wait 5
+tap SEL
 wait 20
-press REC
-turn K3 -5 60
-wait 300
-tapkey w6
-wait 120
-turn SELECT 2 60
-wait 30
+turn K3 -3 40
+wait 5
+press ARP
 wait 400
-release REC
+release ARP
+wait 60
+tapkey w7
+wait 60
+turn K1 -6 80
+wait 60
+tapkey w5
 wait 5
-turn PRESET 4 80
-wait 20
-wait 50
+tapkey w2
+wait 5
+turn ALGO -1 80
 wait 60
-tapkey b5
+tapkey b3
 wait 60
-turn SELECT -6 40
-wait 60
-tap SEQ
+tapkey b2
+wait 5
+turn K2 4 80
 wait 20
 wait 800
 wait 20
@@ -6394,29 +6111,23 @@ tap SEL
 wait 20
 tap HOME
 wait 5
-tapkey b8
+tapkey w0
 wait 20
-turn ALGO 4 40
-wait 60
-press SEQ
-turn K1 2 60
-wait 300
-turn K1 2 60
-wait 30
-tapkey w5
-wait 30
-wait 1200
-release SEQ
-wait 60
-turn ALGO -6 80
+turn K1 4 10
+wait 20
+tapkey w10
+wait 20
+wait 200
 wait 5
-key w1 down 54
-wait 100
-key w3 up
+turn SELECT -3 40
 wait 20
-tapkey w5
+tapkey b2
+wait 5
+turn ALGO 2 80
 wait 60
-wait 50
+turn K4 1 10
+wait 20
+tapkey b3
 wait 60
 key w6 down 98
 wait 100
@@ -6426,46 +6137,46 @@ key w8 down 68
 wait 20
 key w4 up
 wait 5
-tapkey w4
-wait 5
-press REC
-tap EDIT
-wait 30
-tapkey w3
-wait 30
 tapkey w2
-wait 120
-turn SELECT 5 60
-wait 300
-turn K1 -5 60
-wait 120
-wait 400
-release REC
 wait 5
-turn ALGO -1 80
-wait 20
-wait 2000
+turn K4 2 10
 wait 60
-tap ENV
+tap OCT-
+wait 60
+turn SELECT -3 40
+wait 20
+turn K1 9 10
+wait 20
+tapkey w1
+wait 20
+press GLO
+wait 50
+wait 30
+tapkey w1
+wait 30
+wait 50
+wait 300
+wait 400
+release GLO
 wait 5
 tap LFO
 wait 20
+expect inv 0
+expect voices <25
 turn K3 -3 10
 wait 20
 press LFO
 wait 100
 release LFO
 wait 20
-tapkey b8
-wait 60
-tapkey w9
-wait 60
+tapkey b10
+wait 20
+turn K1 2 80
+wait 20
 turn ALGO -1 10
 wait 60
 wait 200
 wait 20
-expect inv 0
-expect voices <25
 turn ALGO -1 10
 wait 60
 turn K3 1 40
@@ -6490,13 +6201,16 @@ key w6 up
 wait 5
 turn ALGO -1 10
 wait 20
-tapkey w10
+page 11
+tap EDIT
+tapkey w11
+tapkey b3
 wait 5
-turn K3 -1 80
+key w7 down 62
+wait 400
+key w12 up
 wait 5
-turn ALGO -1 80
-wait 60
-tapkey w4
+tap EDIT
 wait 5
 turn K4 -1 80
 wait 20
@@ -6506,19 +6220,17 @@ key w8 down 31
 wait 20
 key w10 up
 wait 5
-tapkey w3
+tapkey w10
 wait 60
-key w0 down 77
-wait 100
-key w7 up
+turn K1 9 40
 wait 60
-tap HOME
+turn K2 9 10
 wait 20
-turn K4 1 80
-wait 60
-turn ALGO -1 40
-wait 60
-tapkey b10
+tapkey w8
+wait 5
+turn PRESET 1 80
+wait 20
+tap REC
 wait 60
 tap OCT-
 wait 5
@@ -6543,74 +6255,60 @@ wait 20
 wait 200
 wait 20
 tapkey w2
-wait 5
-tapkey b5
-wait 5
-key w4 down 53
-wait 400
-key w0 up
 wait 20
-tap EDIT
-wait 60
-wait 2000
+tapkey b2
 wait 20
-tap SEL
-wait 60
-turn ALGO 9 80
-wait 60
-tapkey w10
-wait 5
-key w0 down 79
-wait 400
-key w13 up
-wait 20
-key w4 down 42
-wait 20
-key w0 up
-wait 20
-tap PLAY
-wait 60
-press REC
-wait 100
-release REC
-wait 5
-turn SELECT -1 10
-wait 60
-tap LFO
-wait 60
-press HOME
+press LFO
 wait 50
-wait 30
-turn PRESET -2 60
 wait 120
-turn ALGO -5 60
+wait 50
+wait 300
+turn SELECT 2 60
+wait 300
+turn K3 5 60
+wait 300
+wait 50
+wait 120
+wait 1200
+release LFO
+wait 60
+tap ENV
+wait 5
+turn K3 2 80
+wait 60
+turn SELECT -6 10
+wait 5
+press REC
+tapkey w1
+wait 120
+turn K3 5 60
 wait 120
 wait 400
-release HOME
+release REC
+wait 60
+tapkey w1
 wait 20
-key w11 down 123
-wait 20
-key w6 up
+turn K3 -3 40
+wait 60
 wait 5
-tapkey b7
+wait 5
+turn PRESET 2 40
 wait 5
 turn K4 9 80
 wait 60
+tapkey w1
+wait 5
+tapkey w1
+wait 20
+press LFO
 tapkey w4
-wait 5
-turn K1 2 40
-wait 20
-turn PRESET 9 40
-wait 60
-tapkey b0
-wait 20
-tapkey b2
-wait 60
-tapkey w7
-wait 5
-key w14 down 36
-wait 20
-key w0 up
+wait 120
+tapkey w5
+wait 120
+turn ALGO -5 60
+wait 30
+wait 100
+release LFO
 wait 20
 press REC
 wait 400
@@ -6634,8 +6332,8 @@ key w11 up
 wait 5
 tap ARP
 wait 20
-tapkey w10
-wait 5
+tapkey b0
+wait 20
 turn SELECT 4 40
 wait 5
 tap LFO
@@ -6683,17 +6381,13 @@ wait 20
 turn K3 4 10
 wait 5
 tapkey w6
-wait 20
-press GLO
-wait 400
-release GLO
 wait 60
-tap OCT-
-wait 60
-tapkey w6
+turn K4 4 80
 wait 20
-expect inv 0
-expect voices <25
+wait 2000
+wait 20
+tap HOME
+wait 20
 wait 5
 wait 20
 turn K3 -6 40
@@ -6714,6 +6408,8 @@ release REC
 wait 20
 tap HOME
 wait 5
+expect inv 0
+expect voices <25
 turn K1 -6 40
 wait 60
 press GLO
@@ -6730,43 +6426,43 @@ turn K1 -6 10
 wait 5
 tap FX
 wait 5
+tapkey w8
+wait 5
 tapkey w5
 wait 5
-key w1 down 65
-wait 100
-key w2 up
-wait 20
-turn K4 1 10
-wait 60
-turn PRESET 2 80
+tap HOME
 wait 5
-key w4 down 118
-wait 400
-key w8 up
-wait 20
-turn K1 -3 80
-wait 5
-turn K2 1 80
-wait 5
-tap GLO
-wait 20
-press FX
-tapkey w7
-wait 300
-tapkey w3
-wait 30
-tapkey w1
-wait 120
-turn SELECT 5 60
-wait 300
-tapkey w3
-wait 300
-wait 1200
-release FX
-wait 20
-tapkey b3
-wait 60
 tap SEQ
+wait 20
+key w1 down 92
+wait 100
+key w4 up
+wait 60
+turn ALGO -1 40
+wait 5
+key w6 down 66
+wait 400
+key w15 up
+wait 60
+turn K4 -1 40
+wait 5
+turn K1 1 40
+wait 20
+key w4 down 124
+wait 20
+key w10 up
+wait 5
+key w2 down 60
+wait 100
+key w1 up
+wait 20
+key w3 down 21
+wait 400
+key w14 up
+wait 60
+turn K3 2 40
+wait 20
+tapkey w8
 wait 5
 tap SEQ
 wait 60
@@ -6796,13 +6492,13 @@ wait 300
 wait 1200
 release SEQ
 wait 20
-tapkey w7
+tapkey w0
 wait 5
-turn SELECT 9 10
+key w2 down 83
 wait 20
-turn K3 -6 10
-wait 5
-tap OCT+
+key w3 up
+wait 60
+turn SELECT 4 40
 wait 20
 turn SELECT 2 10
 wait 60
@@ -6810,61 +6506,59 @@ turn SELECT 4 40
 wait 20
 turn PRESET -6 10
 wait 60
-tapkey w8
-wait 60
-tapkey b4
-wait 60
-key w14 down 32
-wait 20
-key w1 up
-wait 60
-turn SELECT 4 10
+tapkey b6
 wait 5
-press SEQ
-wait 50
+key w2 down 126
+wait 100
+key w3 up
+wait 5
+turn SELECT -6 80
+wait 5
+turn ALGO 1 80
+wait 20
+tap SEQ
+wait 60
+turn K3 -6 80
+wait 5
+key w9 down 119
+wait 100
+key w15 up
+wait 60
+turn K1 -3 10
+wait 20
+turn ALGO 4 80
+wait 60
+press REC
+tap FX
 wait 30
-wait 50
-wait 120
-wait 50
-wait 120
-turn K1 5 60
-wait 120
-wait 50
+tapkey w6
 wait 300
+tap FX
+wait 30
+turn SELECT -5 60
+wait 300
+wait 2700
+release REC
+wait 5
+turn K4 -1 10
+wait 5
+press REC
+turn ALGO 2 60
+wait 300
+turn SELECT 5 60
+wait 120
 wait 400
-release SEQ
-wait 20
-turn SELECT 2 10
-wait 20
-tapkey b7
+release REC
 wait 60
-key w0 down 113
-wait 20
-key w0 up
-wait 5
-tap OCT-
-wait 5
-tap LFO
-wait 5
-turn PRESET -6 10
-wait 60
-turn PRESET -3 40
-wait 5
-key w3 down 95
+key w15 down 126
 wait 400
-key w12 up
-wait 20
-wait 5
-wait 20
-turn K2 9 80
+key w6 up
 wait 60
-tapkey b3
+tapkey w0
 wait 60
-tapkey w4
-wait 60
-turn K2 9 40
-wait 60
-tap ENV
+key w15 down 87
+wait 400
+key w5 up
 wait 60
 tap PLAY
 wait 60
@@ -6872,19 +6566,17 @@ tap OCT-
 wait 5
 wait 200
 wait 20
-tapkey w9
-wait 60
-turn PRESET 1 40
-wait 60
-tapkey w6
+tapkey b0
+wait 20
+turn K1 2 40
+wait 20
+tapkey b6
 wait 5
-tap PLAY
-wait 20
-turn SELECT 4 40
+turn K3 1 80
 wait 60
-tap PLAY
-wait 20
-turn K3 9 40
+key w10 down 49
+wait 400
+key w12 up
 wait 5
 turn SELECT 1 10
 wait 5
@@ -6892,68 +6584,60 @@ key w14 down 70
 wait 100
 key w2 up
 wait 5
-tapkey b4
+tapkey w10
 wait 20
-tap EDIT
-wait 20
-key w7 down 64
+press SEQ
+tapkey w5
+wait 30
+wait 50
+wait 300
+tapkey w5
+wait 30
+tapkey w6
+wait 30
 wait 100
-key w7 up
+release SEQ
 wait 20
-press ARP
+press REC
+turn K4 2 60
+wait 120
+tapkey w5
+wait 30
 wait 1200
-release ARP
+release REC
+wait 5
+wait 800
 wait 60
-key w3 down 116
-wait 100
-key w10 up
+wait 200
 wait 20
 turn PRESET 2 40
 wait 20
-turn SELECT -1 40
-wait 5
-tapkey w3
+tap REC
 wait 60
-turn K1 1 80
+turn ALGO -3 10
 wait 60
-tapkey w7
-wait 5
-key w11 down 125
+tap OCT-
 wait 20
+key w2 down 36
+wait 20
+key w1 up
+wait 5
+key w14 down 82
+wait 400
 key w12 up
 wait 20
-expect inv 0
-expect voices <25
-key w10 down 80
-wait 20
-key w3 up
-wait 20
-key w14 down 110
-wait 400
-key w3 up
-wait 20
-turn SELECT 4 80
-wait 60
-wait 800
-wait 60
-turn ALGO -6 80
-wait 60
-tap FX
-wait 60
-turn K1 1 80
-wait 20
-tapkey w3
+tapkey w0
 wait 5
-turn K4 -3 80
-wait 5
-turn ALGO -3 10
+key w6 down 45
+wait 20
+key w0 up
 wait 20
 tapkey b2
 wait 20
-tapkey b7
-wait 5
-press EDIT
-turn K3 2 60
+tapkey w6
+wait 20
+press LFO
+turn K4 2 60
 wait 120
 tapkey w4
 wait 30
@@ -6961,35 +6645,35 @@ turn K3 2 60
 wait 300
 turn K1 -5 60
 wait 30
+tapkey w3
+wait 30
+wait 1200
+release LFO
+wait 60
+press ARP
+wait 50
+wait 300
+wait 50
+wait 300
+turn K3 2 60
+wait 120
+wait 50
+wait 120
+tapkey w5
+wait 120
+wait 1200
+release ARP
+wait 20
+tap REC
+wait 20
+key w5 down 35
 wait 100
-release EDIT
-wait 5
-turn PRESET 9 80
-wait 5
-tap FX
-wait 20
-turn K3 -6 10
-wait 5
-key w8 down 21
-wait 20
-key w15 up
-wait 5
-key w12 down 34
-wait 400
-key w13 up
-wait 20
-tapkey w7
-wait 20
-tap ARP
+key w4 up
 wait 60
-wait 200
+tap LFO
 wait 60
-turn K4 9 80
-wait 5
-wait 5
-wait 20
-turn K3 -6 10
-wait 60
+expect inv 0
+expect voices <25
 wait 800
 wait 60
 key w14 down 26
@@ -7032,9 +6716,7 @@ turn K1 -6 40
 wait 5
 wait 50
 wait 60
-tapkey w7
-wait 60
-wait 50
+tapkey b2
 wait 5
 tap GLO
 wait 60
@@ -7060,33 +6742,29 @@ turn K3 -3 80
 wait 5
 tap GLO
 wait 20
-tapkey b5
-wait 20
-tap OCT-
-wait 5
 tapkey w3
-wait 60
-wait 50
-wait 5
-turn K2 -3 10
 wait 20
-tapkey b7
+tapkey w8
+wait 5
+press REC
+tapkey w2
+wait 120
+wait 2700
+release REC
 wait 20
 turn ALGO -6 40
 wait 20
-tapkey b9
-wait 20
-tap PLAY
+tapkey w10
 wait 5
-tapkey w6
+key w14 down 58
+wait 20
+key w12 up
 wait 60
 tap ENV
 wait 5
-tapkey w10
+tapkey w0
 wait 20
-wait 800
-wait 20
-turn K2 1 40
+tapkey w5
 wait 5
 turn K4 2 10
 wait 20
@@ -7128,55 +6806,57 @@ key w5 up
 wait 60
 turn PRESET 4 10
 wait 60
-tapkey w3
-wait 20
-press REC
-tapkey w3
+tapkey w7
+wait 60
+turn K2 9 80
+wait 60
+press EDIT
+tapkey w1
 wait 30
 turn K4 5 60
+wait 30
+turn K1 -2 60
+wait 300
+turn ALGO 5 60
+wait 30
+tapkey w6
 wait 120
-turn ALGO -2 60
+wait 100
+release EDIT
+wait 20
+wait 800
+wait 60
+turn K2 -1 40
+wait 60
+wait 800
+wait 60
+key w3 down 62
+wait 20
+key w5 up
+wait 5
+tapkey b8
+wait 60
+tap ENV
+wait 5
+wait 800
+wait 20
+tapkey w8
+wait 60
+press ENV
+tapkey w5
 wait 120
-tapkey w3
+tapkey w7
+wait 120
+turn K1 -2 60
 wait 300
 wait 2700
-release REC
+release ENV
 wait 20
-tapkey w6
-wait 5
-tapkey w6
-wait 60
-tapkey b6
+press LFO
+wait 1200
+release LFO
 wait 20
-tap PLAY
-wait 60
-turn K4 -6 10
-wait 5
-tapkey b10
-wait 60
-expect inv 0
-expect voices <25
-key w5 down 31
-wait 100
-key w15 up
-wait 20
-key w3 down 86
-wait 400
-key w15 up
-wait 20
-key w11 down 59
-wait 100
-key w14 up
-wait 20
-tap OCT+
-wait 20
-tapkey w3
-wait 20
-turn K3 2 80
-wait 60
-tapkey w8
-wait 5
-tapkey b7
+wait 800
 wait 5
 press REC
 tapkey w6
@@ -7190,11 +6870,11 @@ release REC
 wait 60
 wait 5
 wait 20
-tapkey w1
+tapkey w2
 wait 20
 turn SELECT -6 10
-wait 5
-turn K3 2 10
+wait 20
+tap SEL
 wait 5
 press EDIT
 wait 50
@@ -7216,37 +6896,37 @@ key w5 down 79
 wait 20
 key w13 up
 wait 60
-tapkey b3
-wait 5
-turn K3 -6 80
-wait 5
-turn K1 -3 80
-wait 60
-tap OCT-
-wait 60
-press FX
-wait 400
-release FX
-wait 60
-press ARP
-tapkey w5
-wait 300
 tapkey w0
-wait 30
-wait 100
-release ARP
+wait 20
+key w1 down 97
+wait 20
+key w5 up
 wait 20
 tapkey b9
-wait 60
-tapkey b0
-wait 60
-wait 50
-wait 60
+wait 5
 tap ARP
-wait 60
-turn K1 1 10
+wait 5
+turn K2 -6 80
 wait 20
-tap ENV
+turn K4 -6 80
+wait 60
+key w10 down 106
+wait 400
+key w9 up
+wait 60
+key w10 down 22
+wait 20
+key w12 up
+wait 20
+turn K2 2 40
+wait 5
+key w6 down 115
+wait 400
+key w4 up
+wait 20
+wait 5
+wait 20
+tapkey w2
 wait 5
 key w5 down 79
 wait 400
@@ -7256,55 +6936,51 @@ key w6 down 22
 wait 400
 key w8 up
 wait 5
-tapkey b1
+tapkey w5
 wait 20
-tapkey w9
-wait 20
-tapkey b4
-wait 5
-press ARP
+expect inv 0
+expect voices <25
+press GLO
+wait 50
+wait 120
 turn K1 5 60
 wait 120
 wait 50
 wait 300
 wait 2700
-release ARP
+release GLO
 wait 5
 turn K1 -3 80
 wait 5
-tapkey b2
+tapkey w2
+wait 60
+page 3
+tap EDIT
+tapkey w5
+wait 60
+turn K3 1 10
+wait 60
+tap SEQ
+wait 60
+turn K2 2 40
 wait 5
-tap REC
-wait 5
-turn PRESET 2 40
+turn PRESET -3 10
 wait 60
-turn PRESET -1 80
-wait 20
-wait 2000
+turn ALGO 9 80
 wait 60
-turn K2 -3 10
-wait 60
-key w0 down 47
+key w15 down 36
 wait 100
-key w7 up
-wait 5
-key w6 down 96
-wait 400
-key w15 up
-wait 5
+key w0 up
+wait 20
+page 11
+tap EDIT
+tapkey w1
+wait 60
+page 11
+tap EDIT
 tapkey w5
 wait 20
-wait 50
-wait 20
-tapkey w10
-wait 20
-key w8 down 20
-wait 100
-key w11 up
-wait 5
-turn PRESET 4 10
-wait 20
-tapkey w1
+tapkey b1
 wait 20
 key w1 down 88
 wait 20
@@ -7318,25 +6994,23 @@ key w3 up
 wait 5
 tap LFO
 wait 60
-tapkey b2
-wait 5
-press EDIT
-wait 50
-wait 300
+tapkey w0
+wait 20
 tapkey w1
-wait 30
-wait 400
-release EDIT
+wait 60
+tap EDIT
+wait 5
+wait 5
+wait 60
+tap LFO
 wait 20
 tap FX
 wait 5
-tapkey w3
-wait 5
-tap ARP
-wait 20
-turn K2 1 80
+page 11
+tap EDIT
+tapkey w7
 wait 60
-tap OCT+
+tapkey b2
 wait 20
 key w11 down 104
 wait 400
@@ -7346,7 +7020,7 @@ turn K3 2 10
 wait 5
 tap FX
 wait 60
-tapkey w2
+tapkey b2
 wait 60
 turn ALGO 4 40
 wait 60
@@ -7386,95 +7060,91 @@ release REC
 wait 60
 tap SEL
 wait 5
-expect inv 0
-expect voices <25
 tap GLO
 wait 5
-tapkey w6
-wait 5
-key w8 down 68
-wait 400
-key w11 up
-wait 5
-turn SELECT 9 10
-wait 20
-tapkey w8
-wait 20
-wait 2000
-wait 5
-turn K3 1 10
+tapkey w2
 wait 60
-wait 50
-wait 20
-turn K2 9 10
-wait 60
-key w10 down 117
-wait 400
-key w8 up
-wait 60
-wait 5
-wait 20
-tap ENV
-wait 5
-wait 50
-wait 5
-turn K2 -6 80
-wait 60
-wait 5
-wait 60
-key w10 down 124
-wait 20
-key w10 up
-wait 5
-tapkey w3
-wait 60
-tap HOME
-wait 5
-wait 2000
-wait 60
-press REC
-tap FX
-wait 120
-tap SEQ
-wait 300
 tap EDIT
-wait 300
-tap SEQ
-wait 120
-wait 400
-release REC
-wait 5
-turn K3 2 40
-wait 5
-press GLO
-wait 50
-wait 300
-wait 50
-wait 300
+wait 20
+key w7 down 40
 wait 100
-release GLO
+key w3 up
 wait 5
-press EDIT
+tapkey b6
+wait 5
+key w2 down 108
+wait 400
+key w14 up
+wait 5
+tap LFO
+wait 5
+tapkey w8
+wait 60
+tapkey w2
+wait 5
+tapkey w4
+wait 5
+turn ALGO 2 10
+wait 60
+key w14 down 25
+wait 400
+key w9 up
+wait 20
+press LFO
+turn ALGO 5 60
+wait 300
+turn K3 -5 60
+wait 120
+wait 1200
+release LFO
+wait 5
+wait 200
+wait 60
+turn SELECT 4 40
+wait 60
+press GLO
+wait 2700
+release GLO
+wait 60
+tap OCT-
+wait 20
+press ARP
+tapkey w0
+wait 120
+turn K2 5 60
+wait 30
+tapkey w2
+wait 300
 wait 50
 wait 120
-turn K2 -2 60
-wait 300
 wait 2700
-release EDIT
+release ARP
+wait 20
+key w2 down 38
+wait 100
+key w9 up
+wait 20
+turn SELECT 9 10
 wait 60
-turn ALGO -3 40
-wait 5
-tap GLO
-wait 60
-tapkey w1
-wait 20
-turn K3 -3 10
-wait 20
-turn PRESET -1 40
-wait 20
 wait 2000
 wait 60
-tapkey b6
+wait 5
+wait 5
+key w14 down 110
+wait 20
+key w13 up
+wait 5
+turn ALGO 4 80
+wait 20
+tap OCT+
+wait 20
+turn PRESET 4 80
+wait 5
+turn PRESET -3 40
+wait 20
+tapkey b8
+wait 20
+turn K4 2 40
 wait 60
 wait 200
 wait 20
@@ -7504,85 +7174,79 @@ wait 120
 wait 1200
 release ARP
 wait 60
-tapkey b10
-wait 5
-press EDIT
-wait 2700
-release EDIT
+tapkey w6
+wait 20
+turn K3 9 10
 wait 60
-tap ENV
-wait 60
+expect inv 0
+expect voices <25
 tap ENV
 wait 5
 key w7 down 40
 wait 20
 key w5 up
 wait 20
-tapkey w0
-wait 60
-press REC
-wait 1200
-release REC
-wait 5
-turn PRESET 2 40
-wait 5
-tap ENV
+tapkey w8
+wait 20
+turn PRESET -3 10
+wait 20
+key w7 down 110
+wait 20
+key w5 up
 wait 60
 turn PRESET -1 10
 wait 5
-tapkey w0
-wait 20
-turn K4 1 40
+tapkey w7
 wait 5
-turn PRESET -1 80
+wait 800
 wait 20
-turn K4 4 10
+turn K3 -1 40
 wait 60
-key w15 down 63
-wait 20
-key w3 up
+press HOME
+tapkey w7
+wait 30
+wait 100
+release HOME
 wait 20
 tap LFO
 wait 5
-tapkey w8
+tapkey b9
 wait 60
-key w1 down 51
-wait 20
-key w11 up
+press REC
+tap EDIT
+wait 300
+wait 1200
+release REC
+wait 60
+press ARP
+turn K4 -2 60
+wait 120
+tapkey w0
+wait 30
+wait 50
+wait 30
+wait 50
+wait 30
+wait 50
+wait 300
+wait 1200
+release ARP
 wait 5
-tap OCT-
+press ARP
+wait 50
+wait 30
+wait 50
+wait 300
+wait 400
+release ARP
 wait 20
-key w4 down 48
-wait 20
-key w9 up
-wait 20
-turn ALGO 2 10
-wait 5
-key w7 down 93
-wait 20
-key w11 up
-wait 60
-turn PRESET 9 80
-wait 20
-key w9 down 20
-wait 20
-key w10 up
-wait 20
-tapkey b5
-wait 60
-turn ALGO 2 40
-wait 60
-tap REC
-wait 5
 tapkey w6
-wait 5
-tapkey b4
 wait 60
-wait 2000
+turn K4 2 10
 wait 5
-turn K1 -6 10
-wait 20
-turn SELECT 2 10
+page 11
+tap EDIT
+tapkey w1
 wait 60
 key w15 down 117
 wait 400
@@ -7592,17 +7256,16 @@ turn K3 -3 40
 wait 20
 turn SELECT 2 10
 wait 60
-tapkey b3
-wait 20
-press REC
-turn SELECT 5 60
-wait 300
-tap EDIT
-wait 300
-wait 2700
-release REC
+tapkey w7
 wait 5
-turn SELECT 9 10
+page 11
+tap EDIT
+tapkey w3
+tapkey b5
+wait 5
+tapkey w0
+wait 20
+wait 50
 wait 5
 turn K4 -6 80
 wait 5
@@ -7624,27 +7287,24 @@ release LFO
 wait 60
 turn PRESET -1 80
 wait 60
-tapkey b0
+tapkey w0
 wait 5
-turn ALGO 1 40
-wait 20
-press REC
-tap FX
-wait 120
-wait 100
-release REC
-wait 20
-expect inv 0
-expect voices <25
-tapkey w8
+turn K1 9 40
 wait 5
-turn SELECT 1 40
+turn ALGO -3 80
 wait 60
-tapkey w8
+turn ALGO 4 40
 wait 5
-press GLO
-wait 1200
-release GLO
+page 3
+tap EDIT
+tapkey w2
+tapkey b6
+wait 20
+tap PLAY
+wait 5
+key w8 down 93
+wait 20
+key w11 up
 wait 20
 turn ALGO 2 40
 wait 20
@@ -7698,14 +7358,12 @@ wait 300
 wait 2700
 release SEQ
 wait 20
-tapkey b6
-wait 60
-press REC
-wait 2700
-release REC
-wait 20
-tapkey w1
+tapkey b9
 wait 5
+turn K2 4 40
+wait 20
+tapkey w0
+wait 60
 key w10 down 38
 wait 400
 key w10 up
@@ -7760,9 +7418,9 @@ release ENV
 wait 5
 tap REC
 wait 20
-tapkey b6
-wait 5
-turn K3 4 40
+tapkey w3
+wait 60
+wait 200
 wait 20
 tap PLAY
 wait 20
@@ -7792,6 +7450,8 @@ turn SELECT 9 10
 wait 60
 turn K2 -1 10
 wait 20
+expect inv 0
+expect voices <25
 key w14 down 95
 wait 400
 key w3 up
@@ -7818,10 +7478,8 @@ key w0 up
 wait 60
 turn K2 9 10
 wait 20
-tapkey w5
-wait 5
-tapkey b2
-wait 60
+tapkey w7
+wait 20
 key w14 down 70
 wait 100
 key w0 up
@@ -7830,19 +7488,19 @@ turn SELECT 1 40
 wait 60
 tap REC
 wait 5
-tapkey b10
+tapkey b2
+wait 5
+key w2 down 58
+wait 400
+key w2 up
 wait 60
-turn K2 2 10
-wait 20
-key w2 down 97
-wait 20
-key w12 up
+turn K2 9 40
 wait 60
 tap SEQ
 wait 20
-tapkey b9
-wait 60
-tapkey b1
+tapkey b8
+wait 20
+tap SEL
 wait 5
 tap GLO
 wait 5
@@ -7860,29 +7518,23 @@ tap HOME
 wait 5
 tap GLO
 wait 60
-tapkey w3
-wait 5
-wait 800
+tapkey w2
 wait 20
 tapkey w6
 wait 20
-turn K4 1 10
-wait 20
-press LFO
-wait 100
-release LFO
-wait 20
-turn K4 2 40
-wait 60
-expect inv 0
-expect voices <25
-turn ALGO -3 80
+tapkey w5
 wait 5
-tapkey b8
-wait 20
-key w2 down 109
+key w1 down 81
 wait 100
-key w9 up
+key w15 up
+wait 60
+press FX
+tapkey w2
+wait 300
+wait 2700
+release FX
+wait 60
+turn K3 1 40
 wait 60
 turn K3 1 10
 wait 20
@@ -7890,64 +7542,52 @@ wait 2000
 wait 20
 turn SELECT -3 80
 wait 60
-tapkey w5
-wait 60
-press HOME
-tapkey w1
-wait 30
-tapkey w2
-wait 300
-wait 400
-release HOME
-wait 60
-turn ALGO 9 80
+tapkey w6
 wait 20
-press HOME
-wait 50
-wait 300
+tapkey w5
+wait 5
+turn ALGO -1 80
+wait 5
+tap LFO
+wait 5
+press LFO
 turn K1 2 60
 wait 300
+turn K3 5 60
+wait 30
 tapkey w3
 wait 300
-wait 50
-wait 30
-turn K2 -2 60
-wait 120
-wait 1200
-release HOME
+wait 2700
+release LFO
+wait 60
+tapkey b3
+wait 60
+turn ALGO -1 40
 wait 5
 turn K1 -3 10
 wait 20
 turn K2 4 40
 wait 60
-tapkey w0
+tapkey w4
 wait 20
-turn K4 -3 10
-wait 60
-key w4 down 30
-wait 400
-key w9 up
-wait 60
-tap EDIT
-wait 20
-tap ARP
-wait 20
-tapkey w0
+press REC
+tap FX
+wait 120
+tapkey w4
+wait 120
+turn PRESET 5 60
+wait 300
+tap SEQ
+wait 120
+tapkey w1
+wait 120
+wait 2700
+release REC
 wait 5
-tap EDIT
-wait 5
-tapkey w2
+tapkey b1
 wait 60
-turn SELECT 4 40
-wait 20
-tap SEL
-wait 20
-turn K4 9 80
+tapkey b10
 wait 5
-key w14 down 59
-wait 400
-key w7 up
-wait 60
 key w8 down 115
 wait 20
 key w8 up
@@ -7956,53 +7596,52 @@ turn K4 9 40
 wait 5
 tap OCT-
 wait 60
-tapkey w4
+tapkey b10
 wait 60
-tap OCT-
-wait 20
 turn ALGO 4 10
 wait 5
-tapkey w7
-wait 60
-turn K1 -1 10
-wait 20
-turn ALGO 2 40
-wait 20
-tapkey b7
-wait 20
-press SEQ
+page 3
+tap EDIT
 tapkey w6
+wait 5
+tapkey b6
+wait 20
+tapkey w4
+wait 20
+key w14 down 74
+wait 100
+key w4 up
+wait 60
+page 3
+tap EDIT
+tapkey w5
+tapkey b6
+wait 60
+press FX
+turn K3 -2 60
+wait 120
+turn K4 5 60
+wait 300
+wait 2700
+release FX
+wait 5
+press ARP
+turn K3 5 60
 wait 30
 wait 50
 wait 300
-turn PRESET -5 60
-wait 120
-tapkey w3
+tapkey w6
+wait 30
+turn ALGO 5 60
 wait 300
-wait 400
-release SEQ
-wait 20
-turn K4 4 40
+tapkey w0
+wait 300
+wait 2700
+release ARP
 wait 5
-turn K1 9 10
-wait 60
-tap ARP
-wait 5
-turn K2 -1 80
+tap REC
 wait 20
-wait 200
-wait 60
-tapkey w5
-wait 5
-turn K1 -6 80
-wait 20
-press LFO
-wait 1200
-release LFO
-wait 60
-tapkey w5
-wait 60
-tapkey w1
+tap SEL
 wait 20
 key w6 down 71
 wait 20
@@ -8038,19 +7677,19 @@ key w15 down 99
 wait 20
 key w15 up
 wait 20
-tapkey b7
+tapkey w3
 wait 20
-turn K3 -1 10
+tap FX
 wait 60
-tapkey w8
+tapkey w9
 wait 20
-key w10 down 82
-wait 20
-key w14 up
-wait 5
-turn PRESET 4 10
-wait 5
-turn K3 2 10
+tapkey w4
+wait 60
+tapkey w3
+wait 60
+expect inv 0
+expect voices <25
+tap ENV
 wait 20
 press EDIT
 wait 50
@@ -8068,127 +7707,123 @@ release EDIT
 wait 20
 turn K3 1 80
 wait 5
-tapkey b7
-wait 60
-tap SEL
-wait 60
-turn K2 4 10
+tapkey b2
 wait 5
-press REC
-tap EDIT
-wait 30
-tapkey w3
-wait 120
-wait 400
-release REC
-wait 20
-turn K1 2 40
-wait 60
-press GLO
-wait 2700
-release GLO
-wait 20
-wait 5
-wait 5
-tapkey b8
-wait 5
-tap SEL
-wait 20
-tapkey w10
-wait 5
-turn K4 9 10
-wait 20
-turn ALGO -1 10
-wait 60
-key w10 down 72
-wait 20
-key w5 up
-wait 60
-expect inv 0
-expect voices <25
-press REC
-turn ALGO -2 60
-wait 30
-turn ALGO 2 60
-wait 300
-turn SELECT 2 60
-wait 300
-wait 2700
-release REC
-wait 60
-press ENV
-wait 2700
-release ENV
-wait 20
-tapkey w2
-wait 60
-turn PRESET -1 40
-wait 60
-tap FX
-wait 20
-tap OCT-
-wait 60
-tapkey b0
-wait 60
-key w3 down 50
-wait 400
-key w6 up
-wait 5
-turn ALGO -6 40
-wait 60
-turn K4 -6 80
-wait 5
-tap PLAY
-wait 60
-tapkey b4
-wait 60
-turn K1 -3 40
-wait 20
 tap ENV
 wait 60
-tapkey w4
-wait 60
-press HOME
-tapkey w4
-wait 120
-wait 400
-release HOME
+tap ENV
 wait 5
+tap EDIT
+wait 5
+turn K4 2 10
+wait 60
+key w5 down 121
+wait 20
+key w7 up
+wait 60
+turn K4 -3 40
+wait 5
+tap PLAY
+wait 20
+tap PLAY
+wait 5
+tapkey w2
+wait 20
+tap PLAY
+wait 60
+turn K2 -6 40
+wait 20
+tapkey b2
+wait 5
+press REC
+tap FX
+wait 300
+tap FX
+wait 30
+wait 2700
+release REC
+wait 60
+turn ALGO -3 40
+wait 20
+turn ALGO -1 80
+wait 60
+key w0 down 107
+wait 20
+key w3 up
+wait 60
+tapkey b8
+wait 60
+tapkey b7
+wait 5
+key w12 down 70
+wait 100
+key w14 up
+wait 5
+tap LFO
+wait 20
 tapkey w5
+wait 60
+tap OCT-
+wait 60
+tapkey w8
+wait 60
+tapkey w3
+wait 60
+turn SELECT 4 10
+wait 5
+tapkey w1
+wait 60
+turn K4 2 40
+wait 5
+key w0 down 72
+wait 100
+key w5 up
+wait 20
+wait 50
+wait 60
+tapkey b3
+wait 20
+turn SELECT 9 40
+wait 20
+tap REC
+wait 5
+turn ALGO 9 40
 wait 20
 turn K1 2 80
 wait 20
 wait 50
 wait 60
-tapkey w9
-wait 20
-turn K3 1 10
+tapkey w2
+wait 60
+tap LFO
 wait 5
 turn K3 -3 10
 wait 20
-tapkey w10
+tapkey b3
 wait 5
-turn PRESET 2 80
-wait 5
-turn K2 2 80
-wait 5
-press FX
-wait 50
-wait 120
-turn K1 -5 60
-wait 300
-tapkey w0
-wait 120
-tapkey w2
-wait 300
-turn ALGO 2 60
-wait 30
-wait 2700
-release FX
+tapkey w4
 wait 60
-tapkey b6
+key w4 down 126
 wait 20
-tap OCT+
+key w7 up
+wait 60
+key w5 down 121
+wait 400
+key w13 up
+wait 20
+turn PRESET 9 10
+wait 60
+tap FX
+wait 20
+tapkey b10
+wait 20
+wait 2000
+wait 5
+wait 50
+wait 20
+tapkey b7
+wait 60
+tapkey w2
 wait 20
 press SEQ
 turn K2 -2 60
@@ -8204,41 +7839,35 @@ tap FX
 wait 60
 turn SELECT 9 40
 wait 5
-tapkey w8
+tapkey b1
 wait 60
-turn K3 -3 80
-wait 5
-press LFO
-turn K4 -5 60
+turn ALGO -6 80
+wait 60
+press REC
+turn K2 -5 60
 wait 300
-wait 50
-wait 30
-wait 50
-wait 30
-tapkey w5
-wait 300
-wait 50
-wait 30
 wait 1200
-release LFO
-wait 5
-tapkey b5
-wait 5
-key w0 down 81
+release REC
+wait 60
+turn SELECT 2 10
 wait 20
-key w8 up
-wait 5
-press LFO
-wait 1200
-release LFO
+tapkey b2
 wait 20
-press HOME
-wait 50
-wait 300
+tap SEL
+wait 20
+tap GLO
+wait 60
+press FX
+turn SELECT -5 60
+wait 120
+tapkey w4
+wait 120
+turn PRESET 2 60
+wait 120
 wait 50
 wait 30
 wait 1200
-release HOME
+release FX
 wait 60
 tap REC
 wait 20
@@ -8254,137 +7883,137 @@ release REC
 wait 5
 turn K1 -1 10
 wait 60
-tapkey w6
-wait 20
-key w0 down 54
-wait 20
-key w8 up
+tapkey w4
+wait 60
+tap EDIT
 wait 5
-tap ENV
+turn K3 -6 10
 wait 60
 turn K1 2 80
 wait 5
-tapkey w9
-wait 20
-turn K2 4 10
+tapkey w1
 wait 5
-wait 5
+key w3 down 39
+wait 100
+key w2 up
 wait 5
 turn K2 2 80
 wait 60
 tapkey b9
 wait 60
-key w1 down 47
-wait 20
-key w11 up
+press REC
+turn ALGO 2 60
+wait 300
+wait 100
+release REC
 wait 5
-wait 50
+turn K1 -1 40
+wait 20
+tap SEQ
+wait 5
+tapkey w3
+wait 20
+expect inv 0
+expect voices <25
+key w2 down 123
+wait 400
+key w15 up
+wait 5
+turn ALGO 4 40
 wait 60
-turn ALGO -3 40
-wait 20
-tapkey w10
-wait 60
-turn K3 2 10
-wait 5
-tap OCT+
-wait 5
-turn ALGO -6 80
-wait 20
-turn K3 -3 80
-wait 20
-tap EDIT
-wait 20
-tap FX
-wait 5
 wait 200
+wait 60
+key w3 down 49
+wait 100
+key w0 up
+wait 60
+tap OCT-
+wait 20
+turn K1 -3 10
+wait 60
+tap REC
+wait 60
+turn ALGO 1 40
 wait 5
-press GLO
-turn PRESET -5 60
+tapkey b0
+wait 60
+key w4 down 92
+wait 100
+key w12 up
+wait 5
+press HOME
+tapkey w0
 wait 30
-turn K3 -2 60
-wait 120
+tapkey w4
+wait 300
 tapkey w2
 wait 30
 wait 50
 wait 300
-tapkey w5
-wait 30
+tapkey w3
+wait 120
+wait 2700
+release HOME
+wait 60
+tap FX
+wait 5
+tap HOME
+wait 20
+tapkey w0
+wait 5
+turn K4 -6 40
+wait 5
+tapkey b7
+wait 60
+press GLO
+turn K3 -2 60
+wait 300
 wait 1200
 release GLO
 wait 20
-wait 200
-wait 5
-turn K4 -3 80
-wait 20
-turn K2 9 10
-wait 5
-tapkey w7
+turn PRESET 4 40
 wait 60
-tapkey b9
+wait 800
+wait 5
+turn SELECT 2 80
 wait 60
-turn PRESET 1 80
-wait 20
+wait 2000
+wait 60
 tap LFO
 wait 5
-turn K2 1 40
+tap REC
+wait 5
+page 11
 wait 20
+tapkey w9
+wait 60
 tap FX
-wait 5
-turn PRESET 1 10
-wait 20
-turn K4 -6 80
-wait 20
-key w4 down 111
-wait 20
-key w1 up
-wait 5
-press LFO
-turn K2 2 60
-wait 120
-tapkey w0
-wait 30
-wait 50
-wait 300
-turn K2 -5 60
-wait 30
-wait 100
-release LFO
-wait 20
-key w9 down 111
-wait 100
-key w6 up
-wait 5
-tap SEQ
-wait 20
-turn K4 2 10
 wait 60
-press ARP
-wait 50
-wait 30
-turn ALGO 2 60
-wait 30
-tapkey w7
-wait 30
-turn PRESET -5 60
-wait 120
-wait 100
-release ARP
-wait 20
-expect inv 0
-expect voices <25
-turn K2 9 80
+tapkey b8
+wait 5
+tap PLAY
 wait 60
-press ARP
+key w13 down 67
 wait 400
-release ARP
-wait 20
-tap OCT+
-wait 60
-tapkey b4
+key w0 up
 wait 5
-tapkey w4
+tapkey w10
+wait 20
+key w15 down 69
+wait 20
+key w10 up
+wait 5
+tap LFO
+wait 5
+tapkey w8
 wait 60
-tap ENV
+tap ARP
+wait 60
+turn K1 9 80
+wait 60
+tapkey w5
+wait 5
+tapkey b2
 wait 5
 press HOME
 wait 2700
@@ -8442,21 +8071,20 @@ key w4 down 110
 wait 400
 key w11 up
 wait 5
-tapkey b5
-wait 20
-wait 50
+tapkey w7
 wait 60
-tap OCT+
-wait 20
-press HOME
-wait 50
-wait 30
-turn K1 2 60
-wait 300
-wait 50
-wait 30
-wait 100
-release HOME
+tap REC
+wait 60
+tap EDIT
+wait 5
+page 3
+tap EDIT
+tapkey w11
+tapkey b5
+wait 5
+turn K4 4 80
+wait 60
+tapkey w0
 wait 5
 wait 5
 wait 5
@@ -8488,31 +8116,25 @@ turn PRESET 9 80
 wait 20
 tapkey w6
 wait 5
-tap LFO
-wait 20
-turn PRESET -1 40
+tapkey w4
 wait 5
 tap OCT+
 wait 5
-tapkey w8
-wait 60
-turn K4 -3 80
-wait 60
-wait 5
-wait 5
-press REC
-tapkey w4
+tapkey b3
+wait 20
+press LFO
+tapkey w0
 wait 30
-wait 100
-release REC
-wait 60
-tap LFO
-wait 60
-press GLO
-wait 1200
-release GLO
-wait 60
-tapkey w3
+wait 50
+wait 300
+wait 50
+wait 30
+wait 50
+wait 30
+wait 50
+wait 30
+wait 400
+release LFO
 wait 5
 tap PLAY
 wait 20
@@ -8528,20 +8150,20 @@ turn K1 9 40
 wait 20
 tap ARP
 wait 60
-tapkey b9
-wait 20
-press REC
-turn K1 2 60
-wait 300
-tap FX
-wait 300
-tapkey w6
-wait 120
-turn K4 5 60
-wait 300
-wait 2700
-release REC
+tapkey b4
+wait 60
 wait 5
+wait 60
+tapkey w8
+wait 20
+tapkey w1
+wait 20
+tapkey w3
+wait 20
+wait 800
+wait 5
+expect inv 0
+expect voices <25
 turn K2 -6 80
 wait 20
 turn SELECT 4 40
@@ -8554,97 +8176,81 @@ key w8 up
 wait 60
 turn PRESET 4 40
 wait 20
-tapkey b5
-wait 20
-key w5 down 61
-wait 20
-key w7 up
-wait 5
-turn SELECT 1 40
-wait 20
-turn K1 -3 10
+tapkey w4
 wait 60
-key w5 down 50
+key w10 down 25
+wait 20
+key w2 up
+wait 20
+key w15 down 82
 wait 100
 key w6 up
-wait 5
-press ARP
-turn ALGO 2 60
-wait 300
-wait 50
-wait 300
-turn K3 -5 60
-wait 30
-wait 50
-wait 30
-turn K4 -5 60
-wait 300
-wait 100
-release ARP
-wait 20
-turn PRESET 1 80
-wait 20
-tap PLAY
-wait 5
-tap HOME
-wait 20
-turn K4 2 80
-wait 20
-tap OCT-
-wait 5
-wait 200
-wait 5
-tap ARP
-wait 5
-tapkey w1
-wait 5
-turn PRESET -6 10
-wait 5
-key w7 down 35
-wait 400
-key w9 up
-wait 20
-turn K4 -1 10
-wait 5
-turn PRESET 2 10
-wait 20
-wait 200
-wait 20
-turn SELECT 2 40
-wait 20
-wait 5
 wait 60
-turn K2 4 40
+tapkey b2
+wait 5
+tapkey b10
+wait 60
+turn K3 2 40
+wait 5
+turn K4 2 10
+wait 5
+key w0 down 54
+wait 20
+key w0 up
+wait 60
+key w11 down 87
+wait 20
+key w0 up
+wait 5
+turn K2 -6 40
+wait 5
+press SEQ
+tapkey w6
+wait 30
+turn K1 2 60
+wait 120
+tapkey w3
+wait 120
+turn PRESET -5 60
+wait 120
+wait 100
+release SEQ
+wait 5
+turn SELECT -3 10
+wait 60
+turn SELECT -6 40
+wait 5
+turn K3 -1 80
+wait 5
+tapkey w2
+wait 60
+turn K1 1 40
+wait 5
+key w3 down 85
+wait 400
+key w8 up
 wait 20
 turn K1 -3 10
 wait 60
 turn K3 2 40
 wait 5
-tapkey w6
-wait 60
-expect inv 0
-expect voices <25
-turn K4 9 80
-wait 20
-tap LFO
-wait 60
-turn K1 -6 80
+tapkey w10
 wait 5
-turn ALGO 1 80
-wait 60
-key w6 down 112
+press LFO
+tapkey w0
+wait 30
+wait 50
+wait 30
+tapkey w4
+wait 300
 wait 400
-key w9 up
-wait 20
-key w5 down 86
-wait 20
-key w8 up
-wait 5
-tap SEQ
+release LFO
 wait 60
-tap SEL
+turn K4 -1 10
 wait 5
-tap HOME
+key w2 down 22
+wait 400
+key w12 up
 wait 20
 tap ENV
 wait 20
@@ -8654,9 +8260,9 @@ key w2 up
 wait 20
 turn K4 2 80
 wait 20
-tapkey w10
+tapkey b5
 wait 20
-tapkey w10
+tap REC
 wait 20
 tap REC
 wait 60
@@ -8670,151 +8276,148 @@ tap FX
 wait 60
 wait 800
 wait 5
-tapkey b1
+tapkey w6
+wait 5
+tap SEL
+wait 20
+tapkey w7
+wait 60
+tapkey b9
+wait 60
+turn SELECT 9 40
+wait 5
+page 11
+wait 20
+tapkey w1
+tapkey b6
+wait 5
+tap FX
+wait 5
+tap HOME
+wait 5
+tapkey w10
+wait 5
+wait 2000
+wait 60
+wait 50
+wait 5
+tapkey w7
+wait 60
+tapkey w6
+wait 20
+tap SEQ
+wait 60
+turn K3 -6 40
+wait 60
+turn K2 4 40
+wait 5
+tap PLAY
+wait 60
+turn K4 1 10
+wait 60
+tap OCT-
+wait 20
+turn K2 1 40
+wait 20
+turn K2 -1 10
 wait 20
 press SEQ
-tapkey w1
-wait 120
-wait 2700
+tapkey w0
+wait 300
+tapkey w3
+wait 30
+wait 1200
 release SEQ
 wait 20
-tapkey w10
+key w4 down 107
+wait 400
+key w4 up
+wait 5
+tapkey b8
+wait 5
+tapkey w8
+wait 60
+tapkey w8
+wait 60
+turn ALGO -3 10
 wait 20
-key w3 down 64
+tapkey b8
+wait 20
+press EDIT
+wait 50
+wait 300
+wait 50
+wait 300
+turn PRESET 2 60
+wait 30
+turn ALGO 5 60
+wait 120
+wait 50
+wait 300
+wait 100
+release EDIT
+wait 20
+tapkey w9
+wait 5
+wait 2000
+wait 60
+turn SELECT 1 10
+wait 5
+press GLO
+turn K1 2 60
+wait 120
+wait 50
+wait 30
+turn K2 5 60
+wait 30
+wait 1200
+release GLO
+wait 20
+turn SELECT -3 40
+wait 20
+turn K2 -1 40
+wait 5
+tap FX
+wait 5
+tapkey b3
+wait 60
+tapkey w0
+wait 20
+wait 800
+wait 20
+tapkey b4
+wait 60
+press ENV
+tapkey w4
+wait 30
+turn SELECT 5 60
+wait 30
+wait 50
+wait 300
+tapkey w7
+wait 300
+wait 100
+release ENV
+wait 20
+expect inv 0
+expect voices <25
+turn K3 -6 10
+wait 20
+key w0 down 101
 wait 20
 key w15 up
 wait 5
-tapkey w6
-wait 20
-wait 5
-wait 20
-press FX
-wait 50
-wait 120
-turn SELECT 2 60
-wait 30
-turn K3 -2 60
-wait 30
-tapkey w7
-wait 300
-tapkey w0
-wait 120
-wait 2700
-release FX
-wait 60
-tapkey b1
-wait 60
-turn K3 -1 10
-wait 60
-tap SEL
-wait 60
-turn K3 -3 10
-wait 20
-turn K3 9 10
-wait 60
-tapkey b7
-wait 20
-tapkey w8
-wait 20
-turn PRESET 9 40
-wait 20
-tapkey w8
-wait 5
-turn K1 2 40
-wait 5
-tapkey w6
-wait 60
-tap SEQ
-wait 5
-tap SEQ
-wait 5
-turn SELECT 4 80
-wait 60
-turn K1 1 80
-wait 60
-tapkey b1
-wait 60
-press REC
-wait 400
-release REC
-wait 5
-wait 200
-wait 20
-key w11 down 126
-wait 100
-key w2 up
-wait 60
-tapkey b8
-wait 5
-press ENV
-wait 50
-wait 30
-tapkey w2
+press EDIT
+tapkey w4
 wait 120
 wait 50
 wait 300
-tapkey w1
-wait 120
-wait 2700
-release ENV
-wait 60
-turn K2 -3 80
-wait 60
-tap HOME
-wait 5
-tapkey w9
-wait 20
-tapkey w6
-wait 5
-tapkey w1
-wait 60
-turn K2 1 40
-wait 5
-turn PRESET -1 10
-wait 5
-turn K1 -1 10
-wait 60
-tapkey w1
-wait 5
-turn K2 1 80
-wait 60
-turn K2 1 10
-wait 5
-press REC
 tapkey w5
-wait 120
-tap SEQ
-wait 120
-wait 1200
-release REC
-wait 20
-tapkey w9
-wait 20
-key w8 down 31
-wait 20
-key w7 up
-wait 20
-tap SEQ
-wait 20
-tapkey w10
-wait 5
-tapkey b0
-wait 5
-tapkey w0
-wait 60
-turn K1 -6 80
-wait 60
-turn K2 -6 80
-wait 20
-tapkey b4
-wait 20
-wait 2000
-wait 20
-tapkey w9
-wait 5
-key w6 down 105
-wait 20
-key w0 up
+wait 30
+wait 50
+wait 30
+wait 100
+release EDIT
 wait 20
 turn ALGO 2 10
 wait 60
@@ -8834,8 +8437,6 @@ wait 5
 wait 5
 turn K3 -3 10
 wait 60
-expect inv 0
-expect voices <25
 tap SEL
 wait 5
 press ARP
@@ -8854,11 +8455,11 @@ turn K3 4 80
 wait 60
 turn K4 -3 40
 wait 60
-tapkey b9
+tapkey w2
 wait 20
-turn SELECT 9 10
-wait 20
-tapkey b4
+turn SELECT 1 40
+wait 5
+wait 200
 wait 5
 tap LFO
 wait 5
@@ -8866,51 +8467,49 @@ press GLO
 wait 400
 release GLO
 wait 60
-tapkey w7
-wait 60
-turn K1 -1 80
-wait 60
-key w5 down 95
-wait 20
-key w3 up
-wait 20
-wait 5
-wait 5
-tapkey w6
-wait 20
-tapkey w6
+tapkey b3
 wait 20
 tapkey b9
+wait 5
+tap ENV
+wait 60
+turn SELECT 1 40
+wait 5
+wait 800
+wait 5
+tapkey w6
 wait 20
-turn ALGO 1 80
+tapkey w3
+wait 60
+turn K2 -1 10
+wait 5
+tapkey w1
 wait 20
 press REC
-tapkey w1
-wait 120
-wait 100
+wait 1200
 release REC
 wait 5
-tapkey b3
-wait 60
-turn ALGO -6 40
+key w6 down 90
 wait 20
-tap SEL
-wait 60
-tapkey w1
+key w13 up
 wait 5
-press ARP
-wait 50
-wait 120
-turn ALGO -5 60
-wait 30
-tapkey w3
-wait 30
-tapkey w5
-wait 120
-turn K1 -5 60
-wait 120
+turn PRESET 1 40
+wait 5
+key w10 down 31
+wait 20
+key w12 up
+wait 5
+key w5 down 26
 wait 100
-release ARP
+key w2 up
+wait 5
+tap LFO
+wait 20
+turn K4 2 80
+wait 60
+turn PRESET -1 40
+wait 20
+turn ALGO -1 10
 wait 60
 tap EDIT
 wait 20
@@ -8958,7 +8557,999 @@ turn ALGO 1 10
 wait 20
 turn K2 9 10
 wait 20
-tapkey w5
+tapkey b5
+wait 20
+turn K4 9 10
+wait 20
+key w14 down 39
+wait 100
+key w0 up
 wait 60
+tap OCT-
+wait 5
+press EDIT
+turn ALGO -5 60
+wait 300
+tapkey w5
+wait 120
+tapkey w5
+wait 120
+wait 400
+release EDIT
+wait 5
+press REC
+tap SEQ
+wait 300
+turn PRESET -5 60
+wait 30
+tapkey w2
+wait 300
+tap SEQ
+wait 120
+tapkey w4
+wait 120
+wait 1200
+release REC
+wait 5
+tap REC
+wait 5
+tapkey b1
+wait 60
+press ENV
+tapkey w1
+wait 300
+turn K4 2 60
+wait 30
+tapkey w7
+wait 30
+tapkey w5
+wait 300
+turn PRESET 2 60
+wait 120
+wait 2700
+release ENV
+wait 20
+press ARP
+wait 50
+wait 30
+wait 2700
+release ARP
+wait 20
+key w2 down 69
+wait 400
+key w10 up
+wait 5
+key w12 down 57
+wait 400
+key w11 up
+wait 20
+turn SELECT -1 80
+wait 5
+press HOME
+wait 50
+wait 30
+tapkey w7
+wait 300
+tapkey w2
+wait 120
+wait 50
+wait 30
+wait 400
+release HOME
+wait 20
+tap ARP
+wait 5
+press ENV
+turn ALGO -2 60
+wait 300
+tapkey w2
+wait 30
+wait 400
+release ENV
+wait 5
+key w8 down 95
+wait 400
+key w7 up
+wait 20
+key w1 down 33
+wait 20
+key w10 up
+wait 20
+tapkey w0
+wait 5
+tap LFO
+wait 5
+turn PRESET 1 40
+wait 20
+tap GLO
+wait 5
+tapkey w0
+wait 5
+press LFO
+tapkey w2
+wait 120
+tapkey w2
+wait 120
+tapkey w2
+wait 300
+tapkey w6
+wait 300
+tapkey w6
+wait 120
+wait 2700
+release LFO
+wait 5
+turn K2 -3 10
+wait 60
+turn PRESET 2 40
+wait 20
+expect inv 0
+expect voices <25
+turn K2 9 40
+wait 60
+key w7 down 86
+wait 400
+key w11 up
+wait 5
+turn ALGO 1 10
+wait 60
+key w15 down 79
+wait 400
+key w3 up
+wait 20
+turn K4 2 40
+wait 60
+key w6 down 35
+wait 400
+key w9 up
+wait 20
+press ARP
+tapkey w4
+wait 300
+wait 1200
+release ARP
+wait 5
+turn PRESET 9 10
+wait 20
+turn K1 9 40
+wait 60
+press REC
+tapkey w7
+wait 120
+tapkey w6
+wait 300
+turn K4 5 60
+wait 120
+wait 1200
+release REC
+wait 20
+turn ALGO -1 40
+wait 5
+turn K3 1 10
+wait 60
+key w5 down 75
+wait 100
+key w1 up
+wait 60
+key w5 down 78
+wait 400
+key w15 up
+wait 5
+tapkey w9
+wait 5
+tap OCT-
+wait 5
+tapkey w5
+wait 5
+tap REC
+wait 20
+tapkey b0
+wait 5
+tapkey w2
+wait 5
+wait 5
+wait 20
+turn K4 1 80
+wait 20
+key w7 down 65
+wait 20
+key w14 up
+wait 60
+press EDIT
+wait 50
+wait 300
+tapkey w0
+wait 120
+turn K2 2 60
+wait 120
+wait 400
+release EDIT
+wait 20
+tapkey w3
+wait 20
+key w10 down 83
+wait 400
+key w10 up
+wait 5
+turn K1 1 80
+wait 60
+turn ALGO -1 40
+wait 60
+turn K3 9 10
+wait 5
+tap ENV
+wait 60
+tap LFO
+wait 20
+tap REC
+wait 5
+key w5 down 103
+wait 100
+key w4 up
+wait 5
+tap FX
+wait 20
+turn K4 9 40
+wait 5
+wait 50
+wait 60
+turn ALGO -3 10
+wait 5
+wait 200
+wait 60
+key w15 down 87
+wait 100
+key w4 up
+wait 20
+tap REC
+wait 5
+press HOME
+tapkey w6
+wait 300
+wait 50
+wait 120
+turn K3 -5 60
+wait 30
+turn K3 5 60
+wait 120
+wait 1200
+release HOME
+wait 5
+turn SELECT -3 80
+wait 20
+turn K3 4 40
+wait 60
+tapkey w5
+wait 5
+wait 5
+wait 5
+tapkey w6
+wait 60
+turn K1 -3 80
+wait 5
+press GLO
+wait 2700
+release GLO
+wait 20
+press REC
+tapkey w0
+wait 120
+turn SELECT 2 60
+wait 30
+tapkey w0
+wait 120
+wait 400
+release REC
+wait 5
+turn K3 1 10
+wait 20
+tapkey b2
+wait 60
+press ARP
+wait 50
+wait 30
+turn K4 2 60
+wait 30
+tapkey w0
+wait 300
+tapkey w3
+wait 120
+wait 100
+release ARP
+wait 20
+tapkey w8
+wait 60
+tap ENV
+wait 5
+turn SELECT 2 10
+wait 5
+tapkey w5
+wait 5
+turn K4 9 80
+wait 60
+turn PRESET -6 10
+wait 20
+wait 5
+wait 5
+tap OCT-
+wait 5
+wait 50
+wait 5
+tap SEQ
+wait 5
+turn K4 4 40
+wait 20
+turn PRESET -3 10
+wait 60
+tapkey b0
+wait 60
+press GLO
+turn K4 5 60
+wait 300
+tapkey w1
+wait 300
+tapkey w4
+wait 300
+wait 2700
+release GLO
+wait 60
+tapkey b6
+wait 60
+press FX
+wait 2700
+release FX
+wait 20
+tapkey w1
+wait 5
+tap FX
+wait 5
+key w6 down 108
+wait 100
+key w13 up
+wait 5
+tapkey w2
+wait 20
+turn SELECT 1 10
+wait 5
+turn K1 -3 80
+wait 5
+tap ENV
+wait 20
+key w8 down 126
+wait 400
+key w14 up
+wait 20
+key w7 down 45
+wait 100
+key w2 up
+wait 60
+key w12 down 112
+wait 20
+key w1 up
+wait 5
+turn ALGO -1 80
+wait 20
+wait 800
+wait 5
+expect inv 0
+expect voices <25
+tapkey b1
+wait 20
+key w9 down 106
+wait 100
+key w4 up
+wait 60
+press ARP
+tapkey w7
+wait 300
+turn K1 2 60
+wait 120
+turn K4 -2 60
+wait 300
+wait 50
+wait 120
+wait 1200
+release ARP
+wait 20
+tapkey w7
+wait 60
+wait 200
+wait 5
+tapkey w9
+wait 20
+tapkey w2
+wait 20
+key w0 down 118
+wait 400
+key w15 up
+wait 20
+tapkey w6
+wait 5
+tap OCT+
+wait 20
+key w0 down 88
+wait 20
+key w9 up
+wait 5
+key w9 down 60
+wait 100
+key w6 up
+wait 20
+press SEQ
+wait 50
+wait 30
+turn K1 2 60
+wait 30
+wait 1200
+release SEQ
+wait 20
+tapkey b1
+wait 20
+turn K3 4 80
+wait 60
+turn K3 1 80
+wait 5
+turn K3 -6 10
+wait 5
+wait 5
+wait 60
+turn K2 -6 10
+wait 5
+key w0 down 42
+wait 20
+key w13 up
+wait 5
+tapkey w1
+wait 20
+press REC
+tap SEQ
+wait 30
+tapkey w6
+wait 30
+turn K2 2 60
+wait 120
+wait 400
+release REC
+wait 20
+key w4 down 88
+wait 400
+key w9 up
+wait 5
+tap SEL
+wait 5
+turn K2 -3 80
+wait 60
+turn K3 -3 80
+wait 20
+tap PLAY
+wait 60
+press ENV
+wait 50
+wait 30
+wait 1200
+release ENV
+wait 20
+tap PLAY
+wait 20
+tapkey w4
+wait 20
+turn K2 1 80
+wait 60
+turn PRESET 2 80
+wait 5
+tapkey b9
+wait 20
+turn K2 9 80
+wait 60
+key w7 down 49
+wait 100
+key w5 up
+wait 20
+tapkey w9
+wait 20
+wait 200
+wait 60
+press EDIT
+turn K2 5 60
+wait 120
+turn SELECT 5 60
+wait 120
+wait 1200
+release EDIT
+wait 5
+tap SEQ
+wait 20
+turn K3 1 80
+wait 60
+turn ALGO 2 80
+wait 20
+turn K2 1 80
+wait 5
+turn K1 9 40
+wait 5
+press REC
+tapkey w6
+wait 300
+wait 2700
+release REC
+wait 60
+wait 50
+wait 60
+turn K1 4 80
+wait 20
+press FX
+wait 50
+wait 120
+turn ALGO -5 60
+wait 120
+turn K1 -5 60
+wait 30
+tapkey w1
+wait 30
+wait 50
+wait 300
+wait 1200
+release FX
+wait 20
+tapkey w10
+wait 60
+turn K1 -6 40
+wait 20
+wait 2000
+wait 5
+turn SELECT 1 10
+wait 60
+key w0 down 79
+wait 20
+key w4 up
+wait 5
+tap ENV
+wait 5
+tapkey b10
+wait 60
+key w15 down 65
+wait 20
+key w1 up
+wait 20
+press SEQ
+wait 50
+wait 30
+wait 2700
+release SEQ
+wait 20
+press ENV
+tapkey w0
+wait 120
+turn K1 -5 60
+wait 120
+wait 100
+release ENV
+wait 60
+tap ARP
+wait 60
+press EDIT
+turn K3 -2 60
+wait 300
+wait 2700
+release EDIT
+wait 5
+tapkey w8
+wait 20
+wait 800
+wait 20
+tap FX
+wait 20
+turn SELECT -3 80
+wait 5
+tap OCT-
+wait 60
+tapkey b8
+wait 60
+key w0 down 81
+wait 100
+key w11 up
+wait 60
+wait 800
+wait 60
+turn K2 2 80
+wait 60
+tapkey w8
+wait 60
+press REC
+turn K4 2 60
+wait 300
+tapkey w3
+wait 300
+wait 1200
+release REC
+wait 5
+tapkey w2
+wait 20
+key w13 down 81
+wait 400
+key w9 up
+wait 20
+turn K1 2 80
+wait 5
+tap HOME
+wait 5
+press EDIT
+wait 50
+wait 120
+wait 2700
+release EDIT
+wait 20
+press HOME
+turn K4 2 60
+wait 30
+wait 2700
+release HOME
+wait 60
+wait 50
+wait 20
+wait 5
+wait 20
+tapkey w10
+wait 5
+tap OCT+
+wait 60
+expect inv 0
+expect voices <25
+tapkey w0
+wait 20
+turn SELECT -1 40
+wait 60
+wait 200
+wait 20
+turn K2 -3 40
+wait 20
+tap SEL
+wait 5
+press REC
+turn K3 5 60
+wait 300
+tap FX
+wait 30
+turn K4 5 60
+wait 300
+tap SEQ
+wait 300
+wait 100
+release REC
+wait 60
+turn ALGO -3 40
+wait 60
+turn SELECT 9 40
+wait 5
+press SEQ
+tapkey w5
+wait 120
+wait 2700
+release SEQ
+wait 5
+turn K4 1 10
+wait 60
+key w13 down 87
+wait 100
+key w4 up
+wait 60
+tap OCT+
+wait 60
+press EDIT
+wait 50
+wait 30
+tapkey w6
+wait 120
+wait 50
+wait 300
+tapkey w6
+wait 30
+turn K2 5 60
+wait 30
+wait 400
+release EDIT
+wait 5
+wait 200
+wait 5
+tapkey b6
+wait 60
+key w10 down 107
+wait 100
+key w2 up
+wait 5
+turn K1 9 40
+wait 20
+turn K2 -6 10
+wait 5
+turn K1 9 80
+wait 60
+tap SEL
+wait 5
+tap HOME
+wait 60
+turn PRESET -3 40
+wait 5
+turn PRESET -1 40
+wait 5
+tap ENV
+wait 20
+key w8 down 22
+wait 20
+key w2 up
+wait 60
+tap ARP
+wait 20
+tapkey w1
+wait 60
+tapkey w2
+wait 5
+turn K3 2 40
+wait 60
+tapkey w4
+wait 20
+key w0 down 30
+wait 100
+key w9 up
+wait 20
+tapkey w10
+wait 20
+key w10 down 37
+wait 20
+key w2 up
+wait 5
+press REC
+tapkey w7
+wait 300
+turn ALGO -5 60
+wait 120
+tap SEQ
+wait 30
+wait 1200
+release REC
+wait 5
+tapkey w3
+wait 5
+key w0 down 52
+wait 100
+key w8 up
+wait 60
+turn SELECT 9 10
+wait 20
+tap EDIT
+wait 5
+press FX
+tapkey w2
+wait 300
+wait 400
+release FX
+wait 60
+tapkey w5
+wait 5
+key w8 down 73
+wait 400
+key w5 up
+wait 60
+turn K4 -3 40
+wait 20
+wait 5
+wait 20
+tap PLAY
+wait 60
+key w11 down 57
+wait 20
+key w7 up
+wait 20
+tapkey w1
+wait 5
+turn ALGO -1 40
+wait 20
+tap ENV
+wait 20
+tap REC
+wait 5
+page 3
+tap EDIT
+tapkey w1
+wait 20
+wait 2000
+wait 20
+turn ALGO -3 80
+wait 20
+tapkey w1
+wait 60
+turn K1 9 40
+wait 5
+page 3
+tap EDIT
+tapkey w5
+wait 5
+tap SEL
+wait 20
+tapkey b5
+wait 5
+tap OCT-
+wait 5
+turn ALGO 2 10
+wait 20
+turn SELECT 9 80
+wait 20
+wait 50
+wait 20
+tap GLO
+wait 20
+tapkey b5
+wait 5
+tapkey b10
+wait 5
+tap ENV
+wait 60
+tap OCT+
+wait 20
+turn ALGO 4 80
+wait 5
+turn PRESET 4 80
+wait 20
+key w14 down 98
+wait 400
+key w3 up
+wait 60
+tap LFO
+wait 20
+tap EDIT
+wait 60
+press EDIT
+wait 50
+wait 300
+wait 2700
+release EDIT
+wait 60
+press SEQ
+tapkey w1
+wait 120
+tapkey w3
+wait 30
+wait 50
+wait 300
+turn K2 -5 60
+wait 300
+tapkey w7
+wait 30
+wait 2700
+release SEQ
+wait 5
+turn K4 2 40
+wait 5
+press REC
+tap FX
+wait 30
+turn SELECT -5 60
+wait 30
+wait 400
+release REC
+wait 20
+key w7 down 121
+wait 100
+key w14 up
+wait 5
+turn K4 4 40
+wait 60
+tapkey w0
+wait 5
+turn K1 -1 10
+wait 60
+tap SEL
+wait 5
+expect inv 0
+expect voices <25
+tapkey w5
+wait 5
+wait 5
+wait 20
+tap LFO
+wait 20
+key w2 down 44
+wait 400
+key w7 up
+wait 60
+turn SELECT 4 40
+wait 5
+key w4 down 117
+wait 100
+key w8 up
+wait 20
+press EDIT
+wait 50
+wait 300
+turn ALGO -5 60
+wait 30
+tapkey w0
+wait 120
+wait 400
+release EDIT
+wait 20
+tap ARP
+wait 5
+key w12 down 52
+wait 100
+key w15 up
+wait 5
+tapkey b10
+wait 5
+press ENV
+wait 1200
+release ENV
+wait 5
+turn SELECT 9 80
+wait 20
+turn K4 4 40
+wait 20
+tap REC
+wait 5
+wait 800
+wait 20
+turn SELECT 2 40
+wait 60
+turn PRESET 2 80
+wait 5
+tap OCT-
+wait 60
+tap OCT-
+wait 5
+turn K3 -1 40
+wait 5
+tapkey w5
+wait 20
+page 11
+tap EDIT
+tapkey w9
+wait 60
+wait 5
+wait 5
+wait 2000
+wait 60
+press EDIT
+wait 400
+release EDIT
+wait 5
+tapkey w7
+wait 60
+key w7 down 25
+wait 20
+key w14 up
+wait 5
+wait 50
+wait 5
+key w11 down 55
+wait 20
+key w3 up
+wait 60
+tap ENV
+wait 5
+key w4 down 52
+wait 100
+key w8 up
+wait 5
+key w13 down 96
+wait 20
+key w5 up
+wait 5
+tap GLO
+wait 5
+tap EDIT
+wait 60
+wait 5
+wait 60
+tapkey w0
+wait 60
+tap ENV
+wait 60
+turn K3 -6 40
+wait 60
+page 11
+tap EDIT
+tapkey w8
+wait 60
+turn K1 9 10
+wait 5
 wait 500
 expect inv 0

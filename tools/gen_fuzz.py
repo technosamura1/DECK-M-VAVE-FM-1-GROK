@@ -56,7 +56,7 @@ for i in range(n):
             out.append("turn %s %d %d" % (r.choice(["K1", "K2", "K3", "K4"]), r.choice([-6, -3, -1, 1, 3, 6]), r.choice([20, 60])))
             out.append("wait %d" % r.choice([20, 90, 250]))
         if r.random() < 0.08:
-            out += ["tap FX"]                 # the erase combo
+            out += ["page 11", "tap EDIT", "tapkey w%d" % r.choice([11, 12, 13]), "tapkey w%d" % r.choice([11, 12, 13])]   # the EDIT list's erases (ask, then do)
         out += ["wait %d" % r.choice([50, 300, 1100, 2700]), "release REC", "wait %d" % r.choice([20, 400])]
         if r.random() < 0.5:
             out.append("turn %s %d 60" % (r.choice(["K1", "K2", "K3", "K4"]), r.choice([-4, 4])))   # a hand over a curve
@@ -71,13 +71,18 @@ for i in range(n):
         if r.random() < 0.04:
             out += ["press ENV", "wait 700", "tapkey w%d" % r.randrange(0, 8), "release ENV"]       # the garage: copy a part
         if r.random() < 0.03:
-            out += ["press REC", "wait %d" % r.choice([1200, 2800]), "release REC"]                 # erase by holding
+            out += ["press REC", "wait %d" % r.choice([1200, 2800]), "release REC"]                 # REC held alone: nothing happens
         out.append("expect inv 0") if i % 20 == 19 else None
         continue
     if x < 0.30:
         out.append("turn %s %d %d" % (r.choice(ENC), r.choice([-6, -3, -1, 1, 2, 4, 9]), r.choice([10, 40, 80])))
     elif x < 0.50:
-        out.append("tapkey %s%d" % (r.choice("wwb"), r.randrange(0, 11)))
+        if r.random() < 0.12:               # the EDIT list: any of its 14 items (the erases ask first), now and then the keys of MIX / TRACKS (black 1-8)
+            out += ["page %d" % r.choice([11, 11, 3]), "tap EDIT" if r.random() < 0.7 else "wait 20", "tapkey w%d" % r.randrange(0, 14)]
+            if r.random() < 0.4:
+                out.append("tapkey b%d" % r.randrange(0, 8))
+        else:
+            out.append("tapkey %s%d" % (r.choice("wwb"), r.randrange(0, 11)))
     elif x < 0.62:
         out.append("key w%d down %d" % (r.randrange(0, 16), r.randrange(20, 127)))
         out.append("wait %d" % r.choice([20, 100, 400]))
@@ -86,7 +91,7 @@ for i in range(n):
         b = r.choice(BTN)
         out.append("tap %s" % b)
     elif x < 0.92:
-        # a hold with knobs turned inside it (REC + a knob is AUTOMATION; REC + FX its erase)
+        # a hold with knobs turned inside it (REC + a knob is AUTOMATION)
         b = r.choice(["REC", "REC", "REC", "FX", "EDIT", "HOME", "SEQ", "ENV", "LFO", "GLO", "ARP"])
         out.append("press %s" % b)
         for _ in range(r.randrange(0, 6)):
@@ -102,6 +107,6 @@ for i in range(n):
         out.append("expect inv 0")
         out.append("expect voices <25")
 out += ["wait 500", "expect inv 0"]
-if auto and n <= 1000:                      # (a long run may hold REC 2.5 s: the ERASE gesture, by design, wipes the track's curves)
+if auto and n <= 1000:                      # (a long run may use the EDIT list's ERASE AUTO / ALL, which by design wipe the track's curves)
     out.append("expect autoall >0")
 print("\n".join(out))

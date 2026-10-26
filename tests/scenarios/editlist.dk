@@ -1,0 +1,116 @@
+# The EDIT list (TRACKS, EDIT; 14 white keys) and the one track-key rule: white = pick, black = do (MIX and TRACKS alike).
+# Each edit is one undo step (hold EDIT); the three erases ask first (press again within 3 s); REC does not edit; nothing erases by holding.
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+listen
+demo
+wait 100
+press HOME
+tapkey b0
+release HOME
+wait 50
+expect events >4
+page 11
+tap EDIT
+wait 100
+expect layview 1
+shot p42_edit_list.png
+# every item in turn: nothing crashes, the text fits
+tapkey w0
+tapkey w1
+tapkey w2
+tapkey w3
+tapkey w4
+tapkey w5
+tapkey w6
+tapkey w7
+tapkey w8
+tapkey w9
+wait 100
+expect textfit 0
+# an erase asks, and forgets the ask after 3 s
+tapkey w11
+wait 100
+said AGAIN = ERASE
+wait 3300
+tapkey w11
+wait 100
+said AGAIN = ERASE
+expect events >0
+# nothing to erase: says so
+tapkey w11
+wait 100
+mark
+tapkey w12
+wait 100
+said NO AUTOMATION
+expect same 1
+# while recording the list refuses
+tap EDIT
+tap REC
+wait 200
+expect counting >0
+tap EDIT
+tapkey w3
+wait 100
+said STOP REC
+tap REC
+wait 200
+expect recording 0
+expect counting 0
+tap EDIT
+# the same keys on MIX and on TRACKS: white picks the track, black mutes, black 7 solos, black 8 arms
+page 3
+wait 100
+tapkey w2
+wait 100
+expect track 2
+expect pmask 0
+tapkey b2
+wait 100
+expect pmask 4
+tapkey b2
+wait 100
+expect pmask 0
+tapkey b6
+wait 100
+expect solo2 1
+tapkey b6
+wait 100
+expect solo2 0
+tapkey b7
+wait 100
+expect armtrk 4
+tapkey b7
+wait 100
+expect armtrk 0
+page 11
+tapkey w5
+wait 100
+expect track 5
+tapkey b1
+wait 100
+expect pmask 2
+tapkey b1
+wait 100
+expect pmask 0
+tapkey b6
+wait 100
+expect solo5 1
+tapkey b6
+wait 100
+expect solo5 0
+# REC held 1.2 s with nothing else: no take, nothing erased
+mark
+press REC
+wait 1200
+release REC
+wait 200
+expect recording 0
+expect counting 0
+expect same 1
+expect textfit 0
