@@ -138,6 +138,39 @@ static void text_box(int x, int y, int w, int align, const felucca_font_t *pref,
     tw = text_w(f, t);
     cv_text(align == 1 ? x + (w - tw) / 2 : align == 2 ? x + w - tw : x, y + (pref->h - f->h) / 2, f, t, c);
 }
+/* a preset's label: the BLOCK green, then "- NAME" white ("SYNTHWAVE - 909 TECHNO"), in one box (x, w; align 0/1/2), the biggest font from
+ * pref down to min that fits; too long still: the NAME is cut (its vowels first), never the block */
+static void tag_box(int x, int y, int w, int align, const felucca_font_t *pref, const felucca_font_t *min, const char *blk, const char *nm,
+                    uint16_t cb, uint16_t cn)
+{
+    const felucca_font_t *f = pref;
+    char all[72], tail[40], cut[40];
+    int i, r0 = font_rank(pref), r1 = font_rank(min), bw, tw;
+    const char *t = tail;
+    if (!blk[0]) {
+        text_box(x, y, w, align, pref, min, nm, cn);
+        return;
+    }
+    cpy(cpy(tail, "- "), nm);
+    cpy(cpy(cpy(all, blk), " "), tail);
+    for (i = r0; i <= r1; i++) {
+        f = FONTS[i];
+        if (text_w(f, all) <= w)
+            break;
+    }
+    cpy(cpy(all, blk), " ");
+    bw = text_w(f, all);                    /* the block and the space after it */
+    if (bw + text_w(f, tail) > w) {
+        if (shorten(f, tail, cut, w - bw))
+            ui.fit_over++;
+        t = cut;
+    }
+    tw = bw + text_w(f, t);
+    x = align == 1 ? x + (w - tw) / 2 : align == 2 ? x + w - tw : x;
+    y += (pref->h - f->h) / 2;
+    cv_text(x, y, f, blk, cb);
+    cv_text(x + bw, y, f, t, cn);
+}
 /* FONT_L at twice its size (the KEYS page's chord): each pixel 2 x 2 */
 static int text2x_w(const char *s) { return 2 * text_w(&FONT_L, s); }
 static void text2x(int x, int y, const char *s, uint16_t c)
@@ -461,7 +494,12 @@ static void draw_toast(void)
     int w, x, y = 96;
     if (plat_ms() >= ui.msg_until)
         return;
-    w = text_w(&FONT_B, ui.msg[0]) + (ui.msg[1][0] ? text_w(&FONT_S, ui.msg[1]) + 12 : 0) + 24;
+    if (ui.msg_tag) {                    /* a preset's label: the block green, "- name" white */
+        char all[72];
+        cpy(cpy(cpy(all, ui.msg[0]), " - "), ui.msg[1]);
+        w = text_w(&FONT_B, all) + 24;
+    } else
+        w = text_w(&FONT_B, ui.msg[0]) + (ui.msg[1][0] ? text_w(&FONT_S, ui.msg[1]) + 12 : 0) + 24;
     if (w > 228)
         w = 228;
     x = (240 - w) / 2;
@@ -470,7 +508,9 @@ static void draw_toast(void)
     hline(x, y + 29, w, TH_TEXT);
     vline(x, y, 30, TH_TEXT);
     vline(x + w - 1, y, 30, TH_TEXT);
-    if (ui.msg[1][0]) {
+    if (ui.msg_tag)
+        tag_box(x + 12, y + 7, w - 24, 1, &FONT_B, &FONT_XS, ui.msg[0], ui.msg[1], TH_ENC[0], TH_TEXT);
+    else if (ui.msg[1][0]) {
         int w0 = text_w(&FONT_B, ui.msg[0]);
         text_box(x + 12, y + 7, w0 < w - 24 ? w0 : w - 24, 0, &FONT_B, &FONT_XS, ui.msg[0], TH_TEXT);
         text_box(x + 12 + w0 + 12, y + 7, w - 36 - w0 > 0 ? w - 36 - w0 : 1, 0, &FONT_S, &FONT_XS, ui.msg[1], TH_ENC[0]);
@@ -718,7 +758,7 @@ static void draw_sound(void)                /* SOUND: the source on the left, th
     static const char *const TAB[5] = {"FAV", "MORE", "FX", "TYPE", "MOD"};
     const dk_track_t *k = cur();
     const dk_engine_t *e = cur_eng();
-    char lb[32];
+    dk_preset_t tmp;
     int tab = ui.row[PG_SOUND] % 5, i, x = 100, wy = WY, wh = WH;
     uint32_t now = plat_ms();
     for (i = 0; i < 5; i++) {            /* the tabs */
@@ -729,8 +769,8 @@ static void draw_sound(void)                /* SOUND: the source on the left, th
         x += text_w(&FONT_XS, TAB[i]) + 7;
     }
     module(e->name, 0);                      /* the engine's name, as if printed on it; the window */
-    preset_tag(lb, k->eng, k->preset);  /* the block, then the preset: "SYNTHWAVE - 909 TECHNO" */
-    text_box(14, wy + 2, 212, 1, &FONT_B, &FONT_XS, lb, TH_TEXT);
+    tag_box(14, wy + 2, 212, 1, &FONT_B, &FONT_XS, preset_blk(k->preset, 0), preset_of(k->eng, k->preset, &tmp)->name, TH_ENC[0], TH_TEXT);
+                                         /* the block (green), then the preset (white): "SYNTHWAVE - 909 TECHNO" */
     if (tab < 4) {
         int f = page_field(ui.touched >= 0 && ui.touched < 4 ? ui.touched : 0, 0), lo, hi, v, j, nm = 0;
         char num[24];
@@ -1736,8 +1776,8 @@ static void draw_layers(void)
         q = cpy(q, " N  TAKE ");
         itoa_b(tk[k], q);
         text_box(4, ry + 13, 76, 0, &FONT_T, &FONT_T, s, TH_GRAY);
-        text_box(80, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", muted ? TH_REC : dimc(TH_GRAY, 6));
-        text_box(92, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
+        text_box(72, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", muted ? TH_REC : dimc(TH_GRAY, 6));
+        text_box(84, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
         cv_rect(tx, ry + 2, tw, 19, RGB(20, 18, 16));
         for (i = 0; i < c->n; i++) {
             const dk_ev_t *e = &dk_ev[c->at + i];
@@ -1782,7 +1822,7 @@ static void draw_tracks(void)
     char s[40];
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_track_t *k = &dk_song.trk[t];
-        int ry = 30 + t * 25, cl = part * DK_NTRACK + t, clen = clip_len(cl), i, lo = 127, hi = 0, tx = 108, tw = 128, sel = t == dk_song.cur_track,
+        int ry = 30 + t * 25, cl = part * DK_NTRACK + t, clen = clip_len(cl), i, lo = 127, hi = 0, tx = 158, tw = 78, sel = t == dk_song.cur_track,
             pm = part_muted(t), pend = part_mute_pending(t), muted = k->mute || pm, rec = trk_rec(t), n = dk_song.clip[cl].n;
         const dk_clip_t *c = &dk_song.clip[cl];
         uint16_t col = muted ? dimc(TH_TRACK[t], 5) : TH_TRACK[t];
@@ -1796,15 +1836,16 @@ static void draw_tracks(void)
         s[0] = (char)('1' + t);
         s[1] = 0;
         text_box(4, ry + 5, 16, 1, &FONT_S, &FONT_S, s, TH_BG);
-        text_box(23, ry + 1, 54, 0, &FONT_XS, &FONT_XS, track_label(t), muted ? TH_GRAY : TH_TEXT);
-        text_box(23, ry + 13, 54, 0, &FONT_T, &FONT_T, preset_of(k->eng, k->preset, &tmp)->name, TH_GRAY);
+        text_box(23, ry + 1, 46, 0, &FONT_XS, &FONT_XS, track_label(t), muted ? TH_GRAY : TH_TEXT);
+        tag_box(23, ry + 13, 130, 0, &FONT_T, &FONT_T, preset_blk(k->preset, 1), preset_of(k->eng, k->preset, &tmp)->name, muted ? dimc(TH_ENC[0], 6) : TH_ENC[0], muted ? TH_GRAY : TH_TEXT);
+                                             /* the block (short, green), then the name (white) */
         {                                    /* M: the part's mute (or the temporary one), blinking while a change waits; S: solo */
             int show = pend >= 0 && blink ? pend : pm;
-            text_box(80, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", k->mute || show ? TH_REC : dimc(TH_GRAY, 6));
-            text_box(92, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", k->solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
+            text_box(72, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", k->mute || show ? TH_REC : dimc(TH_GRAY, 6));
+            text_box(84, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", k->solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
         }
-        cv_rect(80, ry + 15, 24, 4, RGB(34, 30, 27));      /* the level */
-        cv_rect(80, ry + 15, (int)k->vol * 24 / 100, 4, muted ? TH_GRAY : TH_ENC[0]);
+        cv_rect(97, ry + 3, 26, 4, RGB(34, 30, 27));       /* the level */
+        cv_rect(97, ry + 3, (int)k->vol * 26 / 100, 4, muted ? TH_GRAY : TH_ENC[0]);
         cv_rect(tx, ry + 2, tw, 19, RGB(20, 18, 16));      /* the thumbnail's window */
         for (i = 0; i < n; i++) {
             const dk_ev_t *e = &dk_ev[c->at + i];

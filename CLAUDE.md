@@ -455,8 +455,11 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   (движок, блок≥1) + i; `PCOUNT[11*DK_NBLK]` — сколько пресетов в блоке. Flash, не RAM.
 - **Кнопки**: HOME + FX = следующий блок, HOME + SEL = предыдущий (место i внутри блока то же, блок без пресетов пропускается);
   ручка PRESET проходит все блоки движка и занятые свои слоты; белые 1–12 — пресет текущего блока (пусто → «NO PRESET HERE»);
-  KEYS-группа остаётся на своих 12. Подпись пресета везде «БЛОК - ИМЯ» (`preset_tag`, ui.c; блок первым, при нехватке места режется имя — text_box убирает гласные/хвост
-  с конца, блок не трогается): окошко (`say_preset`), окно SOUND (шапка модуля — только имя движка); строки TRACKS остались с одним именем (54 px, «AMB - SWD» не читается); свой пресет — «USER - ИМЯ». Окошко `ui.msg[2][32]`. Окошко смены движка (имя движка + пресет 0) не менялось.
+  KEYS-группа остаётся на своих 12. Подпись пресета везде «БЛОК - ИМЯ»: блок ЗЕЛЁНЫЙ (TH_ENC[0]), «- ИМЯ» белым (`tag_box`, pages.c; `preset_blk` — блок, ui.c): окошко
+  (`say_preset`; `ui.msg[0]` блок, `ui.msg[1]` имя, `ui.msg_tag`), окно SOUND, строки TRACKS (блок короткий: AMB / 8BIT / SYN / CINE; своя: USER).
+  Не влезает → сжимается шрифт, потом режется ИМЯ (сначала гласные), блок — никогда. Строка TRACKS: подпись x23..153 (130 px), M S и уровень
+  в первой строке (x72/84/97), миниатюра клипа x158, 78 px. Аудит `textaudit` проходит все пресеты всех движков в SOUND, в окошке и в TRACKS.
+  Окошко `ui.msg[2][32]`. Окошко смены движка (имя движка + пресет 0) не менялось.
 - **Движки**: 10-й SYNTH (`eng_synth.c`: WAVE SAW/PULSE/PULSE12/SQUARE/TRI/SUPER/NOISE/SINE, CUTOFF RESO SWEEP DETUNE CRUSH SUSTAIN MOTION),
   11-й PLUCK (LUTE HARP NYLON STEEL KOTO DULCIMER; BRIGHT DECAY POSITION BODY CRUSH). `DK_UENG 12` (свои пресеты, v1 8 / v2 10 движков
   мигрируют). Новые TYPE в старых движках: AIRPAD +SUPER CHOIR DRONE ORGAN (+STRINGS), SOFTBASS +SQUARE SAW TRI SUBDRONE, DUSTKIT киты

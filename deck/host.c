@@ -225,6 +225,10 @@ static void host_textaudit(void)
                 for (r = 0; r < 3; r++)
                     draw_page_band(r);
             }
+            ui.page = PG_TRACKS;             /* the TRACKS rows: the short block and the name */
+            for (r = 0; r < 3; r++)
+                draw_page_band(r);
+            ui.page = PG_SOUND;
             band_begin(90, 50);              /* the preset's popup, "BLOCK - NAME" */
             say_preset(preset_id(pr / DK_NFACT, pr % DK_NFACT));
             draw_toast();
@@ -361,6 +365,13 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_unlock();
         project_save(set.proj);
         project_load(set.proj);
+        return 1;
+    }
+    if (!strcmp(cmd, "trkset")) {               /* trkset T ENG BLK I: track T's engine, and its preset I of the block BLK (the screenshots, the sweeps) */
+        dk_lock();
+        dk_track_setup((atoi(a) - 1 + DK_NTRACK) % DK_NTRACK, atoi(b) % TAPE.neng, preset_id(atoi(c) % DK_NBLK, atoi(d) % DK_NFACT), SQ_LIVE,
+                       TAPE.eng[atoi(b) % TAPE.neng]->role);
+        dk_unlock();
         return 1;
     }
     if (!strcmp(cmd, "firedclr")) {
