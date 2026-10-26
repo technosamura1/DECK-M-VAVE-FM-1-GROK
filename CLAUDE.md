@@ -236,17 +236,17 @@ out/                  прошивка, установщик, WAV, listen.html, 
 | Кнопка | Тап | Удержание | HOME + |
 |---|---|---|---|
 | FX | SOUND; ещё раз — вкладка ENGINE/ENV/FX/MOD | — | — |
-| SEQ | SEQ; ещё раз — ряд (мелодия: 3-й — STEP EDIT); на странице ARP — копия арпеджио в STEP | + белая 1–5: секвенсор; + чёрная 1 COOK, 2 RANDOM, 3 QUANTIZE, 4 COPY BAR, 5 PASTE BAR (на TRACKS чёрные — соло); + OCT−/OCT+ UNDO/REDO; + REC стереть | BAKE (DRIVE → STEP) |
+| SEQ | SEQ сразу по нажатию; ещё раз — ряд (мелодия: 3-й — STEP EDIT; секвенсор — ряд SEQUENCER, K1); на странице ARP — копия арпеджио в STEP | — (комбо SEQ+… удалены в -11) | BAKE (DRIVE → STEP) |
 | ENV | ROAD | 0,6 с: гараж частей | — |
 | LFO | MIX (пульт) | + крутить ручку SOUND: MOD 1 на неё | — |
 | PLAY | старт/стоп (сразу по нажатию) | 0,8 с: PART/SONG | тапы: TAP TEMPO |
-| REC | запись (со счётом); при записи — punch-out (игра продолжается); на ROAD — запись трассы; SEQ+REC — стереть клип сразу | 1 с: очистить клип | метроном вкл/выкл |
+| REC | тап — запись (со счётом; срабатывает при отпускании); при записи — punch-out; на ROAD — запись трассы | + ручка SOUND/MIX: АВТОМАТИЗАЦИЯ; удержание ≥ 0,45 с без действия — записи нет, только подсказка. Стирания нет (см. EDIT-список) | метроном вкл/выкл |
 | SEL | ATMO (PG_ATMO): слои атмосферы, DUST, TAPE; ещё раз — ряд | — | — |
 | ARP | страница ARP (PG_ARP) + ARP вкл; ещё раз — ряд | + белая A–H: часть (с конца такта; пустая получает КОПИЮ этой, NEW PART) | ARP выкл |
 | GLO | GLOBAL (PG_GLOB: темп, свинг, пыль, сон, метроном, MIDI); ещё раз — ряд | 0,25 с: FILL пока держишь | — |
-| EDIT | KEYS; ещё раз — следующий ряд; на TRACKS — список LAYERS | 0,7 с: UNDO | REDO |
+| EDIT | KEYS; ещё раз — следующий ряд; на TRACKS — EDIT-список (14 белых), ещё раз — назад | 0,7 с: UNDO | REDO |
 | SAVE | PROJECT; ещё раз — сохранить сейчас | + белая 13–16: сохранить пресет | — |
-| HOME | PLAY; на PLAY — TRACKS (PG_TRACKS), ещё раз — назад (при записи TRACKS ⇄ REC) | SHIFT | белая 1–16: пресет; чёрная 1–6: дорожка; чёрная 7–11: COPY PASTE DOUBLE VARIATE HUMANIZE |
+| HOME | PLAY; на PLAY — TRACKS (PG_TRACKS), ещё раз — назад (при записи TRACKS ⇄ REC) | SHIFT | белая 1–16: пресет; чёрная 1–6: дорожка (чёрные 7–11 больше ничего не делают) |
 | OCT− / OCT+ | октава дорожки | — | клип на ступень лада вниз/вверх |
 
 Ручки (как у OP-1): K1–K4 — четыре поля текущей страницы/ряда (цвета зелёный/голубой/жёлтый/белый; таблица
@@ -255,7 +255,7 @@ out/                  прошивка, установщик, WAV, listen.html, 
 ECHO VOLUME текущей дорожки, ALGO = MOOD, HOME + SELECT = темп. DUST SIDECHAIN SLEEP SWING — на GLOBAL.
 ARP — своя страница PG_ARP (ряды: MODE RATE RHYTHM LATCH / OCT GATE PLAYS ON), на SEQ его рядов нет.
 Страницы: PROJECT — белые 1–4 открыть проект, 5 новый (шаблон), 6 демо; чёрные 1 EXPORT, 2 STEMS, 3 сохранить.
-MIX — белые 1–6 мьют дорожки В ЧАСТИ (при игре — с конца такта; HOME+белая — сразу; SEQ+белая — общий временный; держать 1 с — стереть клип дорожки в части), чёрные 1–6 соло. ROAD — белые A–H добавить блок, чёрные: HALF DOUBLE REVERSE +12 −12 TAPESTOP
+MIX и TRACKS — одно правило (-11): белые 1–6 — выбрать дорожку, чёрные 1–6 — мьют дорожки В ЧАСТИ (при игре — с конца такта), чёрная 7 — соло выбранной, чёрная 8 — взвести её на запись. Временного мьюта и «держать белую — стереть» больше нет. ROAD — белые A–H добавить блок, чёрные: HALF DOUBLE REVERSE +12 −12 TAPESTOP
 DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность только ручкой K1 (ROOT), клавиши её больше не ставят.
 
 ## Как сделать новую кассету (чек-лист)
@@ -515,6 +515,26 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   RAM заранее 0x5A), `trkoct N`, `expect oldck 0`; `oldformat.dk`; `deck_test stress24` (24 голоса, MOURNING ×3 + цепочка FX на всех дорожках).
   `expect autoall >0` стоит только в коротких auto-fuzz: удержание REC 2,5 с (ERASE) стирает кривые по замыслу.
 - **ASAN/UBSAN**: `CC=/tmp/asancc sh build.sh overworld --host` (`-fsanitize=address,undefined`), запуск с `ASAN_OPTIONS=detect_leaks=0`.
+
+## Упрощение комбо (op1-rec, -11)
+
+Цель — меньше модификаторов, как на OP-1: **белая = выбрать, чёрная = сделать**. Идея и решения:
+- **Одно правило дорожек на MIX и TRACKS** (`key_down`, один блок): белые 1–6 `track_select`; чёрные 1–6 `part_mute_toggle(b, 0)`; чёрная 7 — `dk_song.trk[cur].solo`;
+  чёрная 8 — `rec_arm_toggle(cur_track)` (взвести — только выбранную; чтобы взвести другую: белая, чёрная 8, белая назад). Старый временный (глобальный) мьют
+  удалён целиком (`ui.mix_key/mix_t`, SEQ+белая, HOME+белая; поле `trk.mute` в `deck_api.h` оставлено ради формата, не читается). HOME+белая — пресет (как раньше),
+  HOME+чёрная 1–6 — дорожка (оставлено), остальные чёрные при HOME — ничего.
+- **EDIT-список** (TRACKS → EDIT, `ui.lay == 1`, `draw_edit`/`edit_list_do`, `ED_N 14`, `ED_NAME[]` в pages.c): белые 1–14 = QUANTIZE, COPY BAR, PASTE BAR, DOUBLE, VARIATE,
+  HUMANIZE, COOK, RANDOM, COPY CLIP, PASTE CLIP, LAYERS (откроет `ui.lay == 2`, как раньше), ERASE NOTES, ERASE AUTO, ERASE ALL. Каждая правка — один шаг UNDO (удержать EDIT);
+  тост «UNDO: HOLD EDIT». При записи/счёте — «STOP REC». Удалены SEQ+чёрная 1–5, HOME+чёрная 7–11, SEQ+OCT−/OCT+ (UNDO/REDO — удержать EDIT / HOME+EDIT), SEQ+белая 1–4
+  (секвенсор — ряд SEQUENCER на странице SEQ, K1; для тестов команда `seqtype N`: 0 STEP 1 LIVE 2 DRIVE 3 FINGER).
+- **Стирание** только из списка и с подтверждением: первое нажатие спрашивает («AGAIN = ERASE», красный пункт, 3 с — `ui.ed_ask/ed_t`), второе делает. NOTES — клип текущей части
+  (`clip_clear`, кривые остаются); AUTO — кривые дорожки в части (`auto_erase`); ALL — дорожка во всех 8 частях, ноты + кривые (`clip_clear_all`, одна группа UNDO).
+  «NOTHING TO ERASE» / «NO AUTOMATION», если нечего. Удалены: стирание удержанием REC (1 с / 2,5 с), REC+FX, SEQ+REC, MIX 1 с, `draw_erase`, `ui.erase_*`, `A_CLEAR`, `erase_*`.
+- **REC**: тап = запись (срабатывает на отпускание, `HOLD_MOD`), удержание + ручка = автоматизация. Правило отпускания (`input`): удержание ≥ `HOLD_HINT_MS` без записи/счёта/взвода и без автоматизации — тап
+  пропускается (подсказка в подвале не должна начать запись). `hold` у REC `A_NONE`.
+- **Тесты**: `editlist.dk` (14 пунктов, спрос/забыть 3 с, STOP REC, единое правило на MIX и TRACKS), `erase.dk` (спрос → стирание → UNDO, удержание REC 3 с ничего не стирает),
+  остальные переписаны (partmute, tracks, recmulti, recgen, record, tools, stepedit, automation*, laylist, clipedit, seqtypes, fingerbank, screens). `host_textaudit` рисует EDIT-список (со спрошенным
+  пунктом) и LAYERS для всех дорожек. fuzz1–4 перегенерированы (`gen_fuzz.py` теперь трогает EDIT-список и чёрные 1–8 на MIX/TRACKS). Ранние разделы выше, где написаны SEQ+…, REC-удержание-стирание, SEQ+белая-мьют, устарели.
 
 ## Мелочи удобства (op1-rec, -10)
 
