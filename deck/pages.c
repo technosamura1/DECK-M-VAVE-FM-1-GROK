@@ -2010,6 +2010,25 @@ static void draw_page_band(int band)
 
 static void draw_frame(void)
 {
+    static int drawn_page = -1;
+    if (ui.page != drawn_page) {          /* the page changed: the WHOLE screen at once (a band a frame left the old page's bands under the
+                                           * new one for up to 3 frames, longer when the frames run slow: the garden over TRACKS) */
+        int b;
+        drawn_page = ui.page;
+        if (ui.page == PG_PLAY) {
+            ui.garden_t = plat_ms();
+            tape_play_draw(28);
+            band_begin(0, 28);
+            draw_header();
+            band_end();
+            band_begin(172, 68);
+            draw_footer(176);
+            band_end();
+        } else
+            for (b = 0; b < 3; b++)
+                draw_page_band(b);
+        return;
+    }
     if (ui.page == PG_PLAY) {             /* the garden every other frame; the header and the foot between */
         uint32_t now = plat_ms();
         if (now - ui.garden_t >= 70u || now < ui.garden_t) {   /* the garden ~14 times a second, the rest between */

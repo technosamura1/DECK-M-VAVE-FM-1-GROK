@@ -51,6 +51,7 @@
 #define __attribute__(x)
 
 /* ------------------------------------------------------------ screen --- */
+static uint16_t snap_fb[2][240 * 240];
 static uint16_t fb[240 * 240];          /* RGB565, byte-swapped as the panel takes it (gfx.c) */
 static void lcd_sync(void) {}
 static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
@@ -924,7 +925,19 @@ int main(int argc, char **argv)
             wav_close();
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
-        else if (!strcmp(cmd, "shot")) {
+        else if (!strcmp(cmd, "snap")) {              /* the screen kept as picture 0 or 1 ... */
+            int n = atoi(a) & 1;
+            memcpy(snap_fb[n], fb, sizeof fb);
+        } else if (!strcmp(cmd, "expect_snap")) {     /* ... and the two compared: the same screen, pixel for pixel */
+            int i, d = 0, y0 = a[0] ? atoi(a) : 0, y1 = b[0] ? atoi(b) : 240;   /* the rows y0 .. y1 (the garden moves) */
+            for (i = 240 * y0; i < 240 * y1; i++)
+                d += snap_fb[0][i] != snap_fb[1][i];
+            if (d) {
+                printf("FAIL expect_snap: the screens differ in %d pixels (rows %d-%d)\n", d, y0, y1);
+                fails++;
+            } else
+                printf("  ok   the two screens are the same\n");
+        } else if (!strcmp(cmd, "shot")) {
             snprintf(out, sizeof out, "%s/%s", dir, a);
             png_write(out);
         } else if (!strcmp(cmd, "leds")) {
