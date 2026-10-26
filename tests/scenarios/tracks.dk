@@ -1,5 +1,6 @@
 # TRACKS (HOME on PLAY; HOME on it goes back): six rows, one per track. SELECT or white 1-6 select the track with ONE press (HOME + black
-# still does); black 1-6 toggle the track's mute IN THE PART (at the bar end while playing), SEQ + black 1-6 the solo.
+# still does); black 1-6 toggle the track's mute IN THE PART (at the bar end while playing), black 7 the solo of the selected track,
+# black 8 arms it for recording (the same keys in MIX). One rule: white = pick, black = do.
 wait 300
 tap SAVE
 wait 100
@@ -51,18 +52,25 @@ said MUTED
 tapkey b1
 wait 100
 expect pmask 0
-# SEQ + black: solo
-press SEQ
-tapkey b2
-release SEQ
+# black 7: solo of the SELECTED track (white 3 picks track 2), again: off; black 8 arms it (again: disarms)
+tapkey w2
+wait 100
+expect track 2
+tapkey b6
 wait 100
 expect solo2 1
 expect page 11
-press SEQ
-tapkey b2
-release SEQ
+tapkey b6
 wait 100
 expect solo2 0
+tapkey b7
+wait 100
+expect armtrk 4
+said ARM
+tapkey b7
+wait 100
+expect armtrk 0
+said DISARM
 # playing: the mute waits for the bar's end
 tap PLAY
 wait 300

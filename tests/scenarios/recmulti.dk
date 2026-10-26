@@ -1,4 +1,4 @@
-# REC polish: several armed tracks (TRACKS: SEQ + white 1-6), REPLACE / OVERDUB, the punch-out (REC again leaves the tape
+# REC polish: several armed tracks (TRACKS: white = select, black 8 = arm the selected track), REPLACE / OVERDUB, the punch-out (REC again leaves the tape
 # playing), UNDO per track with the track named.
 wait 300
 tap SAVE
@@ -17,24 +17,24 @@ expect page 11
 tapkey w0
 wait 100
 expect track 0
-# SEQ + white arms (no selecting), again disarms
-press SEQ
+# black 8 arms the SELECTED track (white picks it first), again disarms
 tapkey w2
-release SEQ
+tapkey b7
+tapkey w0
 wait 100
 expect armtrk 4
 expect track 0
 expect page 11
 said ARM T3
-press SEQ
 tapkey w2
-release SEQ
+tapkey b7
+tapkey w0
 wait 100
 expect armtrk 0
 said DISARM
-press SEQ
 tapkey w2
-release SEQ
+tapkey b7
+tapkey w0
 wait 50
 expect armtrk 4
 wait 2500
@@ -62,14 +62,14 @@ shot p33_rec_multi.png
 tap HOME
 wait 100
 expect page 11
-press SEQ
 tapkey w1
-release SEQ
+tapkey b7
+tapkey w0
 wait 100
 expect recmask 7
-press SEQ
 tapkey w1
-release SEQ
+tapkey b7
+tapkey w0
 wait 100
 expect recmask 5
 tap HOME

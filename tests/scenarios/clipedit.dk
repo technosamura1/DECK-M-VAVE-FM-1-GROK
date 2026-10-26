@@ -1,5 +1,6 @@
-# CLIP EDITING on SEQ + black keys (each one undo step): black 3 = QUANTIZE (every note toward the 1/16 by the track's QUANT),
-# black 4 = COPY BAR, black 5 = PASTE BAR (stopped: into the bar after the copied one, the next press the one after that).
+# CLIP EDITING in the EDIT LIST (TRACKS, EDIT; white 1-14; each one undo step): white 1 = QUANTIZE (every note toward the 1/16 by the
+# track's QUANT), 2 = COPY BAR, 3 = PASTE BAR (stopped: into the bar after the copied one, the next press the one after that).
+# The old SEQ + black and HOME + black 7-11 combos are gone.
 wait 300
 tap SAVE
 wait 100
@@ -19,10 +20,13 @@ setbars 0 4
 seedat 0 1 30
 seedat 0 1 400
 expect events 2
+page 11
+tap EDIT
+wait 100
+expect layview 1
+shot p37_edit_list.png
 # QUANTIZE at 50%: 30 -> 27, 400 -> 404
-press SEQ
-tapkey b2
-release SEQ
+tapkey w0
 wait 100
 said ON THE GRID
 expect evpos 27
@@ -37,28 +41,20 @@ expect evpos 30
 expect evlast 400
 # QUANTIZE with QUANT 0 says so and moves nothing
 qnt 0
-press SEQ
-tapkey b2
-release SEQ
+tapkey w0
 wait 100
 said QUANT IS 0
 expect evpos 30
 # COPY BAR 1 (the note at 30), PASTE twice: bar 2 (its note at 400 goes), then bar 3
-press SEQ
-tapkey b3
-release SEQ
+tapkey w1
 wait 100
 said COPIED
-press SEQ
-tapkey b4
-release SEQ
+tapkey w2
 wait 100
 said BAR PASTED
 expect events 2
 expect evlast 414
-press SEQ
-tapkey b4
-release SEQ
+tapkey w2
 wait 100
 said 1->3
 shot p39_bar_paste.png

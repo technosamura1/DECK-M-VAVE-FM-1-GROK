@@ -1,6 +1,6 @@
-# PER-PART TRACK MUTES: in MIX a white key 1-6 mutes that track IN THE PART (a bit of the part, saved with the project). Stopped: at once;
-# playing: it waits for the bar's end (pending, blinking); HOME + white: at once; SEQ + white: the old global (temporary) mute;
-# holding a white key 1 s still clears that clip. Each part has its own mask.
+# PER-PART TRACK MUTES: in MIX (and TRACKS) a BLACK key 1-6 mutes that track IN THE PART (a bit of the part, saved with the project);
+# a white key 1-6 only selects the track. Stopped: at once; playing: it waits for the bar's end (pending, blinking). There is no
+# temporary mute and no clear-by-holding any more. Each part has its own mask.
 wait 300
 tap SAVE
 wait 100
@@ -17,66 +17,62 @@ wait 100
 expect page 3
 expect pmask 0
 # stopped: at once, toasts A: <track> MUTED / ON
-tapkey w0
+tapkey b0
 wait 100
 expect pmask 1
 said MUTED
-tapkey w0
+tapkey b0
 wait 100
 expect pmask 0
 said ON
-tapkey w1
+tapkey b1
 wait 100
 expect pmask 2
 expect pmaskB 0
-expect tmute0 0
 # playing: the toggle waits for the bar's end
 tap PLAY
 wait 300
 expect playing 1
-tapkey w0
+tapkey b0
 wait 100
 expect pmpend 1
 expect pmask 2
 said BAR END
 # toggled again before the bar's end: cancelled (nothing pending)
-tapkey w0
+tapkey b0
 wait 100
 expect pmpend 0
-tapkey w0
+tapkey b0
 wait 100
 expect pmpend 1
 wait 3400
 expect pmpend 0
 expect pmask 3
 expect part 0
-# HOME + white: at once, even playing
+# HOME + black selects the track and mutes nothing; a white key only selects (no temp mute, no clear)
 press HOME
-tapkey w0
+tapkey b2
 release HOME
 wait 100
-expect pmask 2
-expect pmpend 0
-# SEQ + white: the global (temporary) mute, not the part's
-press SEQ
-tapkey w0
-release SEQ
+expect track 2
+expect pmask 3
+tapkey w3
 wait 100
-expect tmute0 1
+expect track 3
+expect pmask 3
+tapkey b0
+wait 3600
 expect pmask 2
-said TEMP
-press SEQ
-tapkey w0
-release SEQ
-wait 100
-expect tmute0 0
-# holding the key 1 s clears the clip, and does not toggle the mute
+# holding a black key is still one toggle, and clears nothing
 expect eventsA2 4
-key w1 down 90
+key b1 down 90
 wait 1200
-key w1 up
-wait 100
-expect eventsA2 0
+key b1 up
+wait 3600
+expect eventsA2 4
+expect pmask 0
+tapkey b1
+wait 3600
 expect pmask 2
 # another part has its own mask: B is asked for, at the bar's end the song is in B, whose mask is 0
 press ARP
@@ -87,7 +83,7 @@ expect part 1
 expect pmask 0
 expect pmaskA 2
 # pending while stopping: applied
-tapkey w3
+tapkey b3
 wait 100
 expect pmpend 8
 tap PLAY

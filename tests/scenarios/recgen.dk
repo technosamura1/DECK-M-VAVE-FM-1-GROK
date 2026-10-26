@@ -12,9 +12,7 @@ press HOME
 tapkey b4
 release HOME
 wait 50
-press SEQ
-tapkey w2
-release SEQ
+seqtype 2
 wait 50
 expect seq 4
 press HOME
@@ -23,9 +21,9 @@ release HOME
 wait 50
 tap HOME
 wait 100
-press SEQ
 tapkey w4
-release SEQ
+tapkey b7
+tapkey w0
 wait 100
 expect armtrk 16
 page 0

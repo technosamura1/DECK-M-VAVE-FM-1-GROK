@@ -71,9 +71,7 @@ press HOME
 tapkey b3
 release HOME
 wait 100
-press SEQ
-tapkey w3
-release SEQ
+seqtype 3
 wait 100
 expect seq 5
 turn K1 1

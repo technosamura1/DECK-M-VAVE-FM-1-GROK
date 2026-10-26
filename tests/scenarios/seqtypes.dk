@@ -28,12 +28,6 @@ press HOME
 tap ARP
 release HOME
 wait 50
-# TOMBOLA is gone: SEQ held + white 5 is no sequencer any more, the track stays as it was
-press SEQ
-tapkey w4
-release SEQ
-wait 50
-expect seq 1
 # FINGER on the drums: a pattern held
 press HOME
 tapkey b4
@@ -46,9 +40,8 @@ expect voices >0
 shot finger.png
 key w6 up
 # DRIVE on the drums, then BAKE it to STEP
-press SEQ
-tapkey w2
-release SEQ
+# the sequencer is picked on the SEQ page (its row SEQUENCER, K1): no key combo any more
+seqtype 2
 wait 50
 expect seq 4
 tap HOME

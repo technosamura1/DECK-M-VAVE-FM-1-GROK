@@ -556,6 +556,8 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "page")) {
         ui.page = (uint8_t)(atoi(a) % NPG);
+        ui.lay = 0;
+        ui.ed_ask = 0;
         return 1;
     }
     if (!strcmp(cmd, "row")) {
@@ -601,8 +603,8 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         app_splash();
         return 1;
     }
-    if (!strcmp(cmd, "seqtype")) {
-        cur()->seq = (uint8_t)atoi(a);
+    if (!strcmp(cmd, "seqtype")) {            /* seqtype N: the sequencer by its SEQ page index (0 STEP 1 LIVE 2 DRIVE 3 FINGER), as K1 of its row */
+        field_set(F_SEQTYPE, atoi(a));
         return 1;
     }
     return 0;
