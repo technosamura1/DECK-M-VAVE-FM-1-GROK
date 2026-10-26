@@ -225,6 +225,11 @@ static void host_textaudit(void)
                 for (r = 0; r < 3; r++)
                     draw_page_band(r);
             }
+            band_begin(90, 50);              /* the preset's popup, "BLOCK - NAME" */
+            say_preset(preset_id(pr / DK_NFACT, pr % DK_NFACT));
+            draw_toast();
+            band_end();
+            ui.msg_until = 0;
             dk_song.trk[dk_song.cur_track].fx = (uint8_t)(pr % TAPE.nfx);
             ui.row[PG_SOUND] = 2;
             for (r = 0; r < 3; r++)

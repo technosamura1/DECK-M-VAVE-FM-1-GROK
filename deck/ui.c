@@ -13,7 +13,7 @@ static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
     uint32_t btn, keys, down_t[NB];
     uint8_t used[NB], held_done[NB];
-    char msg[2][24];
+    char msg[2][32];
     uint32_t msg_until;
     int8_t touched;
     uint32_t touch_until, frame, last_ms, change_t, edits_seen, rec_end, root_until;
@@ -53,15 +53,15 @@ static struct {
 static void say(const char *a, const char *b)
 {
     uint32_t i;
-    for (i = 0; i < 23u && a && a[i]; i++)
+    for (i = 0; i < 31u && a && a[i]; i++)
         ui.msg[0][i] = a[i];
     ui.msg[0][i] = 0;
-    for (i = 0; i < 23u && b && b[i]; i++)
+    for (i = 0; i < 31u && b && b[i]; i++)
         ui.msg[1][i] = b[i];
     ui.msg[1][i] = 0;
     ui.msg_until = plat_ms() + 700u;     /* a VHS-plate's 0.6 s, and a little */
     if (ann_on()) {
-        char t[48];
+        char t[72];
         uint32_t k = 0;
         for (i = 0; ui.msg[0][i]; i++)
             t[k++] = ui.msg[0][i];
@@ -109,7 +109,7 @@ static void mark_dirty(void)
 
 static int held(int b) { return (int)(ui.btn >> b & 1u); }
 
-static const char *blk_label(void);   /* the block the track's preset is in (0: the engine has one only) */
+static void preset_tag(char *o, int e, int slot);   /* the preset's label, the block first (32 bytes) */
 #include "pages.c"
 
 /* ------------------------------------------------------------------ actions --- */
@@ -174,26 +174,28 @@ static int blk_of_track(int t)
 static int cur_blk(void) { return blk_of_track(dk_song.cur_track); }
 static const char *blk_name(int b) { return TAPE.block_name ? TAPE.block_name[b % DK_NBLK] : ""; }
 static int is_factory(int id) { return id < DK_NFACT || id >= DK_PBASE; }
-static const char *blk_label(void)
+/* the preset's label, the BLOCK first: "SYNTHWAVE - 909 TECHNO" (a user one: "USER - NAME"; the TRACKS rows have 54 px:
+ * the name only).
+ * The name goes last, so a cut takes the name, never the block. o: 32 bytes */
+static void preset_tag(char *o, int e, int slot)
 {
-    int i, multi = 0, e = cur()->eng;
-    for (i = 0; i < DK_NBLK; i++)
-        multi += preset_count(e, i) > 0;
-    return multi > 1 ? blk_name(cur_blk()) : 0;
+    dk_preset_t tmp;
+    int b = preset_block(slot);
+    const char *blk = b < 0 ? "USER" : blk_name(b), *n = preset_of(e, slot, &tmp)->name;
+    char *q = o;
+    if (blk[0]) {
+        q = cpy(q, blk);
+        q = cpy(q, " - ");
+    }
+    for (; *n && q < o + 31; n++)
+        *q++ = *n;
+    *q = 0;
 }
 static void say_preset(int slot)
 {
-    dk_preset_t tmp;
-    char sub[24];
-    int b = preset_block(slot), i = 0, multi = 0, e = cur()->eng;
-    const char *n;
-    for (i = 0; i < DK_NBLK; i++)
-        multi += preset_count(e, i) > 0;
-    n = b < 0 ? "USER" : multi > 1 ? blk_name(b) : cur_eng()->name;
-    for (i = 0; i < 22 && n[i]; i++)
-        sub[i] = n[i];
-    sub[i] = 0;
-    say(preset_of(e, slot, &tmp)->name, sub);
+    char lb[32];
+    preset_tag(lb, cur()->eng, slot);
+    say(lb, "");
 }
 static void preset_apply(int slot)       /* (the take being recorded has been frozen with the old sound) */
 {
