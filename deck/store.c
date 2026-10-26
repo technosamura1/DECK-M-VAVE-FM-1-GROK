@@ -339,11 +339,11 @@ static void settings_load(void)
         set.midi_notes = 1;
         set.midi_clock = 1;
         set.midi_in = 1;
-        set.metro[0] = 1;
+        set.metro[0] = 0;                /* the click OFF (METRO: ON REC / ALWAYS), the count-in 1 bar, quiet */
         set.metro[1] = 1;
         set.metro[2] = TAPE.metro_sound;
         set.metro[3] = 0;
-        set.metro[4] = 55;
+        set.metro[4] = 40;
         set.metro[5] = 0;
     }
     dk_metro.mode = set.metro[0] % 3;

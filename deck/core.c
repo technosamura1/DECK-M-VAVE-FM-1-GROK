@@ -18,7 +18,7 @@ static double prof_t0;
 dk_song_t dk_song;
 dk_ev_t dk_ev[DK_NEV] DK_POOL;
 dk_ctx_t dk_ctx;
-dk_metro_t dk_metro = {1, 1, METRO_WOOD, 0, 55, 0};
+dk_metro_t dk_metro = {0, 1, METRO_WOOD, 0, 40, 0};
 uint8_t dk_midi_notes = 1, dk_midi_clock = 1;
 uint8_t dk_rec_lat = 9;
 uint8_t dk_rec_arm = 0;                 /* REC ARM (optional, default OFF): REC arms the tape, PLAY starts it (two steps); OFF: REC records at once */

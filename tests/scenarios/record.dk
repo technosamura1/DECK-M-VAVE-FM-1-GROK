@@ -93,7 +93,12 @@ tapkey w0
 tapkey w0
 wait 100
 expect nroad >0
-# HOME+REC: the metronome off
+# the click is OFF by default (the count-in still clicks); HOME+REC: ON REC, again: off
+press HOME
+tap REC
+release HOME
+wait 50
+expect metro 1
 press HOME
 tap REC
 release HOME
