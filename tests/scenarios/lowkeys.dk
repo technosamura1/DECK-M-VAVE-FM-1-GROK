@@ -1,9 +1,15 @@
 # REGRESSION: the KEYS page with the keys' octave all the way down (a note below zero named a key by a negative index into the
-# note names: a read before the table, a hard fault on the device). Both octaves down (the keys' and the track's), every layout.
+# note names: a read before the table, a hard fault on the device). Both octaves down (the keys' and the track's), WHITE off
+# (the degree numbers hide the names). Under ASAN/UBSAN the old code is reported here.
 wait 300
 tap EDIT
 wait 100
 expect page 5
+row 0
+turn K3 -1 8
+wait 150
+turn K3 -1 8
+wait 150
 tap OCT-
 tap OCT-
 tap OCT-
