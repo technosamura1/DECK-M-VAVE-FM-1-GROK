@@ -1,4 +1,9 @@
-# Сборка прошивки DECK в облаке GitHub (Linux-тулчейн JieLi; из SDK нужны 3 файла — лежат в ci/ac79-sdk).
+# Сборка прошивки DECK в облаке GitHub (Linux-тулчейн JieLi).
+# Два задания: test — тесты на хосте (симулятор, сценарии, синхронизация по Bluetooth); build — прошивка для каждой кассеты.
+# Bluetooth (ble = true в deck/fm1.toml.in) собирается на закрытых библиотеках JieLi (btctrler.a, btstack.a): их нет в репозитории,
+# build скачивает SDK скриптом base/bsp/tools/get_sdk.sh (GitHub JieLi удалён → Gitee JieLi, ~0,5 ГБ, кэшируется).
+# Если SDK скачать не удалось (Gitee недоступен), прошивка собирается БЕЗ Bluetooth (--no-ble, архив deck-<кассета>-usb.zip)
+# и в логе остаётся предупреждение: такая сборка Bluetooth не проверяет. Для USB-упаковки хватает 3 файлов из ci/ac79-sdk.
 # На каждый push и PR: собирает .fwsc для каждой кассеты из tapes/ и кладёт архив «к установке» в Artifacts.
 # На push в main: дополнительно обновляет релиз «latest» — оттуда прошивку удобно скачать с телефона/ПК.
 name: firmware
@@ -16,6 +21,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python-пакеты тестов
+        run: pip install --quiet pillow numpy mido
+
+      - name: Симулятор и тесты (сценарии, bsp/ble, синхронизация по Bluetooth)
+        run: |
+          set -e
+          mkdir -p "$HOME/bin"
+          printf '#!/bin/sh\nexec gcc -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE "$@"\n' > "$HOME/bin/gccp"
+          chmod +x "$HOME/bin/gccp"
+          export CC="$HOME/bin/gccp"
+          sh build.sh overworld --host > host-build.log 2>&1 || { tail -n 30 host-build.log; exit 1; }
+          sh tests/run_tests.sh > tests.log 2>&1 || true
+          grep -E "^ +(ok|FAIL) |^--|ALL OK|TESTS FAILED|sync_test" tests.log || true
+          tail -n 2 tests.log
+          grep -q "ALL OK" tests.log
+          sh base/bsp/tests/run_ble_test.sh > ble-test.log 2>&1 || true
+          tail -n 2 ble-test.log
+          grep -q " 0 failed" ble-test.log
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -39,6 +72,23 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: sh base/tools/get_toolchain.sh ~/.jieli
 
+      - name: Кэш SDK JieLi (библиотеки Bluetooth)
+        id: sdkcache
+        uses: actions/cache@v4
+        with:
+          path: ~/ac79-sdk
+          key: ac79-sdk-d179b44-v1
+
+      - name: Скачать SDK JieLi (Gitee; нужен для Bluetooth)
+        id: sdk
+        run: |
+          if sh base/bsp/tools/get_sdk.sh "$HOME/ac79-sdk"; then
+            echo "ble=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::SDK JieLi не скачался (GitHub JieLi удалён, Gitee недоступен): прошивка соберётся БЕЗ Bluetooth (--no-ble)"
+            echo "ble=0" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Файлы SDK для упаковки (из ci/ac79-sdk, со сверкой SHA-256)
         run: |
           cd ci/ac79-sdk
@@ -51,16 +101,22 @@ jobs:
       - name: Собрать прошивку для каждой кассеты
         env:
           JIELI_TOOLCHAIN: /home/runner/.jieli/toolchain
-          AC79_SDK: ${{ github.workspace }}/ci/ac79-sdk
+          BLE: ${{ steps.sdk.outputs.ble }}
         run: |
           set -e
+          if [ "$BLE" = 1 ]; then
+            export AC79_SDK="$HOME/ac79-sdk"; OPT=""; SFX=""
+          else
+            export AC79_SDK="$GITHUB_WORKSPACE/ci/ac79-sdk"; OPT="--no-ble"; SFX="-usb"
+          fi
           mkdir -p dist
           for t in $(ls tapes); do
             echo "::group::$t"
-            if ! sh build.sh "$t" > "build-$t.log" 2>&1; then
+            if ! sh build.sh "$t" $OPT > "build-$t.log" 2>&1; then
               tail -n 30 "build-$t.log" | while IFS= read -r l; do echo "::error::$l"; done
               exit 1
             fi
+            grep -E "image .* RAM|parts " "build-$t.log" || true
             tail -n 3 "build-$t.log"
             echo "::notice::deck-$t.fwsc md5 $(md5sum out/deck-$t.fwsc | cut -c1-32)"
             d="dist/deck-$t"
@@ -68,7 +124,7 @@ jobs:
             cp "out/deck-$t.fwsc" out/fm1_install.py "$d/"
             sed "s/deck-overworld.fwsc/deck-$t.fwsc/; s/DECK + OVERWORLD/DECK + $(echo $t | tr a-z A-Z)/" out/install-deck.bat > "$d/install-deck.bat"
             [ -f "out/DECK_инструкция.pdf" ] && cp "out/DECK_инструкция.pdf" "$d/" || true
-            (cd dist && zip -qr "deck-$t.zip" "deck-$t")
+            (cd dist && zip -qr "deck-$t$SFX.zip" "deck-$t")
             echo "::endgroup::"
           done
           ls -la dist

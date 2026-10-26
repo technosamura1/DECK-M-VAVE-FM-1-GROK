@@ -4,16 +4,28 @@
 # The SDK is not copied into this repository: you fetch it from JieLi, and its LICENSE and notices stay with it.
 #   tools/get_sdk.sh [DEST]      (default: ~/.jieli/ac79-sdk)     then: export AC79_SDK=DEST
 #   SDK_URL=...   another remote (a mirror)       SDK_REV=...   another revision (the checks below then fail)
+# The remotes tried, in order: SDK_URL if set; JieLi's GitHub (404 since 2026: the repository was taken down); JieLi's
+# own Gitee (gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK, the same revision). Only what the build reads is checked out
+# (~0.5 GB): the chip's libraries and headers, the BLE demo's include and the shared apps/common headers.
 set -e
 DEST="${1:-$HOME/.jieli/ac79-sdk}"
-URL="${SDK_URL:-https://github.com/Jieli-Tech/fw-AC79_AIoT_SDK}"
+URLS="${SDK_URL:-https://github.com/Jieli-Tech/fw-AC79_AIoT_SDK https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git}"
 REV="${SDK_REV:-d179b4484759423312073f5fbb232501aa491047}"      # AC79NN_SDK_V1.2.1_2023-12-13
 mkdir -p "$DEST"
 cd "$DEST"
 [ -d .git ] || git init -q .
-git fetch -q --depth 1 --filter=blob:none "$URL" "$REV"
+ok=
+for URL in $URLS; do
+    for try in 1 2 3; do
+        if GIT_TERMINAL_PROMPT=0 git fetch -q --depth 1 --filter=blob:none "$URL" "$REV" 2>/dev/null; then ok=1; break 2; fi
+        sleep 3
+    done
+    echo "get_sdk: $URL: no" >&2
+done
+[ -n "$ok" ] || { echo "get_sdk: the SDK could not be fetched (tried: $URLS)" >&2; exit 2; }
 git sparse-checkout init --no-cone
-git sparse-checkout set /LICENSE /README.md /cpu/wl82/ /include_lib/ /apps/include_lib/
+git sparse-checkout set /LICENSE /README.md /cpu/wl82/ /include_lib/ /apps/common/include /apps/common/config \
+    /apps/common/ble/include /apps/demo/demo_ble/include
 git checkout -q FETCH_HEAD
 check() { echo "$2  $1" | sha256sum -c - >/dev/null || { echo "get_sdk: $1 is not the file this repository was tested with" >&2; exit 1; }; }
 check cpu/wl82/tools/uboot.boot       4e3b4c220dc96641cb5a723f41e68ce41d5261ae9434bb33fbd7f2c59976ded4
