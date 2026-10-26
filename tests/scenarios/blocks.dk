@@ -29,17 +29,23 @@ tap FX
 release HOME
 wait 50
 expect blk 1
+wait 300
+shot blk_8bit.png
 expect preset >15
 press HOME
 tap FX
 release HOME
 wait 50
 expect blk 2
+wait 300
+shot blk_synthwave.png
 press HOME
 tap FX
 release HOME
 wait 50
 expect blk 3
+wait 300
+shot blk_cinematic.png
 press HOME
 tap FX
 release HOME
