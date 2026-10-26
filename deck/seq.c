@@ -28,6 +28,12 @@ static uint8_t rec_nocomp;                     /* the note that starts a take is
 static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */
 static uint8_t open_vel[128], open_trk[128];
+/* the count-in's last beat: notes played after its last click belong to the take's first beat (a hand a little
+ * early). Held on: they start at 0 when the take does; let go already: a note at 0 as long as it was */
+static uint8_t pre_vel[128], pre_trk[128];
+static int16_t pre_dur[128];                   /* -1 still held; else its length in ticks */
+static int32_t pre_at[128];                    /* count_left when pressed */
+#define PRE_WIN DK_PPQ
 static uint8_t arp_step[DK_NTRACK], arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
 volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
 static uint16_t finger_held[DK_NTRACK];        /* FINGER: the patterns held (a bit each) */
@@ -226,6 +232,28 @@ static int rec_pos(int t)
     p = (int)(f + (g - f) * q + 0.5f);
     return ((p % clen) + clen) % clen;
 }
+static int rec_pre_track(int t)               /* in the count-in's last beat, a track the take will record */
+{
+    return count_left > 0 && count_left <= PRE_WIN && rec_start_after && (unsigned)t < DK_NTRACK &&
+           (dk_rec_mask >> t & 1u);
+}
+static void rec_pre_flush(void)                /* the take begins: the early notes in at its start */
+{
+    int n;
+    for (n = 0; n < 128; n++) {
+        if (!pre_vel[n])
+            continue;
+        if (pre_dur[n] < 0) {                  /* still held: open from 0 */
+            open_pos[n] = 0;
+            open_vel[n] = pre_vel[n];
+            open_trk[n] = pre_trk[n];
+            open_nc[n] = 0;
+        } else
+            rec_push(cur_part * DK_NTRACK + pre_trk[n], 0, 0, pre_dur[n] > DK_T16 / 2 ? pre_dur[n] : DK_T16 / 2, n,
+                     pre_vel[n], 0);
+        pre_vel[n] = 0;
+    }
+}
 static void rec_open(int t, int note, int vel)
 {
     const dk_track_t *k = &dk_song.trk[t];
@@ -283,6 +311,11 @@ static void rec_stop(void)
     rec_wait_note = 0;
     rec_start_after = 0;
     rec_bake = 0;
+    {                                          /* (stopped in the count-in: the early notes forgotten) */
+        int n;
+        for (n = 0; n < 128; n++)
+            pre_vel[n] = 0;
+    }
     if (count_left > 0) {
         count_left = 0;
         dk_counting = 0;
@@ -851,6 +884,12 @@ static void live_note(int t, int note, int vel, int delay)
         voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0, 0);
         if (rec_track_of(t))
             rec_open(t, note, vel);
+        else if (rec_pre_track(t)) {           /* a touch early: kept for the take's first beat */
+            pre_vel[note] = (uint8_t)vel;
+            pre_trk[note] = (uint8_t)t;
+            pre_dur[note] = -1;
+            pre_at[note] = count_left;
+        }
     } else {
         held_pcs[t] &= ~(1u << (note % 12));
         if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {
@@ -869,6 +908,8 @@ static void live_note(int t, int note, int vel, int delay)
         voices_off_note(t, note);
         if (rec_track_of(t))
             rec_close(note, 0);
+        else if (pre_vel[note] && pre_dur[note] < 0)   /* an early one let go in the count-in: its length */
+            pre_dur[note] = (int16_t)(pre_at[note] - count_left);
     }
 }
 
@@ -947,6 +988,7 @@ static void seq_tick(void)
                 rec_start_after = 0;
                 play_start();
                 rec_on_now();
+                rec_pre_flush();
             }
             if (dk_stems == 1)
                 play_start(), dk_stems = 2;
