@@ -283,6 +283,22 @@ static void host_textaudit(void)
             }
             dk_song.trk[t].seq = keep[t].seq;
         }
+    for (t = 0; t < DK_NTRACK; t++) {        /* TRACKS' EDIT list (and its asked item) and the LAYERS list, each track */
+        int lv, ask;
+        dk_song.cur_track = (uint8_t)t;
+        ui.page = PG_TRACKS;
+        for (lv = 1; lv <= 2; lv++)
+            for (ask = 0; ask < (lv == 1 ? 2 : 1); ask++) {
+                ui.lay = (uint8_t)lv;
+                ui.ed_ask = (uint8_t)(ask ? 13 : 0);
+                ui.ed_t = plat_ms();
+                draw_page_band(0);
+                draw_page_band(1);
+                draw_page_band(2);
+            }
+        ui.lay = 0;
+        ui.ed_ask = 0;
+    }
     for (p = 0; p < TAPE.nmood; p++) {       /* every mood's name in the PLAY page's foot */
         dk_song.mood = (uint8_t)p;
         ui.page = PG_PLAY;

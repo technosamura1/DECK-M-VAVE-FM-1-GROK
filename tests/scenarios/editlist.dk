@@ -18,6 +18,7 @@ page 11
 tap EDIT
 wait 100
 expect layview 1
+wait 2500
 shot p42_edit_list.png
 # every item in turn: nothing crashes, the text fits
 tapkey w0

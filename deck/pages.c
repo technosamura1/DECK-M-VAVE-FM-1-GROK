@@ -1830,7 +1830,7 @@ static void draw_edit(void)
         text_box(x + 24, y + 3, 90, 0, &FONT_T, &FONT_T, ED_NAME[i], on ? TH_REC : TH_TEXT);
     }
     text_box(4, 183, 232, 0, &FONT_T, &FONT_T, ask >= 0 ? "AGAIN = ERASE  (3 S)" : "W1-14 = ITEM  ERASE: PRESS TWICE", ask >= 0 ? TH_REC : TH_GRAY);
-    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = TRACK  EDIT = BACK  HOLD EDIT = UNDO", dimc(TH_GRAY, 8));
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = TRACK  EDIT = BACK", dimc(TH_GRAY, 8));
 }
 static int trk_rec(int t) { return (dk_recording || dk_counting) && (dk_rec_mask >> t & 1u); }
 static void draw_tracks(void)
