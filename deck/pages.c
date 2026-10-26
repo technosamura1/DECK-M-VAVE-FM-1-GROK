@@ -480,7 +480,7 @@ static const char *hold_hint(uint32_t now)
         "FX: SOUND  +W1-4 BYPASS", "SEL: ATMO  HOME+SEL = PREV BANK",
         "ENV: ROAD  HOLD = GARAGE", "LFO: MIX  +SOUND KNOB = MOD 1",
         "EDIT: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
-        0, "SAVE: PROJECT  +W13-16 PRESET",
+        0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
         "ARP: AGAIN LATCH  +WHITE PART", "SEQ +B1 COOK B2 RAND B3 QNT",
         "PLAY/STOP  HOLD PART/SONG", 0,
         "OCT-: OCTAVE  HOME+ SCALE STEP", "OCT+: OCTAVE  HOME+ SCALE STEP"};

@@ -111,6 +111,29 @@ static void mark_dirty(void)
 
 static int held(int b) { return (int)(ui.btn >> b & 1u); }
 
+/* SAVE held + white 1: SNAPSHOT of the part (before an experiment), + white 2: RECALL it (an undo step: EDIT holds it back) */
+static void snapshot_key(int w)
+{
+    char s[16] = "PART A";
+    int part = dk_playing ? dk_cur_part : dk_song.cur_part, r;
+    if (dk_recording || dk_counting) {
+        say("SNAPSHOT", "NOT WHILE RECORDING");
+        return;
+    }
+    if (w == 0) {
+        s[5] = (char)('A' + (part & 7));
+        say("SNAPSHOT", snapshot_take(part) ? s : "PART TOO BIG");
+        return;
+    }
+    r = snapshot_recall();
+    if (r == 1) {
+        s[5] = (char)('A' + snapshot_part());
+        mark_dirty();
+        say("RECALL", s);
+    } else
+        say("RECALL", r ? "NO ROOM" : "NO SNAPSHOT YET");
+}
+
 static const char *preset_blk(int slot, int sh);   /* the preset's block, for its label (green) */
 #include "pages.c"
 
@@ -1080,8 +1103,10 @@ static void key_down(int k, int vel)
         ui.used[B_SAVE] = 1;
         if (w >= 12)
             preset_save(w - 12);
+        else if (w < 2)
+            snapshot_key(w);
         else
-            say("SAVE", "WHITE 13-16");
+            say("SAVE", "W1 SNAP  W2 RECALL  W13-16");
         return;
     }
     if (held(B_ARP) && w >= 0 && w < 8) {

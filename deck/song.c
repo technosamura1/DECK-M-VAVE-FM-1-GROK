@@ -26,6 +26,16 @@ static uint8_t grp_now, grp_seq;
 static snap_t usnap[NSNAP], rsnap[8];
 static int un, rn;                       /* entries */
 uint32_t song_edits;                     /* changes (autosave, the screen) */
+/* SNAPSHOT: one part (its six clips, bars, mutes) kept in memory to come back to after an experiment (one slot; gone with
+ * the song). Its notes keep their frozen sounds alive like the undo's do (snd_in_use) */
+#define SNAP_EV 768
+static dk_ev_t sbuf[SNAP_EV] DK_POOL;
+static struct {
+    uint8_t ok, part, bars, mute;
+    uint16_t n[DK_NTRACK], len[DK_NTRACK];
+    uint8_t layers[DK_NTRACK];
+    uint32_t lmute[DK_NTRACK];
+} snp;
 
 /* ------------------------------------------------------------------ events --- */
 static void reindex(void)
@@ -431,9 +441,10 @@ int song_redo(int *what)
 static uint8_t take_pend[DK_NCLIP];      /* a clip: the take (pass + 1) with notes in it not frozen yet; 0 none */
 uint8_t song_layers_full;                /* the sounds' table was full: the UI says it, once */
 
-void takes_forget(void)                  /* a new song: no take waits to be frozen */
+void takes_forget(void)                  /* a new song: no take waits to be frozen (and no snapshot) */
 {
     int c;
+    snp.ok = 0;
     for (c = 0; c < DK_NCLIP; c++)
         take_pend[c] = 0;
 }
@@ -459,6 +470,13 @@ static int snd_in_use(int t, int id)
     for (i = 0; i < rn; i++)
         if (!rsnap[i].kind && rsnap[i].clip % DK_NTRACK == t && snd_scan(rbuf + rsnap[i].at, rsnap[i].n, id))
             return 1;
+    if (snp.ok) {
+        int at = 0;
+        for (i = 0; i < t; i++)
+            at += snp.n[i];
+        if (snd_scan(sbuf + at, snp.n[t], id))
+            return 1;
+    }
     return 0;
 }
 static int snd_same(const dk_snd_t *a, const dk_snd_t *b)
@@ -766,6 +784,74 @@ int part_copy_x(int from, int to, int wipe)
     dk_song.part[to].mute = dk_song.part[from].mute;
     song_edits++;
     pc_edits = song_edits;
+    dk_unlock();
+    return 1;
+}
+/* SNAPSHOT: a part's clips taken (1), or not (0: more than SNAP_EV events); the one before is forgotten */
+int snapshot_take(int part)
+{
+    int t, n = 0, i;
+    part &= 7;
+    rec_flush();
+    snp.ok = 0;
+    for (t = 0; t < DK_NTRACK; t++)
+        n += dk_song.clip[part * DK_NTRACK + t].n;
+    if (n > SNAP_EV)
+        return 0;
+    n = 0;
+    for (t = 0; t < DK_NTRACK; t++) {
+        const dk_clip_t *c = &dk_song.clip[part * DK_NTRACK + t];
+        for (i = 0; i < c->n; i++)
+            sbuf[n + i] = dk_ev[c->at + i];
+        n += c->n;
+        snp.n[t] = c->n;
+        snp.len[t] = c->len;
+        snp.layers[t] = c->layers;
+        snp.lmute[t] = dk_song.lmute[part * DK_NTRACK + t];
+    }
+    snp.part = (uint8_t)part;
+    snp.bars = dk_song.part[part].bars;
+    snp.mute = dk_song.part[part].mute;
+    snp.ok = 1;
+    return 1;
+}
+int snapshot_part(void) { return snp.ok ? snp.part : -1; }
+/* the part as it was taken: 1 done (one undo step), 0 no snapshot, -1 the events do not fit now */
+int snapshot_recall(void)
+{
+    int t, pass, at, now = 0, tot = 0, p = snp.part;
+    if (!snp.ok)
+        return 0;
+    rec_flush();
+    for (t = 0; t < DK_NTRACK; t++) {
+        now += dk_song.clip[p * DK_NTRACK + t].n;
+        tot += snp.n[t];
+    }
+    if (dk_song.nev - now + tot > DK_NEV)
+        return -1;
+    undo_group(1);
+    for (t = 0; t < DK_NTRACK; t++)
+        if (dk_song.clip[p * DK_NTRACK + t].n || snp.n[t])
+            undo_push(p * DK_NTRACK + t);
+    undo_push_part(p);
+    undo_group(0);
+    dk_lock();
+    for (pass = 0; pass < 2; pass++) {   /* (the clips that shrink first: the events always fit) */
+        at = 0;
+        for (t = 0; t < DK_NTRACK; t++) {
+            int c = p * DK_NTRACK + t;
+            if ((snp.n[t] <= dk_song.clip[c].n) == (pass == 0)) {
+                clip_put(c, sbuf + at, snp.n[t]);
+                dk_song.clip[c].len = snp.len[t];
+                dk_song.clip[c].layers = snp.layers[t];
+                dk_song.lmute[c] = snp.lmute[t];
+            }
+            at += snp.n[t];
+        }
+    }
+    dk_song.part[p].bars = snp.bars;
+    dk_song.part[p].mute = snp.mute;
+    song_edits++;
     dk_unlock();
     return 1;
 }
