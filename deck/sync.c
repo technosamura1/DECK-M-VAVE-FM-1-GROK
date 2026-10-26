@@ -20,39 +20,56 @@ void sync_reset(sync_t *s, int keep_tempo)
 /* the slope of arrival time against clock number over the last m clocks (Q8 samples per clock), twice: a line through
  * all of them, then through the half that lies nearest to or below it. A link only ever delays (jitter, a burst of
  * clocks delivered together), so the early half is the one that is true, and the late outliers are left out. */
-static int64_t line(const sync_t *s, uint32_t m, uint32_t first, const int32_t *res, int32_t cut, int64_t *icpt)
+static int32_t line(const sync_t *s, uint32_t m, uint32_t first, const int32_t *res, int32_t cut, int32_t *icpt)
 {
-    uint32_t i;
-    int64_t n = 0, sx = 0, sy = 0, sxy = 0, sxx = 0, num, den;
-    uint32_t t0 = s->t[first % SY_N];
+    /* All in 32 bits (the device has no 64-bit divide, and its 64-bit multiplies are best left out): the sums are taken
+     * around a rounded mean, so they stay small; the exact mean is put back as a correction. */
+    int32_t n = 0, sx = 0, sy = 0, x0, y0, dx = 0, dy = 0, sxy = 0, sxx = 0, num, den, p, q, r;
+    uint32_t i, t0 = s->t[first % SY_N];
+    int32_t y[SY_N];
     for (i = 0; i < m; i++) {
-        int64_t y = (int32_t)(s->t[(first + i) % SY_N] - t0);
+        y[i] = (int32_t)(s->t[(first + i) % SY_N] - t0);
         if (res && res[i] > cut)
             continue;
         n++;
-        sx += (int64_t)i;
-        sy += y;
-        sxy += (int64_t)i * y;
-        sxx += (int64_t)i * (int64_t)i;
+        sx += (int32_t)i;
+        sy += y[i];
     }
-    num = n * sxy - sx * sy;
-    den = n * sxx - sx * sx;
+    if (n < 2)
+        return 0;
+    x0 = (sx + n / 2) / n;
+    y0 = (sy + n / 2) / n;
+    for (i = 0; i < m; i++) {
+        int32_t xc, yc;
+        if (res && res[i] > cut)
+            continue;
+        xc = (int32_t)i - x0;
+        yc = y[i] - y0;
+        dx += xc;
+        dy += yc;
+        sxy += xc * yc;
+        sxx += xc * xc;
+    }
+    num = sxy - dx * dy / n;
+    den = sxx - dx * dx / n;
     if (den <= 0 || num <= 0)
         return 0;
-    *icpt = (sy * 256 - (num * 256 / den) * sx) / n;        /* Q8 samples */
-    return (num * 256 + den / 2) / den;
+    q = num / den;
+    r = num % den;
+    p = q * 256 + (r * 256 + den / 2) / den;                 /* Q8 samples per clock (r*256 fits: den is small) */
+    *icpt = y0 * 256 + dy * 256 / n - p * x0 - (int32_t)((int32_t)p * dx / n);
+    return p;
 }
 static uint32_t fit(const sync_t *s, uint32_t m)
 {
     uint32_t i, j, first = s->count - m;
     uint32_t t0 = s->t[first % SY_N];
     int32_t res[SY_N], srt[SY_N], cut;
-    int64_t b = 0, p = line(s, m, first, 0, 0, &b);
+    int32_t b = 0, p = line(s, m, first, 0, 0, &b);
     if (p <= 0)
         return 0;
     for (i = 0; i < m; i++) {
-        int64_t y = (int64_t)(int32_t)(s->t[(first + i) % SY_N] - t0) * 256 - b - p * (int64_t)i;
-        res[i] = (int32_t)(y > 2000000000 ? 2000000000 : y < -2000000000 ? -2000000000 : y);
+        res[i] = (int32_t)(s->t[(first + i) % SY_N] - t0) * 256 - b - p * (int32_t)i;
         srt[i] = res[i];
     }
     for (i = 1; i < m; i++) {                                /* (insertion sort, 96 at most) */
@@ -63,7 +80,7 @@ static uint32_t fit(const sync_t *s, uint32_t m)
     }
     cut = srt[m / 2];
     {
-        int64_t q = line(s, m, first, res, cut, &b);
+        int32_t q = line(s, m, first, res, cut, &b);
         if (q > 0)
             p = q;
     }
