@@ -54,7 +54,7 @@ static const char *const FD_SRC[16][9] = {
 };
 /* the melodic ones: chord tones ('1' the root, '2' its third, '3' fifth, '4' seventh, '5'..'8' an octave up), each
  * note's length in sixteenths ('.' one) */
-static const char *const FM_SRC[16][3] = {
+static const char *const FM_SRC[16][6] = {
     {"ROOT", "1...............", "8"},          {"ROOT 2", "1.......1.......", "6.......6"},
     {"FIFTH", "1.......3.......", "6.......6"}, {"PULSE", "1...1...1...1...", "3...3...3...3"},
     {"BROKEN", "1...3...5...3...", "4...4...4...4"}, {"ARP", "1.2.3.4.3.2.3.4.", "2.2.2.2.2.2.2.2"},
@@ -64,36 +64,7 @@ static const char *const FM_SRC[16][3] = {
     {"DENSE", "1.3.5.8.5.3.1.3.", "2.2.2.2.2.2.2.2"}, {"FILL UP", "............1235", ""},
     {"FILL DOWN", "............8531", ""},        {"HOLD", "1...............", "g"},
 };
-static dk_finger_t FINGER_DRUM[16], FINGER_MEL[16];
-static void finger_build(void)
-{
-    int p, l, s;
-    for (p = 0; p < 16; p++) {
-        FINGER_DRUM[p].name = FD_SRC[p][0];
-        for (l = 0; l < 8; l++) {
-            const char *c = FD_SRC[p][l + 1];
-            for (s = 0; s < 16; s++)
-                {
-                int k = 0;
-                while (c[k] && k < 16)
-                    k++;
-                FINGER_DRUM[p].lanes[l][s] = (uint8_t)(s < k && c[s] >= '1' && c[s] <= '9' ? c[s] - '0' : 0);
-            }
-        }
-        FINGER_MEL[p].name = FM_SRC[p][0];
-        for (s = 0; s < 16; s++) {
-            const char *ln = FM_SRC[p][2];
-            int k = 0;
-            char t = FM_SRC[p][1][s], d;
-            while (ln[k] && k < 16)
-                k++;
-            d = s < k ? ln[s] : '.';
-            FINGER_MEL[p].lanes[0][s] = (uint8_t)(t >= '1' && t <= '8' ? t - '0' : 0);
-            FINGER_MEL[p].lanes[1][s] = (uint8_t)(d >= '1' && d <= '9' ? d - '0' : d == 'g' ? 16 : 1);
-            FINGER_MEL[p].lanes[2][s] = 0;
-        }
-    }
-}
+#include "finger_banks.c"
 
 #include "dream.c"
 
@@ -285,12 +256,11 @@ static void tape_init(void)
 {
     trng = 0x2545F491u;                         /* the same noise each time (the tests' WAVs repeat) */
     pad_tables();
-    finger_build();
 }
 
 const dk_tape_t TAPE = {
     "OVERWORLD", tape_init, ENGINES, 9, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
-    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FINGER_DRUM, FINGER_MEL, PERFORM, PERFORM_ACT, MOODS, 8,
+    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FBANKS, PERFORM, PERFORM_ACT, MOODS, 8,
     BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
     ATMO, 6,
 };

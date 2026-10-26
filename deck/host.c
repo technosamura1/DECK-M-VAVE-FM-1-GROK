@@ -111,6 +111,8 @@ int app_expect(const char *what, int *got)
     }
     else if (!strncmp(what, "clen", 4) && what[4] >= 'A' && what[4] <= 'H' && what[5] >= '1')
         g = dk_song.clip[(what[4] - 'A') * DK_NTRACK + (what[5] - '1') % DK_NTRACK].len;
+    else if (!strcmp(what, "fbank")) g = dk_fb_bank(dk_song.cur_track);        /* FINGER's bank of the track */
+    else if (!strncmp(what, "fbank", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.fbank[what[5] - '0'];   /* the song's byte, raw */
     else if (!strcmp(what, "preset")) g = cur()->preset;
     else if (!strcmp(what, "eng")) g = cur()->eng;
     else if (!strcmp(what, "mute")) g = cur()->mute;

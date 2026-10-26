@@ -253,7 +253,7 @@ static int page_field(int i, int home)
             return F[i];
         }
         case SQ_FINGER: {
-            static const uint8_t F[5] = {F_FLATCH, F_VOL, F_REV, F_ECHO, F_NONE};
+            static const uint8_t F[5] = {F_FBANK, F_FLATCH, F_VOL, F_REV, F_ECHO};
             return F[i];
         }
         default: {
@@ -301,7 +301,7 @@ static const char *hint(void)
         if (k->seq == SQ_STEP)
             return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "SEQ AGAIN x2 = STEP EDIT";
         if (k->seq == SQ_FINGER)
-            return "WHITE PATTERNS  BLACK VARIATIONS";
+            return "K1 BANK  WHITE PLAY  BLACK VARY";
         if (k->seq == SQ_DRIVE)
             return "PLAY = IT PLAYS  HOME+SEQ = TO STEP";
         return "SEQ+B1 COOK  B2 RANDOM  OCT-/+ UNDO/REDO";
@@ -1068,27 +1068,28 @@ static void draw_seq(void)
         break;
     }
     case SQ_FINGER: {
-        const dk_finger_t *set_ = drum ? TAPE.finger_drum : TAPE.finger_mel;
         for (i = 0; i < 16; i++) {           /* the sixteen patterns: held or latched, lit */
             int cx = WX + 3 + (i % 4) * 56, cy = WY + 3 + (i / 4) * 24, on = (dk_finger_latch[dk_song.cur_track] >> i & 1u) != 0;
+            uint16_t dc = on ? TH_TEXT : dimc(TH_TEXT, 11);
+            int st, l, t = dk_song.cur_track;
             if (on)
                 cv_rect(cx, cy, 52, 22, dimc(TH_ENC[0], 4));
             hline(cx, cy + 22, 52, on ? TH_ENC[0] : W_LINE);
-            if (set_) {                      /* the pattern itself, small: hits per lane, or a melody's contour */
-                const dk_finger_t *f = &set_[i];
-                uint16_t dc = on ? TH_TEXT : dimc(TH_TEXT, 11);
-                int st, l;
-                for (st = 0; st < 16; st++) {
-                    int xx = cx + 2 + st * 3;
-                    if (drum) {
-                        for (l = 0; l < 4; l++)
-                            if (f->lanes[l][st])
-                                cv_rect(xx, cy + 3 + l * 5, 2, 4, f->lanes[l][st] > 6 ? dc : dimc(dc, 8));
-                    } else if (f->lanes[0][st]) {
-                        int ln = f->lanes[1][st] ? f->lanes[1][st] : 1, y = cy + 18 - (f->lanes[0][st] - 1) * 2
-                                 - (f->lanes[2][st] > 1 ? 3 : 0);
-                        if (y < cy + 2)
-                            y = cy + 2;
+            for (st = 0; st < 16; st++) {    /* the pattern itself, small: hits per lane, or a melody's contour */
+                int xx = cx + 2 + st * 3;
+                if (drum) {
+                    for (l = 0; l < 4; l++) {        /* KICK, SNARE, HATS, the rest */
+                        int v = l < 2 ? dk_fb_drum(t, i, l, st)
+                                      : l == 2 ? dk_fb_drum(t, i, 4, st) | dk_fb_drum(t, i, 5, st)
+                                               : dk_fb_drum(t, i, 2, st) | dk_fb_drum(t, i, 3, st) | dk_fb_drum(t, i, 6, st) | dk_fb_drum(t, i, 7, st);
+                        if (v)
+                            cv_rect(xx, cy + 3 + l * 5, 2, 4, v > 6 ? dc : dimc(dc, 8));
+                    }
+                } else {
+                    int ln, oc, d = dk_fb_mel(t, i, st, &ln, &oc, 0, 0);
+                    if (d) {
+                        int y = cy + 19 - (d - 1) * 3 / 2 - oc * 3;
+                        y = y < cy + 2 ? cy + 2 : y > cy + 19 ? cy + 19 : y;
                         cv_rect(xx, y, ln * 3 - 1 > 49 - st * 3 ? 49 - st * 3 : ln * 3 - 1, 2, dc);
                     }
                 }

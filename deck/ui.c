@@ -861,9 +861,8 @@ static void notes_show(int k)
     if (kh[k].trk < 0)
         return;
     if (kh[k].kind == 2 || kh[k].kind == 3) {
-        const dk_finger_t *set_ = (e->flags & EF_DRUM) ? TAPE.finger_drum : TAPE.finger_mel;
-        if (kh[k].kind == 2 && set_)
-            cpy(p, set_[kh[k].notes[0] & 15].name);
+        if (kh[k].kind == 2)
+            cpy(p, dk_fb_name(kh[k].trk, kh[k].notes[0] & 15));
         else
             cpy(p, "VARIATION");
     } else if (kh[k].kind == 1) {          /* PERFORM: the effect's name, up top for as long as it is held */

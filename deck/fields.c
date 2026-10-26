@@ -10,7 +10,7 @@ enum {
     /* SOUND */ F_P0, F_P1, F_P2, F_P3, F_P4, F_P5, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
     F_MODTGT, F_MODSLOT,
     /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING,
-    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_FLATCH,
+    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_FLATCH, F_FBANK,
     F_SEQTYPE, F_OCT, F_DRIFT, F_MIDICH, F_ROLE,
     /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP,
     /* ROAD */ F_ROADCUR, F_ROADPART, F_ROADREPS, F_GPART, F_GLABEL, F_GBARS, F_PLAYMODE,
@@ -459,6 +459,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_ARPSRC: *hi = 1; break;
     case F_ARPON: *hi = 1; break;
     case F_ARPOCT: *lo = 1; *hi = 3; break;
+    case F_FBANK: *hi = DK_NFBANK - 1; break;
     case F_ARPLATCH:
     case F_FLATCH:
     case F_LEAD:
@@ -596,6 +597,7 @@ static int field_get(int f)
     case F_ARPOCT: return k->arp[2] ? k->arp[2] : 1;
     case F_ARPLATCH:
     case F_FLATCH: return k->arp[3] ? 1 : 0;
+    case F_FBANK: return dk_fb_bank(dk_song.cur_track);
     case F_ENERGY: return k->drv[0];
     case F_STYLE: return k->drv[1];
     case F_VAR: return k->drv[2];
@@ -763,6 +765,10 @@ static void field_set(int f, int v)
         k->arp[3] = (uint8_t)v;
         if (!v)
             dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
+        break;
+    case F_FBANK:
+        dk_song.fbank[dk_song.cur_track] = (uint8_t)v;
+        say(dk_fb_bankname(v), dk_fb_banksub(v));
         break;
     case F_ENERGY: k->drv[0] = (uint8_t)v; break;
     case F_STYLE: k->drv[1] = (uint8_t)v; break;
@@ -936,6 +942,7 @@ static const char *field_label(int f)
     case F_ARPOCT: return "OCTAVES";
     case F_ARPLATCH:
     case F_FLATCH: return "LATCH";
+    case F_FBANK: return "BANK";
     case F_ENERGY: return "ENERGY";
     case F_STYLE: return "STYLE";
     case F_VAR: return "VARIATION";
@@ -1128,6 +1135,7 @@ static void field_text(int f, char *b)
     case F_SONGSTYLE: cpy(b, TAPE.style_name[v % TAPE.nstyle]); break;
     case F_SEQTYPE: cpy(b, SEQ_NAME[SQ_LIST[v % NSEQ]]); break;
     case F_ROLE: cpy(b, ROLE_NAME[v % R_N]); break;
+    case F_FBANK: cpy(b, dk_fb_bankname(v)); break;
     case F_OCT:
     case F_KOCT:
         if (v > 0)

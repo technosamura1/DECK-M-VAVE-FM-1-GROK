@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 """DECK's sound check (CLAUDE_TASK 9): every WAV of out/sounds checked by ear's proxies.
 
-  python tools/sound_check.py [out/sounds] [--json out/sound_check.json] [--trims]
+  python tools/sound_check.py [out/sounds] [--json out/sound_check.json] [--trims] [--nolevel]
+(--nolevel: no per-engine loudness spread check, for folders of patterns of different density)
 
 For each file: the peak (<= -1 dBFS), DC (|mean| < -54 dBFS), clicks (a jump the signal around it does not explain),
 aliasing (the top octave's energy against the whole, the high notes' part), the tail (the last 50 ms below -60 dBFS),
@@ -140,7 +141,7 @@ def main():
             r["dev_db"] = dev
             r["trim_half_db"] = int(round(-dev * 2))
             flag = list(r["problems"])
-            if abs(dev) > 2.0:
+            if abs(dev) > 2.0 and "--nolevel" not in sys.argv:
                 flag.append(f"level {dev:+.1f} dB off the engine's")
             name = os.path.basename(r["file"])
             s = (f"   {name:28s} peak {r['peak_db']:6.1f}  loud {r['loud_db']:6.1f}  top {r['top_db']:6.1f}  "

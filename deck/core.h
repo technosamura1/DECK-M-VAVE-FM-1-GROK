@@ -96,6 +96,14 @@ extern volatile uint32_t dk_metro_err_max;              /* the worst offset of a
 
 /* the engine of a track and the values its voices get */
 const dk_engine_t *dk_engine(int trk);
+/* FINGER's banks (the tape's text patterns, decoded here) */
+const char *dk_fb_bankname(int bank);
+const char *dk_fb_banksub(int bank);
+int dk_fb_bank(int t);                  /* the track's bank (0 LOFI 1 8BIT 2 SYNTH 3 CINEMA) */
+int dk_fb_set(int t);                   /* the track's set: 0 drums 1 keys 2 bass 3 pad */
+const char *dk_fb_name(int t, int p);
+int dk_fb_drum(int t, int p, int lane, int step);
+int dk_fb_mel(int t, int p, int step, int *len, int *oct, int *vel, int *deg2);
 int dk_param_static(int trk, int target);               /* the knobs and the MACRO only (what a take is frozen with) */
 int dk_param_value(int trk, int target);                /* the value now (MACRO, motion and modulation applied) */
 uint32_t dk_cpu_cost(void);

@@ -16,6 +16,10 @@ echo "-- the sound"
 rm -rf out/sounds
 build/test/deck_test sounds out/sounds > build/test/sounds.txt || fail=1
 python tools/sound_check.py out/sounds --json build/test/check.json > build/test/sound_check.txt && echo "  ok   every preset: no clicks, peaks, DC, tails, levels within 2 dB" || { echo "  FAIL sound check"; grep "<--" build/test/sound_check.txt | head; fail=1; }
+python tools/finger_lint.py > build/test/finger_lint.txt && echo "  ok   FINGER banks: patterns well-formed, no duplicates" || { echo "  FAIL finger lint"; grep LINT build/test/finger_lint.txt | head; fail=1; }
+rm -rf out/fingerbanks
+build/test/deck_test fingerbank out/fingerbanks > build/test/fingerbank.txt || { echo "  FAIL fingerbank (silent or error)"; grep SILENT build/test/fingerbank.txt | head -5; fail=1; }
+python tools/sound_check.py out/fingerbanks --nolevel > build/test/fingerbank_check.txt && echo "  ok   every FINGER bank pattern: no clicks, peaks, DC, tails" || { echo "  FAIL fingerbank sound check"; grep "<--" build/test/fingerbank_check.txt | head; fail=1; }
 build/test/deck_test chords out/chords.wav > /dev/null || fail=1
 build/test/deck_test metro | sed 's/^/  /'
 build/test/deck_test bench | sed 's/^/  /'

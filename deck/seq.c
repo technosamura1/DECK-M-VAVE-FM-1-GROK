@@ -408,22 +408,73 @@ static void clip_tick(int t, uint32_t *harm_pcs)
 }
 
 /* ----------------------------------------------------------------- FINGER --- */
+/* the banks (the tape's text patterns) decoded a step at a time: no table in RAM */
+int dk_fch(const char *s, int step)
+{
+    int i;
+    if (!s)
+        return '.';
+    for (i = 0; i < step; i++)
+        if (!s[i])
+            return '.';
+    return s[step] ? s[step] : '.';
+}
+const char *dk_fb_bankname(int bank) { return TAPE.fbank[bank >= 0 && bank < DK_NFBANK ? bank : 0].name; }
+const char *dk_fb_banksub(int bank) { return TAPE.fbank[bank >= 0 && bank < DK_NFBANK ? bank : 0].sub; }
+int dk_fb_bank(int t) { return dk_song.fbank[t] < DK_NFBANK ? dk_song.fbank[t] : 0; }
+/* the track's set: 0 drums, 1 keys/lead (everything melodic), 2 bass, 3 pad */
+int dk_fb_set(int t)
+{
+    const dk_engine_t *e = dk_engine(t);
+    int r = dk_song.trk[t].role;
+    return (e->flags & EF_DRUM) ? 0 : r == R_BASS ? 2 : r == R_PAD ? 3 : 1;
+}
+static const char *const *fb_row(int t, int p)
+{
+    const dk_fbank_t *b = &TAPE.fbank[dk_fb_bank(t)];
+    int s = dk_fb_set(t);
+    p &= 15;
+    return s == 0 ? b->drum[p] : s == 1 ? b->mel[p] : s == 2 ? b->bass[p] : b->pad[p];
+}
+const char *dk_fb_name(int t, int p) { return fb_row(t, p)[0]; }
+/* a drum pattern: the velocity 0..9 of a lane at a step */
+int dk_fb_drum(int t, int p, int lane, int step)
+{
+    int c = dk_fch(fb_row(t, p)[1 + (lane & 7)], step);
+    return c >= '1' && c <= '9' ? c - '0' : 0;
+}
+static int fb_deg(int c) { return c >= '1' && c <= '9' ? c - '0' : c >= 'a' && c <= 'c' ? c - 'a' + 10 : 0; }
+/* a melodic pattern's step: the degree 1..12 (0 a rest); its length in sixteenths, octave shift (-2..2), velocity
+ * (0 the default) and the second voice's degree (0 none) through the pointers */
+int dk_fb_mel(int t, int p, int step, int *len, int *oct, int *vel, int *deg2)
+{
+    const char *const *r = fb_row(t, p);
+    int d = fb_deg(dk_fch(r[1], step)), l = dk_fch(r[2], step), o = dk_fch(r[3], step), v = dk_fch(r[4], step);
+    if (len)
+        *len = l >= '1' && l <= '9' ? l - '0' : l >= 'a' && l <= 'f' ? l - 'a' + 10 : l == 'g' ? 16 : 1;
+    if (oct)
+        *oct = o == 'd' ? -1 : o == 'D' ? -2 : o == 'u' ? 1 : o == 'U' ? 2 : 0;
+    if (vel)
+        *vel = v >= '1' && v <= '9' ? 20 + 11 * (v - '0') : 0;
+    if (deg2)
+        *deg2 = fb_deg(dk_fch(r[5], step));
+    return d;
+}
+
 static void finger_tick(int t, uint32_t pats, uint8_t var, int is_fill)
 {
     const dk_engine_t *e = dk_engine(t);
-    const dk_finger_t *set = (e->flags & EF_DRUM) ? TAPE.finger_drum : TAPE.finger_mel;
     uint32_t g = gt + (var & 16 ? DK_T16 : 0) - (var & 32 ? DK_T16 : 0) + 100000u * DK_T16;
     int unit = var & 1 ? 2 * DK_T16 : var & 2 ? DK_T16 / 2 : DK_T16, step, p, lane;
-    if (!set || g % (uint32_t)unit)
+    if (g % (uint32_t)unit)
         return;
     step = (int)((g / (uint32_t)unit) % 16u);
     for (p = 0; p < 16; p++) {
-        const dk_finger_t *f = &set[p];
         if (!(pats >> p & 1u))
             continue;
         if (e->flags & EF_DRUM) {
             for (lane = 0; lane < 8 && lane < e->nlanes; lane++) {
-                int v = f->lanes[lane][step];
+                int v = dk_fb_drum(t, p, lane, step);
                 float vel;
                 if (!v)
                     continue;
@@ -438,21 +489,27 @@ static void finger_tick(int t, uint32_t pats, uint8_t var, int is_fill)
                     rec_done(t, e->lane_note[lane], (int)(vel * 127.0f), DK_T16);
             }
         } else {
-            int v = f->lanes[0][step], len, base, tone, note, vel;
+            int len, oct, pv, d2, v = dk_fb_mel(t, p, step, &len, &oct, &pv, &d2), voice;
             static const uint8_t BASE[R_N] = {36, 36, 60, 64, 55, 72, 79, 60};
             if (!v)
                 continue;
-            len = f->lanes[1][step] ? f->lanes[1][step] : 1;
-            base = BASE[dk_song.trk[t].role % R_N] + 12 * dk_song.trk[t].oct;
-            tone = (v - 1) % 4;
-            note = dk_nearest(base + 12 * ((v - 1) / 4), harm.pcs[tone < harm.n ? tone : 0], base - 6, base + 30);
-            if (f->lanes[2][step])
-                note += 12 * (f->lanes[2][step] - 1);
-            vel = (var & 8) ? 50 : (var & 4) && step % 4 == 0 ? 110 : 84;
-            note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)(len * unit) * tick_len * 0.9f),
-                      jitter() + (int32_t)(0.012f * DK_SR) + swing_delay(t, step * DK_T16), 2);
-            if (rec_track_of(t))
-                rec_done(t, note, vel, len * unit);
+            if (dk_song.trk[t].role == R_PAD && len < 4)
+                len = 4;                         /* a pad swells slowly: a 16th would never be heard */
+            for (voice = 0; voice < 2; voice++) {
+                int base = BASE[dk_song.trk[t].role % R_N] + 12 * dk_song.trk[t].oct, tone, note, vel;
+                int dg = voice ? d2 : v;
+                if (!dg)
+                    continue;
+                tone = (dg - 1) % 4;
+                note = dk_nearest(base + 12 * ((dg - 1) / 4), harm.pcs[tone < harm.n ? tone : 0], base - 6, base + 30) +
+                       12 * oct;
+                note = note < 0 ? note + 12 : note > 127 ? note - 12 : note;
+                vel = (var & 8) ? 50 : (var & 4) && step % 4 == 0 ? 110 : pv ? pv : 84;
+                note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)(len * unit) * tick_len * 0.9f),
+                          jitter() + (int32_t)(0.012f * DK_SR) + swing_delay(t, step * DK_T16), 2);
+                if (rec_track_of(t))
+                    rec_done(t, note, vel, len * unit);
+            }
         }
     }
 }

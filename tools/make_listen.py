@@ -66,6 +66,18 @@ parts.append("<h2>MOOD-ы (биомы)</h2>")
 for i, s in enumerate(MOODS):
     parts.append(row(f"moods/mood_{i}.wav", s))
 
+parts.append("<h2>FINGER — банки паттернов</h2><p class='dim'>LOFI · 8BIT · SYNTH (night drive) · CINEMA (север). "
+             "Каждый из 16 паттернов: два такта на движках по умолчанию (deck_test fingerbank out/fingerbanks).</p>")
+fb = os.path.join(out, "fingerbanks")
+if os.path.isdir(fb):
+    for d in sorted(os.listdir(fb), key=lambda n: (["LOFI", "8BIT", "SYNTH", "CINEMA"].index(n.split("_")[0]) if n.split("_")[0] in ["LOFI", "8BIT", "SYNTH", "CINEMA"] else 9, n)):
+        if os.path.isdir(os.path.join(fb, d)):
+            parts.append(f"<details><summary><b>{html.escape(d.replace('_', ' '))}</b></summary>")
+            for f in sorted(os.listdir(os.path.join(fb, d))):
+                if f.endswith(".wav"):
+                    parts.append(row(f"fingerbanks/{d}/{f}", f"паттерн {int(f[1:3])}", "заливка/брейк" if int(f[1:3]) >= 14 else ""))
+            parts.append("</details>")
+
 page = f"""<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DECK · OVERWORLD — звуки</title>

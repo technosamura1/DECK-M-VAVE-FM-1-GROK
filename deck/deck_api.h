@@ -198,7 +198,8 @@ typedef struct {
     /* (added 2026-10: an older project ends here, DK_SONG_V1; the rest loads as zeros, which are the defaults) */
     dk_lane_t lane[DK_NTRACK][8];       /* a drum track's sounds, each its own */
     uint8_t atmo[8];                    /* ATMO: the layers' levels 0..100 (the tape's atmo list) */
-    uint8_t tapesim, atmo_lvl, rsv2[6]; /* ATMO: the tape emulation 0..100; the layers' master level (0 = 100) */
+    uint8_t tapesim, atmo_lvl;         /* ATMO: the tape emulation 0..100; the layers' master level (0 = 100) */
+    uint8_t fbank[DK_NTRACK];           /* FINGER: each track's pattern bank (0 LOFI .. DK_NFBANK-1); old projects: 0 */
     dk_snd_t snd[DK_NTRACK][DK_NSND];   /* the frozen sounds of each track (events' layer bits 5..7 point here) */
     uint32_t lmute[DK_NCLIP];           /* LAYERS: per clip, the takes muted (bit = take 0..31; playback skips them). Older projects: 0 */
 } dk_song_t;
@@ -242,11 +243,18 @@ typedef struct {
 } dk_borrow_t;
 
 #define DK_NFINGER 16
+#define DK_NFBANK 4                     /* FINGER's pattern banks: LOFI 8BIT SYNTH CINEMA */
+/* a FINGER bank: sixteen patterns for each set, as text in flash (tapes/overworld/finger_banks.c has the format);
+ * decoded a step at a time by dk_fb_* (seq.c) */
 typedef struct {
-    const char *name;
-    uint8_t lanes[8][16];               /* DRUM: velocity 0..9 a sixteenth per lane; melodic: lanes[0] the degree+1
-                                         * (0 rest), lanes[1] its length in sixteenths, lanes[2] the octave (+1) */
-} dk_finger_t;
+    const char *name, *sub;             /* shown: "LOFI", and what it is ("AMBIENT") */
+    const char *const (*drum)[9];       /* 16 rows: name, KICK SNARE RIM SHAKER HAT OPEN CLAP WOOD */
+    const char *const (*mel)[6];        /* 16 rows: name, notes, lengths, octaves, velocities, notes 2 (keys, lead, ...) */
+    const char *const (*bass)[6];
+    const char *const (*pad)[6];
+} dk_fbank_t;
+
+int dk_fch(const char *s, int step);    /* a pattern string's character at a step ('.' past its end) */
 
 /* an ATMO layer: an engine's voice that keeps going (WORLD's rain, its fire...) at a level of its own */
 typedef struct dk_atmo_s {
@@ -273,7 +281,7 @@ typedef struct {
     const uint8_t *style_bars;
     const uint8_t *style_breath;        /* a style rests a bar in eight */
     const dk_borrow_t *borrow_major, *borrow_minor;   /* 4 each */
-    const dk_finger_t *finger_drum, *finger_mel;   /* 16 each */
+    const dk_fbank_t *fbank;            /* FINGER's banks (DK_NFBANK) */
     const char *const *perform;         /* the 11 black keys in PERFORM (PF_*) */
     const uint8_t *perform_act;
     const dk_mood_t *moods;

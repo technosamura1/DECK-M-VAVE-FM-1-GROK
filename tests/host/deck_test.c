@@ -436,6 +436,57 @@ static void phrase(int inst, const char *out)
 #endif
 }
 
+
+/* FINGER's banks: every pattern of every bank (a drum, a bass, a pad, a melody track) held for two bars on the default
+ * engines, one WAV each in <dir>/<BANK>_<ROLE>/pNN.wav; sound_check.py --nolevel checks them. Silence fails the run. */
+static int fingerbank(const char *dir)
+{
+    static const struct { int t; const char *tag; } TR[4] = {{4, "DRUM_DUSTKIT"}, {3, "BASS"}, {2, "PAD"}, {0, "MEL"}};
+    int b, k, p, bad = 0, n = 0;
+    char cmd[256], fn[320];
+    for (b = 0; b < DK_NFBANK; b++)
+        for (k = 0; k < 4; k++) {
+            int t = TR[k].t;
+            snprintf(fn, sizeof fn, "%s/%s_%s", dir, dk_fb_bankname(b), TR[k].tag);
+            snprintf(cmd, sizeof cmd, "mkdir -p '%s'", fn);
+            if (system(cmd))
+                return 2;
+            for (p = 0; p < 16; p++) {
+                double bar;
+                int v, vmax;
+                fresh();
+                dk_lock();
+                dk_song.trk[t].seq = SQ_FINGER;
+                dk_song.fbank[t] = (uint8_t)b;
+                dk_song.dust = 0;
+                dk_unlock();
+                bar = 4.0 * 60.0 / (dk_song.tempo > 0 ? dk_song.tempo : 100);
+                run(0.05);
+                reset_out();
+                dk_cmd(C_FINGER, t, 1, p);
+                for (vmax = 0, v = 0; v < 20; v++) {       /* two bars, the busiest moment's voices counted */
+                    run(0.1 * bar);
+                    vmax = (int)dk_voices_on > vmax ? (int)dk_voices_on : vmax;
+                }
+                dk_cmd(C_FINGER, t, 0, p);
+                tail(8.0);
+                snprintf(fn, sizeof fn, "%s/%s_%s/p%02d.wav", dir, dk_fb_bankname(b), TR[k].tag, p + 1);
+                wav(fn);
+                n++;
+                if (vmax >= DK_NVOICE) {
+                    printf("VOICES FULL %s\n", fn);
+                    bad++;
+                }
+                if (peak < 200) {
+                    printf("SILENT %s (peak %d)\n", fn, peak);
+                    bad++;
+                }
+            }
+        }
+    printf("fingerbank: %d patterns rendered, %d silent\n", n, bad);
+    return bad ? 1 : 0;
+}
+
 /* ATMO to listen to: the demo's chorus three times: dry; with RAIN and the FIRE under it; with the TAPE as well */
 static void atmo_demo(const char *out)
 {
@@ -619,6 +670,8 @@ int main(int argc, char **argv)
         balance();
     else if (!strcmp(m, "atmo"))
         atmo_demo(argc > 2 ? argv[2] : "out/atmo.wav");
+    else if (!strcmp(m, "fingerbank"))
+        return fingerbank(argc > 2 ? argv[2] : "out/fingerbanks");
     else if (!strcmp(m, "bench"))
         bench();
 #ifdef DK_PROF
@@ -628,7 +681,7 @@ int main(int argc, char **argv)
     else if (!strcmp(m, "metro"))
         metro();
     else {
-        fprintf(stderr, "deck_test sounds|demo|drive|mood|chords|phrase|bench|metro\n");
+        fprintf(stderr, "deck_test sounds|demo|drive|mood|chords|phrase|fingerbank|bench|metro\n");
         return 2;
     }
     return 0;
