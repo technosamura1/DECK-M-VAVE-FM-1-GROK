@@ -438,6 +438,8 @@ int song_redo(int *what)
 /* LOCK TAKE (layers like the OP-1's tape): when a take ends, the sound the track has then (its engine, knobs and MACRO) is
  * kept in dk_song.snd[track] and the take's notes point to it (the layer byte's bits 5..7): the notes play with it whatever
  * the track's preset, engine or knobs become. The next take is recorded with the new sound */
+/* ERASE THE LAST TAKE (hold REC): per clip, the lowest take number the latest REC press put notes in (last_sess = that press's number) */
+static uint8_t last_sess[DK_NCLIP], last_from[DK_NCLIP], rec_sess;
 static uint8_t take_pend[DK_NCLIP];      /* a clip: the take (pass + 1) with notes in it not frozen yet; 0 none */
 uint8_t song_layers_full;                /* the sounds' table was full: the UI says it, once */
 
@@ -446,7 +448,7 @@ void takes_forget(void)                  /* a new song: no take waits to be froz
     int c;
     snp.ok = 0;
     for (c = 0; c < DK_NCLIP; c++)
-        take_pend[c] = 0;
+        take_pend[c] = last_sess[c] = 0;
 }
 
 static int snd_scan(const dk_ev_t *b, int n, int id)
@@ -699,8 +701,13 @@ static int rec_flush_do(int only_t)
         }
         if (dk_song.clip[r.clip].len == 0 && r.ev.pos + r.ev.dur > clip_len(r.clip))
             r.ev.dur = (uint16_t)(clip_len(r.clip) - r.ev.pos);
-        if (dk_song_insert(r.clip, &r.ev) >= 0 && !(r.ev.fl & EV_MOTION) && !DK_L_SND(r.ev.layer))
+        if (dk_song_insert(r.clip, &r.ev) >= 0 && !(r.ev.fl & EV_MOTION) && !DK_L_SND(r.ev.layer)) {
             take_pend[r.clip] = (uint8_t)(DK_L_TAKE(r.ev.layer) + 1u);
+            if (last_sess[r.clip] != rec_sess) {     /* the first note of this REC press in the clip: its take is where it starts */
+                last_sess[r.clip] = rec_sess;
+                last_from[r.clip] = (uint8_t)DK_L_TAKE(r.ev.layer);
+            }
+        }
         n++;
     }
     n += takes_settle(rec_on, pass, only_t);
@@ -716,6 +723,11 @@ void track_sound_to(int t)
 void rec_reset(void)
 {
     int c;
+    if (++rec_sess == 0) {               /* (wrapped: nothing older is "the last take" any more) */
+        rec_sess = 1;
+        for (c = 0; c < DK_NCLIP; c++)
+            last_sess[c] = 0;
+    }
     rep_started = 0;
     rec_r = dk_recq_w;
     for (c = 0; c < DK_NCLIP; c++) {
@@ -1450,6 +1462,58 @@ int layer_delete(int clip, int take)
     if (dk_lsolo_clip == clip && dk_lsolo_take == take)
         dk_lsolo_clip = 0xFF;
     dk_unlock();
+    undo_group(0);
+    song_edits++;
+    return n;
+}
+/* ERASE THE LAST TAKE (hold REC): the notes the latest REC press recorded (every pass of it, on every track it put notes on)
+ * go; older notes, automation (motion) and the rest of the song stay. One undo step. Returns the notes erased (0: nothing) */
+int take_erase_last(void)
+{
+    int c, i, n = 0, any = 0;
+    rec_flush();                         /* (what was just played is in the clips) */
+    for (c = 0; c < DK_NCLIP; c++) {
+        const dk_clip_t *cl = &dk_song.clip[c];
+        if (last_sess[c] != rec_sess)
+            continue;
+        for (i = 0; i < cl->n && !any; i++)
+            any = !(dk_ev[cl->at + i].fl & EV_MOTION) && DK_L_TAKE(dk_ev[cl->at + i].layer) >= last_from[c];
+    }
+    if (!any)
+        return 0;
+    undo_group(1);
+    for (c = 0; c < DK_NCLIP; c++) {
+        dk_clip_t *cl = &dk_song.clip[c];
+        int top = 0, k = 0;
+        if (last_sess[c] != rec_sess)
+            continue;
+        for (i = 0; i < cl->n && !k; i++)
+            k = !(dk_ev[cl->at + i].fl & EV_MOTION) && DK_L_TAKE(dk_ev[cl->at + i].layer) >= last_from[c];
+        if (!k)                          /* (nothing of it is left: undone, or erased by hand) */
+            continue;
+        k = 0;
+        undo_push(c);
+        dk_lock();
+        for (i = cl->n - 1; i >= 0; i--) {
+            const dk_ev_t *e = &dk_ev[cl->at + i];
+            if (!(e->fl & EV_MOTION) && DK_L_TAKE(e->layer) >= last_from[c]) {
+                ev_delete(c, i);
+                k++;
+            }
+        }
+        for (i = 0; i < cl->n; i++)
+            if ((int)DK_L_TAKE(dk_ev[cl->at + i].layer) > top)
+                top = (int)DK_L_TAKE(dk_ev[cl->at + i].layer);
+        cl->layers = (uint8_t)top;
+        for (i = last_from[c]; i < 32; i++)
+            dk_song.lmute[c] &= ~(1u << i);
+        if (dk_lsolo_clip == c && dk_lsolo_take >= last_from[c])
+            dk_lsolo_clip = 0xFF;
+        take_pend[c] = 0;
+        dk_unlock();
+        last_sess[c] = 0;
+        n += k;
+    }
     undo_group(0);
     song_edits++;
     return n;

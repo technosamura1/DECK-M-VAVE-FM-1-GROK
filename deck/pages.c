@@ -487,7 +487,7 @@ static const char *hold_hint(uint32_t now)
         "EDIT: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
         0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
         "ARP: AGAIN LATCH  +WHITE PART", 0,
-        "PLAY/STOP  HOLD PART/SONG", "REC: TAP = RECORD  +KNOB = AUTO",
+        "PLAY/STOP  HOLD PART/SONG", "REC: HOLD = ERASE TAKE  +KNOB = AUTO",
         "OCT-: OCTAVE  HOME+ SCALE STEP", "OCT+: OCTAVE  HOME+ SCALE STEP"};
     int b, best = -1;
     for (b = 0; b < NB; b++)

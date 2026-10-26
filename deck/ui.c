@@ -1745,6 +1745,19 @@ static void auto_erase(void)
     mark_dirty();
     say("AUTOMATION CLEARED", "UNDO: HOLD EDIT");
 }
+#define HOLD_ERASE_MS 600u               /* REC held this long (the hint comes at 450 ms) */
+/* hold REC: the notes of the last take (the latest REC press, all its passes and tracks) erased; automation and older notes stay */
+static void take_erase_ui(void)
+{
+    int n;
+    au_end();
+    n = take_erase_last();
+    if (n) {
+        mark_dirty();
+        say("TAKE ERASED", "UNDO: HOLD EDIT");
+    } else
+        say("NO TAKE", "RECORD FIRST");
+}
 static void input(void)
 {
     uint32_t keys, btn = plat_buttons(), k, now = plat_ms();
@@ -1785,6 +1798,9 @@ static void input(void)
                 action(A_PLAY, 1);
             else if (!m->hold_ms)
                 action(m->tap, 1), ui.used[k] = 1;
+        } else if (k == B_REC && (btn & bit) && !ui.used[k] && now - ui.down_t[k] >= HOLD_ERASE_MS && !held(B_HOME)) {
+            ui.used[k] = 1;              /* REC held, no knob turned: the take just recorded goes (one undo step); it records on if it was */
+            take_erase_ui();
         } else if ((btn & bit) && !ui.used[k] && m->hold_ms && m->hold_ms != HOLD_MOD) {   /* held */
             if (now - ui.down_t[k] >= m->hold_ms) {
                 ui.used[k] = 1;

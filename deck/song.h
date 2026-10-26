@@ -40,6 +40,7 @@ int layer_soloed(int clip, int take);
 void layer_mute_toggle(int clip, int take);
 void layer_solo_toggle(int clip, int take);
 int layer_delete(int clip, int take);
+int take_erase_last(void);              /* hold REC: the notes of the latest REC press (all its passes, all its tracks) erased: one undo step; 0 none */
 int layers_merge(int clip);
 int clip_quantize(int clip, int strength);
 int clip_bars(int clip);

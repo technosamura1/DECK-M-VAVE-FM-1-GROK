@@ -1,0 +1,135 @@
+# hold REC (0.6 s, no knob turned): the take just recorded is erased (its notes; older notes stay), one undo step
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+press HOME
+tapkey b0
+release HOME
+tap SEQ
+tap SEQ
+turn K2 1
+turn K2 -1
+wait 50
+expect bars 4
+# no take yet: nothing happens
+press REC
+wait 700
+release REC
+wait 200
+expect recording 0
+expect counting 0
+expect nev 0
+# a first take: three notes
+tap REC
+wait 3500
+expect recording 1
+key w0 down 90
+wait 300
+key w0 up
+wait 300
+key w2 down 90
+wait 300
+key w2 up
+wait 300
+key w4 down 90
+wait 300
+key w4 up
+wait 300
+tap REC
+wait 300
+expect recording 0
+expect events 12
+# a second take: two notes (the first take is older)
+tap REC
+wait 200
+key w1 down 90
+wait 300
+key w1 up
+wait 300
+key w3 down 90
+wait 300
+key w3 up
+wait 300
+expect recording 1
+# a short hold (under the hint): a tap, it stops the recording; and the notes stay
+tap REC
+wait 300
+expect recording 0
+expect events 20
+# the hold erases the second take only
+press REC
+wait 500
+shot rec_erase_hint.png
+wait 300
+expect events 12
+release REC
+wait 300
+shot rec_erase_done.png
+expect recording 0
+expect events 12
+# again: nothing left of that take; the older one stays
+press REC
+wait 800
+release REC
+wait 200
+expect events 12
+# UNDO (hold EDIT): the erased take is back, one step
+press EDIT
+wait 800
+release EDIT
+wait 300
+expect events 20
+# a knob turned during the hold is AUTOMATION: nothing is erased (the notes stay, the curve is there)
+tap FX
+wait 300
+expect playing 1
+press REC
+turn K1 3
+wait 150
+turn K1 3
+wait 1200
+release REC
+wait 200
+tap PLAY
+wait 200
+expect events 22   # (20 notes + 2 curve points)
+expect autos >0
+# a take of two passes, then erased while recording: the notes of the passes so far go, the recording goes on
+tap HOME
+tap PLAY
+wait 200
+tap REC
+wait 3500
+expect recording 1
+key w5 down 90
+wait 300
+key w5 up
+wait 9500
+expect pass >1
+key w6 down 90
+wait 300
+key w6 up
+wait 300
+expect events >=28
+press REC
+wait 800
+release REC
+wait 200
+expect recording 1
+expect events 22
+key w7 down 90
+wait 300
+key w7 up
+wait 300
+expect events 26
+tap REC
+wait 200
+expect recording 0
+expect events 26
+press EDIT
+wait 800
+release EDIT
+wait 200
+expect events 30   # (the state at the erase: the two passes' notes back)
