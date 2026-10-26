@@ -342,14 +342,14 @@ static const char *hint(void)
             return "K1 BANK  WHITE PLAY  BLACK VARY";
         if (k->seq == SQ_DRIVE)
             return "PLAY = IT PLAYS  HOME+SEQ = TO STEP";
-        return "SEQ+B1 COOK  B2 RANDOM  OCT-/+ UNDO/REDO";
+        return "HOME x2, EDIT = COOK RANDOM QUANTIZE";
     case PG_SOUND:
         if (plat_ms() / 3000u % 3u == 1u)
             return "HOLD REC + KNOB = AUTOMATION";
         if (plat_ms() / 3000u % 3u == 2u && auto_count(cur_clip(), 0))
-            return "REC + FX = ERASE AUTOMATION";
+            return "HOME x2, EDIT = ERASE AUTOMATION";
         return "FX = ROW  HOLD FX+WHITE 1-4 = BYPASS";
-    case PG_MIX: return "WHITE MUTE  HOLD = CLEAR  BLACK SOLO";
+    case PG_MIX: return "WHITE TRACK  BLACK MUTE  B7 SOLO  B8 ARM";
     case PG_ROAD:
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "WHITE ADD  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
@@ -363,7 +363,7 @@ static const char *hint(void)
     case PG_TRACKS:
         if (ui.lay)
             return "HOLD EDIT = UNDO  HOME = BACK";
-        return "SEQ+WHITE = ARM  K3 MODE  HOME = BACK";
+        return "EDIT = EDIT LIST  K3 MODE  HOME = BACK";
     case PG_ARP: return "SEQ = COPY TO STEP  ARP = ROW  HOME+ARP = OFF";
     default: return "";
     }
@@ -443,7 +443,7 @@ static void draw_header(void)
         int k = (int)(itoa_b(dk_song.cur_track + 1, tl) - tl);
         tl[k] = ' ';
         cpy(tl + k + 1, track_label(dk_song.cur_track));
-        text_box(70, 4, 94 - mw, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC || ui.page == PG_ARP ? tl : ui.page == PG_TRACKS && ui.lay ? "LAYERS" : PAGE_NAME[ui.page], TH_GRAY);
+        text_box(70, 4, 94 - mw, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC || ui.page == PG_ARP ? tl : ui.page == PG_TRACKS && ui.lay ? (ui.lay == 2 ? "LAYERS" : "EDIT") : PAGE_NAME[ui.page], TH_GRAY);
     }
     {                                    /* the battery: shown only when low or HOME held (a quiet header) */
         int pct = batt_pct(), w;
@@ -467,7 +467,7 @@ no_batt:
     for (t = 0; t < DK_NTRACK; t++) {    /* the six tracks: the one you are on bright, a muted one hollow */
         int cx = 211 + (t % 3) * 9, cy = 6 + (t / 3) * 8;
         uint16_t c = t == dk_song.cur_track ? TH_TEXT : dk_level[t] > 0.01f ? TH_TRACK[t] : TH_GRAY;
-        if (dk_song.trk[t].mute || part_muted(t))
+        if (part_muted(t))
             circle(cx, cy, 2, TH_GRAY);
         else
             disc(cx, cy, 2, c);
@@ -477,7 +477,7 @@ no_batt:
 }
 
 /* a button held a moment (and not used for anything yet): what it does, in one line where the page's hint is. HOME (its
- * own hint and the battery) and REC (the ERASE guide) have none here */
+ * own hint and the battery) and SEQ (a tap on the press) have none here */
 #define HOLD_HINT_MS 450u
 static const char *hold_hint(uint32_t now)
 {
@@ -486,8 +486,8 @@ static const char *hold_hint(uint32_t now)
         "ENV: ROAD  HOLD = GARAGE", "LFO: MIX  +SOUND KNOB = MOD 1",
         "EDIT: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
         0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
-        "ARP: AGAIN LATCH  +WHITE PART", "SEQ +B1 COOK B2 RAND B3 QNT",
-        "PLAY/STOP  HOLD PART/SONG", 0,
+        "ARP: AGAIN LATCH  +WHITE PART", 0,
+        "PLAY/STOP  HOLD PART/SONG", "REC: TAP = RECORD  +KNOB = AUTO",
         "OCT-: OCTAVE  HOME+ SCALE STEP", "OCT+: OCTAVE  HOME+ SCALE STEP"};
     int b, best = -1;
     for (b = 0; b < NB; b++)
@@ -555,49 +555,6 @@ static void draw_toast(void)
         text_box(x + 12 + w0 + 12, y + 7, w - 36 - w0 > 0 ? w - 36 - w0 : 1, 0, &FONT_S, &FONT_XS, ui.msg[1], TH_ENC[0]);
     } else
         text_box(x + 12, y + 7, w - 24, 1, &FONT_B, &FONT_XS, ui.msg[0], TH_TEXT);
-}
-
-/* ERASE (REC held): what goes, a bar each that fills as you hold, what is gone in red */
-static void draw_erase(void)
-{
-    int x = 14, y = 64, w = 212, h = 100, i, rows = ui.erase_kind == 0 ? 2 : 1;
-    uint32_t dt = plat_ms() - ui.down_t[B_REC];
-    char who[24], row[2][24];
-    if (!ui.erase_on)
-        return;
-    cv_rect(x, y, w, h, TH_BG);
-    hline(x, y, w, TH_REC);
-    hline(x, y + h - 1, w, TH_REC);
-    vline(x, y, h, TH_REC);
-    vline(x + w - 1, y, h, TH_REC);
-    text_box(x + 10, y + 7, 90, 0, &FONT_B, &FONT_T, "ERASE", TH_REC);
-    if (ui.erase_kind == 2) {
-        cpy(who, "THE ROAD");
-        cpy(row[0], "ALL ITS BLOCKS");
-    } else if (ui.erase_kind == 1) {
-        char *p = cpy(who, "PART ");
-        *p++ = (char)('A' + ui_gpart % DK_NPART);
-        *p = 0;
-        cpy(row[0], "ALL SIX TRACKS");
-    } else {
-        char *p;
-        cpy(who, track_label(dk_song.cur_track));
-        p = cpy(row[0], "IN PART ");
-        *p++ = (char)('A' + dk_song.cur_part % DK_NPART);
-        *p = 0;
-        cpy(row[1], "IN ALL 8 PARTS");
-    }
-    text_box(x + 100, y + 9, w - 110, 2, &FONT_S, &FONT_T, who, TH_TEXT);
-    for (i = 0; i < rows; i++) {
-        int ry = y + 34 + i * 24, bw = w - 20, from = i ? (int)ERASE_1 : (int)ERASE_SHOW, to = i ? (int)ERASE_2 : (int)ERASE_1,
-            f = (int)dt <= from ? 0 : (int)dt >= to ? bw : ((int)dt - from) * bw / (to - from), done = ui.erase_stage > i;
-        text_box(x + 10, ry, 120, 0, &FONT_T, &FONT_T, row[i], done ? TH_REC : TH_TEXT);
-        text_box(x + 130, ry, w - 140, 2, &FONT_T, &FONT_T, done ? "GONE" : i ? "HOLD ON" : "HOLD", done ? TH_REC : TH_GRAY);
-        cv_rect(x + 10, ry + 12, bw, 4, TH_LINE);
-        cv_rect(x + 10, ry + 12, done ? bw : f, 4, done ? TH_REC : TH_TEXT);
-    }
-    text_box(x + 6, y + h - 16, w - 12, 1, &FONT_T, &FONT_XS,
-             ui.erase_stage ? "LET GO = DONE   UNDO: HOLD EDIT" : "LET GO = CANCEL", TH_GRAY);
 }
 
 /* ------------------------------------------------------------------- SOUND --- */
@@ -1265,10 +1222,10 @@ static void draw_mix(void)
             cv_rect(x + 27, top + h - 5 - i * 6, 3, 4, i < lv ? (i < 4 ? TH_ENC[0] : i < 6 ? TH_ENC[2] : TH_REC) : RGB(60, 54, 48));
         cv_rect(cx - 8, fy - 4, 17, 8, sel ? CS_LABEL : CS_BODY_D);   /* the cap */
         hline(cx - 8, fy, 17, sel ? TH_ENC[0] : CS_INK);
-        cv_rect(x + 4, WY + WH - 14, 24, 12, k->mute || show ? CS_BODY_D : TH_TRACK[t]);   /* the strip of tape: dark when silent */
-        s[0] = (char)(k->mute ? 'M' : '1' + t);    /* M: the temporary mute (SEQ + white); the part's: the number crossed out */
+        cv_rect(x + 4, WY + WH - 14, 24, 12, show ? CS_BODY_D : TH_TRACK[t]);   /* the strip of tape: dark when silent */
+        s[0] = (char)('1' + t);                    /* the part's mute: the strip dark */
         s[1] = 0;
-        text_box(x + 4, WY + WH - 14, 24, 1, &FONT_T, &FONT_T, s, k->mute || show ? CS_INK : TH_BG);
+        text_box(x + 4, WY + WH - 14, 24, 1, &FONT_T, &FONT_T, s, show ? CS_INK : TH_BG);
         if (show) {
             int i;
             for (i = 0; i < 24; i++)
@@ -1850,11 +1807,36 @@ static void draw_layers(void)
     text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "W1 MUTE  W2 SOLO  W3 DELETE  W4 MERGE", TH_GRAY);
     text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = LAYER  EDIT = BACK", dimc(TH_GRAY, 8));
 }
+/* THE EDIT LIST (TRACKS: EDIT): the selected track's clip; one item per white key, two columns. An erase asked once is red. */
+#define ED_N 14
+static const char *const ED_NAME[ED_N] = {"QUANTIZE", "COPY BAR", "PASTE BAR", "DOUBLE", "VARIATE", "HUMANIZE", "COOK",
+                                          "RANDOM", "COPY CLIP", "PASTE CLIP", "LAYERS", "ERASE NOTES", "ERASE AUTO", "ERASE ALL"};
+static void draw_edit(void)
+{
+    int t = dk_song.cur_track, i, ask = ui.ed_ask && plat_ms() - ui.ed_t < 3000u ? ui.ed_ask - 1 : -1;
+    char s[40], *p;
+    p = cpy(s, track_label(t));
+    p = cpy(p, "  ");
+    *p++ = (char)('A' + dk_song.cur_part % DK_NPART);
+    *p = 0;
+    text_box(4, 20, 232, 0, &FONT_T, &FONT_T, s, TH_TRACK[t]);
+    for (i = 0; i < ED_N; i++) {
+        int x = 4 + i / 7 * 118, y = 34 + i % 7 * 20, er = i >= 11, on = i == ask;
+        uint16_t col = on || er ? TH_REC : TH_TRACK[t];
+        char n[4];
+        cv_rect(x, y, 20, 17, on ? TH_REC : er ? dimc(TH_REC, 4) : RGB(52, 46, 40));
+        itoa_b(i + 1, n);
+        text_box(x, y + 3, 20, 1, &FONT_T, &FONT_T, n, on ? TH_BG : col);
+        text_box(x + 24, y + 3, 90, 0, &FONT_T, &FONT_T, ED_NAME[i], on ? TH_REC : TH_TEXT);
+    }
+    text_box(4, 183, 232, 0, &FONT_T, &FONT_T, ask >= 0 ? "AGAIN = ERASE  (3 S)" : "W1-14 = ITEM  ERASE: PRESS TWICE", ask >= 0 ? TH_REC : TH_GRAY);
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = TRACK  EDIT = BACK  HOLD EDIT = UNDO", dimc(TH_GRAY, 8));
+}
 static int trk_rec(int t) { return (dk_recording || dk_counting) && (dk_rec_mask >> t & 1u); }
 static void draw_tracks(void)
 {
     if (ui.lay) {
-        draw_layers();
+        ui.lay == 2 ? draw_layers() : draw_edit();
         return;
     }
     int t, part = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, blink = (plat_ms() / 230u) & 1u;
@@ -1863,7 +1845,7 @@ static void draw_tracks(void)
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_track_t *k = &dk_song.trk[t];
         int ry = 30 + t * 25, cl = part * DK_NTRACK + t, clen = clip_len(cl), i, lo = 127, hi = 0, tx = 158, tw = 78, sel = t == dk_song.cur_track,
-            pm = part_muted(t), pend = part_mute_pending(t), muted = k->mute || pm, rec = trk_rec(t), n = dk_song.clip[cl].n;
+            pm = part_muted(t), pend = part_mute_pending(t), muted = pm, rec = trk_rec(t), n = dk_song.clip[cl].n;
         const dk_clip_t *c = &dk_song.clip[cl];
         uint16_t col = muted ? dimc(TH_TRACK[t], 5) : TH_TRACK[t];
         if (rec)
@@ -1881,7 +1863,7 @@ static void draw_tracks(void)
                                              /* the block (short, green), then the name (white) */
         {                                    /* M: the part's mute (or the temporary one), blinking while a change waits; S: solo */
             int show = pend >= 0 && blink ? pend : pm;
-            text_box(72, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", k->mute || show ? TH_REC : dimc(TH_GRAY, 6));
+            text_box(72, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", show ? TH_REC : dimc(TH_GRAY, 6));
             text_box(84, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", k->solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
         }
         cv_rect(97, ry + 3, 26, 4, RGB(34, 30, 27));       /* the level */
@@ -1923,7 +1905,7 @@ static void draw_tracks(void)
         if (dk_playing)                      /* the playhead, across the rows */
             vline(tx + (int)(dk_part_tick % (uint16_t)clen) * (tw - 2) / clen, ry, 23, TH_TEXT);
     }
-    text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "SEL/W1-6 TRACK  B1-6 MUTE  SEQ+B SOLO", TH_GRAY);
+    text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "SEL/W1-6 TRACK  B1-6 MUTE  B7 SOLO  B8 ARM", TH_GRAY);
     {                                        /* the take's settings: the armed tracks and the mode (SEQ + white arms) */
         char *p = cpy(s, "ARM ");
         int any = 0;
@@ -1936,7 +1918,7 @@ static void draw_tracks(void)
             *p++ = '-';
         *p++ = ' ';
         *p++ = ' ';
-        cpy(cpy(p, dk_rec_mode ? "REPLACE" : "OVERDUB"), "  SEQ+W ARM  K3 MODE");
+        cpy(cpy(p, dk_rec_mode ? "REPLACE" : "OVERDUB"), "  K3 MODE");
         text_box(4, 195, 232, 0, &FONT_T, &FONT_T, s, TH_GRAY);
     }
 }
@@ -1979,7 +1961,7 @@ static void draw_trackbar(void)
     vline(229, y, 58, TH_TEXT);
     for (t = 0; t < DK_NTRACK; t++) {
         int cx = 30 + t * 36, on = t == cur_t, cy = y + 18;
-        uint16_t c = dk_song.trk[t].mute || part_muted(t) ? TH_GRAY : TH_TRACK[t];
+        uint16_t c = part_muted(t) ? TH_GRAY : TH_TRACK[t];
         if (on) {
             disc(cx, cy, 11, c);
             circle(cx, cy, 13, TH_TEXT);
@@ -2005,14 +1987,13 @@ static void draw_trackbar(void)
 
 static void garden_overlay(int32_t y0, int32_t h)
 {
-    if (plat_ms() >= ui.msg_until && plat_ms() >= ui.trk_until && !ui.erase_on)
+    if (plat_ms() >= ui.msg_until && plat_ms() >= ui.trk_until )
         return;
     cv_oy = -y0;
     cv_y0 = 0;
     cv_y1 = h;
     draw_toast();
     draw_trackbar();
-    draw_erase();
     cv_oy = 0;
 }
 
@@ -2024,7 +2005,6 @@ static void draw_page_band(int band)
     draw_footer(186);
     draw_toast();
     draw_trackbar();
-    draw_erase();
     band_end();
 }
 

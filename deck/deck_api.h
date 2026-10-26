@@ -144,7 +144,7 @@ typedef struct {
     int8_t trim;
     uint8_t vol, rev, echo;
     int8_t pan;
-    uint8_t mute, solo, midi_ch;
+    uint8_t mute, solo, midi_ch;      /* mute: unused since the temporary mute went (always read as off); kept for the project's layout */
     int8_t oct;
     uint8_t mod[2][4];                  /* type (MOD_*), depth 0..100, rate 0..100 (FOLLOW: the source track), target T_* */
     uint8_t swing, drift;

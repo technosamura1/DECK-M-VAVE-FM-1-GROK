@@ -719,7 +719,7 @@ static int track_audible(int t)
     int pm = dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute >> t & 1u;   /* muted in the part playing */
     if (stems_solo != 0xFF)                    /* STEMS: the one track alone, silent where the song has it muted in the part */
         return t == stems_solo && !pm;
-    if (k->mute || (drop_mask >> t & 1u) || pm)
+    if ((drop_mask >> t & 1u) || pm)
         return 0;
     if (perf_mute_drums && (dk_engine(t)->flags & EF_DRUM))
         return 0;

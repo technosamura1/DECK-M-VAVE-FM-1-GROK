@@ -6,7 +6,7 @@
  *   textfit (texts cut short: 0) undo playmode; the step editor's cursor senotes selen sepitch; keywN (white key N's
  *   note)
  *   parts: pmask (the part's track mutes, the one now) pmaskA..H pmpend (a mute waiting for the bar's end) newpart (NEW PART 1 COPY, 0 EMPTY)
- *   barsA..H psndA1 (the first event's frozen sound, part A track 1) clenA1 (clip length) pmgen tmute0..5 (a track's old global mute)
+ *   barsA..H psndA1 (the first event's frozen sound, part A track 1) clenA1 (clip length) pmgen
  *   commands: seed P T N SND (N events into part P (A=0) track T (1..6), sound id SND), setbars P N, setpmask P MASK, newpart N,
  *   ballast N (N events into part H's track 6: the pool nearly full), demo (the tape's demo song), export FILE (the song's SysEx stream to a .syx file), textaudit (every page,
  *   row, track and engine drawn: the texts that did not fit counted), page N, track N, wavsolo T */
@@ -183,7 +183,6 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "playmode")) g = dk_song.play_mode;
     else if (!strcmp(what, "pmask")) g = dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute;
     else if (!strncmp(what, "pmask", 5) && what[5] >= 'A' && what[5] <= 'H') g = dk_song.part[what[5] - 'A'].mute;
-    else if (!strncmp(what, "tmute", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.trk[what[5] - '0'].mute;
     else if (!strncmp(what, "solo", 4) && what[4] >= '0' && what[4] <= '5') g = dk_song.trk[what[4] - '0'].solo;
     else if (!strcmp(what, "pmpend")) g = dk_pm_x;
     else if (!strcmp(what, "pmgen")) g = dk_pm_gen;
@@ -206,7 +205,6 @@ int app_expect(const char *what, int *got)
             d++;
         g = preset_count(atoi(what + 4), *d ? atoi(d + 1) : 0);
     }
-    else if (!strcmp(what, "mute")) g = cur()->mute;
     else if (!strcmp(what, "proj")) g = set.proj;
     else if (!strcmp(what, "bars")) g = dk_song.part[dk_song.cur_part & 7].bars;   /* the part's */
     else if (!strcmp(what, "cursor")) g = ui_cursor;                 /* the step editor's */
