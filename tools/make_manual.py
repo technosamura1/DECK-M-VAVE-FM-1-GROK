@@ -641,9 +641,9 @@ def build():
     story.append(table(eng, [24, 86, CW - 110], head=["ДВИЖОК", "ЧТО ЭТО", "РУЧКИ K1–K4"], pad=3))
     story.append(Spacer(1, 4 * mm))
     blk = [["AMBIENT LOFI", "132", "то, что было, плюс новые: SOFT SAW, DUST LEAD, DRONE-пады, лоу-фай пулс, пыльные ударные"],
-           ["8-16 BIT", "42", "меандр, пульс 12,5%, треугольник, шум; чип-арпеджио, GAME OVER, POWER-UP, SNES STRINGS, 707 и CHIP-ударные"],
+           ["8-16 BIT", "46", "меандр, пульс 12,5%, треугольник, шум; чип-арпеджио, GAME OVER, POWER-UP, SNES STRINGS, 707 и CHIP-ударные"],
            ["SYNTHWAVE", "70", "NIGHT DRIVE, OUTRUN LEAD, SUNSET SAW, NEON PLUCK, MIAMI BRASS, DARK DRIVE, MIDNIGHT, неоновые колокола"],
-           ["CINEMATIC", "88", "низкие дроны, хор (CHOIR), рога (HORN, BRASS), струнные, лютня и арфа, боевые барабаны WAR как звук"]]
+           ["CINEMATIC", "84", "низкие дроны, хор (CHOIR), рога (HORN, BRASS), струнные, лютня и арфа, боевые барабаны WAR как звук"]]
     story.append(table(blk, [30, 14, CW - 44], head=["БЛОК", "ПРЕСЕТОВ", "ЧТО ВНУТРИ"], pad=3))
     story.append(Spacer(1, 3 * mm))
     story.append(Paragraph("Не у каждого инструмента есть все четыре блока: у KALIMBA новых нет, у WORLD четыре кинематографических, "

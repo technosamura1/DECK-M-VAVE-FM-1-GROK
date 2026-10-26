@@ -462,7 +462,7 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
   707 DUSTY BRUSH CHIP SYNTH WAR, WINDS +SYNBRASS DUDUK.
 - **Счёт пресетов** [блок0, 8-16, SYNTHWAVE, CINEMATIC]: FELT 12/4/4/6, TINE 12/4/8/4, AIRPAD 12/0/8/12, GLASS 12/4/6/6, SOFTBASS 12/8/12/8,
   DUSTKIT 12/8/8/8, WORLD 12/0/0/4, KALIMBA 12/0/0/0, WINDS 12/0/6/12, SYNTH 12/12/12/12, PLUCK 12/6/6/12. Итого 332
-  (132 / 42 / 70 / 88). FELT/TINE/GLASS в блоках 1–2 — через LOFI/хорус/эхо и параметры, не новые осцилляторы.
+  (132 / 46 / 70 / 84). FELT/TINE/GLASS в блоках 1–2 — через LOFI/хорус/эхо и параметры, не новые осцилляторы.
 - **SVF Chamberlin**: `dk_svf_f(hz)` выше ~7200 Гц неустойчив: срез ≤ 6000 Гц, `fk` ≤ 0.8 (SYNTH). Выходной одно-полюсник против
   краёв пульса/шума (`lp`, `lpk`); PLUCK — `lq` после crush.
 - **Калибровка**: `tools/calibrate.py` (11 движков; старые 108 строк не трогает без `--all`; читает PCOUNT). `sound_check.py`: детектор
