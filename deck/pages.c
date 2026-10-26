@@ -411,6 +411,8 @@ static void draw_header(void)
     }
     s[1] = 0;
     cv_text(25, 4, &FONT_XS, s, TH_BG);
+    if (ui.dirty)                        /* unsaved changes: a small dot (it goes out by itself with the autosave) */
+        cv_rect(3, 9, 2, 2, TH_GRAY);
     bar = dk_playing ? dk_part_tick / DK_TPB + 1 : 1;
     beat = dk_playing ? dk_part_tick % DK_TPB / DK_PPQ + 1 : 1;
     x = (int)(itoa_b(bar, s) - s);

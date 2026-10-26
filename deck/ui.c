@@ -50,7 +50,7 @@ static struct {
 #define ERASE_SHOW 350u                    /* REC held: ERASE shown; at ERASE_1 the clip goes, at ERASE_2 the track */
 #define ERASE_1 1000u
 #define ERASE_2 2500u
-#define AUTOSAVE_MS 90000u                 /* the autosave: no more often than this */
+#define AUTOSAVE_MS 300000u                /* the autosave: no more often than this (5 min; the first one at once) */
 static void say(const char *a, const char *b)
 {
     uint32_t i;
@@ -2003,11 +2003,13 @@ static void housekeeping(uint32_t now)
             plat_sysex_send(f, (uint32_t)n);
         }
     }
-    /* saving by itself: once in 90 s at most (SAVE on PROJECT saves at once), a few seconds after the last change,
-     * while all rests and is quiet (an erase stops the sound; it is faded out first) */
+    /* saving by itself: once in 5 min at most (the first at once; SAVE on PROJECT saves now), six seconds after the last
+     * change, while all rests and is quiet: nothing playing or recording, no key or button held, no knob just touched (an
+     * erase stops the sound; it is faded out first). Nothing is shown but the small dot of unsaved changes going out */
     if ((ui.dirty || settings_due) && !dk_playing && !dk_recording && !dk_counting && now - ui.change_t > 6000u &&
-        now - ui.save_t >= AUTOSAVE_MS && dk_master_level < 0.004f && !ui.keys && !ui.btn) {
-        ui.save_t = now;
+        (!ui.save_t || now - ui.save_t >= AUTOSAVE_MS) && dk_master_level < 0.004f && !ui.keys && !ui.btn &&
+        now >= ui.touch_until + 2000u && !ui.export_on) {
+        ui.save_t = now | 1u;            /* (never 0: that is "not yet") */
         if (settings_due)
             settings_save();
         tape_ui_keep();
