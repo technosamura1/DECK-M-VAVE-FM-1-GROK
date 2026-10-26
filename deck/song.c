@@ -574,8 +574,13 @@ static int takes_settle(int rec_on, int pass, int only_t)
         int take = take_pend[c] - 1;
         if (!take_pend[c] || (only_t >= 0 && c % DK_NTRACK != only_t))
             continue;
-        if (only_t < 0 && rec_on && take == (pass > 31 ? 31 : pass))   /* (still being played) */
-            continue;
+        {
+            int live = dk_rec_take[c % DK_NTRACK];
+            if (live < 1 || live > 31)
+                live = pass > 31 ? 31 : pass;
+            if (only_t < 0 && rec_on && take == live)   /* (still being played) */
+                continue;
+        }
         take_pend[c] = 0;
         n += take_freeze(c, take);
     }
@@ -609,7 +614,11 @@ static void rec_snap(int clip, int pass)
 static int rep_erase(int clip, int pass, int from, int to)
 {
     const dk_clip_t *c = &dk_song.clip[clip];
-    int i, n = 0, take0 = dk_rec_pass0 > 31 ? 31 : dk_rec_pass0;
+    int i, n = 0, take0 = dk_rec_floor[clip % DK_NTRACK];
+    if (take0 < 1)
+        take0 = dk_rec_pass0 > 31 ? 31 : dk_rec_pass0;
+    if (take0 > 31)
+        take0 = 31;
     for (i = c->n - 1; i >= 0; i--) {
         const dk_ev_t *e = &dk_ev[c->at + i];
         if (!(e->fl & EV_MOTION) && e->pos >= from && e->pos < to && DK_L_TAKE(e->layer) < (unsigned)take0) {
@@ -745,7 +754,10 @@ static int rec_flush_do(int only_t)
         {
             /* played again this pass only if it lies ahead of the clip's time now (else it waits a turn) */
             int len = clip_len(r.clip), now = dk_part_tick % (len ? len : 1);
-            if (r.pass == dk_pass && dk_recording && r.ev.pos > now)
+            int cur = dk_rec_take[r.clip % DK_NTRACK];
+            if (cur < 1 || cur > 31)
+                cur = pass > 31 ? 31 : pass;
+            if (r.pass == cur && dk_recording && r.ev.pos > now)
                 r.ev.fl |= EV_FRESH;
         }
         if (dk_song.clip[r.clip].len == 0 && r.ev.pos + r.ev.dur > clip_len(r.clip))

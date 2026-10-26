@@ -44,6 +44,8 @@ extern volatile uint32_t dk_fired;          /* the takes (bit) whose notes the s
 extern volatile uint8_t dk_lsolo_clip, dk_lsolo_take;   /* LAYERS solo (not saved): that clip plays only that take (clip 0xFF: none) */
 extern volatile uint8_t dk_rec_pass0;    /* the pass number the REC press started with (REPLACE: older takes are the ones it erases) */
 extern volatile uint8_t dk_rec_mask;     /* the tracks being recorded (bit t): the armed ones and the track the take began on */
+extern volatile uint8_t dk_rec_take[DK_NTRACK];  /* the layer this track writes while recording (0: not this take) */
+extern volatile uint8_t dk_rec_floor[DK_NTRACK]; /* REPLACE erases takes below this; set when the track joins the take */
 extern uint8_t dk_rec_mode;              /* REC MODE: 0 OVERDUB (default), 1 REPLACE (the take erases the armed tracks' old notes it passes over) */
 extern volatile uint8_t dk_cur_part, dk_next_part, dk_road_i, dk_road_rep, dk_stems;
 extern volatile uint16_t dk_part_tick, dk_part_len;
@@ -64,6 +66,7 @@ extern volatile uint8_t dk_perform;                     /* the performance effec
 extern volatile uint8_t dk_open_n;                      /* notes held while recording (the tape's red) */
 extern volatile uint16_t dk_open_pos[8];
 extern volatile uint8_t dk_open_note[8];
+extern volatile uint8_t dk_open_trk[8];                 /* which track each held note belongs to */
 extern volatile uint8_t dk_voices_on;
 extern volatile uint8_t dk_trk_voices[];
 extern volatile uint8_t dk_live_voices;

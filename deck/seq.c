@@ -181,19 +181,60 @@ static void harm_heard(uint32_t pcs)           /* a chord you played (or the har
 }
 
 /* ------------------------------------------------------------- recording --- */
+/* the layer a track writes. SELECT can add a track that already has takes: those notes stay their own
+ * layer, the new ones take the next free number. A track already in this take is left on its number
+ * (switching back must not open a second layer). REPLACE's floor is the number it joined at, so a
+ * later loop of the same press does not eat the notes it just recorded. */
+static int take_clamp(int v)
+{
+    if (v < 1)
+        return 1;
+    return v > 31 ? 31 : v;
+}
+static void rec_takes_begin(int mask)
+{
+    int i, p = take_clamp(dk_pass);
+    for (i = 0; i < DK_NTRACK; i++) {
+        dk_rec_take[i] = 0;
+        dk_rec_floor[i] = 0;
+        if (mask >> i & 1) {
+            dk_rec_take[i] = (uint8_t)p;
+            dk_rec_floor[i] = (uint8_t)p;
+        }
+    }
+}
+static void rec_take_join(int t)
+{
+    int lay, take;
+    t %= DK_NTRACK;
+    if ((dk_rec_mask >> t & 1u) && dk_rec_take[t])
+        return;
+    lay = CLIP(cur_part, t)->layers;
+    take = take_clamp(dk_pass);
+    if (take <= lay)
+        take = take_clamp(lay + 1);
+    dk_rec_take[t] = (uint8_t)take;
+    dk_rec_floor[t] = (uint8_t)take;
+    dk_rec_mask = (uint8_t)(dk_rec_mask | 1u << t);
+}
 static void rec_push(int clip, int kind, int pos, int dur, int note, int vel, int fl)
 {
     uint32_t w = dk_recq_w;
     volatile dk_recev_t *r = &dk_recq[w % DK_RECQ];
+    int tr = clip % DK_NTRACK;
+    int take = dk_pass;
+    if ((unsigned)tr < DK_NTRACK && dk_rec_take[tr])
+        take = dk_rec_take[tr];
+    take = take_clamp(take);
     r->clip = (uint8_t)clip;
     r->kind = (uint8_t)kind;
-    r->pass = dk_pass;
+    r->pass = (uint8_t)take;
     r->ev.pos = (uint16_t)pos;
     r->ev.dur = (uint16_t)(dur < 1 ? 1 : dur);
     r->ev.note = (uint8_t)note;
     r->ev.vel = (uint8_t)(vel < 1 ? 1 : vel > 127 ? 127 : vel);
     r->ev.fl = (uint8_t)fl;
-    r->ev.layer = DK_L_MAKE(dk_pass, 0);
+    r->ev.layer = DK_L_MAKE(take, 0);
     BARRIER();
     dk_recq_w = w + 1u;
     if (!kind)
@@ -290,7 +331,7 @@ static void rec_close_all(void)
 }
 /* a part branch mid-take: the notes you are holding end HERE in this part (not stretched to the end of the loop)
  * and open again in the part you land on, so the rest of the note records there */
-static uint8_t br_note[16], br_vel[16], br_trk[16], br_nc[16], br_n;
+static uint8_t br_note[32], br_vel[32], br_trk[32], br_nc[32], br_n;
 static void rec_split_close(void)
 {
     int i;
@@ -298,7 +339,7 @@ static void rec_split_close(void)
     for (i = 0; i < 128; i++) {
         if (open_pos[i] < 0)
             continue;
-        if (br_n < 16) {
+        if (br_n < 32) {
             br_note[br_n] = (uint8_t)i;
             br_vel[br_n] = open_vel[i];
             br_trk[br_n] = open_trk[i];
@@ -335,7 +376,9 @@ static void open_publish(void)
     for (i = 0; i < 128 && k < 8; i++)
         if (open_pos[i] >= 0) {
             dk_open_pos[k] = (uint16_t)open_pos[i];
-            dk_open_note[k++] = (uint8_t)i;
+            dk_open_note[k] = (uint8_t)i;
+            dk_open_trk[k] = open_trk[i];
+            k++;
         }
     dk_open_n = (uint8_t)k;
 }
@@ -1121,10 +1164,14 @@ static void seq_tick(void)
     }
     if (dk_recording) {                        /* the recording clip comes round: a new pass (a layer for undo) */
         int clen = clip_len_of(cur_part, dk_rec_trk);
-        if (part_tick % clen == 0) {
+        if (clen > 0 && part_tick % clen == 0) {
+            int i;
             rec_close_all();
             if (dk_pass < 250)
                 dk_pass++;
+            for (i = 0; i < DK_NTRACK; i++)
+                if ((dk_rec_mask >> i & 1u) && dk_rec_take[i] && dk_rec_take[i] < 31)
+                    dk_rec_take[i]++;          /* the floor stays: REPLACE still means "what was there before this press" */
         }
         open_publish();
     }
@@ -1174,6 +1221,7 @@ static void drain(void)
                         lay = CLIP(cur_part, i)->layers;
                 dk_pass = (uint8_t)(lay + 1);
                 dk_rec_pass0 = dk_pass;
+                rec_takes_begin(m);
                 if (bake) {
                     rec_bake = (uint8_t)(bake + (dk_playing ? 1 : 0));
                     if (!dk_playing)
@@ -1192,8 +1240,8 @@ static void drain(void)
                 rec_stop();
             break;
         case C_RECTRK:
-            if (b) {                           /* SELECT while recording: this track records too; the take's own track stays */
-                dk_rec_mask = (uint8_t)(dk_rec_mask | 1u << (a % DK_NTRACK));
+            if (b) {                           /* SELECT while recording: this track records too; its old takes stay theirs */
+                rec_take_join(a % DK_NTRACK);
                 break;
             }
             if (dk_recording)
@@ -1201,6 +1249,13 @@ static void drain(void)
             dk_rec_trk = (uint8_t)(a % DK_NTRACK);
             dk_rec_mask = (uint8_t)(dk_rec_mask | 1u << dk_rec_trk);
             dk_pass = (uint8_t)(CLIP(cur_part, dk_rec_trk)->layers + 1);
+            {
+                int i, p = take_clamp(dk_pass);
+                for (i = 0; i < DK_NTRACK; i++)
+                    if (dk_rec_mask >> i & 1u)
+                        dk_rec_take[i] = (uint8_t)p;
+                dk_rec_floor[dk_rec_trk] = (uint8_t)p;
+            }
             break;
         case C_RECMASK:                        /* a = the armed tracks, changed while it records: a track let go closes its notes */
             if (dk_recording) {
@@ -1208,6 +1263,9 @@ static void drain(void)
                 for (i = 0; i < 128; i++)
                     if (open_pos[i] >= 0 && !(m >> open_trk[i] & 1))
                         rec_close(i, 1);
+                for (i = 0; i < DK_NTRACK; i++) /* armed now, and not already writing: its own layer, not the one it already has */
+                    if ((m >> i & 1u) && !dk_rec_take[i])
+                        rec_take_join(i);
                 dk_rec_mask = (uint8_t)m;
             }
             break;

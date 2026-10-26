@@ -108,6 +108,7 @@ volatile uint32_t dk_seen[DK_SEEN];
 volatile uint8_t dk_playing, dk_recording, dk_counting, dk_rec_trk, dk_pass;
 volatile uint32_t dk_fired;
 volatile uint8_t dk_rec_mask, dk_rec_pass0, dk_lsolo_clip = 0xFF, dk_lsolo_take;
+volatile uint8_t dk_rec_take[DK_NTRACK], dk_rec_floor[DK_NTRACK];
 volatile uint16_t dk_rec_tick0;
 uint8_t dk_rec_mode;
 volatile uint8_t dk_cur_part, dk_next_part = 0xFF, dk_road_i, dk_road_rep, dk_stems;
@@ -124,6 +125,7 @@ volatile uint8_t dk_perform;
 volatile uint8_t dk_open_n;
 volatile uint16_t dk_open_pos[8];
 volatile uint8_t dk_open_note[8];
+volatile uint8_t dk_open_trk[8];
 volatile uint8_t dk_voices_on;
 volatile uint8_t dk_live_voices;             /* (voices of the hand's notes, still held) */
 volatile uint8_t dk_trk_voices[DK_NTRACK];   /* (voices sounding per track) */
@@ -322,7 +324,6 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
     int i, cnt = 0;
     voice_t *best = 0;
     float lo = 1e9f;
-    int32_t oldest = -0x7fffffff;
     *retrig = 0;
     if (e->flags & EF_MONO) {                  /* one voice: played again while held (legato glides); a sound that
                                                 * goes on (the world) whenever it still sounds */
@@ -364,12 +365,16 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
                 best = &vc[i];
             }
         }
-        if (!best)                             /* the sequencer's oldest first: the hand's voices are the last to go */
-            for (i = 0; i < DK_NVOICE; i++)
-                if ((int32_t)(age_ctr - vc[i].age) + (vc[i].src ? 0x40000000 : 0) >= oldest) {
-                    oldest = (int32_t)(age_ctr - vc[i].age) + (vc[i].src ? 0x40000000 : 0);
+        if (!best) {                           /* the sequencer's oldest first: the hand's voices are the last to go */
+            uint32_t top = 0;
+            for (i = 0; i < DK_NVOICE; i++) {
+                uint32_t score = (age_ctr - vc[i].age) + (vc[i].src ? 0x40000000u : 0u);
+                if (!best || score >= top) {
+                    top = score;
                     best = &vc[i];
                 }
+            }
+        }
     }
     if (best && best->held)
         midi(0x80u | ch_of(best->trk), best->note, 0);

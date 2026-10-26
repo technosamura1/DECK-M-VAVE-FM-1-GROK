@@ -859,6 +859,13 @@ static void draw_sound(void)                /* SOUND: the source on the left, th
 }
 
 /* -------------------------------------------------------------------- SEQ --- */
+static int take_live(int t)
+{
+    int v = (unsigned)t < DK_NTRACK ? dk_rec_take[t] : 0;
+    if (v < 1 || v > 31)
+        v = dk_pass > 31 ? 31 : dk_pass;
+    return v;
+}
 static void roll(const dk_clip_t *c, int x0, int y0, int w, int h, int len, uint16_t col, int pass_red)
 {
     int i, lo = 127, hi = 0;
@@ -889,7 +896,7 @@ static void roll(const dk_clip_t *c, int x0, int y0, int w, int h, int len, uint
             continue;
         if (x + ww > WX + WW)
             ww = WX + WW - x;
-        cv_rect(x, y, ww < 2 ? 2 : ww, 2, pass_red && DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass) && dk_recording ? TH_REC : col);
+        cv_rect(x, y, ww < 2 ? 2 : ww, 2, pass_red && DK_L_TAKE(e->layer) == (unsigned)take_live(dk_song.cur_track) && dk_recording ? TH_REC : col);
     }
 }
 
@@ -1612,7 +1619,8 @@ static void draw_tape(void)
     cv_text(53, 26, &FONT_XS, s, TH_BG);
     cv_text(68, 26, &FONT_XS, LABEL_NAME[dk_song.part[dk_cur_part & 7].label & 7], TH_TEXT);
     {
-        char *p = itoa_b(dk_pass > 31 ? 31 : dk_pass, cpy(s, "TAKE "));    /* the take, and the track's frozen sounds of 7 */
+        int show = (dk_rec_mask >> (dk_song.cur_track & 7) & 1u) ? dk_song.cur_track : dk_rec_trk;
+        char *p = itoa_b(take_live(show), cpy(s, "TAKE "));    /* the take of the track you are on, and its frozen sounds of 7 */
         int used = 0, k;
         for (k = 0; k < DK_NSND; k++)
             used += dk_song.snd[dk_rec_trk % DK_NTRACK][k].used ? 1 : 0;
@@ -1683,11 +1691,12 @@ static void draw_tape(void)
             int x = 30 + e->pos * 200 / clen, w = e->dur * 200 / clen;
             if (e->fl & EV_MOTION)
                 continue;
-            cv_rect(x, y + 1, w < 2 ? 2 : w, 3, DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass) && (dk_rec_mask >> t & 1u) ? TH_REC : TH_TRACK[t]);
+            cv_rect(x, y + 1, w < 2 ? 2 : w, 3, DK_L_TAKE(e->layer) == (unsigned)take_live(t) && (dk_rec_mask >> t & 1u) ? TH_REC : TH_TRACK[t]);
         }
         if (dk_rec_mask >> t & 1u)
             for (i = 0; i < dk_open_n; i++)
-                cv_rect(30 + dk_open_pos[i] * 200 / clen, y + 1, 3, 3, TH_REC);
+                if (dk_open_trk[i] == (uint8_t)t)
+                    cv_rect(30 + dk_open_pos[i] * 200 / clen, y + 1, 3, 3, TH_REC);
     }
     if (dk_playing)
         vline(30 + (int)(dk_part_tick % (uint16_t)clip_len(dk_cur_part * DK_NTRACK + dk_rec_trk)) * 200 /
@@ -1895,13 +1904,14 @@ static void draw_tracks(void)
                 w = tx + tw - x;
             if (DK_L_SND(e->layer))          /* a frozen layer: dim */
                 nc = dimc(col, 8);
-            if (rec && dk_recording && DK_L_TAKE(e->layer) == DK_L_TAKE(dk_pass > 31 ? 31 : dk_pass))
+            if (rec && dk_recording && DK_L_TAKE(e->layer) == (unsigned)take_live(t))
                 nc = TH_REC;
             cv_rect(x, y, w < 2 ? 2 : w, 2, nc);
         }
         if (rec)
             for (i = 0; i < dk_open_n; i++)
-                cv_rect(tx + dk_open_pos[i] * (tw - 2) / clen, ry + 2, 2, 19, TH_REC);
+                if (dk_open_trk[i] == (uint8_t)t)
+                    cv_rect(tx + dk_open_pos[i] * (tw - 2) / clen, ry + 2, 2, 19, TH_REC);
         if (dk_playing)                      /* the playhead, across the rows */
             vline(tx + (int)(dk_part_tick % (uint16_t)clen) * (tw - 2) / clen, ry, 23, TH_TEXT);
     }
