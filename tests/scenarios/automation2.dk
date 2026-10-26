@@ -70,6 +70,8 @@ wait 200
 release REC
 wait 300
 expect atgt17 >=2
+wait 100
+shot auto_mix.png
 # save (the silence), reboot: the curves are there
 tap PLAY
 wait 300

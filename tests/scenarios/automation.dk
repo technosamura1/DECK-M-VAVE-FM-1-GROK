@@ -20,6 +20,7 @@ turn K1 4
 wait 150
 turn K1 4
 wait 150
+shot auto_gesture.png
 turn K1 4
 wait 150
 turn K1 4

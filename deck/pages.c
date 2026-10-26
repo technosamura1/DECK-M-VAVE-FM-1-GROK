@@ -671,9 +671,12 @@ static void knob_row(int y)
         if ((ui.page == PG_SOUND || ui.page == PG_MIX) && field_target(f) && auto_count(cur_clip(), field_target(f))) {
             /* a curve is recorded on this knob (this track, this part): a small wave; bright while it is what you hear */
             uint16_t ac = dk_auto_live(dk_song.cur_track, field_target(f)) >= 0 ? TH_REC : dimc(TH_REC, 9);
-            cv_line(cx - 28, y - 12, cx - 25, y - 17, ac);
-            cv_line(cx - 25, y - 17, cx - 22, y - 12, ac);
-            cv_line(cx - 22, y - 12, cx - 19, y - 17, ac);
+            int d;
+            for (d = 0; d < 2; d++) {            /* (two pixels thick: seen at a glance) */
+                cv_line(cx - 28, y - 13 + d, cx - 25, y - 20 + d, ac);
+                cv_line(cx - 25, y - 20 + d, cx - 22, y - 13 + d, ac);
+                cv_line(cx - 22, y - 13 + d, cx - 19, y - 20 + d, ac);
+            }
         }
         text_box(cx - 28, y + 21, 56, 1, &FONT_XS, &FONT_T, t, RGB(28, 20, 12));
     }
