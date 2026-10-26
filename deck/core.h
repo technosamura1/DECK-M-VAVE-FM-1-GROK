@@ -71,6 +71,7 @@ extern volatile uint32_t dk_rec_hits;                   /* notes recorded (the h
 /* ARP / HOLD: the notes held for them */
 extern volatile uint8_t dk_held_n[DK_NTRACK];
 extern volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* ARP: its rhythm's step, a note just now */
+extern uint8_t dk_arp_step[DK_NTRACK];                       /* ARP: the pattern's step (0 = the first) */
 extern const uint8_t DK_ARP_DIV[DK_ARP_NDIV], DK_ARP_RHY[ARPR_N][16];
 extern volatile uint8_t dk_held[DK_NTRACK][8];
 /* the metronome (global settings, not the song's) */

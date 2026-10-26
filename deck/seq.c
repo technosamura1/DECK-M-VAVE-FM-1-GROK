@@ -34,7 +34,9 @@ static uint8_t pre_vel[128], pre_trk[128];
 static int16_t pre_dur[128];                   /* -1 still held; else its length in ticks */
 static int32_t pre_at[128];                    /* count_left when pressed */
 #define PRE_WIN DK_PPQ
-static uint8_t arp_step[DK_NTRACK], arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
+uint8_t dk_arp_step[DK_NTRACK];            /* (the pattern's step: it starts from 1 again with every new hand) */
+#define arp_step dk_arp_step
+static uint8_t arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
 volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
 static uint16_t finger_held[DK_NTRACK];        /* FINGER: the patterns held (a bit each) */
 static uint8_t finger_var[DK_NTRACK];          /* its variations: 1 HALF 2 DOUBLE 4 ACCENT 8 GHOST 16 SHIFT- 32 SHIFT+ */
@@ -871,6 +873,8 @@ static void live_note(int t, int note, int vel, int delay)
             }
         }
         if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {   /* ARP over the sequencer: the keys feed it */
+            if (!arp_keys[t])                  /* a new hand from silence: the pattern starts again from its first step */
+                arp_step[t] = 0;
             if (!arp_keys[t] && !k->arp[3])
                 arp_n[t] = 0;
             if (k->arp[3] && !arp_keys[t])     /* latched: a new hand replaces the old */
