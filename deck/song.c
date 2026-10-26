@@ -913,10 +913,16 @@ void clip_double(int clip)
     if (n > 192 || len * 2 > 16 * DK_TPB)
         return;
     undo_push(clip);
-    for (i = 0; i < n; i++) {
-        tmp[i] = dk_ev[c->at + i];
-        tmp[n + i] = tmp[i];
-        tmp[n + i].pos = (uint16_t)(tmp[i].pos + len);
+    {                                       /* notes past the clip's end (after it was shortened) never sound: they would break the order, so they go */
+        int m = 0;
+        for (i = 0; i < n; i++)
+            if (dk_ev[c->at + i].pos < len)
+                tmp[m++] = dk_ev[c->at + i];
+        for (i = 0; i < m; i++) {
+            tmp[m + i] = tmp[i];
+            tmp[m + i].pos = (uint16_t)(tmp[i].pos + len);
+        }
+        n = m;
     }
     dk_lock();
     clip_put(clip, tmp, 2 * n);

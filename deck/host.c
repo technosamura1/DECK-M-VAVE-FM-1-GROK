@@ -53,13 +53,13 @@ static int invariants(void)
     for (c = 0; c < DK_NCLIP; c++) {
         const dk_clip_t *k = &dk_song.clip[c];
         if (k->n && (unsigned)k->at + k->n > DK_NEV)
-            bad |= 2;
+            { bad |= 2; fprintf(stderr, "DBG clip %d out of pool at %d n %d\n", c, k->at, k->n); }
         if (k->len > DK_TPB * 32)
             bad |= 4;
         for (i = 0; i < k->n && (unsigned)k->at + k->n <= DK_NEV; i++) {
             const dk_ev_t *e = &dk_ev[k->at + i];
             if (i && e->pos < dk_ev[k->at + i - 1].pos)
-                bad |= 2;
+                { bad |= 2; fprintf(stderr, "DBG clip %d unsorted i %d pos %d prev %d n %d\n", c, i, e->pos, dk_ev[k->at + i - 1].pos, k->n); }
             if ((e->fl & EV_MOTION) && e->note >= T_N)
                 bad |= 8;
             if (e->vel > 127)
