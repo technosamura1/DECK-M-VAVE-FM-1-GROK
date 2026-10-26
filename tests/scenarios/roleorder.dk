@@ -1,0 +1,35 @@
+# REGRESSION: a load that puts the tracks in the order of their roles (older projects) moves the clip table; the events of the pool
+# must follow it (an edit - a recording, an erase - counted on clip i + 1 behind clip i and scrambled the song). expect inv holds
+# bit 128 (the clips in the pool's order)
+wait 300
+demo
+wait 100
+expect inv 0
+trkset 6 13 1 10
+trkset 3 6 6 12
+roundtrip
+wait 100
+expect inv 0
+tap LFO
+press REC
+wait 1300
+release REC
+wait 200
+expect inv 0
+turn SELECT 1 40
+press REC
+wait 3000
+release REC
+wait 200
+expect inv 0
+tap PLAY
+wait 400
+press REC
+wait 100
+tapkey w3
+wait 300
+release REC
+wait 300
+expect inv 0
+roundtrip
+expect inv 0

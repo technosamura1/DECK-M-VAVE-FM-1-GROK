@@ -41,8 +41,9 @@ static int auto_edge(int tgt, int last)
     }
     return v;
 }
-/* the song's invariants, 0 = all hold (fuzz): bit 0 events within the pool, 1 each clip inside it and sorted, 2 lengths sane,
- * 3 motion targets valid, 4 voices within the pool, 5 every parameter a track hears inside its range */
+/* the song's invariants, 0 = all hold (fuzz); the bits: 1 events within the pool, 2 each clip inside it and sorted, 4 lengths sane,
+ * 8 motion targets and velocities valid, 16 voices within the pool, 32 every parameter a track hears inside its range, 64 every
+ * track's engine exists and its preset id is a place that engine has, 128 the clips follow one another in the pool in the table's order */
 static int invariants(void)
 {
     int bad = 0, c, i, t, g;
@@ -64,8 +65,24 @@ static int invariants(void)
                 bad |= 8;
         }
     }
+    {                                      /* 7: the clips follow one another in the pool, in the order of the table (reindex and the edits count on it) */
+        unsigned at = 0;
+        for (c = 0; c < DK_NCLIP; c++) {
+            if (dk_song.clip[c].n && dk_song.clip[c].at != at)
+                bad |= 128;
+            at += dk_song.clip[c].n;
+        }
+    }
     if (dk_voices_on > DK_NVOICE)
         bad |= 16;
+    for (t = 0; t < DK_NTRACK; t++) {      /* 6: every track's engine exists and its preset id is one that engine has (a block's place not empty) */
+        const dk_track_t *k = &dk_song.trk[t];
+        int pb = preset_block(k->preset), pi = k->preset < DK_PBASE ? k->preset : (k->preset - DK_PBASE) % DK_NFACT;
+        if (k->eng >= TAPE.neng)
+            bad |= 64;
+        else if (pb == 0 ? pi >= preset_count(k->eng, 0) : pb > 0 && (pb >= DK_NBLK || pi >= preset_count(k->eng, pb)))
+            bad |= 64;
+    }
     for (t = 0; t < DK_NTRACK; t++)
         for (g = 1; g < T_N; g++)
             if (g >= T_ATT && g <= T_PAN) {
@@ -367,10 +384,17 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         project_load(set.proj);
         return 1;
     }
-    if (!strcmp(cmd, "trkset")) {               /* trkset T ENG BLK I: track T's engine, and its preset I of the block BLK (the screenshots, the sweeps) */
+    if (!strcmp(cmd, "roundtrip")) {            /* roundtrip: the project saved and loaded again (the fuzz: the song stays the same, the invariants hold) */
+        project_save(set.proj);
+        project_load(set.proj);
+        return 1;
+    }
+    if (!strcmp(cmd, "trkset")) {               /* trkset T ENG BLK I: track T's engine, and its place I of the block BLK (an empty block: the first block; a place past the end wraps) */
+        int e = atoi(b) % TAPE.neng, bl = atoi(c) % DK_NBLK;
+        if (preset_count(e, bl) <= 0)
+            bl = 0;
         dk_lock();
-        dk_track_setup((atoi(a) - 1 + DK_NTRACK) % DK_NTRACK, atoi(b) % TAPE.neng, preset_id(atoi(c) % DK_NBLK, atoi(d) % DK_NFACT), SQ_LIVE,
-                       TAPE.eng[atoi(b) % TAPE.neng]->role);
+        dk_track_setup((atoi(a) - 1 + DK_NTRACK) % DK_NTRACK, e, preset_id(bl, atoi(d) % preset_count(e, bl)), SQ_LIVE, TAPE.eng[e]->role);
         dk_unlock();
         return 1;
     }

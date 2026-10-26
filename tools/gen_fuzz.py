@@ -4,7 +4,8 @@ Presses, holds (REC, FX, EDIT, ... long and short), key taps, knob turns across 
 invariants are checked (expect inv 0: events in the pool, clips sorted, lengths sane, targets valid, voices within the pool)."""
 import random, sys
 seed, n = int(sys.argv[1]), int(sys.argv[2])
-auto = len(sys.argv) > 3 and sys.argv[3] == "auto"   # AUTOMATION: mostly REC held + knobs on SOUND / MIX, tracks and parts switched, copies
+auto = len(sys.argv) > 3 and sys.argv[3] == "auto"
+snd = len(sys.argv) > 3 and sys.argv[3] == "sound"   # SOUND: block / preset / engine / kit / FILTER cutoff switches, REC layers and automation, user presets, save+load round-trips   # AUTOMATION: mostly REC held + knobs on SOUND / MIX, tracks and parts switched, copies
 r = random.Random(seed)
 BTN = "FX SEL ENV LFO EDIT GLO HOME ARP SEQ PLAY REC OCT- OCT+".split()   # (no SAVE: the project's pages are a wipe away)
 ENC = "SELECT ALGO PRESET K1 K2 K3 K4".split()
@@ -13,8 +14,42 @@ out = ["# FUZZ seed %d, %d events (tools/gen_fuzz.py): random buttons, holds, ke
 held = []
 if auto:
     out += ["tap PLAY", "wait 400", "tap FX"]
+def sound_event():
+    """one event of the SOUND mode: the preset blocks, engines, kits, user slots, the FX page and the project round-trip"""
+    y = r.random()
+    o = []
+    if y < 0.14:
+        o += ["press HOME", "tap %s" % r.choice(["FX", "SEL"]), "release HOME"]                    # the next / previous block
+    elif y < 0.22:
+        o += ["press HOME", "turn PRESET %d 40" % r.choice([-3, -1, 1, 2]), "release HOME"]         # the next melodic engine
+    elif y < 0.34:
+        o.append("turn PRESET %d 40" % r.choice([-9, -3, -1, 1, 2, 5, 13, 40]))                     # along every block, the user's
+    elif y < 0.44:
+        o.append("trkset %d %d %d %d" % (r.randrange(1, 7), r.randrange(0, 30), r.randrange(0, 9), r.randrange(0, 30)))   # any engine, block, place
+    elif y < 0.52:
+        o += ["press SAVE", "tapkey w%d" % r.randrange(12, 16), "release SAVE"]                     # a user preset (it keeps the sound as it is)
+    elif y < 0.58:
+        o.append("tapkey w%d" % r.randrange(0, 16))                                                 # a white key: the block's place or a user slot
+    elif y < 0.72:
+        o += ["tap FX", "tap FX", "turn %s %d 40" % (r.choice(["K1", "K2", "K3", "K4"]), r.choice([-9, -4, -1, 2, 6, 12]))]   # the FX page: the cutoff and the rest
+    elif y < 0.80:
+        o += ["tap FX", "turn ALGO %d 40" % r.choice([-3, -1, 1, 2, 5])]                           # the effect type (FILTER among them)
+    elif y < 0.88:
+        o += ["turn K4 %d 40" % r.choice([-9, -3, 3, 9]), "turn K3 %d 40" % r.choice([-5, 5])]
+    elif y < 0.94:
+        o += ["roundtrip", "expect inv 0"]                                                          # saved and loaded again
+    else:
+        o += ["press REC", "turn %s %d 60" % (r.choice(["K1", "K2", "K3", "K4"]), r.choice([-5, 5])), "wait %d" % r.choice([300, 1200]),
+              "tapkey w%d" % r.randrange(0, 12), "release REC", "wait 50"]
+    return o
 for i in range(n):
     x = r.random()
+    if snd and x < 0.5:
+        out += sound_event()
+        out.append("wait %d" % r.choice([5, 30, 120]))
+        if i % 25 == 24:
+            out += ["expect inv 0", "expect voices <25"]
+        continue
     if auto and x < 0.55:
         out += ["press REC"]
         for _ in range(r.randrange(2, 9)):

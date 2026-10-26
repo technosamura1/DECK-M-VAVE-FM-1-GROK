@@ -56,6 +56,40 @@ const char *project_name(int slot, char *name)
     return name;
 }
 
+/* the events of the pool in the order of the clips again (a permuted clip table points at them out of order, and every edit
+ * of the pool - insert, close, reindex - counts on clip i + 1 following clip i): each clip's block rotated into its place, no
+ * second buffer (reversals, 8 bytes an event) */
+static void ev_rev(uint32_t a, uint32_t b)
+{
+    while (a + 1 < b) {
+        dk_ev_t t = dk_ev[a];
+        dk_ev[a++] = dk_ev[--b];
+        dk_ev[b] = t;
+    }
+}
+static void clips_repack(void)
+{
+    uint32_t cum = 0, tot = 0, i, j;
+    for (i = 0; i < DK_NCLIP; i++)
+        tot += dk_song.clip[i].n;
+    if (tot != dk_song.nev || tot > DK_NEV)
+        return;
+    for (i = 0; i < DK_NCLIP; i++) {
+        dk_clip_t *c = &dk_song.clip[i];
+        uint32_t a = c->at, n = c->n;
+        if (n && a != cum && a > cum && a + n <= tot) {
+            ev_rev(cum, a);                       /* [cum, a) [a, a + n) -> [a, a + n) [cum, a) */
+            ev_rev(a, a + n);
+            ev_rev(cum, a + n);
+            for (j = i + 1; j < DK_NCLIP; j++)
+                if (dk_song.clip[j].n && dk_song.clip[j].at >= cum && dk_song.clip[j].at < a)
+                    dk_song.clip[j].at = (uint16_t)(dk_song.clip[j].at + n);
+        }
+        c->at = (uint16_t)cum;
+        cum += n;
+    }
+}
+
 /* older projects: the tracks in the order of today's (PIANO KEYS PAD BASS DRUMS NATURE), by their roles, when the
  * six roles are six different places; the clips, the road's drops, SPLIT's track and FOLLOW's sources go with them */
 static void song_track_order(void)
@@ -96,6 +130,7 @@ static void song_track_order(void)
     }
     for (p = 0; p < DK_NCLIP; p++)
         dk_song.clip[p] = cl[p];
+    clips_repack();
     for (j = 0; j < DK_NROAD; j++) {
         uint8_t d = dk_song.road[j].drop, n = 0;
         for (t = 0; t < DK_NTRACK; t++)
