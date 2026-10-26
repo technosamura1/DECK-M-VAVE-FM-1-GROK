@@ -497,3 +497,21 @@ DROP(дорожка) DELETE DUP CUT PASTE. KEYS — тональность то�
 - Проверка: `deck_test kitvoices DIR` рендерит каждый голос каждой машины (DIR/МАШИНА/NN_голос.wav), `tools/kit_analyse.py DIR` печатает
   пик/затухание/центроид. **calibrate.py**: «старые не трогает» считает старыми первые N строк PRESETS2 — после вставки строк в середину
   он пересчитал все 236; для вставок правь триммы новых строк вручную по `build/test/check.json`.
+
+## Метка пресета и проверка на баги (op1-rec, -9)
+
+- **Метка**: «БЛОК - ИМЯ» — блок ЗЕЛЁНЫЙ, имя пресета БЕЛОЕ (попап пресета, страница SOUND, строки TRACKS; в TRACKS блок сокращён AMB/8BIT/SYN/CINE).
+  `labels.dk` проверяет тексты и цвета (textaudit покрывает TRACKS и попап).
+- **Найденные и исправленные баги** (ASAN/UBSAN + длинный fuzz):
+  1. после загрузки проекта с переставленными ролями дорожек пул событий шёл не в порядке таблицы клипов → правка «ломала» песню.
+     Лечит `clips_repack()` после `project_load`; инварианты `expect inv` 64 (id движка/пресета) и 128 (порядок пула); `roleorder.dk`.
+  2. SOUND: цвет ручки читал `TH_ENC[3]` (четвёртая ручка, за массивом) → `knob_col`.
+  3. `echo_step`: округлённый указатель чтения уходил на один сэмпл за буфер (`rp >= ECHO_N → 0`).
+  4. `fastmath.h`: сдвиг отрицательного (UB) → умножение.
+  5. страница KEYS (EDIT): нота ниже нуля (раскладка SCALE, −6 октав) индексировала `DK_NOTE_NAME` отрицательным числом (на устройстве — hard fault);
+     тот же `% 12` в тесте тоники (`ui.c`). Лечится `(x % 12 + 12) % 12`. `lowkeys.dk`.
+- **Тесты**: `gen_fuzz.py SEED N [auto|sound]` — режим `sound` (блоки/пресеты/движки/киты/FILTER CUTOFF/REC-слои/автоматизация/
+  user-пресеты/save+load); команды host `roundtrip`, `trkset T ENG BLK I`, `projv1` (короткая песня), `userold N` (user-стор на 8/10/12 движков,
+  RAM заранее 0x5A), `trkoct N`, `expect oldck 0`; `oldformat.dk`; `deck_test stress24` (24 голоса, MOURNING ×3 + цепочка FX на всех дорожках).
+  `expect autoall >0` стоит только в коротких auto-fuzz: удержание REC 2,5 с (ERASE) стирает кривые по замыслу.
+- **ASAN/UBSAN**: `CC=/tmp/asancc sh build.sh overworld --host` (`-fsanitize=address,undefined`), запуск с `ASAN_OPTIONS=detect_leaks=0`.

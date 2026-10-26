@@ -102,6 +102,6 @@ for i in range(n):
         out.append("expect inv 0")
         out.append("expect voices <25")
 out += ["wait 500", "expect inv 0"]
-if auto:
+if auto and n <= 1000:                      # (a long run may hold REC 2.5 s: the ERASE gesture, by design, wipes the track's curves)
     out.append("expect autoall >0")
 print("\n".join(out))
