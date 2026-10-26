@@ -463,6 +463,27 @@ no_batt:
         cv_rect(200, 9, 2, 2, TH_ENC[2]);
 }
 
+/* a button held a moment (and not used for anything yet): what it does, in one line where the page's hint is. HOME (its
+ * own hint and the battery) and REC (the ERASE guide) have none here */
+#define HOLD_HINT_MS 450u
+static const char *hold_hint(uint32_t now)
+{
+    static const char *const H[NB] = {
+        "FX: SOUND  +W1-4 BYPASS", "SEL: ATMO  HOME+SEL = PREV BANK",
+        "ENV: ROAD  HOLD = GARAGE", "LFO: MIX  +SOUND KNOB = MOD 1",
+        "EDIT: KEYS  HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
+        0, "SAVE: PROJECT  +W13-16 PRESET",
+        "ARP: ON  AGAIN LATCH  +WHITE PART", "SEQ: ROW  +B1 COOK B2 RAND B3 QNT",
+        "PLAY/STOP  HOLD PART/SONG", 0,
+        "OCT-: OCTAVE  HOME+ SCALE STEP", "OCT+: OCTAVE  HOME+ SCALE STEP"};
+    int b, best = -1;
+    for (b = 0; b < NB; b++)
+        if (H[b] && held(b) && !ui.used[b] && !ui.held_done[b] && now - ui.down_t[b] >= HOLD_HINT_MS && !held(B_HOME) &&
+            (best < 0 || ui.down_t[b] > ui.down_t[best]))
+            best = b;
+    return best < 0 ? 0 : H[best];
+}
+
 /* the foot: the four knobs K1..K4 (a ring for a number, a dot for a choice; their colours), the hint */
 static uint16_t knob_col(int i) { return i < 3 ? TH_ENC[i] : RGB(250, 150, 70); }   /* green blue yellow orange */
 static void draw_footer(int y)
@@ -484,8 +505,13 @@ static void draw_footer(int y)
         text_box(x + 13, y + 1, 43, 0, &FONT_T, &FONT_T, field_label(f), lit ? knob_col(i) : TH_GRAY);
         text_box(x, y + 15, 56, 0, &FONT_S, &FONT_XS, s, TH_TEXT);
     }
-    if (now - ui.page_t < 3000u || held(B_HOME))
-        text_box(4, y + 43, 232, 1, &FONT_T, &FONT_T, hint(), TH_GRAY);
+    {
+        const char *hh = hold_hint(now);
+        if (hh)
+            text_box(4, y + 43, 232, 1, &FONT_T, &FONT_T, hh, TH_TEXT);
+        else if (now - ui.page_t < 3000u || held(B_HOME))
+            text_box(4, y + 43, 232, 1, &FONT_T, &FONT_T, hint(), TH_GRAY);
+    }
 }
 
 /* a VHS-plate's message: what just happened, for 0.6 s */
