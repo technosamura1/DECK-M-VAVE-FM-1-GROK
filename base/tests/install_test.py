@@ -247,6 +247,28 @@ def errors():
     rc, out, err = cli(["--info", "--port", "my int"], dev)
     ok(rc == 0 and "FM-1_015" in out, "--port picks a port the default match skips")
 
+    # a custom firmware's own port name: found without --port, via the name match or the fallback
+    dev = FakeFM1(image, name="Clipper 4")
+    rc, out, err = cli(["--info"], dev)
+    ok(rc == 0 and "FM-1_015" in out and "Clipper 4" in out, "port 'Clipper 4' is found by name")
+    dev = FakeFM1(image, name="Weird Synth 7")
+    rc, out, err = cli(["--info"], dev)
+    ok(rc == 0 and "FM-1_015" in out and "Weird Synth 7" in out and dev.upgrades == 0, "unknown port name: fallback handshake finds it")
+    dev = FakeFM1(image, name="Weird Synth 7")
+    rc, out, err = cli([p, "--yes"], dev)
+    ok(rc == 0 and dev.bad == 0 and "done: the FM-1 runs FM-1_900" in out, "install on an unknown port name works end to end")
+    dev = FakeFM1(image, name="Minilab3 MIDI 0")
+    rc, out, err = cli(["--info"], dev)
+    ok(rc == 3 and dev.sent == [] and "skipped (other gear): Minilab3 MIDI 0" in err, "other gear is never probed (nothing sent), listed as skipped")
+    dev = FakeFM1(image, identity="XY-9_001", name="Weird Synth 7")
+    rc, out, err = cli([p, "--yes"], dev)
+    ok(rc == 6 and dev.upgrades == 0 and len(dev.sent) == 1, "fallback port of another model: only the handshake, then exit 6")
+    dev = FakeFM1(image, name="Weird Synth 7")
+    rc, out, err = cli([p, "--yes", "--port", "Other"], dev)
+    ok(rc == 3 and dev.sent == [], "--port given: no fallback probing")
+    rc, out, err = cli([p, "--yes"], FakeFM1(image, name="IAC Driver Bus 1"))
+    ok(rc == 3 and "MIDI inputs: IAC Driver Bus 1" in err and "--port NAME" in err, "not found: the message lists the ports and the --port hint")
+
     t0 = time.monotonic()
     rc, out, err = cli([p, "--yes"], FakeFM1(image, unplug_after=2))
     ok(rc == 4 and "disconnected" in err and "nothing was written" in err and time.monotonic() - t0 < 3,
