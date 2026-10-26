@@ -1,4 +1,4 @@
-# AUTOMATION kept: the notes' erase, the 2.5 s erase, a part copy, a save and a reboot, another part has none, a curve on MIX volume
+# AUTOMATION kept: the notes' erase and the all-parts erase (EDIT list), a part copy, a save and a reboot, another part has none, a curve on MIX volume
 wait 300
 demo
 wait 100
@@ -22,12 +22,11 @@ release REC
 wait 300
 expect autos >=3
 mark
-# the 1 s REC hold on the SEQ page: the notes of the clip go, the curve stays
-tap SEQ
-wait 100
-press REC
-wait 1300
-release REC
+# the EDIT list (TRACKS, EDIT): ERASE NOTES (white 12, twice): the notes of the clip go, the curve stays
+page 11
+tap EDIT
+tapkey w11
+tapkey w11
 wait 100
 expect events 3
 expect autos 3
@@ -37,10 +36,9 @@ release EDIT
 wait 100
 expect events >0
 expect same 1
-# the 2.5 s hold: the track in every part, the automation too
-press REC
-wait 2800
-release REC
+# ERASE ALL PARTS (white 14, twice): the track in every part, the automation too
+tapkey w13
+tapkey w13
 wait 100
 expect events 0
 expect autos 0
@@ -50,6 +48,7 @@ release EDIT
 wait 100
 expect autos >=3
 expect same 1
+tap EDIT
 # a part copy (ARP held + a white key of an empty part) takes the curve along
 press ARP
 tapkey w3

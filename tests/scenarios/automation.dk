@@ -73,27 +73,28 @@ wait 100
 expect alive2 -1
 wait 4000
 expect alive2 >=0
-# REC + FX: the curves erased, the notes stay, the page stays
+# EDIT list, ERASE AUTO (white 13, press twice): the curves erased, the notes stay
 expect events >0
-press REC
-press FX
-release FX
-release REC
+page 11
+tap EDIT
+tapkey w12
+wait 50
+expect autos >=2
+tapkey w12
 wait 100
 expect autos 0
-expect page 2
-expect rowof 0
+expect events >0
+expect page 11
 expect alive2 -1
 press EDIT
 wait 800
 release EDIT
 wait 100
 expect autos >=2
-# the notes' erase (SEQ + REC) leaves the curves
-press SEQ
-press REC
-release REC
-release SEQ
+# the notes' erase (white 12, twice) leaves the curves
+tapkey w11
+tapkey w11
 wait 100
 expect autos >=2
+expect events 4
 expect recording 0
