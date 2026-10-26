@@ -701,6 +701,77 @@ static int bypass_test(void)
     return bad ? 1 : 0;
 }
 
+/* AUTOMATION: a curve on every target of a track, a sawtooth with a very steep edge (the worst a hand can do), over a held
+ * chord and a note pattern: no click (the biggest step between two samples against the same sound with no automation), the
+ * peak under -1 dBFS, no DC, not silent. The curve is made as the UI makes it (a ramp event per point) */
+static int auto_test(void)
+{
+    static const int TG[] = {T_P0, T_P1, T_P2, T_P3, T_P4, T_P5, T_ATT, T_DEC, T_REL, T_FXAMT, T_FXA, T_FXB, T_REV, T_ECHO, T_VOL, T_PAN};
+    int bad = 0, n = 0, e, i, k;
+    for (e = 0; e < 3; e++)
+        for (k = 0; k < (int)(sizeof TG / sizeof TG[0]); k++) {
+            int t = 2, pass, st[2], pk[2], dc[2];
+            for (pass = 0; pass < 2; pass++) {
+                int c = CLIP(0, t) - dk_song.clip;
+                double sum = 0.0;
+                fresh();
+                dk_lock();
+                dk_track_setup(t, e * 3 % TAPE.neng, 0, SQ_LIVE, dk_engine(t) ? dk_engine(t)->role : 0);
+                dk_song.trk[t].fx = (uint8_t)(1 + e);
+                dk_song.trk[t].fxamt = 60;
+                dk_song.trk[t].echo = 40;
+                dk_song.trk[t].rev = 40;
+                dk_song.clip[c].len = DK_TPB * 2;
+                for (i = 0; i < 16; i++) {
+                    dk_ev_t ev;
+                    ev.pos = (uint16_t)(i * 48);
+                    ev.dur = 40;
+                    ev.note = (uint8_t)(48 + (i * 5) % 17);
+                    ev.vel = 90;
+                    ev.fl = 0;
+                    ev.layer = 0;
+                    dk_song_insert(c, &ev);
+                }
+                if (pass) {
+                    for (i = 0; i < 9; i++) {           /* up in a bar, a steep fall, up again, down */
+                        static const int V[9] = {0, 40, 100, 100, 5, 5, 60, 100, 0};
+                        dk_ev_t ev;
+                        ev.pos = (uint16_t)(i < 4 ? i * 96 : i == 4 ? 4 * 96 + 24 : 4 * 96 + 24 + (i - 4) * 90);
+                        ev.dur = 0;
+                        ev.note = (uint8_t)TG[k];
+                        ev.vel = (uint8_t)V[i];
+                        ev.fl = EV_MOTION | EV_RAMP;
+                        ev.layer = 0;
+                        dk_song_insert(c, &ev);
+                    }
+                }
+                dk_unlock();
+                dk_cmd(C_PLAY, 1, 0, 0);
+                run(2.0);
+                reset_out();
+                run(10.0);
+                st[pass] = stepmax(0, frames);
+                pk[pass] = peak;
+                for (i = 0; i < 2 * frames; i++)
+                    sum += buf[i];
+                dc[pass] = (int)(sum / (2.0 * frames));
+                if (pass && peak < 200) {
+                    printf("SILENT engine %d target %d\n", e, TG[k]);
+                    bad++;
+                }
+            }
+            n++;
+            if (getenv("AUTO_VERBOSE"))
+                printf("engine %d target %2d: step %5d (plain %5d) peak %5d (plain %5d) dc %d\n", e, TG[k], st[1], st[0], pk[1], pk[0], dc[1]);
+            if (st[1] > 2 * st[0] + 600 || pk[1] > 29200 || abs(dc[1]) > 300) {
+                printf("BAD engine %d target %d: step %d (plain %d) peak %d dc %d\n", e, TG[k], st[1], st[0], pk[1], dc[1]);
+                bad++;
+            }
+        }
+    printf("automation: %d tracks x curves rendered, %d bad\n", n, bad);
+    return bad ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "sounds";
@@ -728,6 +799,8 @@ int main(int argc, char **argv)
         return fingerbank(argc > 2 ? argv[2] : "out/fingerbanks");
     else if (!strcmp(m, "bypass"))
         return bypass_test();
+    else if (!strcmp(m, "automation"))
+        return auto_test();
     else if (!strcmp(m, "bench"))
         bench();
 #ifdef DK_PROF

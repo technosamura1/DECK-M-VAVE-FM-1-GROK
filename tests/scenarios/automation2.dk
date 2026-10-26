@@ -1,0 +1,82 @@
+# AUTOMATION kept: the notes' erase, the 2.5 s erase, a part copy, a save and a reboot, another part has none, a curve on MIX volume
+wait 300
+demo
+wait 100
+tap PLAY
+wait 500
+turn SELECT -2
+wait 100
+expect track 0
+tap FX
+expect page 2
+press REC
+turn K1 5
+wait 150
+turn K1 5
+wait 150
+turn K1 -5
+wait 150
+turn K1 -5
+wait 150
+release REC
+wait 300
+expect autos >=3
+mark
+# the 1 s REC hold on the SEQ page: the notes of the clip go, the curve stays
+tap SEQ
+wait 100
+press REC
+wait 1300
+release REC
+wait 100
+expect events 3
+expect autos 3
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect events >0
+expect same 1
+# the 2.5 s hold: the track in every part, the automation too
+press REC
+wait 2800
+release REC
+wait 100
+expect events 0
+expect autos 0
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect autos >=3
+expect same 1
+# a part copy (ARP held + a white key of an empty part) takes the curve along
+press ARP
+tapkey w3
+release ARP
+wait 300
+expect autos >=3
+# MIX: REC held and the volume knob
+tap LFO
+wait 100
+expect page 3
+press REC
+turn K1 -4
+wait 200
+turn K1 4
+wait 200
+turn K1 -4
+wait 200
+release REC
+wait 300
+expect atgt17 >=2
+# save (the silence), reboot: the curves are there
+tap PLAY
+wait 300
+wait 92000
+expect dirty 0
+expect autos >=5
+reboot
+wait 500
+expect autos >=5
+expect atgt17 >=2

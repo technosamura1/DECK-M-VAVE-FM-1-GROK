@@ -22,6 +22,7 @@ build/test/deck_test fingerbank out/fingerbanks > build/test/fingerbank.txt || {
 python tools/sound_check.py out/fingerbanks --nolevel > build/test/fingerbank_check.txt && echo "  ok   every FINGER bank pattern: no clicks, peaks, DC, tails" || { echo "  FAIL fingerbank sound check"; grep "<--" build/test/fingerbank_check.txt | head; fail=1; }
 build/test/deck_test chords out/chords.wav > /dev/null || fail=1
 build/test/deck_test bypass > build/test/bypass.txt && echo "  ok   SOUND bypass: every stage of the chain off and on again: no clicks, peak under -1 dBFS" || { echo "  FAIL bypass"; grep CLICK build/test/bypass.txt | head -5; fail=1; }
+build/test/deck_test automation > build/test/automation.txt && echo "  ok   AUTOMATION: a curve on every target, three engines: no click, peak under -1 dBFS, no DC, not silent" || { echo "  FAIL automation"; grep "BAD\|SILENT" build/test/automation.txt | head -5; fail=1; }
 build/test/deck_test metro | sed 's/^/  /'
 build/test/deck_test bench | sed 's/^/  /'
 echo "-- the scenarios"

@@ -41,6 +41,40 @@ static int auto_edge(int tgt, int last)
     }
     return v;
 }
+/* the song's invariants, 0 = all hold (fuzz): bit 0 events within the pool, 1 each clip inside it and sorted, 2 lengths sane,
+ * 3 motion targets valid, 4 voices within the pool, 5 every parameter a track hears inside its range */
+static int invariants(void)
+{
+    int bad = 0, c, i, t, g;
+    if (dk_song.nev > DK_NEV)
+        bad |= 1;
+    for (c = 0; c < DK_NCLIP; c++) {
+        const dk_clip_t *k = &dk_song.clip[c];
+        if (k->n && (unsigned)k->at + k->n > DK_NEV)
+            bad |= 2;
+        if (k->len > DK_TPB * 32)
+            bad |= 4;
+        for (i = 0; i < k->n && (unsigned)k->at + k->n <= DK_NEV; i++) {
+            const dk_ev_t *e = &dk_ev[k->at + i];
+            if (i && e->pos < dk_ev[k->at + i - 1].pos)
+                bad |= 2;
+            if ((e->fl & EV_MOTION) && e->note >= T_N)
+                bad |= 8;
+            if (e->vel > 127)
+                bad |= 8;
+        }
+    }
+    if (dk_voices_on > DK_NVOICE)
+        bad |= 16;
+    for (t = 0; t < DK_NTRACK; t++)
+        for (g = 1; g < T_N; g++)
+            if (g >= T_ATT && g <= T_PAN) {
+                int v = dk_param_value(t, g);
+                if (v < -1000 || v > 1000)
+                    bad |= 32;
+            }
+    return bad;
+}
 int app_expect(const char *what, int *got)
 {
     int g = 0;
@@ -58,6 +92,12 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "root")) g = dk_song.root;
     else if (!strcmp(what, "mode")) g = dk_song.mode;
     else if (!strcmp(what, "seq")) g = cur()->seq;
+    else if (!strcmp(what, "autoall")) {                                                  /* ... in the whole song */
+        int c;
+        for (c = 0; c < DK_NCLIP; c++)
+            g += auto_count(c, 0);
+    }
+    else if (!strcmp(what, "inv")) g = invariants();
     else if (!strcmp(what, "nev")) g = dk_song.nev;
     else if (!strcmp(what, "autos")) g = auto_count(cur_clip(), 0);                      /* AUTOMATION: the curve points of the track in this part */
     else if (!strncmp(what, "atgt", 4)) g = auto_count(cur_clip(), atoi(what + 4));      /* ... of one target (T_*) */
