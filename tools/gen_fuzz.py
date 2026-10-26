@@ -27,9 +27,9 @@ def sound_event():
     elif y < 0.44:
         o.append("trkset %d %d %d %d" % (r.randrange(1, 7), r.randrange(0, 30), r.randrange(0, 9), r.randrange(0, 30)))   # any engine, block, place
     elif y < 0.52:
-        o += ["press SAVE", "tapkey w%d" % r.randrange(12, 16), "release SAVE"]                     # a user preset (it keeps the sound as it is)
+        o += ["press SAVE", "tapkey w%d" % r.choice([0, 1, 2, 12, 13, 14, 15]), "release SAVE"]          # a user preset (it keeps the sound as it is); w0-2: the part snapshot, its recall
     elif y < 0.58:
-        o.append("tapkey w%d" % r.randrange(0, 16))                                                 # a white key: the block's place or a user slot
+        o.append("tapkey w%d" % r.randrange(0, 16) if r.random() < 0.9 else "ballast %d" % r.choice([300, 900, 2500]))   # a white key: the block's place or a user slot; now and then the song memory fills
     elif y < 0.72:
         o += ["tap FX", "tap FX", "turn %s %d 40" % (r.choice(["K1", "K2", "K3", "K4"]), r.choice([-9, -4, -1, 2, 6, 12]))]   # the FX page: the cutoff and the rest
     elif y < 0.80:

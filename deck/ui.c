@@ -485,7 +485,7 @@ static void rec_start(void)
     }
     ui.armed = 0;
     {
-        char s[12] = "TAKE ";
+        char s[20] = "TAKE ";   /* "TAKE 31 L7/7" is 12 characters and the end */
         int n = dk_song.clip[clip].layers + 1, i, used = 0;
         for (i = 0; i < DK_NTRACK; i++)       /* (several armed: one number for them all, the highest + 1) */
             if ((ui.arm_trk >> i & 1) && dk_song.clip[dk_song.cur_part * DK_NTRACK + i].layers + 1 > n)
