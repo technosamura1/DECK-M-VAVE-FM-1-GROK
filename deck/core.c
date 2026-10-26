@@ -641,6 +641,8 @@ static inline float echo_step(float in)
         rp = (float)echo_w - echo_d;
         if (rp < 0.0f)
             rp += (float)ECHO_N;
+        if (rp >= (float)ECHO_N)         /* (a hair under zero rounds up to exactly ECHO_N: one past the buffer's end) */
+            rp = 0.0f;
         i0 = (int)rp;
         fr = rp - (float)i0;
         i1 = i0 + 1 >= ECHO_N ? 0 : i0 + 1;
