@@ -391,6 +391,7 @@ static void draw_header(void)
     char s[24];
     int part = dk_playing ? dk_cur_part : dk_song.cur_part, bar, beat, x, t;
     uint32_t now = plat_ms();
+    int mw = dk_song.nev * 10 >= DK_NEV * 9 ? 24 : 0;   /* the event pool (clips and automation) 90 % full: "MEM" at the right */
     if (dk_recording || dk_counting) {
         if ((now / 400u) & 1u)
             disc(12, 10, 4, TH_REC);
@@ -420,29 +421,29 @@ static void draw_header(void)
     itoa_b(beat, s + x + 1);
     cv_text(40, 4, &FONT_XS, s, TH_GRAY);
     if (plat_ms() < ui.notes_until)      /* what you play, for a moment: its notes (or the drum) */
-        text_box(70, 4, 92, 0, &FONT_XS, &FONT_T, ui.notes, ui.notes_k ? RGB(250, 150, 70) : TH_ENC[1]);
+        text_box(70, 4, 92 - mw, 0, &FONT_XS, &FONT_T, ui.notes, ui.notes_k ? RGB(250, 150, 70) : TH_ENC[1]);
     else if (held(B_HOME)) {             /* HOME held: the load, for a look: the voices of 24, the CPU */
         char ld[24], *q = itoa_b(dk_voices_on, ld);
         q = cpy(q, "/");
         q = itoa_b(DK_NVOICE, q);
-        q = cpy(q, " V  CPU ");
+        q = cpy(q, mw ? " V " : " V  CPU ");
         q = itoa_b((int)plat_cpu_pct(), q);
         cpy(q, "%");
-        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ld, plat_cpu_pct() > 80u ? TH_REC : TH_ENC[2]);
+        text_box(70, 4, 94 - mw, 0, &FONT_XS, &FONT_XS, ld, plat_cpu_pct() > 80u ? TH_REC : TH_ENC[2]);
     } else if (ui.page == PG_PLAY) {       /* PLAY: the part's name and the chord, in the header (not on the meadow) */
         int pcs[4], n = dk_harm_n ? dk_harm_n : 1, i;
         char c[12];
-        text_box(70, 4, 50, 0, &FONT_XS, &FONT_XS, LABEL_NAME[dk_song.part[part & 7].label & 7], TH_TEXT);
+        text_box(70, 4, 50 - mw, 0, &FONT_XS, &FONT_XS, LABEL_NAME[dk_song.part[part & 7].label & 7], TH_TEXT);
         for (i = 0; i < 4; i++)
             pcs[i] = 60 + dk_harm_pcs[i];
         dk_chord_name(pcs, n, c);
-        text_box(122, 4, 42, 1, &FONT_XS, &FONT_T, chord_deg >= 0 || dk_playing ? (have_chord && !dk_playing ? chord_name : c) : "", TH_ENC[0]);
+        text_box(122 - mw, 4, 42, 1, &FONT_XS, &FONT_T, chord_deg >= 0 || dk_playing ? (have_chord && !dk_playing ? chord_name : c) : "", TH_ENC[0]);
     } else {
         char tl[16];
         int k = (int)(itoa_b(dk_song.cur_track + 1, tl) - tl);
         tl[k] = ' ';
         cpy(tl + k + 1, track_label(dk_song.cur_track));
-        text_box(70, 4, 94, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC || ui.page == PG_ARP ? tl : ui.page == PG_TRACKS && ui.lay ? "LAYERS" : PAGE_NAME[ui.page], TH_GRAY);
+        text_box(70, 4, 94 - mw, 0, &FONT_XS, &FONT_XS, ui.page == PG_SEQ || ui.page == PG_SOUND || ui.page == PG_REC || ui.page == PG_ARP ? tl : ui.page == PG_TRACKS && ui.lay ? "LAYERS" : PAGE_NAME[ui.page], TH_GRAY);
     }
     {                                    /* the battery: shown only when low or HOME held (a quiet header) */
         int pct = batt_pct(), w;
@@ -459,6 +460,8 @@ static void draw_header(void)
         }
     }
 no_batt:
+    if (mw)                              /* the song memory nearly full: orange from 90 %, red from 97 % */
+        text_box(143, 4, 22, 2, &FONT_XS, &FONT_XS, "MEM", dk_song.nev * 100 >= DK_NEV * 97 ? TH_REC : RGB(250, 150, 70));
     itoa_b(dk_song.tempo, s);
     text_box(182, 4, 24, 2, &FONT_XS, &FONT_XS, s, TH_TEXT);
     for (t = 0; t < DK_NTRACK; t++) {    /* the six tracks: the one you are on bright, a muted one hollow */
