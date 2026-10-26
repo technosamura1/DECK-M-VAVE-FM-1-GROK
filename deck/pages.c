@@ -819,7 +819,7 @@ static void draw_sound(void)                /* SOUND: the source on the left, th
             field_range(f, &lo, &hi);
             v = field_get(f);
             field_big(f, num, unit);
-            text_box(14, wy + 82, 54, 0, &FONT_XS, &FONT_XS, field_label(f), TH_ENC[ui.touched >= 0 && ui.touched < 4 ? ui.touched : 0]);
+            text_box(14, wy + 82, 54, 0, &FONT_XS, &FONT_XS, field_label(f), knob_col(ui.touched >= 0 && ui.touched < 4 ? ui.touched : 0));
             text_box(66, wy + 82, 60, 2, &FONT_B, &FONT_S, num, TH_TEXT);
             text_box(128, wy + 84, 28, 0, &FONT_XS, &FONT_XS, unit[0], W_GRAY);
             cv_rect(158, wy + 87, 66, 5, W_LINE);
