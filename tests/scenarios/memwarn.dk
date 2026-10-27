@@ -1,0 +1,24 @@
+# the song memory (clips and automation) nearly full: a small MEM in the header (orange from 90 %, red from 97 %)
+wait 300
+shot mem_none.png
+ballast 2400
+wait 300
+expect nev 3761
+shot mem_90.png
+tap SEQ
+wait 300
+shot mem_90_seq.png
+press HOME
+wait 300
+shot mem_90_load.png
+release HOME
+ballast 250
+wait 300
+expect nev 4011
+shot mem_97.png
+tap PLAY
+wait 600
+shot mem_97_play.png
+tap PLAY
+wait 300
+expect textfit 0

@@ -1,0 +1,44 @@
+# a button held a moment: its one-line hint in the foot (not when it is used as a modifier, not before 0.45 s)
+wait 300
+tap FX
+wait 3500
+press EDIT
+wait 200
+shot hint_none.png
+wait 400
+shot hint_edit.png
+release EDIT
+press SAVE
+wait 600
+shot hint_save.png
+release SAVE
+press ENV
+wait 500
+shot hint_env.png
+wait 400
+release ENV
+wait 100
+# HOME held: the load (voices of 24, CPU) takes the header's middle for a look
+tap FX
+wait 100
+press HOME
+wait 200
+shot load_home.png
+release HOME
+# every hint fits its line
+tap SEQ
+wait 100
+press SEQ
+wait 600
+release SEQ
+press ARP
+wait 600
+release ARP
+press SAVE
+wait 600
+release SAVE
+press HOME
+wait 100
+release HOME
+wait 100
+expect textfit 0

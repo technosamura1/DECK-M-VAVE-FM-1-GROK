@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 """DECK's sound check (CLAUDE_TASK 9): every WAV of out/sounds checked by ear's proxies.
 
-  python tools/sound_check.py [out/sounds] [--json out/sound_check.json] [--trims]
+  python tools/sound_check.py [out/sounds] [--json out/sound_check.json] [--trims] [--nolevel]
+(--nolevel: no per-engine loudness spread check, for folders of patterns of different density)
 
 For each file: the peak (<= -1 dBFS), DC (|mean| < -54 dBFS), clicks (a jump the signal around it does not explain),
 aliasing (the top octave's energy against the whole, the high notes' part), the tail (the last 50 ms below -60 dBFS),
@@ -72,10 +73,14 @@ def check(path):
         blocks = d2[: nb * win].reshape(nb, win)
         bmax = blocks.max(axis=1)
         bmed = np.median(blocks, axis=1)
+        # a wave with edges of its own (a saw's wrap, a pulse's flank) has one in every few blocks: a click has to stand
+        # out from those too (against the 90th percentile of the blocks' own largest steps)
+        live = bmax[bmax > 0.005]
+        edge = float(np.percentile(live, 90)) if len(live) > 10 else 0.0
         for i in range(2, nb - 2):
             ctx = np.concatenate([blocks[i - 2], blocks[i - 1], blocks[i + 1], blocks[i + 2]])
             ref = np.percentile(ctx, 95) + 1e-9
-            if bmax[i] > 0.03 and bmax[i] > 12 * ref and bmax[i] > 20 * (bmed[i] + 1e-9):
+            if bmax[i] > 0.03 and bmax[i] > 12 * ref and bmax[i] > 20 * (bmed[i] + 1e-9) and bmax[i] > 2.5 * edge:
                 clicks += 1
                 where.append(round(i * win / SR, 3))
     r["clicks"] = clicks
@@ -140,7 +145,7 @@ def main():
             r["dev_db"] = dev
             r["trim_half_db"] = int(round(-dev * 2))
             flag = list(r["problems"])
-            if abs(dev) > 2.0:
+            if abs(dev) > 2.0 and "--nolevel" not in sys.argv:
                 flag.append(f"level {dev:+.1f} dB off the engine's")
             name = os.path.basename(r["file"])
             s = (f"   {name:28s} peak {r['peak_db']:6.1f}  loud {r['loud_db']:6.1f}  top {r['top_db']:6.1f}  "

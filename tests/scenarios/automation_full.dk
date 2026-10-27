@@ -1,0 +1,11295 @@
+# AUTOMATION pool stress: every row of every track wiggled hard while playing; the pool never overflows (MEMORY FULL stops the recording)
+wait 300
+demo
+wait 100
+tap PLAY
+wait 400
+tap FX
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K3 9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 -9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K3 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K2 5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K1 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K1 9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K1 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K2 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 -9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K4 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K1 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K1 -9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K2 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K4 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K4 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K4 5 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K4 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K1 9 20
+wait 90
+turn K1 9 20
+wait 50
+turn K4 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K1 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K3 5 20
+wait 20
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K2 -9 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K1 9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K2 -5 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K3 5 20
+wait 90
+turn K1 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K4 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K2 -5 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K3 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K3 5 20
+wait 20
+turn K1 5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K2 9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K4 9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K3 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K4 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K1 9 20
+wait 50
+turn K1 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K1 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 -9 20
+wait 20
+turn K3 9 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K2 5 20
+wait 20
+turn K4 5 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K3 5 20
+wait 20
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 -9 20
+wait 20
+turn K1 -5 20
+wait 50
+release REC
+wait 100
+expect inv 0
+turn SELECT 1
+wait 50
+tap FX
+press REC
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K1 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K4 5 20
+wait 50
+turn K4 9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 -9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K4 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K4 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 -5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K4 -9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K1 -9 20
+wait 50
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K1 5 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K3 5 20
+wait 20
+turn K2 -9 20
+wait 50
+turn K4 9 20
+wait 20
+turn K1 5 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K3 -5 20
+wait 50
+turn K1 9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K4 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 5 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K3 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K3 -5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K4 5 20
+wait 50
+turn K4 -5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 -5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -5 20
+wait 20
+turn K4 9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K2 9 20
+wait 50
+turn K4 -5 20
+wait 90
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K3 5 20
+wait 90
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K1 -5 20
+wait 50
+turn K4 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 9 20
+wait 50
+turn K2 -5 20
+wait 20
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 20
+turn K3 -9 20
+wait 20
+turn K3 5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 -5 20
+wait 50
+turn K2 -9 20
+wait 90
+turn K1 9 20
+wait 20
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K4 5 20
+wait 50
+turn K3 5 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K2 5 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 5 20
+wait 20
+turn K3 -9 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 5 20
+wait 90
+turn K2 5 20
+wait 90
+turn K3 9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K1 5 20
+wait 50
+turn K4 9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K1 -9 20
+wait 90
+turn K1 5 20
+wait 20
+turn K3 5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K4 9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K3 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K4 -9 20
+wait 90
+turn K4 9 20
+wait 20
+turn K4 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K4 9 20
+wait 90
+turn K4 9 20
+wait 50
+turn K3 5 20
+wait 20
+turn K2 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K1 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K2 9 20
+wait 20
+turn K1 9 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K3 5 20
+wait 50
+turn K3 9 20
+wait 90
+turn K3 9 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K1 -9 20
+wait 20
+turn K4 9 20
+wait 20
+turn K2 9 20
+wait 50
+turn K2 -9 20
+wait 20
+turn K3 9 20
+wait 50
+turn K2 5 20
+wait 20
+turn K1 -5 20
+wait 90
+turn K3 5 20
+wait 90
+turn K4 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 5 20
+wait 20
+turn K3 9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K3 9 20
+wait 20
+turn K4 -5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K3 9 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K3 -9 20
+wait 90
+turn K4 -9 20
+wait 20
+turn K3 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 9 20
+wait 20
+turn K4 9 20
+wait 90
+release REC
+wait 100
+expect inv 0
+tap FX
+press REC
+turn K4 -5 20
+wait 20
+turn K4 -9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 90
+turn K2 -9 20
+wait 20
+turn K1 -9 20
+wait 20
+turn K4 -9 20
+wait 50
+turn K3 9 20
+wait 50
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K2 -5 20
+wait 20
+turn K3 -9 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K3 -5 20
+wait 20
+turn K1 9 20
+wait 20
+turn K2 -5 20
+wait 20
+turn K2 -9 20
+wait 90
+turn K1 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K2 5 20
+wait 50
+turn K3 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K2 5 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 9 20
+wait 90
+turn K1 -9 20
+wait 20
+turn K1 9 20
+wait 50
+turn K4 -9 20
+wait 20
+turn K1 -9 20
+wait 50
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 90
+turn K4 -9 20
+wait 50
+turn K2 -9 20
+wait 50
+turn K1 5 20
+wait 90
+turn K3 -5 20
+wait 20
+turn K4 5 20
+wait 50
+turn K2 5 20
+wait 20
+turn K2 9 20
+wait 20
+turn K1 -5 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K3 -5 20
+wait 90
+turn K1 -5 20
+wait 90
+turn K2 9 20
+wait 50
+turn K3 -5 20
+wait 90
+turn K2 -5 20
+wait 50
+turn K1 5 20
+wait 20
+turn K4 -9 20
+wait 90
+turn K2 9 20
+wait 20
+turn K2 9 20
+wait 20
+turn K2 -5 20
+wait 50
+turn K3 -9 20
+wait 50
+turn K3 5 20
+wait 90
+release REC
+wait 100
+expect inv 0
+expect events <4097
+expect nev >3900

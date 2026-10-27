@@ -21,9 +21,12 @@ tapkey b0
 release HOME
 tap SEQ
 wait 50
-press SEQ
-tap REC
-release SEQ
+# the EDIT list: ERASE NOTES (white 12) twice, then back to SEQ
+page 11
+tap EDIT
+tapkey w11
+tapkey w11
+page 1
 wait 50
 expect events 0
 tap SEQ
@@ -92,9 +95,12 @@ wait 50
 expect events 2
 expect textfit 0
 # a melody by the knobs only (the manual's picture)
-press SEQ
-tap REC
-release SEQ
+# the EDIT list: ERASE NOTES (white 12) twice, then back to SEQ
+page 11
+tap EDIT
+tapkey w11
+tapkey w11
+page 1
 wait 50
 turn K1 -16
 turn K2 1

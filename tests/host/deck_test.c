@@ -205,24 +205,31 @@ static void play_kit(int t)
             run(s16);
         }
 }
-static void sounds(const char *dir)
+static void sounds(const char *dir, const char *only)
 {
     int e, p;
     char fn[512], cmd[600];
     for (e = 0; e < TAPE.neng; e++) {
         const dk_engine_t *eng = TAPE.eng[e];
+        if (only && !strstr(only, eng->name))
+            continue;
         MKDIR(dir);
         sprintf(cmd, "%s/%s", dir, eng->name);
         MKDIR(cmd);
-        for (p = 0; p < DK_NFACT; p++) {
-            const dk_preset_t *pr = &TAPE.presets[e * DK_NFACT + p];
+        for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+            const dk_preset_t *pr;
+            dk_preset_t tmp;
+            int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT);
             char nm[40];
+            if (p % DK_NFACT >= preset_count(e, blk))
+                continue;
+            pr = preset_of(e, id, &tmp);
             int i, t = 2;
             fresh();
             dk_lock();
             dk_song.tempo = 84;
             dk_song.dust = 0;
-            dk_track_setup(t, e, p, SQ_LIVE, eng->role);
+            dk_track_setup(t, e, id, SQ_LIVE, eng->role);
             dk_song.trk[t].vol = 80;
             dk_song.trk[t].pan = 0;
             dk_unlock();
@@ -244,10 +251,58 @@ static void sounds(const char *dir)
             for (i = 0; pr->name[i] && i < 30; i++)
                 nm[i] = pr->name[i] == ' ' ? '_' : pr->name[i];
             nm[i] = 0;
-            sprintf(fn, "%s/%s/%02d_%s.wav", dir, eng->name, p + 1, nm);
+            sprintf(fn, "%s/%s/b%d_%02d_%s.wav", dir, eng->name, blk, p % DK_NFACT + 1, nm);
             wav(fn);
+            {   /* what each file is made of, for tools/dup_check.py: the engine's parameters, envelope, effects (not the name, not the level trim) */
+                FILE *tf;
+                sprintf(cmd, "%s/presets.tsv", dir);
+                tf = fopen(cmd, "a");
+                if (tf) {
+                    fprintf(tf, "%s\t%s\t%d\t%s\t", eng->name, fn + strlen(dir) + 1, id, pr->name);
+                    for (i = 0; i < DK_NP; i++)
+                        fprintf(tf, "%d,", pr->p[i]);
+                    fprintf(tf, "|%d,%d,%d|%d,%d,%d,%d|%d,%d|%d:%d,%d:%d,%d:%d|%d\n", pr->env[0], pr->env[1], pr->env[2], pr->fx, pr->fxamt,
+                            pr->fxa, pr->fxb, pr->rev, pr->echo, pr->mt[0], pr->ma[0], pr->mt[1], pr->ma[1], pr->mt[2], pr->ma[2], pr->vol);
+                    fclose(tf);
+                }
+            }
             sprintf(cmd, "%s %s", eng->name, pr->name);
             report(cmd);
+        }
+    }
+}
+
+/* each drum machine's voices, one at a time (out/kits/MACHINE/NN_VOICE.wav): to look at a kit's sounds one by one */
+static void kitvoices(const char *dir)
+{
+    static const struct { const char *n; int blk, i; } M[5] = {{"808", 2, 8}, {"909", 2, 10}, {"606", 1, 8}, {"CR-78", 1, 10}, {"707", 0, 1}};
+    static const struct { const char *n; int note; } V[] = {
+        {"kick", 36}, {"kick2", 35}, {"snare", 38}, {"snare2", 40}, {"rim", 37}, {"clap", 39}, {"hat", 42}, {"open", 46},
+        {"tomlo", 41}, {"tommid", 45}, {"tomhi", 50}, {"cowbell", 56}, {"tamb", 54}, {"crash", 49}, {"ride", 51},
+        {"shaker", 70}, {"wood", 76}, {"congahi", 62}, {"congamid", 63}, {"congalo", 64}};
+    int m, v;
+    char fn[512], cmd[600];
+    MKDIR(dir);
+    for (m = 0; m < 5; m++) {
+        sprintf(cmd, "%s/%s", dir, M[m].n);
+        MKDIR(cmd);
+        for (v = 0; v < (int)(sizeof V / sizeof V[0]); v++) {
+            int id = preset_id(M[m].blk, M[m].i);
+            fresh();
+            dk_lock();
+            dk_song.tempo = 84;
+            dk_song.dust = 0;
+            dk_track_setup(2, 5, id, SQ_LIVE, R_DRUM);
+            dk_song.trk[2].vol = 80;
+            dk_song.trk[2].pan = 0;
+            dk_unlock();
+            run(0.05);
+            reset_out();
+            note(2, V[v].note, 100);
+            run(2.0);
+            tail(5.0);
+            sprintf(fn, "%s/%s/%02d_%s.wav", dir, M[m].n, v, V[v].n);
+            wav(fn);
         }
     }
 }
@@ -436,6 +491,57 @@ static void phrase(int inst, const char *out)
 #endif
 }
 
+
+/* FINGER's banks: every pattern of every bank (a drum, a bass, a pad, a melody track) held for two bars on the default
+ * engines, one WAV each in <dir>/<BANK>_<ROLE>/pNN.wav; sound_check.py --nolevel checks them. Silence fails the run. */
+static int fingerbank(const char *dir)
+{
+    static const struct { int t; const char *tag; } TR[4] = {{4, "DRUM_DUSTKIT"}, {3, "BASS"}, {2, "PAD"}, {0, "MEL"}};
+    int b, k, p, bad = 0, n = 0;
+    char cmd[256], fn[320];
+    for (b = 0; b < DK_NFBANK; b++)
+        for (k = 0; k < 4; k++) {
+            int t = TR[k].t;
+            snprintf(fn, sizeof fn, "%s/%s_%s", dir, dk_fb_bankname(b), TR[k].tag);
+            snprintf(cmd, sizeof cmd, "mkdir -p '%s'", fn);
+            if (system(cmd))
+                return 2;
+            for (p = 0; p < 16; p++) {
+                double bar;
+                int v, vmax;
+                fresh();
+                dk_lock();
+                dk_song.trk[t].seq = SQ_FINGER;
+                dk_song.fbank[t] = (uint8_t)b;
+                dk_song.dust = 0;
+                dk_unlock();
+                bar = 4.0 * 60.0 / (dk_song.tempo > 0 ? dk_song.tempo : 100);
+                run(0.05);
+                reset_out();
+                dk_cmd(C_FINGER, t, 1, p);
+                for (vmax = 0, v = 0; v < 20; v++) {       /* two bars, the busiest moment's voices counted */
+                    run(0.1 * bar);
+                    vmax = (int)dk_voices_on > vmax ? (int)dk_voices_on : vmax;
+                }
+                dk_cmd(C_FINGER, t, 0, p);
+                tail(8.0);
+                snprintf(fn, sizeof fn, "%s/%s_%s/p%02d.wav", dir, dk_fb_bankname(b), TR[k].tag, p + 1);
+                wav(fn);
+                n++;
+                if (vmax >= DK_NVOICE) {
+                    printf("VOICES FULL %s\n", fn);
+                    bad++;
+                }
+                if (peak < 200) {
+                    printf("SILENT %s (peak %d)\n", fn, peak);
+                    bad++;
+                }
+            }
+        }
+    printf("fingerbank: %d patterns rendered, %d silent\n", n, bad);
+    return bad ? 1 : 0;
+}
+
 /* ATMO to listen to: the demo's chorus three times: dry; with RAIN and the FIRE under it; with the TAPE as well */
 static void atmo_demo(const char *out)
 {
@@ -559,6 +665,67 @@ static void bench(void)
     printf("bench: every voice busy: worst %.1f us/128 (voices %d)\n", worst, dk_voices_on);
 }
 
+
+/* 24 voices at once: all six tracks on the heaviest presets, the FX chain on every track, held chords with long releases.
+   Checks the pool really fills (24), nothing goes NaN/inf (the output would clip hard or sit on a rail), the peak stays
+   under full scale, no DC, and prints the worst block cost. Returns 1 on a failure. */
+static int stress24(void)
+{
+    static const int ENG[6] = {10, 10, 10, 0, 2, 1};            /* MOURNING plucks on three tracks, the rest heavy pads */
+    int bad = 0, pass, i, t, fxn = TAPE.nfx;
+    for (pass = 0; pass < 3; pass++) {
+        double worst = 0.0;
+        int maxv = 0, hold, dc_bad = 0;
+        long dc = 0;
+        fresh();
+        dk_lock();
+        for (t = 0; t < 6; t++) {
+            int eng = pass == 0 ? 10 : ENG[t];
+            int pre = eng == 10 ? DK_PBASE + 2 * 12 + 11 : DK_PBASE + ((t + pass) % 3) * 12 + (t * 5 + pass) % 4;
+            dk_track_setup(t, eng, pre, SQ_LIVE, t == 0 ? R_DRUM : R_KEYS);
+            dk_song.trk[t].fx = (uint8_t)(fxn ? 1 + (t + pass) % (fxn > 1 ? fxn - 1 : 1) : 0);
+            dk_song.trk[t].fxamt = 80;
+            dk_song.trk[t].rev = 100;
+            dk_song.trk[t].echo = 60;
+        }
+        dk_song.space = 3;
+        dk_song.dust = 80;
+        dk_song.tapesim = 100;
+        dk_unlock();
+        run(0.1);
+        reset_out();
+        for (hold = 0; hold < 30; hold++) {
+            for (t = 0; t < 6; t++)
+                for (i = 0; i < 5; i++)
+                    note(t, 36 + (hold * 3 + t * 7 + i * 4) % 48, 110);
+            run(0.12);
+            {
+                double us = cost_s * 1e6 / (double)frames * 128.0;
+                if (us > worst)
+                    worst = us;
+            }
+            if (dk_voices_on > maxv)
+                maxv = dk_voices_on;
+            for (t = 0; t < 6; t++)
+                for (i = 0; i < 5; i++)
+                    note(t, 36 + (hold * 3 + t * 7 + i * 4) % 48, 0);
+        }
+        for (i = 0; i < 2 * frames; i++)
+            dc += buf[i];
+        dc /= frames ? frames : 1;
+        dc_bad = labs(dc) > 600;
+        report(pass == 0 ? "stress24: 6 x MOURNING + fx" : pass == 1 ? "stress24: mixed heavy + fx" : "stress24: mixed 2 + fx");
+        printf("   voices max %d, worst %.1f us/128, dc %ld\n", maxv, worst, dc);
+        if (maxv < 24 || peak >= 32767 || dc_bad) {
+            printf("   FAIL stress24 pass %d (voices %d, peak %d, dc %ld)\n", pass, maxv, peak, dc);
+            bad = 1;
+        }
+        quiet_all();
+        tail(8.0);
+    }
+    return bad;
+}
+
 #ifdef DK_PROF
 static void engbench(void)
 {
@@ -596,12 +763,297 @@ static void metro(void)
            dk_song.tempo, (int)(10.0 * dk_song.tempo / 60.0), dk_metro_err_max);
 }
 
+/* SOUND's BYPASS: every stage of the chain switched off and on again under a held chord must not click (the biggest step between
+ * two samples around the switch against the same sound's own steps just before; the tail's peak is the end of the reverb) */
+static int stepmax(int f0, int f1)
+{
+    int i, m = 0;
+    for (i = 2 * f0 + 2; i < 2 * f1; i++) {
+        int d = abs((int)buf[i] - (int)buf[i - 2]);
+        m = d > m ? d : m;
+    }
+    return m;
+}
+static int bypass_test(void)
+{
+    int bad = 0, st, fx, n = 0;
+    for (st = 0; st < 4; st++)
+        for (fx = st ? 0 : 1; fx < (st ? 1 : 8); fx++) {
+            int t = 2, k, sw[2] = {44100 * 2, 44100 * 4}, ref, jmp[2];
+            fresh();
+            dk_lock();
+            dk_song.trk[t].fx = (uint8_t)fx;
+            dk_song.trk[t].fxamt = 80;
+            dk_song.trk[t].fxa = 60;
+            dk_song.trk[t].fxb = 50;
+            dk_song.trk[t].echo = 70;
+            dk_song.trk[t].rev = 70;
+            dk_song.tapesim = 70;
+            dk_unlock();
+            reset_out();
+            for (k = 0; k < 4; k++)
+                note(t, 48 + 4 * k, 96);
+            run(1.9);
+            ref = stepmax(44100 / 2, 44100 * 19 / 10);
+            run(0.1);
+            dk_lock();
+            if (st == 3) dk_song.rsv[DK_NTRACK] |= 1; else dk_song.rsv[t] |= (uint8_t)(1u << st);
+            dk_unlock();
+            run(1.9);
+            jmp[0] = stepmax(sw[0] - 64, sw[0] + 2048);
+            run(0.1);
+            dk_lock();
+            if (st == 3) dk_song.rsv[DK_NTRACK] = 0; else dk_song.rsv[t] = 0;
+            dk_unlock();
+            run(1.9);
+            jmp[1] = stepmax(sw[1] - 64, sw[1] + 2048);
+            n++;
+            if (jmp[0] > 2 * ref + 300 || jmp[1] > 2 * ref + 300 || peak > 29200) {
+                printf("CLICK stage %d fx %d: step %d / %d (own %d) peak %d\n", st, fx, jmp[0], jmp[1], ref, peak);
+                bad++;
+            }
+        }
+    printf("bypass: %d stage/effect pairs switched off and on, %d clicks\n", n, bad);
+    return bad ? 1 : 0;
+}
+
+/* AUTOMATION: a curve on every target of a track, a sawtooth with a very steep edge (the worst a hand can do), over a held
+ * chord and a note pattern: no click (the biggest step between two samples against the same sound with no automation), the
+ * peak under -1 dBFS, no DC, not silent. The curve is made as the UI makes it (a ramp event per point) */
+static int auto_test(void)
+{
+    static const int TG[] = {T_P0, T_P1, T_P2, T_P3, T_P4, T_P5, T_ATT, T_DEC, T_REL, T_FXAMT, T_FXA, T_FXB, T_REV, T_ECHO, T_VOL, T_PAN};
+    int bad = 0, n = 0, e, i, k;
+    for (e = 0; e < 3; e++)
+        for (k = 0; k < (int)(sizeof TG / sizeof TG[0]); k++) {
+            int t = 2, pass, st[2], pk[2], dc[2];
+            for (pass = 0; pass < 2; pass++) {
+                int c = CLIP(0, t) - dk_song.clip;
+                double sum = 0.0;
+                fresh();
+                dk_lock();
+                dk_track_setup(t, e * 3 % TAPE.neng, 0, SQ_LIVE, dk_engine(t) ? dk_engine(t)->role : 0);
+                dk_song.trk[t].fx = (uint8_t)(1 + e);
+                dk_song.trk[t].fxamt = 60;
+                dk_song.trk[t].echo = 40;
+                dk_song.trk[t].rev = 40;
+                dk_song.clip[c].len = DK_TPB * 2;
+                for (i = 0; i < 16; i++) {
+                    dk_ev_t ev;
+                    ev.pos = (uint16_t)(i * 48);
+                    ev.dur = 40;
+                    ev.note = (uint8_t)(48 + (i * 5) % 17);
+                    ev.vel = 90;
+                    ev.fl = 0;
+                    ev.layer = 0;
+                    dk_song_insert(c, &ev);
+                }
+                if (pass) {
+                    for (i = 0; i < 9; i++) {           /* up in a bar, a steep fall, up again, down */
+                        static const int V[9] = {0, 40, 100, 100, 5, 5, 60, 100, 0};
+                        dk_ev_t ev;
+                        ev.pos = (uint16_t)(i < 4 ? i * 96 : i == 4 ? 4 * 96 + 24 : 4 * 96 + 24 + (i - 4) * 90);
+                        ev.dur = 0;
+                        ev.note = (uint8_t)TG[k];
+                        ev.vel = (uint8_t)V[i];
+                        ev.fl = EV_MOTION | EV_RAMP;
+                        ev.layer = 0;
+                        dk_song_insert(c, &ev);
+                    }
+                }
+                dk_unlock();
+                dk_cmd(C_PLAY, 1, 0, 0);
+                run(2.0);
+                reset_out();
+                run(10.0);
+                st[pass] = stepmax(0, frames);
+                pk[pass] = peak;
+                for (i = 0; i < 2 * frames; i++)
+                    sum += buf[i];
+                dc[pass] = (int)(sum / (2.0 * frames));
+                if (pass && peak < 200) {
+                    printf("SILENT engine %d target %d\n", e, TG[k]);
+                    bad++;
+                }
+            }
+            n++;
+            if (getenv("AUTO_VERBOSE"))
+                printf("engine %d target %2d: step %5d (plain %5d) peak %5d (plain %5d) dc %d\n", e, TG[k], st[1], st[0], pk[1], pk[0], dc[1]);
+            if (st[1] > 2 * st[0] + 600 || pk[1] > 29200 || abs(dc[1]) > 300) {
+                printf("BAD engine %d target %d: step %d (plain %d) peak %d dc %d\n", e, TG[k], st[1], st[0], pk[1], dc[1]);
+                bad++;
+            }
+        }
+    printf("automation: %d tracks x curves rendered, %d bad\n", n, bad);
+    return bad ? 1 : 0;
+}
+
+
+/* ------------------------------------------------------------------ pitch --- */
+/* the fundamental of the note just played (frames from f0 on, 0.7 s of it): the autocorrelation's first strong peak between
+ * 25 Hz and 1 kHz; conf (0..1) how periodic it is (a noise or a bell is not) */
+static double fundamental(int f0, double *conf)
+{
+    int n = 30870, lo = 44, hi = 1764, lag, best = 0, i;     /* 0.7 s; the lags of 1 kHz .. 25 Hz */
+    double e0 = 0.0, bestv = -1.0, v[1800];
+    static double x[30870 + 1800];
+    if (f0 + n + hi > frames)
+        n = frames - f0 - hi;
+    if (n < 4000) {
+        *conf = 0.0;
+        return 0.0;
+    }
+    for (i = 0; i < n + hi; i++)
+        x[i] = 0.5 * ((double)buf[2 * (f0 + i)] + (double)buf[2 * (f0 + i) + 1]);
+    for (i = 0; i < n; i++)
+        e0 += x[i] * x[i];
+    if (e0 < 1.0) {
+        *conf = 0.0;
+        return 0.0;
+    }
+    for (lag = lo; lag <= hi; lag++) {
+        double c = 0.0, e1 = 0.0;
+        for (i = 0; i < n; i++) {
+            c += x[i] * x[i + lag];
+            e1 += x[i + lag] * x[i + lag];
+        }
+        v[lag - lo] = c / sqrt(e0 * e1 + 1e-9);
+        if (v[lag - lo] > bestv)
+            bestv = v[lag - lo];
+    }
+    for (lag = lo + 1; lag < hi; lag++)                        /* the first peak within 5 % of the best (not its multiples) */
+        if (v[lag - lo] >= 0.95 * bestv && v[lag - lo] >= v[lag - 1 - lo] && v[lag - lo] >= v[lag + 1 - lo]) {
+            best = lag;
+            break;
+        }
+    *conf = bestv;
+    if (best <= lo || best >= hi)
+        return 0.0;
+    {   /* the parabola through the peak: the lag between the samples */
+        double a = v[best - 1 - lo], b = v[best - lo], c = v[best + 1 - lo], d = a - 2.0 * b + c;
+        return 44100.0 / ((double)best + (d != 0.0 ? 0.5 * (a - c) / d : 0.0));
+    }
+}
+/* every BASS-role preset (all blocks): the notes C2, G2, C3 sound at their pitch (a quarter tone); every other melodic engine's
+ * presets: a report line (the octave off by more than one in a periodic sound is an error too). Written to the output. */
+static int pitch_test(void)
+{
+    static const int N[3] = {36, 43, 48};
+    int e, p, bad = 0, checked = 0;
+    for (e = 0; e < TAPE.neng; e++) {
+        const dk_engine_t *eng = TAPE.eng[e];
+        if ((eng->flags & (EF_DRUM | EF_CONT)))
+            continue;
+        for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+            int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT), j;
+            dk_preset_t tmp;
+            const dk_preset_t *pr;
+            if (p % DK_NFACT >= preset_count(e, blk))
+                continue;
+            pr = preset_of(e, id, &tmp);
+            for (j = 0; j < (eng->role == R_BASS ? 3 : 1); j++) {
+                double want, got, conf, cents;
+                int nn = eng->role == R_BASS ? N[j] : eng->role == R_BELL ? 60 : 48;
+                fresh();
+                dk_lock();
+                dk_song.tempo = 84;
+                dk_song.dust = 0;
+                dk_track_setup(2, e, id, SQ_LIVE, eng->role);
+                dk_song.trk[2].vol = 80;
+                dk_song.trk[2].pan = 0;
+                dk_unlock();
+                run(0.05);
+                reset_out();
+                want = 440.0 * pow(2.0, (nn - 69) / 12.0);
+                note(2, nn, 100);
+                run(1.2);
+                got = fundamental(2000, &conf);
+                note(2, nn, 0);
+                run(0.3);
+                cents = got > 0.0 ? 1200.0 * log2(got / want) : 0.0;
+                if (eng->role == R_BASS) {                     /* at its pitch, or a sub-octave (SUB DRONE, RUMBLE) by design; never above */
+                    int ok = got > 0.0 && (fabs(cents) <= 50.0 || fabs(cents + 1200.0) <= 50.0 || fabs(cents + 2400.0) <= 50.0);
+                    if (!ok) {
+                        printf("BAD   %s %s note %d: %.1f Hz, wanted %.1f (%+.0f cents, periodicity %.2f)\n", eng->name, pr->name,
+                               nn, got, want, cents, conf);
+                        bad++;
+                    } else if (fabs(cents) > 50.0)
+                        printf("sub   %s %s note %d: %.1f Hz (%+.0f cents, by design)\n", eng->name, pr->name, nn, got, cents);
+                    checked++;
+                } else if (conf > 0.9 && got > 0.0 && fabs(cents) > 50.0)   /* the others: a list to look at, not an error */
+                    printf("info  %s %s note %d: %.1f Hz, wanted %.1f (%+.0f cents)\n", eng->name, pr->name, nn, got, want, cents);
+            }
+        }
+    }
+    printf("%d bass notes checked, %d bad\n", checked, bad);
+    return bad != 0 || checked == 0;
+}
+
+/* the effects' delay lines past 2^24 samples: a float write position lost its fraction (steps of 2, then 4 samples) and a
+ * swaying delay (TAPE, CHORUS, ...) turned to a staircase after about six minutes of sound. A held LEAD note through each
+ * insert effect: its top (the second difference against the signal) a second in, and again after ~7 minutes. */
+static double hf_ratio(void)
+{
+    double a = 0.0, b = 0.0;
+    int i;
+    for (i = 2; i < frames; i++) {
+        double x = buf[2 * i], d = x - 2.0 * buf[2 * (i - 1)] + buf[2 * (i - 2)];
+        a += d * d;
+        b += x * x;
+    }
+    return a / (b + 1.0);
+}
+static int fxlong_test(void)
+{
+    int e, fx, bad = 0;
+    for (e = 0; e < TAPE.neng && strcmp(TAPE.eng[e]->name, "LEAD"); e++)
+        ;
+    if (e == TAPE.neng)
+        e = 0;
+    for (fx = 1; fx < TAPE.nfx; fx++) {
+        double early, late;
+        int i;
+        fresh();
+        dk_lock();
+        dk_song.tempo = 84;
+        dk_song.dust = 0;
+        dk_track_setup(2, e, 0, SQ_LIVE, TAPE.eng[e]->role);
+        dk_song.trk[2].vol = 80;
+        dk_song.trk[2].pan = 0;
+        dk_song.trk[2].fx = (uint8_t)fx;
+        dk_song.trk[2].fxamt = 40;
+        dk_song.trk[2].fxa = 30;
+        dk_song.trk[2].fxb = 30;
+        dk_unlock();
+        note(2, 48, 100);
+        run(1.0);
+        reset_out();
+        run(1.0);
+        early = hf_ratio();
+        for (i = 0; i < 70; i++) {                              /* 70 x 6 s: past 2^24 samples (380 s) */
+            reset_out();
+            run(6.0);
+        }
+        reset_out();
+        run(1.0);
+        late = hf_ratio();
+        if (late > 2.5 * early + 1e-6) {
+            printf("BAD   fx %s: the top after 7 minutes is %.1fx the first second's\n", TAPE.fx[fx]->name, late / (early + 1e-12));
+            bad++;
+        }
+        printf("fx %-8s top %.2e -> %.2e\n", TAPE.fx[fx]->name, early, late);
+    }
+    return bad;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "sounds";
     dk_init();
     if (!strcmp(m, "sounds"))
-        sounds(argc > 2 ? argv[2] : "out/sounds");
+        sounds(argc > 2 ? argv[2] : "out/sounds", argc > 3 ? argv[3] : 0);
+    else if (!strcmp(m, "kitvoices"))
+        kitvoices(argc > 2 ? argv[2] : "out/kits");
     else if (!strcmp(m, "demo"))
         demo(argc > 2 ? argv[2] : "out/demo.wav");
     else if (!strcmp(m, "drive") && argc > 4) {
@@ -619,6 +1071,12 @@ int main(int argc, char **argv)
         balance();
     else if (!strcmp(m, "atmo"))
         atmo_demo(argc > 2 ? argv[2] : "out/atmo.wav");
+    else if (!strcmp(m, "fingerbank"))
+        return fingerbank(argc > 2 ? argv[2] : "out/fingerbanks");
+    else if (!strcmp(m, "bypass"))
+        return bypass_test();
+    else if (!strcmp(m, "automation"))
+        return auto_test();
     else if (!strcmp(m, "bench"))
         bench();
 #ifdef DK_PROF
@@ -627,8 +1085,14 @@ int main(int argc, char **argv)
 #endif
     else if (!strcmp(m, "metro"))
         metro();
+    else if (!strcmp(m, "pitch"))
+        return pitch_test();
+    else if (!strcmp(m, "fxlong"))
+        return fxlong_test();
+    else if (!strcmp(m, "stress24"))
+        return stress24();
     else {
-        fprintf(stderr, "deck_test sounds|demo|drive|mood|chords|phrase|bench|metro\n");
+        fprintf(stderr, "deck_test sounds|demo|drive|mood|chords|phrase|fingerbank|bench|metro\n");
         return 2;
     }
     return 0;

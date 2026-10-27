@@ -10,12 +10,19 @@ static inline void fxbuf_put(dk_fxst_t *s, float x)
 }
 static inline float fxbuf_get(const dk_fxst_t *s, float d)   /* d samples back (fractional) */
 {
-    float rp = (float)(s->w - 1u) - d, fr;
-    int i0;
-    uint32_t a, b;
-    i0 = (int)fm_floorf(rp);
-    fr = rp - (float)i0;
-    a = (uint32_t)i0 & (DK_FXBUF - 1);
+    /* the whole samples in integers: a float holds 24 bits, and the write position runs on (a few minutes of sound)
+     * past them: its steps grew to two, four samples, and a swaying delay turned to a staircase */
+    uint32_t di, a, b;
+    float fr;
+    d = d < 0.0f ? 0.0f : d;
+    di = (uint32_t)d;
+    fr = d - (float)di;
+    a = s->w - 1u - di;                 /* the newest sample is s->w - 1; its fraction lies between a and a + 1 */
+    if (fr > 0.0f) {
+        a -= 1u;
+        fr = 1.0f - fr;
+    }
+    a &= (DK_FXBUF - 1);
     b = (a + 1u) & (DK_FXBUF - 1);
     return ((float)s->buf[a] + ((float)s->buf[b] - (float)s->buf[a]) * fr) * (1.0f / 32768.0f);
 }
@@ -122,11 +129,14 @@ static void fx_chorus(dk_fxst_t *s, float *l, float *r, int n, float amt, float 
     }
 }
 
-/* FILTER: a state-variable filter, its cutoff AMOUNT, resonance a, low-pass to high-pass b */
+/* FILTER: a state-variable filter, its CUTOFF (the AMOUNT knob; 60 Hz..17.6 kHz, held where the filter stays stable), resonance a, low-pass to high-pass b */
 static void fx_filter(dk_fxst_t *s, float *l, float *r, int n, float amt, float a, float b)
 {
-    float *f = s->f, fc = dk_svf_f(60.0f * fm_exp2f(amt * 8.2f)), q = 1.6f - 1.45f * a;
+    float *f = s->f, fc, q = 1.6f - 1.45f * a;
     int j, mode = b < 0.33f ? 0 : b < 0.66f ? 1 : 2;
+    fc = dk_svf_f(60.0f * fm_exp2f(amt * 8.2f));
+    if (fc > dk_svf_fmax(q))                     /* (the top of the knob: 17 kHz is open anyway; past this the filter would run away) */
+        fc = dk_svf_fmax(q);
     for (j = 0; j < n; j++) {
         float hp;
         f[0] += fc * f[1];
@@ -260,9 +270,27 @@ static void tape_sim(float *l, float *r, int n, float a)
 static void tape_master_dust(float *l, float *r, int n, float dust, float sleep);
 static void tape_master(float *l, float *r, int n, float dust, float sleep)
 {
+    static float on = 1.0f, dl[DK_BLK], dr[DK_BLK];
+    float tgt = dk_ctx.tape_off ? 0.0f : 1.0f;
     tape_master_dust(l, r, n, dust, sleep);
-    if (dk_ctx.tape > 0.0f)
+    if (dk_ctx.tape > 0.0f && (on > 0.0f || tgt > 0.0f)) {
+        int j;
+        if ((on >= 1.0f && tgt >= 1.0f) || n > DK_BLK) {
+            tape_sim(l, r, n, dk_ctx.tape);
+            return;
+        }
+        for (j = 0; j < n; j++) {               /* switched: the tape's wet eased in or out (bypass, one press) */
+            dl[j] = l[j];
+            dr[j] = r[j];
+        }
         tape_sim(l, r, n, dk_ctx.tape);
+        for (j = 0; j < n; j++) {
+            on += on < tgt ? 0.002f : on > tgt ? -0.002f : 0.0f;
+            on = on < 0.0f ? 0.0f : on > 1.0f ? 1.0f : on;
+            l[j] = dl[j] + (l[j] - dl[j]) * on;
+            r[j] = dr[j] + (r[j] - dr[j]) * on;
+        }
+    }
 }
 static void tape_master_dust(float *l, float *r, int n, float dust, float sleep)
 {

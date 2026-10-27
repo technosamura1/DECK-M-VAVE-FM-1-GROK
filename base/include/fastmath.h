@@ -55,7 +55,7 @@ static inline float fm_exp2_nf(int32_t n, float f)
     p = p * f + 6.931472057e-01f;
     p = p * f + 1.0f;
     b.f = p;
-    b.i += n << 23;
+    b.i += n * 8388608;
     return b.f;
 }
 

@@ -13,6 +13,7 @@
  *   key K down|up [VEL [PRESS]] | tapkey K [VEL]   (K: 0..26 = F3..G5, or w0..w15 white keys, b0..b10 black keys;
  *                                with APP_KEY_SENSE, the key lands at VEL 1..127, default 100, and is pressed PRESS
  *                                0..100 % more: the app's app_host_key makes the readings)
+ *   matrix K down|up             the matrix only, no velocity reading (a pill the scan never seats)
  *   strum A B [MS]               white keys A..B pressed in turn (down then up), MS apart (default 25)
  *   turn ENC N [MS]              (ENC: SELECT ALGO PRESET K1 K2 K3 K4; N detents, MS apart, default 80)
  *   spin ENC N                   N detents at once, exactly N (no acceleration)
@@ -41,6 +42,7 @@
  * makes the readings a key gives, from app_host_tick (every millisecond) while plat_sense is on.
  * FM1B_SAID_LOG=FILE: a reader listens from boot, quietly, and every SAY is appended to FILE (the audit).
  */
+#define _POSIX_C_SOURCE 200809L
 #define PLAT_HOST 1
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +53,7 @@
 #define __attribute__(x)
 
 /* ------------------------------------------------------------ screen --- */
+static uint16_t snap_fb[2][240 * 240];
 static uint16_t fb[240 * 240];          /* RGB565, byte-swapped as the panel takes it (gfx.c) */
 static void lcd_sync(void) {}
 static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
@@ -854,6 +857,16 @@ int main(int argc, char **argv)
             } else {
                 run_ms(2);
             }
+        } else if (!strcmp(cmd, "matrix")) {     /* the matrix alone: no reading, so the scan never seats the key */
+            int k = key_of(a);
+            if (k < 0 || k >= NKEYS) {
+                printf("line %d: no key %s\n", lineno, a);
+                return 2;
+            }
+            if (!strcmp(b, "down"))
+                held_keys |= 1u << k;
+            else
+                held_keys &= ~(1u << k);
         } else if (!strcmp(cmd, "strum")) {          /* strum A B [MS]: a finger across the white keys */
             int x = atoi(a), y = atoi(b), gap = c[0] ? atoi(c) : 25, s = y >= x ? 1 : -1;
             for (;; x += s) {
@@ -924,7 +937,19 @@ int main(int argc, char **argv)
             wav_close();
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
-        else if (!strcmp(cmd, "shot")) {
+        else if (!strcmp(cmd, "snap")) {              /* the screen kept as picture 0 or 1 ... */
+            int n = atoi(a) & 1;
+            memcpy(snap_fb[n], fb, sizeof fb);
+        } else if (!strcmp(cmd, "expect_snap")) {     /* ... and the two compared: the same screen, pixel for pixel */
+            int i, d = 0, y0 = a[0] ? atoi(a) : 0, y1 = b[0] ? atoi(b) : 240;   /* the rows y0 .. y1 (the garden moves) */
+            for (i = 240 * y0; i < 240 * y1; i++)
+                d += snap_fb[0][i] != snap_fb[1][i];
+            if (d) {
+                printf("FAIL expect_snap: the screens differ in %d pixels (rows %d-%d)\n", d, y0, y1);
+                fails++;
+            } else
+                printf("  ok   the two screens are the same\n");
+        } else if (!strcmp(cmd, "shot")) {
             snprintf(out, sizeof out, "%s/%s", dir, a);
             png_write(out);
         } else if (!strcmp(cmd, "leds")) {

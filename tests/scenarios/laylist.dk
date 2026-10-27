@@ -1,0 +1,121 @@
+# LAYERS (TRACKS, EDIT = the EDIT list, white 11 = LAYERS): the track's clip as a list of takes; white 1 MUTE, 2 SOLO, 3 DELETE, 4 MERGE; SELECT moves the cursor.
+# Muted layers do not play; solo plays only one; delete and merge are one undo step each.
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+page 0
+expect nev 0
+listen
+seedl 0 1 4 1
+seedl 0 1 4 12
+seedl 0 1 4 3
+firedclr
+tap HOME
+wait 100
+expect page 11
+tapkey w0
+wait 100
+expect track 0
+# EDIT on TRACKS: the EDIT list (not KEYS); its white 11 opens the layers
+tap EDIT
+wait 100
+expect page 11
+expect layview 1
+tapkey w10
+wait 100
+expect layview 2
+expect nlay 3
+expect laycur 0
+wait 2500
+shot p34_layers.png
+turn SELECT 1
+wait 100
+expect laycur 1
+turn SELECT 1
+turn SELECT 1
+wait 100
+expect laycur 0
+turn SELECT -1
+wait 100
+expect laycur 2
+turn SELECT -1
+wait 100
+expect laycur 1
+# MUTE layer 2 (take 2)
+tapkey w0
+wait 100
+expect lmute 4
+said MUTED
+wait 100
+shot p35_layers_mute.png
+# it does not play: only takes 1 and 3
+tap PLAY
+wait 3000
+tap PLAY
+wait 200
+expect fired 10
+tapkey w0
+wait 100
+expect lmute 0
+said ON
+# SOLO layer 2
+tapkey w1
+wait 100
+expect lsolo 3
+said SOLO
+firedclr
+tap PLAY
+wait 3000
+tap PLAY
+wait 200
+expect fired 4
+tapkey w1
+wait 100
+expect lsolo 0
+# DELETE layer 1 (the cursor on it)
+turn SELECT -1
+wait 100
+expect laycur 0
+tapkey w2
+wait 100
+expect nlay 2
+expect nev 8
+said DELETED
+# one undo brings it back
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect nlay 3
+expect nev 12
+# MERGE: all in one, the track's own sound
+tapkey w3
+wait 100
+expect nlay 1
+expect nev 12
+expect nfrozen 0
+said MERGED
+tapkey w3
+wait 100
+said ONE LAYER
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect nlay 3
+expect nfrozen 4
+# EDIT again: back to the EDIT list, again: the six tracks, then KEYS from PLAY
+tap EDIT
+wait 100
+expect layview 1
+tap EDIT
+wait 100
+expect layview 0
+expect page 11
+tap HOME
+wait 100
+tap EDIT
+wait 100
+expect page 5

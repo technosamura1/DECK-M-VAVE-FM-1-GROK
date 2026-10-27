@@ -16,8 +16,18 @@ echo "-- the sound"
 rm -rf out/sounds
 build/test/deck_test sounds out/sounds > build/test/sounds.txt || fail=1
 python tools/sound_check.py out/sounds --json build/test/check.json > build/test/sound_check.txt && echo "  ok   every preset: no clicks, peaks, DC, tails, levels within 2 dB" || { echo "  FAIL sound check"; grep "<--" build/test/sound_check.txt | head; fail=1; }
+python tools/dup_check.py out/sounds > build/test/dup_check.txt && echo "  ok   no two presets sound the same (spectrum + motion + parameters)" || { echo "  FAIL duplicate presets"; head -8 build/test/dup_check.txt; fail=1; }
+python tools/finger_lint.py > build/test/finger_lint.txt && echo "  ok   FINGER banks: patterns well-formed, no duplicates" || { echo "  FAIL finger lint"; grep LINT build/test/finger_lint.txt | head; fail=1; }
+rm -rf out/fingerbanks
+build/test/deck_test fingerbank out/fingerbanks > build/test/fingerbank.txt || { echo "  FAIL fingerbank (silent or error)"; grep SILENT build/test/fingerbank.txt | head -5; fail=1; }
+python tools/sound_check.py out/fingerbanks --nolevel > build/test/fingerbank_check.txt && echo "  ok   every FINGER bank pattern: no clicks, peaks, DC, tails" || { echo "  FAIL fingerbank sound check"; grep "<--" build/test/fingerbank_check.txt | head; fail=1; }
 build/test/deck_test chords out/chords.wav > /dev/null || fail=1
+build/test/deck_test bypass > build/test/bypass.txt && echo "  ok   SOUND bypass: every stage of the chain off and on again: no clicks, peak under -1 dBFS" || { echo "  FAIL bypass"; grep CLICK build/test/bypass.txt | head -5; fail=1; }
+build/test/deck_test automation > build/test/automation.txt && echo "  ok   AUTOMATION: a curve on every target, three engines: no click, peak under -1 dBFS, no DC, not silent" || { echo "  FAIL automation"; grep "BAD\|SILENT" build/test/automation.txt | head -5; fail=1; }
+build/test/deck_test pitch > build/test/pitch.txt && echo "  ok   PITCH: every BASS preset sounds C2, G2, C3 at its pitch (or a sub-octave by design), none above it" || { echo "  FAIL pitch"; grep BAD build/test/pitch.txt | head -5; fail=1; }
+build/test/deck_test fxlong > build/test/fxlong.txt && echo "  ok   FX LONG: the effects' delay lines keep their fine position past 2^24 samples (7 minutes of sound)" || { echo "  FAIL fxlong"; grep BAD build/test/fxlong.txt | head -5; fail=1; }
 build/test/deck_test metro | sed 's/^/  /'
+build/test/deck_test stress24 > build/test/stress24.txt && echo "  ok   24 voices at once (MOURNING x3 + heavy pads, the FX chain on every track): the pool fills, peak under full scale, no DC" || { echo "  FAIL stress24"; grep FAIL build/test/stress24.txt | head -3; fail=1; }
 build/test/deck_test bench | sed 's/^/  /'
 echo "-- the scenarios"
 for t in tests/scenarios/*.dk; do

@@ -56,6 +56,40 @@ const char *project_name(int slot, char *name)
     return name;
 }
 
+/* the events of the pool in the order of the clips again (a permuted clip table points at them out of order, and every edit
+ * of the pool - insert, close, reindex - counts on clip i + 1 following clip i): each clip's block rotated into its place, no
+ * second buffer (reversals, 8 bytes an event) */
+static void ev_rev(uint32_t a, uint32_t b)
+{
+    while (a + 1 < b) {
+        dk_ev_t t = dk_ev[a];
+        dk_ev[a++] = dk_ev[--b];
+        dk_ev[b] = t;
+    }
+}
+static void clips_repack(void)
+{
+    uint32_t cum = 0, tot = 0, i, j;
+    for (i = 0; i < DK_NCLIP; i++)
+        tot += dk_song.clip[i].n;
+    if (tot != dk_song.nev || tot > DK_NEV)
+        return;
+    for (i = 0; i < DK_NCLIP; i++) {
+        dk_clip_t *c = &dk_song.clip[i];
+        uint32_t a = c->at, n = c->n;
+        if (n && a != cum && a > cum && a + n <= tot) {
+            ev_rev(cum, a);                       /* [cum, a) [a, a + n) -> [a, a + n) [cum, a) */
+            ev_rev(a, a + n);
+            ev_rev(cum, a + n);
+            for (j = i + 1; j < DK_NCLIP; j++)
+                if (dk_song.clip[j].n && dk_song.clip[j].at >= cum && dk_song.clip[j].at < a)
+                    dk_song.clip[j].at = (uint16_t)(dk_song.clip[j].at + n);
+        }
+        c->at = (uint16_t)cum;
+        cum += n;
+    }
+}
+
 /* older projects: the tracks in the order of today's (PIANO KEYS PAD BASS DRUMS NATURE), by their roles, when the
  * six roles are six different places; the clips, the road's drops, SPLIT's track and FOLLOW's sources go with them */
 static void song_track_order(void)
@@ -96,6 +130,7 @@ static void song_track_order(void)
     }
     for (p = 0; p < DK_NCLIP; p++)
         dk_song.clip[p] = cl[p];
+    clips_repack();
     for (j = 0; j < DK_NROAD; j++) {
         uint8_t d = dk_song.road[j].drop, n = 0;
         for (t = 0; t < DK_NTRACK; t++)
@@ -105,7 +140,6 @@ static void song_track_order(void)
     }
     dk_song.harm_track = to[dk_song.harm_track % DK_NTRACK];
     dk_song.cur_track = to[dk_song.cur_track % DK_NTRACK];
-    dk_song.ball_trk = to[dk_song.ball_trk % DK_NTRACK];
 }
 
 int project_load(int slot)
@@ -116,6 +150,7 @@ int project_load(int slot)
     uint8_t *dst;
     uint32_t i, n;
     dk_lock();
+    takes_forget();
     if (!h)
         goto empty;
     src = plat_data(at + sizeof(phead_t));
@@ -124,6 +159,7 @@ int project_load(int slot)
     dst = (uint8_t *)&dk_song;
     for (i = 0; i < sizeof dk_song; i++)   /* an older, shorter song: the rest zeros (the defaults) */
         dst[i] = i < h->nsong ? src[i] : 0;
+    dk_lsolo_clip = 0xFF;
     n = h->nev * sizeof(dk_ev_t);
     src = plat_data(at + sizeof(phead_t) + h->nsong);
     dst = (uint8_t *)dk_ev;
@@ -131,14 +167,23 @@ int project_load(int slot)
         dst[i] = src[i];
     if (!src || dk_song.magic != DK_MAGIC || dk_song.nev != h->nev || song_sum_n(h->nsong) != h->sum)
         goto empty;
-    for (i = 0; i < dk_song.nev; i++)      /* nothing waits for a pass that is long gone */
+    for (i = 0; i < dk_song.nev; i++) {    /* nothing waits for a pass that is long gone */
         dk_ev[i].fl &= (uint8_t)~EV_FRESH;
+        if (dk_ev[i].layer > 0x1Fu)        /* older projects: the take had 7 bits, now 5 (the sound's three are 0: the track's own) */
+            dk_ev[i].layer = 0x1Fu;
+    }
+    for (i = 0; i < DK_NCLIP; i++)
+        if (dk_song.clip[i].layers > 31)
+            dk_song.clip[i].layers = 31;
+    for (i = 0; i < DK_NPART; i++)         /* the parts' track mutes: six bits (older projects: 0, none) */
+        dk_song.part[i].mute &= DK_PMUTE_ALL;
+    dk_pm_x = 0;
     song_track_order();
-    for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS and HOLD too */
+    for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS, HOLD and TOMBOLA too */
         dk_track_t *k = &dk_song.trk[i];
         if (k->seq == SQ_ARP)
             k->arp_opt |= ARPO_ON;
-        if (k->seq == SQ_ARP || k->seq == SQ_ENDLESS || k->seq == SQ_HOLD)
+        if (k->seq == SQ_ARP || k->seq == SQ_ENDLESS || k->seq == SQ_HOLD || k->seq >= SQ_RSV7)   /* (SQ_RSV7: TOMBOLA once) */
             k->seq = SQ_LIVE;
     }
     dk_unlock();
@@ -263,6 +308,12 @@ void settings_save(void)
     set.metro[5] = dk_metro.on_note;
     set.midi_notes = dk_midi_notes;
     set.midi_clock = dk_midi_clock;
+    set.lat = (uint8_t)(dk_rec_lat + 1u);
+    set.nolock = (uint8_t)!dk_lock_take;
+    set.noarm_old = 0;
+    set.recarm = dk_rec_arm ? 1 : 0;
+    set.recmode = dk_rec_mode ? 1 : 0;
+    set.emptypart = (uint8_t)!dk_newpart_copy;
     {                                    /* as it was last written: no erase */
         static uint8_t last[sizeof set];
         static int have;
@@ -288,11 +339,11 @@ static void settings_load(void)
         set.midi_notes = 1;
         set.midi_clock = 1;
         set.midi_in = 1;
-        set.metro[0] = 1;
+        set.metro[0] = 0;                /* the click OFF (METRO: ON REC / ALWAYS), the count-in 1 bar, quiet */
         set.metro[1] = 1;
         set.metro[2] = TAPE.metro_sound;
         set.metro[3] = 0;
-        set.metro[4] = 55;
+        set.metro[4] = 40;
         set.metro[5] = 0;
     }
     dk_metro.mode = set.metro[0] % 3;
@@ -303,6 +354,11 @@ static void settings_load(void)
     dk_metro.on_note = set.metro[5] ? 1 : 0;
     dk_midi_notes = set.midi_notes;
     dk_midi_clock = set.midi_clock;
+    dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
+    dk_lock_take = set.nolock ? 0 : 1;
+    dk_rec_arm = set.recarm == 1 ? 1 : 0;
+    dk_rec_mode = set.recmode == 1 ? 1 : 0;
+    dk_newpart_copy = set.emptypart ? 0 : 1;
     if (set.proj >= DK_NPROJ)
         set.proj = 0;
 }
@@ -315,18 +371,19 @@ void user_save(void)
 }
 static void user_load(void)
 {
-    int n = plat_store_load(OBJ_USER, &dk_user, sizeof dk_user), old = (int)(sizeof dk_user.magic +
-                                                                               DK_UENG_V1 * sizeof dk_user.p[0]);
-    if ((n != (int)sizeof dk_user && n != old) || dk_user.magic != USER_MAGIC) {
+    uint32_t per = (uint32_t)sizeof dk_user.p[0], v1 = (uint32_t)sizeof dk_user.magic + DK_UENG_V1 * per,
+             v2 = (uint32_t)sizeof dk_user.magic + DK_UENG_V2 * per;
+    int n = plat_store_load(OBJ_USER, &dk_user, sizeof dk_user);
+    if ((n != (int)sizeof dk_user && n != (int)v1 && n != (int)v2) || dk_user.magic != USER_MAGIC) {
         uint8_t *b = (uint8_t *)&dk_user;
         uint32_t i;
         for (i = 0; i < sizeof dk_user; i++)
             b[i] = 0;
         dk_user.magic = USER_MAGIC;
-    } else if (n == old) {                       /* saved with eight engines: the new ones' places empty */
+    } else if (n != (int)sizeof dk_user) {       /* saved with eight or ten engines: the new ones' places empty */
         uint8_t *b = (uint8_t *)&dk_user;
         uint32_t i;
-        for (i = (uint32_t)old; i < sizeof dk_user; i++)
+        for (i = (uint32_t)n; i < sizeof dk_user; i++)
             b[i] = 0;
     }
 }

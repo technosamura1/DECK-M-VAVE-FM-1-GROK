@@ -1,0 +1,28 @@
+# DOUBLE (EDIT list, white 4) on a clip with notes past its end (the part was shortened): the clip stays sorted, the notes
+# past the end go (they never sounded). Found by the fuzz (inv bit 2).
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+page 0
+press HOME
+tapkey b0
+release HOME
+wait 50
+expect nev 0
+listen
+setbars 0 4
+seedat 0 1 30
+seedat 0 1 1200
+seedat 0 1 100
+setbars 0 1
+expect events 3
+page 11
+tap EDIT
+wait 100
+expect layview 1
+tapkey w3
+wait 100
+expect inv 0
+expect events 4

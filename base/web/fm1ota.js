@@ -11,6 +11,8 @@ const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];
 const UPGRADE = [0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7];
 const MAXDATA = 512;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const PORT_RE = /fm-?1|felucca|clipper|ota|composite|sinco|usb-midi/i;
+const SKIP_RE = /minilab|arturia|keylab|midi through|microsoft gs|wavetable|iac driver|loopmidi|rtpmidi|network session|bluetooth|launchpad|launchkey|novation|akai|\bmpk\b|\bapc\b|korg|roland|yamaha|behringer|focusrite|scarlett|nektar|keystation|oxygen|m-audio|native instruments|maschine|traktor|push|ableton|reaper|virtual|loopback|dlight|mcu|hui|din thru/i;
 const IS_OTA = (id) => /^ota-/i.test(id.model);
 
 // M-VAVE's FM1 Open firmware (V10, 2026-10): its updater takes only a package it has been told about
@@ -102,11 +104,11 @@ class Link {
   close() { this.input.onmidimessage = null; }
 }
 
-async function handshake(link, tries = 3) {
+async function handshake(link, tries = 3, waitMs = 1000) {
   link.drain();
   for (let t = 0; t < tries; t++) {
     if (!link.send(HS_QUERY)) return null;
-    const end = Date.now() + 1000;
+    const end = Date.now() + waitMs;
     while (Date.now() < end) {
       const p = await link.read(end - Date.now());
       if (!p) break;
@@ -147,19 +149,36 @@ export class Updater {
     this.log = log || (() => {});
   }
 
-  // every in/out pair with the same port name that answers the handshake
-  async find(filter) {
+  // every in/out pair with the same port name that answers the handshake. Ports named like an FM-1
+  // first; with fallback, when none of them answers, the other ports too (read-only handshake, short
+  // wait, never well-known other gear): a custom firmware names its port freely ("Clipper 4").
+  async find(filter, fallback = false) {
     const outs = [...this.access.outputs.values()];
-    for (const input of this.access.inputs.values()) {
-      if (input.state === "disconnected") continue;
-      if (!/fm-?1|felucca|ota|composite|sinco|usb-midi/i.test(input.name || "")) continue;   // never probe other gear
-      const output = outs.find((o) => o.name === input.name) || (outs.length === 1 ? outs[0] : null);
-      if (!output) continue;
-      try { await input.open(); await output.open(); } catch (_) { continue; }
+    const ins = [...this.access.inputs.values()].filter((i) => i.state !== "disconnected");
+    this.tried = [];
+    const probe = async (input, strict, wait) => {
+      const output = outs.find((o) => o.name === input.name) || (!strict && outs.length === 1 ? outs[0] : null);
+      this.tried.push(input.name || "?");
+      if (!output) return null;
+      try { await input.open(); await output.open(); } catch (_) { return null; }
       const link = new Link(input, output);
-      const id = await handshake(link, 2);
+      const id = await handshake(link, wait ? 1 : 2, wait);
       if (id && (!filter || filter(id))) return { link, id, name: input.name };
       link.close();
+      return null;
+    };
+    for (const input of ins) {
+      if (!PORT_RE.test(input.name || "")) continue;
+      const dev = await probe(input, false, 0);
+      if (dev) return dev;
+    }
+    if (fallback) {
+      for (const input of ins) {
+        const name = input.name || "";
+        if (PORT_RE.test(name) || SKIP_RE.test(name)) continue;
+        const dev = await probe(input, true, 600);
+        if (dev) return dev;
+      }
     }
     return null;
   }
@@ -206,8 +225,8 @@ export class Updater {
   // full install: running firmware -> loader -> new firmware
   async install(image, product, onStep) {
     const step = onStep || (() => {});
-    const dev = await this.find((id) => !IS_OTA(id));
-    if (!dev) throw fail("notfound", "FM-1 not found (USB cable, and no other app using it?)");
+    const dev = await this.find((id) => !IS_OTA(id), true);
+    if (!dev) throw fail("notfound", "FM-1 not found (USB cable, and no other app using it?)", this.tried && this.tried.length ? ` [${this.tried.join(", ")}]` : "");
     const [model] = product.split("_");
     if (dev.id.model !== model) { dev.link.close(); throw fail("model", `the device is ${dev.id.text}, the package is for ${product}`); }
     if (dev.id.open) await this.arm(dev, image, product);

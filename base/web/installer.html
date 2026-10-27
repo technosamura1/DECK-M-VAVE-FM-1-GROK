@@ -253,7 +253,7 @@ async function run(img, product, isStock) {
       if (k === "reboot") sayK("reboot");
       if (k === "done") { $("bar").value = 100; sayK(isStock ? "stockdone" : "done"); }
     };
-    const ota = await up.find((id) => /^ota-/i.test(id.model));
+    const ota = await up.find((id) => /^ota-/i.test(id.model), true);
     if (ota) {
       ota.link.close();
       sayK((await up.resume(img, step)) ? (isStock ? "stockdone" : "done") : "stopped");
@@ -287,7 +287,7 @@ $("reportgo").addEventListener("click", async () => {
   st("reportwait");
   const lines = [];
   try {
-    const dev = await new Updater(midi).find((id) => !IS_OTA(id));
+    const dev = await new Updater(midi).find((id) => !IS_OTA(id), true);
     if (dev) {
       lines.push(`${dev.id.text} (${dev.name}), ${new Date().toISOString()}`);
       dev.link.drain();

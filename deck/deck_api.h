@@ -34,6 +34,8 @@
 #define DK_NSLOT 16
 #define DK_NP 8                         /* engine parameters (the first three on the ENGINE tab) */
 #define DK_NVOICE 24                    /* the voices' pool, shared by the tracks */
+#define DK_NBLK 4                       /* a tape's preset blocks (an engine has up to DK_NFACT presets in each) */
+#define DK_PBASE 16                     /* the preset id of block 1's first: 0..11 block 0, 12..15 the user's, then 12 a block */
 #define DK_VSTATE 76                    /* an engine's voice state, floats */
 #define DK_BLK 128
 #define DK_FXBUF 1024                   /* a track effect's delay line, 16-bit samples */
@@ -100,21 +102,36 @@ typedef struct {
 } dk_fx_t;
 
 /* ------------------------------------------------------------------ the song --- */
-enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_TOMBOLA, SQ_N };
+enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_RSV7, SQ_N };
 
 /* an event: a note, or (EV_MOTION) a knob's move: note = its target (T_*), vel = the value 0..100, dur 0 a move,
- * dur > 0 a p-lock held that long */
-enum { EV_PROB = 3, EV_RATCH = 3 << 2, EV_SLIDE = 1 << 4, EV_MOTION = 1 << 6, EV_FRESH = 1 << 7 };
+ * dur > 0 a p-lock held that long. EV_MOTION|EV_RAMP (dur 0): a point of an AUTOMATION curve: the value moves in a straight line
+ * to the next point of the same target in the clip (the last holds), see seq.c auto_tick */
+enum { EV_PROB = 3, EV_RATCH = 3 << 2, EV_SLIDE = 1 << 4, EV_RAMP = 1 << 4, EV_MOTION = 1 << 6, EV_FRESH = 1 << 7 };
 typedef struct {
     uint16_t pos, dur;                  /* ticks into the clip; length */
-    uint8_t note, vel, fl, layer;       /* fl: probability 0..3 (100 75 50 25 %), ratchet (x1..x4), slide; layer: take */
+    uint8_t note, vel, fl, layer;       /* fl: probability 0..3 (100 75 50 25 %), ratchet (x1..x4), slide; layer: see below */
 } dk_ev_t;
+/* an event's layer byte (2026-10, layers like the OP-1's tape): bits 0..4 the take (1..31; 0 none), bits 5..7 the SOUND it
+ * was frozen with: 0 the track's own, as it is now; 1..7 a place in dk_song.snd[track][id - 1], the sound the take was
+ * recorded with, which a later preset, engine or knob does not change. Older projects had the take in 7 bits (0..127) */
+#define DK_L_TAKE(l) ((unsigned)(l) & 0x1Fu)
+#define DK_L_SND(l) ((unsigned)(l) >> 5)
+#define DK_L_MAKE(take, snd) ((uint8_t)(((take) > 31 ? 31 : (take)) | (unsigned)(snd) << 5))
+#define DK_NSND 7                       /* frozen sounds a track can keep */
 
 typedef struct {
     uint16_t at, n;                     /* its events: dk_ev[at .. at + n), sorted by pos */
     uint16_t len;                       /* ticks (a clip shorter than its part goes round) */
     uint8_t layers, rsv;
 } dk_clip_t;
+
+typedef struct {                        /* a frozen sound: what a voice hears of its track (the engine, its knobs with MACRO in) */
+    uint8_t used, eng, drift, rsv;
+    int8_t p[DK_NP];
+    int8_t env[3];
+    uint8_t rsv2[5];
+} dk_snd_t;
 
 typedef struct {
     uint8_t eng, preset, seq, fx;
@@ -127,13 +144,13 @@ typedef struct {
     int8_t trim;
     uint8_t vol, rev, echo;
     int8_t pan;
-    uint8_t mute, solo, midi_ch;
+    uint8_t mute, solo, midi_ch;      /* mute: unused since the temporary mute went (always read as off); kept for the project's layout */
     int8_t oct;
     uint8_t mod[2][4];                  /* type (MOD_*), depth 0..100, rate 0..100 (FOLLOW: the source track), target T_* */
     uint8_t swing, drift;
     uint8_t drv[3];                     /* DRIVE: ENERGY, STYLE, VARIATION */
     uint8_t arp[4];                     /* ARP: mode, rate (ARPD_*: 1/4 1/8 1/8T 1/16 1/16T 1/32), octaves, latch */
-    uint8_t tmb[4];                     /* TOMBOLA: SPIN, GRAVITY, BOUNCE, QUANT */
+    uint8_t tmb[4];                     /* reserved (TOMBOLA once: SPIN, GRAVITY, BOUNCE, QUANT); kept for the song format */
     uint8_t div;                        /* ENDLESS: the division (ticks / 6) */
     uint8_t qnt;                        /* LIVE: quantize strength 0..100 */
     uint8_t role;
@@ -157,8 +174,10 @@ typedef struct {                        /* a drum sound's own settings (0 = as t
     uint8_t rev, echo, crush, rsv;      /* extra sends 0..100; crush: bits and rate down, 0..100 */
 } dk_lane_t;
 typedef struct {
-    uint8_t label, bars, rsv[2];        /* label: INTRO VERSE PRE CHORUS DROP BRIDGE BREAK OUTRO; bars 1..16 */
+    uint8_t label, bars;                /* label: INTRO VERSE PRE CHORUS DROP BRIDGE BREAK OUTRO; bars 1..16 */
+    uint8_t mute, rsv;                  /* mute: the tracks silent in THIS part (bit t = track t; 0 = all play). Older projects: 0 */
 } dk_part_t;
+#define DK_PMUTE_ALL 0x3Fu              /* (DK_NTRACK bits) */
 
 #define DK_MAGIC 0x4B434544u            /* "DECK" */
 #define DK_FORMAT 1u
@@ -176,15 +195,26 @@ typedef struct {
     dk_part_t part[DK_NPART];
     dk_clip_t clip[DK_NCLIP];
     dk_block_t road[DK_NROAD];
-    uint8_t ball[12], nball, ball_trk;  /* TOMBOLA's balls (their notes) */
+    uint8_t ball[12], nball, ball_trk;  /* reserved (TOMBOLA's balls once); kept for the song format */
     float garden[4];                    /* the screen's world (the tape's): its day, its flower */
     uint8_t rsv[16];
     /* (added 2026-10: an older project ends here, DK_SONG_V1; the rest loads as zeros, which are the defaults) */
     dk_lane_t lane[DK_NTRACK][8];       /* a drum track's sounds, each its own */
     uint8_t atmo[8];                    /* ATMO: the layers' levels 0..100 (the tape's atmo list) */
-    uint8_t tapesim, atmo_lvl, rsv2[6]; /* ATMO: the tape emulation 0..100; the layers' master level (0 = 100) */
+    uint8_t tapesim, atmo_lvl;         /* ATMO: the tape emulation 0..100; the layers' master level (0 = 100) */
+    uint8_t fbank[DK_NTRACK];           /* FINGER: each track's pattern bank (0 LOFI .. DK_NFBANK-1); old projects: 0 */
+    dk_snd_t snd[DK_NTRACK][DK_NSND];   /* the frozen sounds of each track (events' layer bits 5..7 point here) */
+    uint32_t lmute[DK_NCLIP];           /* LAYERS: per clip, the takes muted (bit = take 0..31; playback skips them). Older projects: 0 */
 } dk_song_t;
 #define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
+
+/* SOUND's effect chain, a stage off (FX held + WHITE 1-4): a bit each in dk_song.rsv[track] (older projects: 0, all on),
+ * the tape's (global) in rsv[DK_NTRACK] */
+#define DK_BYP_FX 1u
+#define DK_BYP_ECHO 2u
+#define DK_BYP_REV 4u
+#define DK_BYP(t) ((unsigned)dk_song.rsv[(t)] & 7u)
+#define DK_BYP_TAPE() (dk_song.rsv[DK_NTRACK] & 1u)
 
 extern dk_song_t dk_song;
 extern dk_ev_t dk_ev[DK_NEV];
@@ -224,11 +254,18 @@ typedef struct {
 } dk_borrow_t;
 
 #define DK_NFINGER 16
+#define DK_NFBANK 4                     /* FINGER's pattern banks: LOFI 8BIT SYNTH CINEMA */
+/* a FINGER bank: sixteen patterns for each set, as text in flash (tapes/overworld/finger_banks.c has the format);
+ * decoded a step at a time by dk_fb_* (seq.c) */
 typedef struct {
-    const char *name;
-    uint8_t lanes[8][16];               /* DRUM: velocity 0..9 a sixteenth per lane; melodic: lanes[0] the degree+1
-                                         * (0 rest), lanes[1] its length in sixteenths, lanes[2] the octave (+1) */
-} dk_finger_t;
+    const char *name, *sub;             /* shown: "LOFI", and what it is ("AMBIENT") */
+    const char *const (*drum)[9];       /* 16 rows: name, KICK SNARE RIM SHAKER HAT OPEN CLAP WOOD */
+    const char *const (*mel)[6];        /* 16 rows: name, notes, lengths, octaves, velocities, notes 2 (keys, lead, ...) */
+    const char *const (*bass)[6];
+    const char *const (*pad)[6];
+} dk_fbank_t;
+
+int dk_fch(const char *s, int step);    /* a pattern string's character at a step ('.' past its end) */
 
 /* an ATMO layer: an engine's voice that keeps going (WORLD's rain, its fire...) at a level of its own */
 typedef struct dk_atmo_s {
@@ -255,7 +292,7 @@ typedef struct {
     const uint8_t *style_bars;
     const uint8_t *style_breath;        /* a style rests a bar in eight */
     const dk_borrow_t *borrow_major, *borrow_minor;   /* 4 each */
-    const dk_finger_t *finger_drum, *finger_mel;   /* 16 each */
+    const dk_fbank_t *fbank;            /* FINGER's banks (DK_NFBANK) */
     const char *const *perform;         /* the 11 black keys in PERFORM (PF_*) */
     const uint8_t *perform_act;
     const dk_mood_t *moods;
@@ -271,6 +308,9 @@ typedef struct {
     uint8_t keys_role;                  /* the role whose track browses keys_set (R_ARP: "KEYS") */
     const struct dk_atmo_s *atmo;       /* ATMO: up to six layers of the place's sound, under the music, or 0 */
     uint8_t natmo;
+    const dk_preset_t *presets2;        /* the blocks 1..DK_NBLK-1: the engines' blocks 1.. one after the other, as many as pcount says (no padding) */
+    const uint8_t *pcount;              /* presets in a block: DK_NBLK an engine (block 0: its DK_NFACT, or fewer) */
+    const char *const *block_name;      /* DK_NBLK names: AMBIENT LOFI, 8-16 BIT, SYNTHWAVE, CINEMATIC */
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 
@@ -287,6 +327,7 @@ typedef struct {
     float trem;                         /* tremolo phase, 4.6 Hz */
     float spb;                          /* samples a beat */
     uint8_t pedal;                      /* the sustain pedal */
+    uint8_t tape_off;                   /* SOUND's BYPASS of the tape: the master's tape eased out (not cut: it is a delay line) */
     float tape;                         /* ATMO's TAPE: the master's tape emulation 0..1 (the tape's master reads it) */
 } dk_ctx_t;
 extern dk_ctx_t dk_ctx;
@@ -299,6 +340,7 @@ float dk_lpk(float fc);                 /* a one-pole low-pass coefficient */
 float dk_sine(float ph);                /* a sine from the table, ph in turns >= 0 */
 float dk_saw(float t, float dt);        /* a band-limited saw (polyBLEP) */
 float dk_svf_f(float fc);
+float dk_svf_fmax(float q);          /* the biggest dk_svf_f() the filter stays stable at, for damping q */
 
 /* DRIVE's output: a note on the track (dur ticks; delay samples, loose) */
 void dk_emit(int trk, int note, int vel, int dur, int delay);

@@ -1,0 +1,100 @@
+# AUTOMATION: REC held + a SOUND knob records a curve; it plays back and the knob follows; a hand on the knob wins till the
+# bar's end; REC + FX erases the curves (the notes stay); undo; the notes' erase leaves the curves
+wait 300
+demo
+wait 100
+tap PLAY
+wait 500
+expect playing 1
+turn SELECT -2
+wait 100
+expect track 0
+tap FX
+expect page 2
+expect autos 0
+expect events >0
+mark
+# REC held, K1 (P0) up then down over a bar or so
+press REC
+turn K1 4
+wait 150
+turn K1 4
+wait 150
+shot auto_gesture.png
+turn K1 4
+wait 150
+turn K1 4
+wait 150
+turn K1 -4
+wait 150
+turn K1 -4
+wait 150
+turn K1 -4
+wait 150
+turn K1 -4
+wait 150
+turn K1 -4
+wait 150
+release REC
+wait 300
+expect recording 0
+expect atgt2 >=3
+expect atgt2 <25
+expect rowof 0
+# (REC was a gesture: no take, no erase, the notes are as they were)
+wait 100
+shot auto_rec.png
+# the curve plays: its value is the voices'
+wait 1500
+expect alive2 >=0
+# one undo step for the whole gesture
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect autos 0
+expect same 1
+# again, then a hand on the knob: the curve lets go till the bar's end
+press REC
+turn K1 6
+wait 200
+turn K1 -6
+wait 200
+turn K1 6
+wait 200
+release REC
+wait 200
+expect autos >=2
+# (the hand's last value holds to the bar's end, then the curve plays)
+wait 4000
+expect alive2 >=0
+turn K1 2
+wait 100
+expect alive2 -1
+wait 4000
+expect alive2 >=0
+# EDIT list, ERASE AUTO (white 13, press twice): the curves erased, the notes stay
+expect events >0
+page 11
+tap EDIT
+tapkey w12
+wait 50
+expect autos >=2
+tapkey w12
+wait 100
+expect autos 0
+expect events >0
+expect page 11
+expect alive2 -1
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect autos >=2
+# the notes' erase (white 12, twice) leaves the curves
+tapkey w11
+tapkey w11
+wait 100
+expect autos >=2
+expect events 4
+expect recording 0

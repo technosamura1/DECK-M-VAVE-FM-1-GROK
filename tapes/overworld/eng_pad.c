@@ -7,7 +7,7 @@
 
 /* ------------------------------------------------------------------ AIRPAD --- */
 #define PSN 1024
-static float padtab[3][PSN + 1] DK_POOL;
+static float padtab[4][PSN + 1] DK_POOL;
 static void pad_tables(void)
 {
     int i;
@@ -18,6 +18,9 @@ static void pad_tables(void)
         padtab[1][i] = dk_sinx(ph + dk_sinx(ph) * kw + 4.0f) * 0.85f + dk_sinx(2.0f * ph + 4.0f) * 0.12f;
         padtab[2][i] = (dk_sinx(ph + 4.0f) + dk_sinx(2.0f * ph + 4.0f) * (0.30f + 0.25f * tone_) +
                         dk_sinx(3.0f * ph + 4.0f) * 0.16f + dk_sinx(4.0f * ph + 4.0f) * (0.08f + 0.12f * tone_)) * 0.75f;
+        padtab[3][i] = (dk_sinx(ph + 4.0f) + dk_sinx(2.0f * ph + 4.0f) * 0.75f + dk_sinx(3.0f * ph + 4.0f) * 0.5f +
+                        dk_sinx(4.0f * ph + 4.0f) * 0.4f + dk_sinx(6.0f * ph + 4.0f) * 0.25f + dk_sinx(8.0f * ph + 4.0f) * 0.2f) *
+                       0.4f;                     /* ORGAN: the drawbars 1 2 2 2/3 4 5 1/3 8 pulled out */
     }
 }
 static inline float ptab(const float *t, float ph)
@@ -30,22 +33,24 @@ static inline float ptab(const float *t, float ph)
 typedef struct {
     float inc, ph1, ph2, ph3, vel, gl, gr;
     float es, att_inc, mr, lp, lp2, lpk, det1, det2, held, kind, vib;
+    float f1l, f1b, f2l, f2b, f3l, f3b;      /* CHOIR: its three formants */
 } pad_v;
 CHECK_SIZE(pad_v);
-static const char *const PAD_TYPES[] = {"SWEDEN", "AIR", "WARM", "SHIMMER", "STRINGS"};
+static const char *const PAD_TYPES[] = {"SWEDEN", "AIR", "WARM", "SHIMMER", "STRINGS", "SUPER", "CHOIR", "DRONE", "ORGAN"};
 static const dk_param_t PAD_P[] = {
     {"BRIGHT", 0, 100, 45, VZ_SUN, 0}, {"SWELL", 0, 100, 50, VZ_SWELL, 0}, {"AIR", 0, 100, 40, VZ_WAVE, 0},
-    {"TYPE", 0, 4, 0, VZ_TYPE, PAD_TYPES}, {"DETUNE", 0, 100, 50, VZ_BAR, 0},
+    {"TYPE", 0, 8, 0, VZ_TYPE, PAD_TYPES}, {"DETUNE", 0, 100, 50, VZ_BAR, 0},
 };
 static void pad_on(float *st, int note, float vel, const float *p, int retrig)
 {
     pad_v *v = (pad_v *)st;
-    static const float ATT[5] = {1.6f, 2.2f, 1.6f, 2.6f, 1.1f}, REL[5] = {2.8f, 3.4f, 2.8f, 3.4f, 2.8f};
-    static const float FC0[5] = {500.0f, 1600.0f, 900.0f, 2400.0f, 1300.0f}, FC1[5] = {1100.0f, 2200.0f, 1500.0f,
-                                                                                      3000.0f, 2600.0f};
+    static const float ATT[9] = {1.6f, 2.2f, 1.6f, 2.6f, 1.1f, 0.9f, 1.2f, 2.0f, 0.06f},
+                       REL[9] = {2.8f, 3.4f, 2.8f, 3.4f, 2.8f, 1.8f, 2.4f, 6.0f, 0.3f};
+    static const float FC0[9] = {500.0f, 1600.0f, 900.0f, 2400.0f, 1300.0f, 1500.0f, 4000.0f, 220.0f, 700.0f},
+                       FC1[9] = {1100.0f, 2200.0f, 1500.0f, 3000.0f, 2600.0f, 5200.0f, 1000.0f, 1100.0f, 3600.0f};
     int k = (int)p[3];
     float tone = p[0] * 0.01f, kt = fm_clampf((float)(note - 48) * (1.0f / 48.0f), -0.5f, 1.0f), sw, dt;
-    k = k < 0 ? 0 : k > 4 ? 4 : k;
+    k = k < 0 ? 0 : k > 8 ? 8 : k;
     if (retrig && v->held != 0.0f)
         (void)0;
     v->kind = (float)k;
@@ -64,6 +69,7 @@ static void pad_on(float *st, int note, float vel, const float *p, int retrig)
         v->ph2 = frnd();
         v->ph3 = frnd();
         v->es = 0.0f;
+        v->f1l = v->f1b = v->f2l = v->f2b = v->f3l = v->f3b = 0.0f;
     }
     v->vib = frnd();
     v->held = 1.0f;
@@ -80,12 +86,24 @@ static int pad_render(float *st, float *l, float *r, int n, const float *p)
     float air = p[2] * 0.01f, drift = dk_sinx(dk_ctx.lfo_slow + v->vib), w = dk_ctx.wow;
     float d1 = v->inc * w * v->det1, d2 = v->inc * w * v->det2, t = v->held != 0.0f ? 1.0f : 0.0f, kk, lvl = 0.17f;
     float shim = 0.25f + 0.2f * dk_sinx(dk_ctx.lfo_mid + 4.0f), breath = 0.18f * (0.4f + 1.5f * air);
-    if (k == 4) {                                         /* STRINGS: a bowed vibrato */
-        float vb = 1.0f + 0.0022f * dk_sinx(dk_ctx.lfo_fast + v->vib);
+    float c1 = 0.0f, c2 = 0.0f, c3 = 0.0f, vow = 0.0f, d0 = v->inc * w;
+    if (k == 4 || k == 6) {                               /* STRINGS, CHOIR: a bowed / sung vibrato */
+        float vb = 1.0f + (k == 6 ? 0.0032f : 0.0022f) * dk_sinx(dk_ctx.lfo_fast + v->vib);
         d1 *= vb;
         d2 *= vb;
+        d0 *= vb;
     }
-    kk = fm_minf(k == 4 ? 0.7f : 0.6f, v->lpk * (1.0f + (k == 4 ? 0.15f : 0.35f + 0.3f * air) * drift));
+    if (k == 6) {                                         /* CHOIR: the vowel by BRIGHT, AH to EE; its formants' coefficients */
+        vow = fm_clampf(p[0] * 0.01f + 0.08f * drift, 0.0f, 1.0f);
+        c1 = dk_svf_f(720.0f - 430.0f * vow);
+        c2 = dk_svf_f(1100.0f + 1350.0f * vow);
+        c3 = dk_svf_f(2650.0f);
+        lvl = 0.30f;
+    } else if (k == 5 || k == 8)
+        lvl = k == 5 ? 0.15f : 0.20f;
+    else if (k == 7)
+        lvl = 0.20f;
+    kk = fm_minf(k == 4 ? 0.7f : 0.6f, v->lpk * (1.0f + (k == 4 ? 0.15f : k == 7 ? 0.6f : 0.35f + 0.3f * air) * drift));
     for (j = 0; j < n; j++) {
         float s, a;
         if (v->es < t)
@@ -107,11 +125,40 @@ static int pad_render(float *st, float *l, float *r, int n, const float *p)
             if (v->ph1 >= 1.0f)
                 v->ph1 -= 1.0f;
             s = (ptab(padtab[2], v->ph2) + ptab(padtab[2], v->ph3) * 0.8f + ptab(padtab[2], v->ph1) * shim) * 0.6f;
-        } else
+        } else if (k == 5 || k == 7) {                    /* SUPER: three saws apart; DRONE: two, and the octave under */
+            v->ph1 = dk_wrap1(v->ph1 + (k == 5 ? d0 : d0 * 0.5f));
+            s = dk_blep(v->ph2, d1) + dk_blep(v->ph3, d2) + dk_blep(v->ph1, k == 5 ? d0 : d0 * 0.5f) * (k == 5 ? 1.0f : 1.2f) +
+                wnoise() * breath * (k == 7 ? 0.5f : 0.1f);
+            s *= k == 5 ? 0.62f : 0.55f;
+        } else if (k == 6) {                              /* CHOIR: a glottal buzz and breath through three formants */
+            float x, hp, buzz;
+            v->ph1 = dk_wrap1(v->ph1 + d0);
+            buzz = dk_blep(v->ph1, d0) + dk_blep(v->ph2, d1) + dk_blep(v->ph3, d2);
+            x = buzz * 0.5f + wnoise() * breath * 0.45f;
+            v->f1l += c1 * v->f1b;
+            hp = x - v->f1l - 0.16f * v->f1b;
+            v->f1b = fm_flush(v->f1b + c1 * hp);
+            v->f1l = fm_flush(v->f1l);
+            v->f2l += c2 * v->f2b;
+            hp = x - v->f2l - 0.14f * v->f2b;
+            v->f2b = fm_flush(v->f2b + c2 * hp);
+            v->f2l = fm_flush(v->f2l);
+            v->f3l += c3 * v->f3b;
+            hp = x - v->f3l - 0.12f * v->f3b;
+            v->f3b = fm_flush(v->f3b + c3 * hp);
+            v->f3l = fm_flush(v->f3l);
+            s = (v->f1b * 0.55f + v->f2b * 0.38f + v->f3b * 0.16f) * 1.0f;
+        } else if (k == 8)                                /* ORGAN: drawbars, two a little apart (the rotor) */
+            s = (ptab(padtab[3], v->ph2) + ptab(padtab[3], v->ph3)) * 0.8f;
+        else
             s = dk_blep(v->ph2, d1) + dk_blep(v->ph3, d2) + wnoise() * breath * 0.3f;
-        v->lp += kk * (s - v->lp);
-        v->lp2 += kk * (v->lp - v->lp2);
-        a = v->lp2 * v->es * v->es * v->vel * lvl;
+        if (k == 6)
+            a = s * v->es * v->es * v->vel * lvl;         /* (the formants are the filter) */
+        else {
+            v->lp += kk * (s - v->lp);
+            v->lp2 += kk * (v->lp - v->lp2);
+            a = v->lp2 * v->es * v->es * v->vel * lvl;
+        }
         l[j] += a * v->gl;
         r[j] += a * v->gr;
     }
@@ -214,18 +261,19 @@ typedef struct {
     float dc;
 } bass_v;
 CHECK_SIZE(bass_v);
-static const char *const BASS_TYPES[] = {"SUB", "MOOG", "UPRIGHT"};
+static const char *const BASS_TYPES[] = {"SUB", "MOOG", "UPRIGHT", "SQUARE", "SAW", "TRI", "SUBDRONE"};
 static const dk_param_t BASS_P[] = {
     {"TONE", 0, 100, 40, VZ_SUN, 0},  {"PLUCK", 0, 100, 35, VZ_ENV, 0}, {"GLIDE", 0, 100, 0, VZ_GLIDE, 0},
-    {"TYPE", 0, 2, 0, VZ_TYPE, BASS_TYPES}, {"LENGTH", 0, 100, 50, VZ_ENV, 0},
+    {"TYPE", 0, 6, 0, VZ_TYPE, BASS_TYPES}, {"LENGTH", 0, 100, 50, VZ_ENV, 0},
 };
 static void bass_on(float *st, int note, float vel, const float *p, int retrig)
 {
     bass_v *v = (bass_v *)st;
-    int k = (int)p[3];
+    int k = (int)p[3], mg;                                /* mg: a filtered saw (MOOG, SAW) */
     float tone = p[0] * 0.01f, pluck = p[1] * 0.01f, len = fm_exp2f((p[4] - 50.0f) * (1.0f / 35.0f)) * env_dec(p);
     float inc = dk_mtof((float)note) * drift_of(p) * (1.0f / DK_SR);
-    k = k < 0 ? 0 : k > 2 ? 2 : k;
+    k = k < 0 ? 0 : k > 6 ? 6 : k;
+    mg = k == 1 || k == 4;
     v->kind = (float)k;
     v->vel = vel;
     v->inc_to = inc;
@@ -235,9 +283,11 @@ static void bass_on(float *st, int note, float vel, const float *p, int retrig)
     pan_of((float)note, 0.15f, &v->gl, &v->gr);
     if (retrig != 2)                                      /* legato: no new attack (and none from zero again) */
         v->att = 0.0f;
-    v->att_inc = 1.0f / (env_att(p, k == 1 ? 0.006f : k == 2 ? 0.004f : 0.018f - 0.012f * pluck) * DK_SR);
-    v->ms = dk_decay((k == 1 ? 0.9f : k == 2 ? 1.1f : 1.2f) * len);
-    v->mr = dk_decay((k == 1 ? 0.20f : k == 2 ? 0.16f : 0.35f) * env_rel(p));
+    v->att_inc = 1.0f / (env_att(p, k == 6 ? 0.45f : k >= 3 ? 0.004f : mg ? 0.006f : k == 2 ? 0.004f : 0.018f - 0.012f * pluck) *
+                         DK_SR);
+    v->ms = dk_decay((k == 6 ? 60.0f : k == 3 || k == 5 ? 3.0f * len : mg ? 0.9f : k == 2 ? 1.1f : 1.2f) *
+                     (k == 3 || k == 5 || k == 6 ? 1.0f : len));
+    v->mr = dk_decay((k == 6 ? 1.6f : k == 3 || k == 5 ? 0.04f : mg ? 0.20f : k == 2 ? 0.16f : 0.35f) * env_rel(p));
     v->idx = 0.035f * (0.6f + tone);
     v->idx_floor = v->idx;
     v->idx_mul = 1.0f;
@@ -250,12 +300,14 @@ static void bass_on(float *st, int note, float vel, const float *p, int retrig)
         v->idx_floor = 0.02f;
         v->idx_mul = dk_decay(0.08f);
     }
-    if (k == 1) {
-        v->lpk = 6.2831853f * fm_clampf((260.0f + 1500.0f * vel) * (0.5f + tone) * (0.6f + 0.8f * pluck), 80.0f, 3000.0f) *
-                 (1.0f / DK_SR);
-        v->lpk_floor = 6.2831853f * (90.0f + 160.0f * tone) * (1.0f / DK_SR);
-        v->lpk_mul = dk_decay(0.16f);
+    if (mg) {
+        v->lpk = 6.2831853f * fm_clampf((260.0f + 1500.0f * vel) * (0.5f + tone) * (0.6f + 0.8f * pluck) * (k == 4 ? 1.7f : 1.0f),
+                                        80.0f, 3000.0f) * (1.0f / DK_SR);
+        v->lpk_floor = 6.2831853f * (90.0f + 160.0f * tone) * (k == 4 ? 1.5f : 1.0f) * (1.0f / DK_SR);
+        v->lpk_mul = dk_decay(k == 4 ? 0.26f : 0.16f);
     }
+    if (retrig == 0 && k == 4)
+        v->ph1 = frnd();
     v->held = 1.0f;
 }
 static void bass_off(float *st, const float *p)
@@ -286,16 +338,33 @@ static int bass_render(float *st, float *l, float *r, int n, const float *p)
         if (k == 2) {
             v->idx = v->idx_floor + (v->idx - v->idx_floor) * v->idx_mul;
             s = dk_sinx(v->ph2 + dk_sinx(v->ph2) * v->idx + 4.0f) * 1.1f;
-        } else if (k == 1) {
+        } else if (k == 1 || k == 4) {
             float hp;
             v->lpk = v->lpk_floor + (v->lpk - v->lpk_floor) * v->lpk_mul;
             s = dk_blep(v->ph2, inc) * 0.8f;
+            if (k == 4) {                                  /* SAW: a second one a little apart (a hair sharp) */
+                v->ph1 = dk_wrap1(v->ph1 + inc * 1.0065f);
+                s = (s + dk_blep(v->ph1, inc * 1.0065f) * 0.8f) * 0.62f;
+            }
             v->lp += v->lpk * v->lp2;
-            hp = s - v->lp - 0.55f * v->lp2;
+            hp = s - v->lp - (k == 4 ? 0.42f : 0.55f) * v->lp2;
             v->lp2 = fm_flush(v->lp2 + v->lpk * hp);
             s = fm_tanhf(v->lp * 1.4f) * 0.9f;
             v->dc += 0.0006f * (s - v->dc);            /* no offset left by the filter */
             s -= v->dc;
+        } else if (k == 3) {                               /* SQUARE: the pulse of a chip, its width by TONE */
+            float duty = 0.12f + 0.38f * fm_clampf((v->idx_floor - 0.021f) * (1.0f / 0.035f), 0.0f, 1.0f), q;
+            q = dk_blep(v->ph2, inc) - dk_blep(dk_wrap1(v->ph2 + duty), inc);
+            v->lp += 0.3f * (q * 0.38f - v->lp);           /* the chip's own output low-pass: an edge, not a click */
+            s = v->lp;
+        } else if (k == 5) {                               /* TRI: a triangle in sixteen steps (the NES's) */
+            float tri = (v->ph2 < 0.5f ? 4.0f * v->ph2 - 1.0f : 3.0f - 4.0f * v->ph2);
+            s = (fm_floorf(tri * 7.5f) + 0.5f) * (1.0f / 7.5f) * 0.95f;
+        } else if (k == 6) {                               /* SUBDRONE: the note, its octave and the one under, breathing */
+            v->ph1 = dk_wrap1(v->ph1 + inc * 0.5f);
+            s = dk_sinx(v->ph2) + 0.45f * dk_sinx(v->ph1) + 0.30f * dk_sinx(2.0f * v->ph2 + 0.3f * dk_sinx(v->ph1) + 4.0f) *
+                                                             (0.5f + 0.5f * dk_sinx(dk_ctx.lfo_slow + 4.0f));
+            s *= 0.8f;
         } else {
             v->idx = v->idx_floor + (v->idx - v->idx_floor) * v->idx_mul;
             v->ph1 = dk_wrap1(v->ph1 + inc);

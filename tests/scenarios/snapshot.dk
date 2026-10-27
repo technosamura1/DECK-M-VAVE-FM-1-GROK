@@ -1,0 +1,72 @@
+# SNAPSHOT (SAVE held + white 1) and RECALL (+ white 2): a part back as it was; one undo step; the track's own SWING
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+seed 0 1 10 0
+seed 0 2 6 0
+setbars 0 2
+expect nev 16
+expect eventsA1 10
+expect snap 0
+# recall with nothing taken: told, nothing changes
+press SAVE
+tapkey w1
+release SAVE
+expect nev 16
+# take it, then an experiment: more notes in, the other clip emptied, the bars changed
+press SAVE
+tapkey w0
+release SAVE
+expect snap 1
+seed 0 1 7 0
+seed 0 3 5 0
+setbars 0 8
+wait 100
+expect eventsA1 17
+expect eventsA3 5
+expect nev 28
+# recall: the part as it was
+press SAVE
+tapkey w1
+release SAVE
+wait 100
+expect eventsA1 10
+expect eventsA2 6
+expect eventsA3 0
+expect nev 16
+expect barsA 2
+expect dirty 1
+# one undo step takes the recall back
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect eventsA1 17
+expect eventsA3 5
+expect nev 28
+# the snapshot is still there; a new song forgets it
+press SAVE
+tapkey w1
+release SAVE
+expect eventsA1 10
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect snap 0
+# the track's own SWING: SEQ, its settings row, K3
+tap SEQ
+tap SEQ
+expect rowof 1
+wait 100
+turn K3 12
+wait 100
+expect tswing2 12
+expect tswing0 0
+press SAVE
+tapkey w0
+shot snapshot_toast.png
+release SAVE

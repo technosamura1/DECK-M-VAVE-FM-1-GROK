@@ -1,0 +1,101 @@
+# PER-PART TRACK MUTES: in MIX (and TRACKS) a BLACK key 1-6 mutes that track IN THE PART (a bit of the part, saved with the project);
+# a white key 1-6 only selects the track. Stopped: at once; playing: it waits for the bar's end (pending, blinking). There is no
+# temporary mute and no clear-by-holding any more. Each part has its own mask.
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+listen
+seed 0 1 4 1
+seed 0 2 4 0
+seed 1 1 2 0
+setbars 0 2
+page 3
+wait 100
+expect page 3
+expect pmask 0
+# stopped: at once, toasts A: <track> MUTED / ON
+tapkey b0
+wait 100
+expect pmask 1
+said MUTED
+tapkey b0
+wait 100
+expect pmask 0
+said ON
+tapkey b1
+wait 100
+expect pmask 2
+expect pmaskB 0
+# playing: the toggle waits for the bar's end
+tap PLAY
+wait 300
+expect playing 1
+tapkey b0
+wait 100
+expect pmpend 1
+expect pmask 2
+said BAR END
+# toggled again before the bar's end: cancelled (nothing pending)
+tapkey b0
+wait 100
+expect pmpend 0
+tapkey b0
+wait 100
+expect pmpend 1
+wait 3400
+expect pmpend 0
+expect pmask 3
+expect part 0
+# HOME + black selects the track and mutes nothing; a white key only selects (no temp mute, no clear)
+press HOME
+tapkey b2
+release HOME
+wait 100
+expect track 2
+expect pmask 3
+tapkey w3
+wait 100
+expect track 3
+expect pmask 3
+tapkey b0
+wait 3600
+expect pmask 2
+# holding a black key is still one toggle, and clears nothing
+expect eventsA2 4
+key b1 down 90
+wait 1200
+key b1 up
+wait 3600
+expect eventsA2 4
+expect pmask 0
+tapkey b1
+wait 3600
+expect pmask 2
+# another part has its own mask: B is asked for, at the bar's end the song is in B, whose mask is 0
+press ARP
+tapkey w1
+release ARP
+wait 4700
+expect part 1
+expect pmask 0
+expect pmaskA 2
+# pending while stopping: applied
+tapkey b3
+wait 100
+expect pmpend 8
+tap PLAY
+wait 300
+expect playing 0
+expect pmpend 0
+expect pmaskB 8
+# NEW PART = EMPTY does not touch masks; the masks are saved with the project and come back
+wait 92000
+expect dirty 0
+reboot
+wait 300
+expect pmaskA 2
+expect pmaskB 8
+expect pmaskC 0

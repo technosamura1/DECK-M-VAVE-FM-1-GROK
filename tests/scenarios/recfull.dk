@@ -1,0 +1,51 @@
+# the event pool FULL while recording ("4 instruments recorded, no 5th would record"): it must never be silent.
+# (1) the oldest take of the fullest clip goes (one undo step), the new take records; (2) nothing to drop: the notes
+# that did not fit are lost with a message, and the take recorded so far stays
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+qnt 0
+# a pool nearly full of old layers (4 takes of notes in part H's track 6)
+ballast 4084 4
+wait 100
+expect nev 4084
+tap REC
+wait 3500
+expect recording 1
+key w0 down 90
+key w2 down 90
+key w4 down 90
+wait 500
+key w0 up
+key w2 up
+key w4 up
+wait 300
+tap REC
+wait 500
+expect recording 0
+# the chord is in (all 12 events of the passes so far, none lost): the ballast's oldest take went for it
+expect events >11
+expect nev <4097
+shot recfull_dropped.png
+# 5 more takes: each one records, the pool stays inside its limit
+tap REC
+wait 3500
+key w1 down 90
+wait 300
+key w1 up
+wait 300
+tap REC
+wait 500
+expect events >14
+tap REC
+wait 3500
+key w3 down 90
+wait 300
+key w3 up
+wait 300
+tap REC
+wait 500
+expect events >17
+expect nev <4097

@@ -1,4 +1,4 @@
-# the sequencers: ARP (over LIVE), TOMBOLA, FINGER, DRIVE (and BAKE); FILL
+# the sequencers: ARP (over LIVE), FINGER, DRIVE (and BAKE); FILL
 wait 300
 # a new empty song: the tape's tracks (PIANO PAD KEYS BASS DRUMS NATURE: LIVE LIVE LIVE STEP FINGER LIVE)
 tap SAVE
@@ -13,9 +13,11 @@ release HOME
 wait 50
 expect track 1
 expect seq 1
-# ARP over LIVE on the keys
+# ARP over LIVE on the keys (the button opens the page; K4 there switches it on)
 tap ARP
 wait 100
+turn K4 1
+wait 50
 expect seq 1
 key w0 down 90
 key w2 down 90
@@ -28,21 +30,6 @@ press HOME
 tap ARP
 release HOME
 wait 50
-# TOMBOLA on the keys (SEQ held + white 5)
-press SEQ
-tapkey w4
-release SEQ
-wait 50
-expect seq 7
-tap PLAY
-tapkey w2
-tapkey w5
-tapkey w7
-wait 4000
-expect tmb >2
-shot tombola.png
-tap PLAY
-wait 200
 # FINGER on the drums: a pattern held
 press HOME
 tapkey b4
@@ -55,9 +42,8 @@ expect voices >0
 shot finger.png
 key w6 up
 # DRIVE on the drums, then BAKE it to STEP
-press SEQ
-tapkey w2
-release SEQ
+# the sequencer is picked on the SEQ page (its row SEQUENCER, K1): no key combo any more
+seqtype 2
 wait 50
 expect seq 4
 tap HOME

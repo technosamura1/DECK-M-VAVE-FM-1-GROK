@@ -1,0 +1,146 @@
+# the reported case: four instruments recorded (four tracks, each with its own sound, several passes, LOCK TAKE on),
+# then a fifth instrument, and one more layer on the first, must still record: nothing silently refuses
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+tap SEQ
+tap SEQ
+turn K2 1
+turn K2 -1
+wait 50
+expect bars 4
+expect locktake 1
+qnt 0
+# track 0..3: a different engine each, a chord on every pass
+press HOME
+tapkey b0
+release HOME
+wait 100
+expect track 0
+tap REC
+wait 3500
+expect recording 1
+key w0 down 90
+key w2 down 90
+key w4 down 90
+wait 1500
+key w0 up
+key w2 up
+key w4 up
+wait 7000
+key w1 down 90
+key w3 down 90
+wait 1500
+key w1 up
+key w3 up
+wait 6000
+tap REC
+wait 500
+expect recording 0
+expect events >2
+press HOME
+tapkey b1
+release HOME
+wait 100
+expect track 1
+press HOME
+turn PRESET 1
+release HOME
+tap REC
+wait 3500
+key w0 down 90
+key w2 down 90
+key w4 down 90
+wait 1500
+key w0 up
+key w2 up
+key w4 up
+wait 14000
+tap REC
+wait 500
+expect recording 0
+expect events >2
+press HOME
+tapkey b2
+release HOME
+wait 100
+expect track 2
+press HOME
+turn PRESET 2
+release HOME
+tap REC
+wait 3500
+key w0 down 90
+key w2 down 90
+key w4 down 90
+wait 1500
+key w0 up
+key w2 up
+key w4 up
+wait 14000
+tap REC
+wait 500
+expect recording 0
+expect events >2
+press HOME
+tapkey b3
+release HOME
+wait 100
+expect track 3
+press HOME
+turn PRESET 3
+release HOME
+tap REC
+wait 3500
+key w0 down 90
+key w2 down 90
+key w4 down 90
+wait 1500
+key w0 up
+key w2 up
+key w4 up
+wait 14000
+tap REC
+wait 500
+expect recording 0
+expect events >0
+expect nev <3000
+# the fifth instrument, on track 4: it records
+press HOME
+tapkey b4
+release HOME
+wait 100
+expect track 4
+press HOME
+turn PRESET 4
+release HOME
+tap REC
+wait 3500
+expect recording 1
+key w0 down 90
+wait 700
+key w0 up
+wait 300
+tap REC
+wait 500
+expect recording 0
+expect events >0
+# one more layer on the first track
+press HOME
+tapkey b0
+release HOME
+wait 100
+tap REC
+wait 3500
+expect recording 1
+key w5 down 90
+wait 700
+key w5 up
+wait 300
+tap REC
+wait 500
+expect recording 0
+expect events >20
+shot recfive.png

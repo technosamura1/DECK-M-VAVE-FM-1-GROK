@@ -9,7 +9,7 @@ import time
 
 import mido
 
-PORT_RE = re.compile(r"fm-?1|felucca|composite|sinco|usb-midi", re.I)
+PORT_RE = re.compile(r"fm-?1|felucca|clipper|composite|sinco|usb-midi", re.I)
 ASK = [0x7D, 0x44, 0x4B, 0x53]
 
 

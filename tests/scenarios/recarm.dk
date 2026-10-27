@@ -1,0 +1,63 @@
+# REC ARM is OPTIONAL and OFF by default: one press of REC records (count-in per metronome mode). First that, then the
+# two-step mode (recarm 1): REC arms the tape, PLAY starts it (count-in, then the take); REC again lets it go.
+# Playing already: REC records at once. UNDO takes the last take away.
+wait 300
+expect recarm 0
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+expect nev 0
+# DEFAULT (OFF): one press of REC: nothing is armed, the count-in starts at once; REC again lets it go
+tap REC
+wait 200
+expect armed 0
+expect counting >0
+tap REC
+wait 300
+expect counting 0
+expect recording 0
+expect playing 0
+# the optional two steps
+recarm 1
+expect recarm 1
+# REC: armed, nothing runs
+tap REC
+wait 200
+expect armed 1
+expect recording 0
+expect playing 0
+# REC again: let go
+tap REC
+wait 200
+expect armed 0
+# armed, PLAY: the take starts (count-in)
+tap REC
+wait 200
+expect armed 1
+tap PLAY
+wait 200
+expect armed 0
+wait 3500
+expect recording 1
+key w0 down 90
+wait 500
+key w0 up
+wait 300
+tap REC
+wait 400
+expect recording 0
+expect events >0
+# playing: REC at once, no arming
+tap PLAY
+wait 300
+tap PLAY
+wait 300
+expect playing 1
+tap REC
+wait 300
+expect armed 0
+expect recording 1
+tap REC
+wait 400
+expect recording 0

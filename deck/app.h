@@ -44,7 +44,13 @@ typedef struct {
     uint8_t proj;                        /* the project open */
     uint8_t metro[6];                    /* dk_metro_t */
     uint8_t midi_notes, midi_clock, midi_in;
-    uint8_t rsv[20];
+    uint8_t lat;                         /* REC LAT: the audio latency made up while recording, ms + 1 (0: the default, 9) */
+    uint8_t noarm_old;                   /* (the first op1-rec builds: REC ARM inverted here; no longer read) */
+    uint8_t nolock;                      /* LOCK TAKE off (inverted: 0, as in an older store, is on) */
+    uint8_t emptypart;                   /* NEW PART = EMPTY (inverted: 0, as in an older store, is COPY) */
+    uint8_t recarm;                      /* REC ARM on (0, as in every older store, is OFF: one press of REC records) */
+    uint8_t recmode;                     /* REC MODE: 0 OVERDUB (as in every older store), 1 REPLACE */
+    uint8_t rsv[14];
 } settings_t;
 extern settings_t set;
 
@@ -59,6 +65,7 @@ void ui_init(void);
 void ui_frame(void);
 void ui_input_only(void);
 void ui_say(const char *a, const char *b);
+void ui_arm_reset(void);              /* REC ARM changed: the tape is not armed any more */
 
 /* the contract: the platform calls these */
 void app_init(void);

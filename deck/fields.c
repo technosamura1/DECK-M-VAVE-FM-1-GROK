@@ -9,16 +9,16 @@ enum {
     /* PLAY */ F_TEMPO, F_MACRO, F_MOOD,
     /* SOUND */ F_P0, F_P1, F_P2, F_P3, F_P4, F_P5, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
     F_MODTGT, F_MODSLOT,
-    /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING, F_DIV,
-    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_SPIN, F_GRAV, F_BOUNCE, F_TQUANT, F_FLATCH,
+    /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING,
+    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_FLATCH, F_FBANK,
     F_SEQTYPE, F_OCT, F_DRIFT, F_MIDICH, F_ROLE,
     /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP,
     /* ROAD */ F_ROADCUR, F_ROADPART, F_ROADREPS, F_GPART, F_GLABEL, F_GBARS, F_PLAYMODE,
     /* KEYS */ F_ROOT, F_MODE, F_CHORD, F_WHITE, F_BLACK, F_QUALITY, F_VOICING, F_STRUM, F_LEAD, F_LAYOUT, F_SPLIT,
     F_BASS, F_KOCT, F_DIM, F_HARMTRK,
     /* PROJECT */ F_SLOT, F_TEMPLATE, F_SWING, F_SONGSTYLE, F_METRO, F_COUNT, F_CLICK, F_MDIV, F_MVOL, F_ONNOTE,
-    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION,
-    /* REC */ F_RECTRK,
+    F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ECHOTIME, F_CPU, F_VERSION, F_RECLAT, F_LOCKTAKE, F_RECARM, F_NEWPART,
+    /* REC */ F_RECTRK, F_RECMODE,
     /* a drum sound's own (the drum track's lanes) */ F_LLEVEL, F_LPAN, F_LTUNE, F_LDECAY, F_LREV, F_LECHO, F_LCRUSH, F_FXFOR,
     /* ATMO */ F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_ATAPE, F_ALVL,
     /* the step editor (SEQ's third row) */ F_SENOTE, F_SETIE, F_SEPITCH, F_SHIFT,
@@ -27,10 +27,10 @@ enum {
     F_N
 };
 
-static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DREAM", "FINGER", "HOLD", "TOMBOLA"};
+static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DREAM", "FINGER", "HOLD", "-"};
 /* the sequencers offered (ARP is a layer over them now; ENDLESS and HOLD folded into LIVE and the ARP's LATCH) */
-#define NSEQ 5
-static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_LIVE, SQ_DRIVE, SQ_FINGER, SQ_TOMBOLA};
+#define NSEQ 4
+static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_LIVE, SQ_DRIVE, SQ_FINGER};
 static int seq_index(int sq)
 {
     int i;
@@ -46,7 +46,6 @@ static const char *const ARPR_NAME[ARPR_N] = {"STRAIGHT", "PULSE", "OFFBEAT", "D
 static const char *const ARPG_NAME[ARPG_N] = {"SHORT", "NORMAL", "LONG", "TIE"};   /* as the encoder turns */
 static const uint8_t ARPG_ORDER[ARPG_N] = {ARPG_SHORT, ARPG_NORMAL, ARPG_LONG, ARPG_TIE};
 static const char *const ARPSRC_NAME[2] = {"KEYS", "CHORD"};
-static const char *const EDIV_NAME[4] = {"1/4", "1/8", "1/16", "1/8T"};
 static const char *const VOICING_NAME[VC_N] = {"CLOSE", "OPEN", "SPREAD", "DROP2", "POWER"};
 static const char *const WHITE_NAME[2] = {"NOTES", "CHORDS"};
 static const char *const BLACK_NAME[3] = {"CHORDS", "PERFORM", "NOTES"};
@@ -59,7 +58,6 @@ static const char *const TEMPLATE_NAME[5] = {"EMPTY", "POP", "CLUB", "AMBIENT", 
 static const char *const METRO_MODE[3] = {"OFF", "ON REC", "ALWAYS"};
 static const char *const METRO_SND[METRO_N] = {"CLICK", "WOOD", "HAT", "COWBELL", "RIM"};
 static const char *const MDIV_NAME[3] = {"1/4", "1/8", "1/16"};
-static const char *const QUANT3[3] = {"OFF", "1/16", "1/8"};
 static const char *const PMODE_NAME[2] = {"PART", "SONG"};
 static const char *const ECHO_T[4] = {"1/8.", "1/4", "1/8", "1/4."};
 static const char *const TARGET_NAME[T_N] = {"-", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "ATTACK", "DECAY",
@@ -97,6 +95,84 @@ static dk_ev_t *step_ev(void)
  * short); K4 the pitch by the scale (HOME: an octave). The keys write their note at the step too. A run of turns on one
  * knob is one undo step; the knobs' values say what changed (no messages over the grid) */
 static void say(const char *a, const char *b);
+
+/* The part to play next (ARP + a white key, NEXT PART, the road's block): while PLAYING in PART mode, an EMPTY part is first made a copy of
+ * the one playing (NEW PART = COPY; never over a part with notes; one undo step, "A->B COPIED"; no room for the notes: "NO ROOM", the
+ * switch goes on); the switch itself is at the bar's end. Stopped, or NEW PART = EMPTY: only the part (an empty one to compose in).
+ * 1 copied, -1 no room (said), 0 nothing */
+static int part_go(int p)
+{
+    int r = 0;
+    p &= 7;
+    if (dk_playing && !dk_song.play_mode) {
+        uint8_t was = dk_next_part;           /* a part chosen before, not reached: its copy taken back (if untouched) */
+        if (was != 0xFF && was != p && was != dk_cur_part)
+            part_copy_undo(was);
+        if (dk_newpart_copy && p != dk_cur_part) {
+            char s[8] = "A->B";
+            s[0] = (char)('A' + (dk_cur_part & 7));
+            s[3] = (char)('A' + p);
+            r = part_copy(dk_cur_part, p);
+            if (r > 0)
+                say(s, "COPIED");
+            else if (r < 0)
+                say("NO ROOM", s);
+        }
+    }
+    dk_cmd(C_PART, p, 0, 0);
+    if (!dk_playing)
+        dk_song.cur_part = (uint8_t)p;
+    return r;
+}
+/* While REC is running (PART, not SONG): ENV held and SELECT turned. An empty part gets this part's copy now
+ * (the same copy as NEW PART: notes, takes, frozen sounds, bars, mutes) and the loop stays where it is, so the
+ * take continues on top of the copy. A part that already has notes is left alone. */
+static int part_branch(int p)
+{
+    int r = 0;
+    char s[16] = "A->B";
+    p &= 7;
+    if (!dk_recording || !dk_playing)
+        return 0;
+    if (dk_song.play_mode) {
+        say("SONG", "PARTS FOLLOW ROAD");
+        return 0;
+    }
+    if (p == (dk_cur_part & 7))
+        return 0;
+    s[0] = (char)('A' + (dk_cur_part & 7));
+    s[3] = (char)('A' + p);
+    {                                        /* a part already queued (ARP + white) and not this one: its copy was not edited, take it back */
+        uint8_t was = dk_next_part;
+        if (was != 0xFF && was != (uint8_t)p && was != (dk_cur_part & 7))
+            part_copy_undo(was);
+        if (part_has_events(p)) {
+            if (was == (uint8_t)p) {         /* this is the part already copied and waiting for the bar: go now */
+                dk_cmd(C_PART, p, 2, 0);
+                say(s, "COPIED");
+                return 1;
+            }
+            {
+                char h[16] = "A HAS NOTES";
+                h[0] = (char)('A' + p);
+                say(h, "NOT COPIED");
+            }
+            return 0;
+        }
+    }
+    if (part_has_events(dk_cur_part)) {
+        r = part_copy(dk_cur_part, p);
+        if (r > 0)
+            say(s, "COPIED");
+        else if (r < 0) {
+            say("NO ROOM", s);
+            return -1;
+        }
+    } else
+        say(s + 3, "");
+    dk_cmd(C_PART, p, 2, 0);             /* now, and the loop does not restart */
+    return r;
+}
 static void mark_dirty(void);
 static char *cpy(char *d, const char *s);
 static uint8_t se_pitch;                 /* the note K2 puts in: the last one written or moved (0: the tonic) */
@@ -425,7 +501,6 @@ static void field_range(int f, int *lo, int *hi)
     case F_SLEN: *lo = 1; *hi = 16; break;
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_RECBARS: *hi = 16; break;
-    case F_DIV: *hi = 3; break;
     case F_ARPMODE: *hi = 5; break;
     case F_ARPDIV: *hi = DK_ARP_NDIV - 1; break;
     case F_ARPRHY: *hi = ARPR_N - 1; break;
@@ -433,6 +508,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_ARPSRC: *hi = 1; break;
     case F_ARPON: *hi = 1; break;
     case F_ARPOCT: *lo = 1; *hi = 3; break;
+    case F_FBANK: *hi = DK_NFBANK - 1; break;
     case F_ARPLATCH:
     case F_FLATCH:
     case F_LEAD:
@@ -440,6 +516,10 @@ static void field_range(int f, int *lo, int *hi)
     case F_BASS:
     case F_DIM:
     case F_ONNOTE:
+    case F_LOCKTAKE:
+    case F_RECARM:
+    case F_RECMODE:
+    case F_NEWPART:
     case F_MIDIOUT:
     case F_CLOCK:
     case F_MIDIIN:
@@ -449,7 +529,6 @@ static void field_range(int f, int *lo, int *hi)
     case F_PLAYMODE: *hi = 1; break;
     case F_STYLE:
     case F_SONGSTYLE: *hi = TAPE.nstyle - 1; break;
-    case F_TQUANT: *hi = 2; break;
     case F_SEQTYPE: *hi = NSEQ - 1; break;
     case F_OCT:
     case F_KOCT: *lo = -3; *hi = 3; break;
@@ -475,6 +554,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_SWING: *hi = 60; break;
     case F_METRO: *hi = 2; break;
     case F_COUNT: *lo = 1; *hi = 2; break;
+    case F_RECLAT: *hi = 30; break;
     case F_CLICK: *hi = METRO_N - 1; break;
     case F_MDIV: *hi = 2; break;
     case F_ECHOTIME: *hi = 3; break;
@@ -501,7 +581,30 @@ static void field_range(int f, int *lo, int *hi)
 }
 static dk_lane_t *cur_lane(void) { return &dk_song.lane[dk_song.cur_track % DK_NTRACK][ui_lane & 7]; }
 
+/* AUTOMATION: the gesture being recorded (REC held and a knob turned: ui.c), and while the screen is drawn (fg_live) a knob
+ * whose target has a curve playing shows the curve's value, not the knob's own */
+static struct {
+    uint8_t on, t, tgt, clip;            /* a gesture is on: the track, the target, the clip */
+    int16_t start, last, pp;             /* the gesture's first point, the last written, the pending (newest) one: clip ticks */
+    int8_t lastv, pv;                    /* ... and the last written value and the pending one (percent) */
+    uint32_t ms;                         /* the last turn */
+} au;
+static uint8_t fg_live;
+static int field_target(int f);
+static int field_get_raw(int f);
 static int field_get(int f)
+{
+    int v = field_get_raw(f);
+    if (fg_live) {
+        int tgt = field_target(f), m, lo, hi;
+        if (tgt && !(au.on && au.t == dk_song.cur_track && au.tgt == tgt) && (m = dk_auto_live(dk_song.cur_track, tgt)) >= 0) {
+            field_range(f, &lo, &hi);
+            return lo + (m * (hi - lo) + 500) / 1000;
+        }
+    }
+    return v;
+}
+static int field_get_raw(int f)
 {
     dk_track_t *k = cur();
     dk_ev_t *e;
@@ -551,7 +654,6 @@ static int field_get(int f)
     case F_RECBARS: return ui_auto_on || (ui_rec_auto && part_empty(dk_song.cur_part)) ? 0 : dk_song.part[dk_song.cur_part & 7].bars;
     case F_QNT: return k->qnt;
     case F_TSWING: return k->swing;
-    case F_DIV: return k->div & 3;
     case F_ARPMODE: return k->arp[0] % 6;
     case F_ARPDIV: return k->arp[1] % DK_ARP_NDIV;
     case F_ARPRHY: return k->arp_rhy % ARPR_N;
@@ -567,13 +669,10 @@ static int field_get(int f)
     case F_ARPOCT: return k->arp[2] ? k->arp[2] : 1;
     case F_ARPLATCH:
     case F_FLATCH: return k->arp[3] ? 1 : 0;
+    case F_FBANK: return dk_fb_bank(dk_song.cur_track);
     case F_ENERGY: return k->drv[0];
     case F_STYLE: return k->drv[1];
     case F_VAR: return k->drv[2];
-    case F_SPIN: return k->tmb[0];
-    case F_GRAV: return k->tmb[1];
-    case F_BOUNCE: return k->tmb[2];
-    case F_TQUANT: return k->tmb[3] % 3;
     case F_SEQTYPE: return seq_index(k->seq);
     case F_OCT: return k->oct;
     case F_DRIFT: return k->drift;
@@ -615,10 +714,15 @@ static int field_get(int f)
     case F_SONGSTYLE: return dk_song.style;
     case F_METRO: return dk_metro.mode;
     case F_COUNT: return dk_metro.count;
+    case F_RECLAT: return dk_rec_lat;
     case F_CLICK: return dk_metro.sound;
     case F_MDIV: return dk_metro.div;
     case F_MVOL: return dk_metro.vol;
     case F_ONNOTE: return dk_metro.on_note;
+    case F_LOCKTAKE: return dk_lock_take;
+    case F_RECARM: return dk_rec_arm;
+    case F_RECMODE: return dk_rec_mode;
+    case F_NEWPART: return dk_newpart_copy;
     case F_MIDIOUT: return dk_midi_notes;
     case F_CLOCK: return dk_midi_clock;
     case F_MIDIIN: return set.midi_in;
@@ -717,13 +821,14 @@ static void field_set(int f, int v)
         break;
     case F_QNT: k->qnt = (uint8_t)v; break;
     case F_TSWING: k->swing = (uint8_t)v; break;
-    case F_DIV: k->div = (uint8_t)v; break;
     case F_ARPMODE: k->arp[0] = (uint8_t)v; break;
     case F_ARPDIV: k->arp[1] = (uint8_t)v; break;
     case F_ARPRHY: k->arp_rhy = (uint8_t)v; break;
     case F_ARPGATE: k->arp_opt = (uint8_t)((k->arp_opt & ~3u) | ARPG_ORDER[v % ARPG_N]); break;
     case F_ARPSRC: k->arp_opt = (uint8_t)((k->arp_opt & ~4u) | (v ? 4u : 0u)); break;
     case F_ARPON:
+        if ((v != 0) != dk_arp_on(k))
+            keys_all_up();               /* (the keys down change hands: no note stays sounding) */
         k->arp_opt = (uint8_t)(v ? k->arp_opt | ARPO_ON : k->arp_opt & ~ARPO_ON);
         if (!v)
             dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
@@ -735,13 +840,13 @@ static void field_set(int f, int v)
         if (!v)
             dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
         break;
+    case F_FBANK:
+        dk_song.fbank[dk_song.cur_track] = (uint8_t)v;
+        say(dk_fb_bankname(v), dk_fb_banksub(v));
+        break;
     case F_ENERGY: k->drv[0] = (uint8_t)v; break;
     case F_STYLE: k->drv[1] = (uint8_t)v; break;
     case F_VAR: k->drv[2] = (uint8_t)v; break;
-    case F_SPIN: k->tmb[0] = (uint8_t)v; break;
-    case F_GRAV: k->tmb[1] = (uint8_t)v; break;
-    case F_BOUNCE: k->tmb[2] = (uint8_t)v; break;
-    case F_TQUANT: k->tmb[3] = (uint8_t)v; break;
     case F_SEQTYPE:
         k->seq = SQ_LIST[v % NSEQ];
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
@@ -762,7 +867,7 @@ static void field_set(int f, int v)
     case F_ROADCUR:                      /* the block chosen: its part is the one PART plays (at the bar's end if on) */
         ui_road_cur = (uint8_t)v;
         if (dk_song.nroad && !(dk_playing && dk_song.play_mode))
-            dk_cmd(C_PART, dk_song.road[v].part & 7, 0, 0);
+            part_go(dk_song.road[v].part);
         break;
     case F_ROADPART:
         if (dk_song.nroad) {
@@ -818,10 +923,15 @@ static void field_set(int f, int v)
         break;
     case F_METRO: dk_metro.mode = (uint8_t)v; settings_save_later(); break;
     case F_COUNT: dk_metro.count = (uint8_t)v; settings_save_later(); break;
+    case F_RECLAT: dk_rec_lat = (uint8_t)v; settings_save_later(); break;
     case F_CLICK: dk_metro.sound = (uint8_t)v; settings_save_later(); break;
     case F_MDIV: dk_metro.div = (uint8_t)v; settings_save_later(); break;
     case F_MVOL: dk_metro.vol = (uint8_t)v; break;
     case F_ONNOTE: dk_metro.on_note = (uint8_t)v; settings_save_later(); break;
+    case F_LOCKTAKE: dk_lock_take = (uint8_t)v; settings_save_later(); break;
+    case F_RECARM: dk_rec_arm = (uint8_t)v; ui_arm_reset(); settings_save_later(); break;
+    case F_RECMODE: dk_rec_mode = (uint8_t)v; settings_save_later(); break;
+    case F_NEWPART: dk_newpart_copy = (uint8_t)v; settings_save_later(); break;
     case F_MIDIOUT: dk_midi_notes = (uint8_t)v; settings_save_later(); break;
     case F_CLOCK: dk_midi_clock = (uint8_t)v; settings_save_later(); break;
     case F_MIDIIN: set.midi_in = (uint8_t)v; settings_save_later(); break;
@@ -873,7 +983,7 @@ static const char *field_label(int f)
     case F_DEC: return "DECAY";
     case F_REL: return "RELEASE";
     case F_FXTYPE: return "EFFECT";
-    case F_FXAMT: return "AMOUNT";
+    case F_FXAMT: return cur()->fx == 5 ? "CUTOFF" : "AMOUNT";   /* FILTER: its cutoff is the amount */
     case F_FXA: return TAPE.fx[cur()->fx % TAPE.nfx]->pa[0] ? TAPE.fx[cur()->fx % TAPE.nfx]->pa : "-";
     case F_FXB: return TAPE.fx[cur()->fx % TAPE.nfx]->pb[0] ? TAPE.fx[cur()->fx % TAPE.nfx]->pb : "-";
     case F_MODTYPE: return ui_mod_slot ? "MOD 2" : "MOD 1";
@@ -897,7 +1007,6 @@ static const char *field_label(int f)
     case F_RECBARS: return "BARS";
     case F_QNT: return "QUANT";
     case F_TSWING: return "SWING";
-    case F_DIV: return "DIVISION";
     case F_ARPMODE: return "MODE";
     case F_ARPDIV: return "RATE";
     case F_ARPRHY: return "RHYTHM";
@@ -907,13 +1016,10 @@ static const char *field_label(int f)
     case F_ARPOCT: return "OCTAVES";
     case F_ARPLATCH:
     case F_FLATCH: return "LATCH";
+    case F_FBANK: return "BANK";
     case F_ENERGY: return "ENERGY";
     case F_STYLE: return "STYLE";
     case F_VAR: return "VARIATION";
-    case F_SPIN: return "SPIN";
-    case F_GRAV: return "GRAVITY";
-    case F_BOUNCE: return "BOUNCE";
-    case F_TQUANT: return "GRID";
     case F_SEQTYPE: return "SEQUENCER";
     case F_OCT: return "OCTAVE";
     case F_DRIFT: return "DRIFT";
@@ -955,10 +1061,15 @@ static const char *field_label(int f)
     case F_SONGSTYLE: return "STYLE";
     case F_METRO: return "METRO";
     case F_COUNT: return "COUNT IN";
+    case F_RECLAT: return "REC LAT";
     case F_CLICK: return "CLICK";
     case F_MDIV: return "M DIV";
     case F_MVOL: return "M VOL";
     case F_ONNOTE: return "ON NOTE";
+    case F_LOCKTAKE: return "LOCK TAKE";
+    case F_RECARM: return "REC ARM";
+    case F_RECMODE: return "REC MODE";
+    case F_NEWPART: return "NEW PART";
     case F_MIDIOUT: return "MIDI OUT";
     case F_CLOCK: return "CLOCK";
     case F_MIDIIN: return "MIDI IN";
@@ -1088,7 +1199,6 @@ static void field_text(int f, char *b)
         else
             itoa_b(v, b);
         break;
-    case F_DIV: cpy(b, EDIV_NAME[v & 3]); break;
     case F_ARPMODE: cpy(b, ARP_NAME[v % 6]); break;
     case F_ARPDIV: cpy(b, DIV_NAME[v % DK_ARP_NDIV]); break;
     case F_ARPRHY: cpy(b, ARPR_NAME[v % ARPR_N]); break;
@@ -1097,9 +1207,9 @@ static void field_text(int f, char *b)
     case F_ARPON: cpy(b, v ? "ON" : "OFF"); break;
     case F_STYLE:
     case F_SONGSTYLE: cpy(b, TAPE.style_name[v % TAPE.nstyle]); break;
-    case F_TQUANT: cpy(b, QUANT3[v % 3]); break;
     case F_SEQTYPE: cpy(b, SEQ_NAME[SQ_LIST[v % NSEQ]]); break;
     case F_ROLE: cpy(b, ROLE_NAME[v % R_N]); break;
+    case F_FBANK: cpy(b, dk_fb_bankname(v)); break;
     case F_OCT:
     case F_KOCT:
         if (v > 0)
@@ -1155,6 +1265,7 @@ static void field_text(int f, char *b)
     case F_CLICK: cpy(b, METRO_SND[v % METRO_N]); break;
     case F_MDIV: cpy(b, MDIV_NAME[v % 3]); break;
     case F_ECHOTIME: cpy(b, ECHO_T[v & 3]); break;
+    case F_RECLAT: b = itoa_b(v, b); cpy(b, " MS"); break;
     case F_CPU: b = itoa_b(v, b); cpy(b, "%"); break;
     case F_VERSION: cpy(b, DK_VERSION); break;
     case F_LLEVEL:                           /* half dB: +6, -3.5 ... */
@@ -1189,9 +1300,189 @@ static void field_text(int f, char *b)
     case F_BASS:
     case F_DIM:
     case F_ONNOTE:
+    case F_LOCKTAKE:
+    case F_RECARM:
     case F_MIDIOUT:
     case F_CLOCK:
     case F_MIDIIN: cpy(b, ONOFF[v & 1]); break;
+    case F_NEWPART: cpy(b, v ? "COPY" : "EMPTY"); break;
+    case F_RECMODE: cpy(b, v ? "REPLACE" : "OVERDUB"); break;
     default: itoa_b(v, b); break;
     }
+}
+
+/* ---------------------------------------------------------- the SOUND page's lists --- */
+/* The sound's own knobs: the engine's (up to five), ATTACK, DECAY, RELEASE, DRIFT. FAVORITES (SOUND row 1) are the four that
+ * matter most for the preset: first what its MACRO moves, then the engine's in their order; MORE (row 2) is the rest. */
+#define NPOOL 9
+static int pool_n(const dk_engine_t *e) { return (e->nparams < 5 ? e->nparams : 5) + 4; }
+static int pool_f(const dk_engine_t *e, int i)
+{
+    static const uint8_t X[4] = {F_ATT, F_DEC, F_REL, F_DRIFT};
+    int np = e->nparams < 5 ? e->nparams : 5;
+    return i < np ? F_P0 + i : X[(i - np) & 3];
+}
+/* the target (T_*) a field is, for MACRO and the automation; 0 for the rest */
+static int field_target(int f)
+{
+    switch (f) {
+    case F_P0: case F_P1: case F_P2: case F_P3: case F_P4: case F_P5: return T_P0 + (f - F_P0);
+    case F_ATT: return T_ATT;
+    case F_DEC: return T_DEC;
+    case F_REL: return T_REL;
+    case F_FXAMT: return T_FXAMT;
+    case F_FXA: return T_FXA;
+    case F_FXB: return T_FXB;
+    case F_REV: return T_REV;
+    case F_ECHO: return T_ECHO;
+    case F_VOL: return T_VOL;
+    case F_PAN: return T_PAN;
+    default: return 0;
+    }
+}
+/* how far (-100..100 %, of the range) the track's MACRO moves a field at its full; 0: not at all */
+static int macro_moves(int f)
+{
+    const dk_track_t *k = cur();
+    int i, t = field_target(f), a = 0;
+    if (!t)
+        return 0;
+    for (i = 0; i < 3; i++)
+        if (k->mt[i] == t)
+            a += k->ma[i];
+    return a;
+}
+static void sound_lists(int fav[4], int more[5])
+{
+    const dk_track_t *k = cur();
+    const dk_engine_t *e = cur_eng();
+    int n = pool_n(e), nf = 0, nm = 0, i, j, used[NPOOL];
+    for (i = 0; i < NPOOL; i++)
+        used[i] = 0;
+    for (i = 0; i < 3 && nf < 4; i++)                /* what MACRO moves, first */
+        if (k->ma[i] && k->mt[i])
+            for (j = 0; j < n; j++)
+                if (!used[j] && field_target(pool_f(e, j)) == k->mt[i]) {
+                    used[j] = 1;
+                    fav[nf++] = pool_f(e, j);
+                    break;
+                }
+    for (j = 0; j < n && nf < 4; j++)                /* then in the engine's order */
+        if (!used[j]) {
+            used[j] = 1;
+            fav[nf++] = pool_f(e, j);
+        }
+    for (j = 0; j < n && nm < 5; j++)
+        if (!used[j])
+            more[nm++] = pool_f(e, j);
+    while (nf < 4)
+        fav[nf++] = F_NONE;
+    while (nm < 5)
+        more[nm++] = F_NONE;
+}
+
+/* a value in its unit, big: the number and the unit apart ("-6" "DB", "1.2" "HZ", "40" "%"); a named value: the name, no unit */
+static char *fix1(char *b, int v10)               /* v10 / 10 with one decimal */
+{
+    if (v10 < 0)
+        *b++ = '-', v10 = -v10;
+    b = itoa_b(v10 / 10, b);
+    *b++ = '.';
+    *b++ = (char)('0' + v10 % 10);
+    *b = 0;
+    return b;
+}
+static void field_big(int f, char *num, const char *unit_out[1])
+{
+    const dk_track_t *k = cur();
+    int v = field_get(f), lo, hi, i;
+    float fl;
+    field_range(f, &lo, &hi);
+    unit_out[0] = "%";
+    num[0] = 0;
+    switch (f) {
+    case F_VOL:                                        /* the gain: VOL squared, times two, in dB */
+        if (v <= 0) {
+            cpy(num, "-INF");
+        } else {
+            fl = 6.0206f * fm_log2f((float)v * (float)v * 0.0002f);
+            i = (int)(fl * (fl < 0.0f ? -1.0f : 1.0f) + 0.5f);
+            if (fl < 0.0f)
+                *num++ = '-';
+            else if (i)
+                *num++ = '+';
+            itoa_b(i, num);
+        }
+        unit_out[0] = "DB";
+        return;
+    case F_TEMPO: itoa_b(v, num); unit_out[0] = "BPM"; return;
+    case F_ECHOTIME: {                                 /* the division in ms at this tempo */
+        static const uint8_t BEATS4[4] = {3, 4, 2, 6};
+        itoa_b((int)((float)BEATS4[v & 3] * 15000.0f / (float)(dk_song.tempo ? dk_song.tempo : 90) + 0.5f), num);
+        unit_out[0] = "MS";
+        return;
+    }
+    case F_PAN:
+        field_text(f, num);
+        unit_out[0] = "";
+        return;
+    case F_FXAMT:
+        if (k->fx == 5) {                              /* FILTER: the cutoff */
+            float xh = 0.5f * dk_svf_fmax(1.6f - 1.45f * (float)k->fxa * 0.01f), cap;
+            fl = 60.0f * fm_exp2f((float)v * 0.01f * 8.2f);
+            cap = DK_SR * 0.3183099f * xh * (1.0f + xh * xh * (0.16667f + xh * xh * 0.075f));   /* the Hz the filter is held at (asin) */
+            if (fl > cap)
+                fl = cap;
+            itoa_b((int)fl, num);
+            unit_out[0] = "HZ";
+            return;
+        }
+        break;
+    case F_FXA:
+    case F_FXB: {
+        float x = (float)v * 0.01f;
+        int a = f == F_FXA;
+        switch (k->fx) {
+        case 2:                                        /* TAPE: wow in ms, saturation in dB */
+            if (a) { itoa_b((int)((8.0f + 60.0f * x) / (DK_SR * 0.001f) + 0.5f), num); unit_out[0] = "MS"; return; }
+            fl = 20.0f * 0.30103f * fm_log2f(1.0f + 2.5f * x);
+            itoa_b((int)(fl + 0.5f), num);
+            unit_out[0] = "DB";
+            return;
+        case 4:                                        /* CHORUS: rate in Hz, depth in ms */
+            if (a) { fix1(num, (int)((0.15f + 2.2f * x * x) * 10.0f + 0.5f)); unit_out[0] = "HZ"; return; }
+            itoa_b((int)((30.0f + 220.0f * x) / (DK_SR * 0.001f) + 0.5f), num);
+            unit_out[0] = "MS";
+            return;
+        case 7:                                        /* SPRING: decay %, tone in Hz */
+            if (!a) { itoa_b((int)(1800.0f + 5000.0f * x), num); unit_out[0] = "HZ"; return; }
+            break;
+        case 6:                                        /* TREMOLO: rate as a division */
+            if (a) { static const char *const D[5] = {"1/2", "1/4", "1/8", "1/12", "1/16"}; cpy(num, D[(int)(x * 4.99f)]); unit_out[0] = ""; return; }
+            break;
+        case 5:                                        /* FILTER: mode */
+            if (!a) { cpy(num, x < 0.33f ? "LOW" : x < 0.66f ? "BAND" : "HIGH"); unit_out[0] = ""; return; }
+            break;
+        default: break;
+        }
+        break;
+    }
+    case F_FXTYPE:
+    case F_FBANK:
+    case F_MODTYPE:
+    case F_MODTGT:
+        field_text(f, num);
+        unit_out[0] = "";
+        return;
+    default: break;
+    }
+    if ((f >= F_P0 && f <= F_P5) || f == F_MODRATE) {
+        const dk_engine_t *e = cur_eng();
+        if (f != F_MODRATE && f - F_P0 < e->nparams && e->params[f - F_P0].names) {
+            field_text(f, num);
+            unit_out[0] = "";
+            return;
+        }
+    }
+    itoa_b(v, num);
 }

@@ -1,0 +1,85 @@
+# GARAGE (hold ENV): white 1-8 = DUPLICATE the part on the cursor TO that part. An empty target takes it at once; a target with notes
+# asks once ("AGAIN = OVERWRITE"), only the second press (same pair, within 3 s) replaces it; one undo step. A queued part
+# (the next, at the bar's end) is blinking in the header: `expect next`.
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+page 0
+expect nev 0
+listen
+seed 0 1 4 0
+seed 0 2 2 0
+seed 2 2 3 0
+expect nev 9
+press ENV
+wait 800
+release ENV
+wait 100
+expect page 4
+# the cursor is on A (K1 moves it): duplicate A to B (empty): at once
+tapkey w1
+wait 100
+said A->B
+expect nev 15
+expect eventsB1 4
+# to the same part: nothing
+tapkey w0
+wait 100
+said PICK ANOTHER
+expect nev 15
+# to C (it has notes): asks first, nothing changes
+tapkey w2
+wait 100
+said AGAIN = OVERWRITE
+expect nev 15
+shot p36_garage_dup.png
+# the second press overwrites: C = A (its own three notes are gone: 4 + 2 now)
+tapkey w2
+wait 100
+said OVERWRITTEN
+expect nev 18
+expect eventsC1 4
+expect eventsC2 2
+# one undo brings C back as it was (and B stays)
+press EDIT
+wait 800
+release EDIT
+wait 100
+expect nev 15
+expect eventsC2 3
+# another target in between forgets the question
+tapkey w2
+wait 100
+said AGAIN = OVERWRITE
+tapkey w1
+wait 100
+said AGAIN = OVERWRITE
+expect nev 15
+# an empty part D: at once
+tapkey w3
+wait 100
+said COPIED
+expect nev 21
+# playing, a part queued: the next part is known (it blinks in the header)
+press ENV
+wait 800
+release ENV
+tap HOME
+wait 100
+tap PLAY
+wait 300
+press ARP
+tapkey w4
+release ARP
+wait 100
+expect next 4
+# the header: the queued letter blinks with the part's own (two frames)
+tap HOME
+wait 100
+tap HOME
+wait 90
+shot p37_next_a.png
+wait 230
+shot p37_next_b.png

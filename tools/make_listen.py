@@ -15,11 +15,15 @@ ABOUT = {
     "AIRPAD": "тёплые пады OVERWORLD: SWEDEN, AIR, WARM, SHIMMER, STRINGS",
     "GLASS": "колокольчики: стекло, челеста, маримба, музыкальная шкатулка, вибрафон",
     "SOFTBASS": "мягкий бас: SUB, UPRIGHT (контрабас), MOOG",
-    "DUSTKIT": "пыльные лоу-фай барабаны: бочка, щётка, римшот, шейкер, хет, клэп, дерево",
+    "DUSTKIT": "барабаны: пыльные лоу-фай киты и синтез-эмуляции 808 / 909 / 606 / CR-78 / 707",
     "WORLD": "звуки мира: дождь, ветер, костёр, ручей, капли, сверчки, птицы, океан, гроза, снег",
     "KALIMBA": "калимба: язычок, щипок пальцем, деревянный корпус",
+    "WINDS": "духовые: флейта, дудук, свирель, синт-брасс, рога",
+    "SYNTH": "синтезатор: меандр/пила/импульс, чип-звуки NES/SNES, synthwave-лиды и бас, хор",
+    "PLUCK": "щипковые: арфа, лютня, чип-пилинь, гитара, балалайка",
 }
-ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "KALIMBA", "SOFTBASS", "DUSTKIT", "WORLD"]
+BLOCKS = ["AMBIENT LOFI", "8-16 BIT", "SYNTHWAVE", "CINEMATIC"]
+ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "KALIMBA", "SOFTBASS", "DUSTKIT", "WORLD", "WINDS", "SYNTH", "PLUCK"]
 MOODS = ["PLAINS", "RAIN", "CAVE", "SNOW", "OCEAN", "NIGHT", "CAMPFIRE", "STUDY"]
 STYLES = ["C418", "LOFI", "AMBIENT", "CAMPFIRE"]
 COMPARE = ["Пианино (FELT)", "Пад (AIRPAD SWEDEN)", "Колокол (GLASS CELESTA)", "Бас (SOFTBASS SUB)"]
@@ -52,9 +56,15 @@ for eng in ORDER:
     if not os.path.isdir(d):
         continue
     parts.append(f'<details open><summary><b>{eng}</b> <span class="dim">— {ABOUT.get(eng, "")}</span></summary>')
+    last = -1
     for f in sorted(os.listdir(d)):
         if f.endswith(".wav"):
-            parts.append(row(f"sounds/{eng}/{f}", f[3:-4].replace("_", " "), f"пресет {int(f[:2])}"))
+            b = int(f[1]) if f[0] == "b" and f[1].isdigit() else 0
+            if b != last:
+                parts.append(f"<div class='dim'>блок {b + 1}: {BLOCKS[b % 4]}</div>")
+                last = b
+            nm = f[3:] if f[0] == "b" else f
+            parts.append(row(f"sounds/{eng}/{f}", nm[3:-4].replace("_", " "), f"пресет {int(nm[:2])}"))
     parts.append("</details>")
 parts.append("<h2>OVERWORLD: было → стало</h2><p class='dim'>Одна и та же фраза: старый звук прошивки OVERWORLD и новый движок DECK.</p>")
 for i, n in enumerate(COMPARE):
@@ -65,6 +75,18 @@ for i, s in enumerate(STYLES):
 parts.append("<h2>MOOD-ы (биомы)</h2>")
 for i, s in enumerate(MOODS):
     parts.append(row(f"moods/mood_{i}.wav", s))
+
+parts.append("<h2>FINGER — банки паттернов</h2><p class='dim'>LOFI · 8BIT · SYNTH (night drive) · CINEMA (север). "
+             "Каждый из 16 паттернов: два такта на движках по умолчанию (deck_test fingerbank out/fingerbanks).</p>")
+fb = os.path.join(out, "fingerbanks")
+if os.path.isdir(fb):
+    for d in sorted(os.listdir(fb), key=lambda n: (["LOFI", "8BIT", "SYNTH", "CINEMA"].index(n.split("_")[0]) if n.split("_")[0] in ["LOFI", "8BIT", "SYNTH", "CINEMA"] else 9, n)):
+        if os.path.isdir(os.path.join(fb, d)):
+            parts.append(f"<details><summary><b>{html.escape(d.replace('_', ' '))}</b></summary>")
+            for f in sorted(os.listdir(os.path.join(fb, d))):
+                if f.endswith(".wav"):
+                    parts.append(row(f"fingerbanks/{d}/{f}", f"паттерн {int(f[1:3])}", "заливка/брейк" if int(f[1:3]) >= 14 else ""))
+            parts.append("</details>")
 
 page = f"""<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

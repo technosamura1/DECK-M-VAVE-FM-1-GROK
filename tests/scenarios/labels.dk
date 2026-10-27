@@ -1,0 +1,42 @@
+# the preset's label, the block first: "SYNTHWAVE - 909 TECHNO" in the popup and in the SOUND page (the TRACKS rows keep the name only: 54 px)
+wait 300
+press HOME
+tapkey b4
+release HOME
+wait 2500
+press HOME
+tap FX
+release HOME
+press HOME
+tap FX
+release HOME
+wait 50
+press HOME
+tapkey w10
+release HOME
+wait 500
+expect blk 2
+shot label_popup_synthwave.png
+wait 1500
+tap FX
+wait 800
+shot label_sound_synthwave.png
+press HOME
+tap SEL
+release HOME
+press HOME
+tapkey w8
+release HOME
+wait 500
+expect blk 1
+shot label_popup_8bit.png
+# TRACKS: the short block green (AMB 8BIT SYN CINE), the name white
+trkset 1 0 0 0
+trkset 2 1 1 1
+trkset 3 2 2 0
+trkset 4 3 2 3
+trkset 5 5 2 2
+trkset 6 4 3 5
+page 11
+wait 600
+shot label_tracks.png

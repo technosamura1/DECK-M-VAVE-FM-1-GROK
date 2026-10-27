@@ -1,0 +1,123 @@
+# a button held with a key or a knob is a combo: on release its own tap (its page, the EDIT list) does not follow
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+press HOME
+tapkey b0
+release HOME
+wait 100
+tap FX
+wait 200
+expect page 2
+# every button: held + a white key, released: the page stays
+press EDIT
+tapkey w6
+release EDIT
+wait 100
+expect page 2
+press LFO
+tapkey w2
+release LFO
+wait 100
+expect page 2
+press SAVE
+tapkey w6
+release SAVE
+wait 100
+expect page 2
+press ARP
+tapkey w3
+release ARP
+wait 100
+expect page 2
+press GLO
+tapkey w3
+release GLO
+wait 100
+expect page 2
+press ENV
+tapkey w2
+release ENV
+wait 100
+expect page 2
+press HOME
+tapkey w2
+release HOME
+wait 100
+expect page 2
+# held + a knob
+press EDIT
+turn K1 1
+release EDIT
+wait 100
+expect page 2
+press LFO
+turn K2 1
+release LFO
+wait 100
+expect page 2
+press SAVE
+turn K1 1
+release SAVE
+wait 100
+expect page 2
+press GLO
+turn K1 1
+release GLO
+wait 100
+expect page 2
+press ENV
+turn K1 1
+release ENV
+wait 100
+expect page 2
+press ARP
+turn K1 1
+release ARP
+wait 100
+expect page 2
+press HOME
+turn K1 1
+release HOME
+wait 100
+expect page 2
+# on TRACKS: EDIT + a white key must not open the EDIT list (the list is for a tap)
+page 11
+wait 200
+expect layview 0
+press EDIT
+tapkey w6
+release EDIT
+wait 100
+expect layview 0
+press EDIT
+turn SELECT 1
+release EDIT
+wait 100
+expect layview 0
+expect page 11
+shot combo_tracks.png
+tap EDIT
+wait 100
+expect layview 1
+tap EDIT
+wait 100
+expect layview 0
+# still the plain taps work: a tap on EDIT, FX, GLO changes the page
+tap FX
+wait 100
+expect page 2
+tap GLO
+wait 100
+expect page 9
+tap FX
+wait 100
+expect page 2
+# hold EDIT without a combo is still UNDO; the hint still shows
+press EDIT
+wait 900
+release EDIT
+wait 100
+expect page 2

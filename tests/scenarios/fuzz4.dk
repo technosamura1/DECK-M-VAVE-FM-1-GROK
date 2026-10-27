@@ -1,0 +1,7221 @@
+# FUZZ seed 4, 700 events (tools/gen_fuzz.py): random buttons, holds, keys and knobs on every page; the song's invariants hold
+wait 300
+demo
+wait 100
+tap PLAY
+wait 400
+tap FX
+press REC
+turn K4 1 20
+wait 20
+turn K1 -6 60
+wait 250
+wait 50
+release REC
+wait 20
+press REC
+wait 2800
+release REC
+press FX
+turn PRESET 2 60
+wait 300
+wait 1200
+release FX
+wait 60
+press REC
+turn K2 -3 60
+wait 90
+turn K1 3 60
+wait 20
+turn K3 3 60
+wait 250
+wait 2700
+release REC
+wait 400
+turn K2 -4 60
+press ARP
+tapkey w0
+release ARP
+tap OCT-
+wait 20
+press REC
+turn K2 -6 60
+wait 20
+turn K4 -1 20
+wait 90
+turn K4 6 60
+wait 250
+turn K2 -1 20
+wait 20
+turn K2 -1 20
+wait 20
+turn K3 -3 60
+wait 90
+turn K1 -6 60
+wait 250
+wait 1100
+release REC
+wait 400
+turn K3 4 60
+press REC
+turn K4 -1 20
+wait 90
+turn K4 3 20
+wait 90
+turn K1 -1 20
+wait 90
+wait 1100
+release REC
+wait 400
+key w4 down 97
+wait 20
+key w15 up
+wait 60
+press REC
+turn K1 3 60
+wait 90
+turn K2 1 20
+wait 20
+wait 2700
+release REC
+wait 20
+turn K4 -4 60
+press ENV
+wait 700
+tapkey w4
+release ENV
+press REC
+turn K4 -1 20
+wait 90
+turn K1 -1 20
+wait 250
+turn K4 6 20
+wait 90
+wait 2700
+release REC
+wait 20
+press REC
+turn K2 6 60
+wait 90
+turn K4 1 20
+wait 90
+turn K2 -6 60
+wait 250
+turn K2 -1 20
+wait 20
+turn K4 3 60
+wait 250
+wait 2700
+release REC
+wait 20
+tap LFO
+turn SELECT 1
+key w6 down 40
+wait 400
+key w10 up
+wait 60
+tap ARP
+wait 60
+press REC
+turn K1 6 20
+wait 90
+turn K3 3 20
+wait 20
+wait 50
+release REC
+wait 400
+turn SELECT 2
+tap HOME
+wait 5
+press REC
+turn K3 3 60
+wait 90
+turn K4 -6 20
+wait 250
+turn K3 1 60
+wait 20
+turn K2 -1 20
+wait 20
+turn K2 -1 60
+wait 90
+turn K3 3 20
+wait 250
+wait 1100
+release REC
+wait 20
+press REC
+turn K2 6 20
+wait 250
+turn K1 3 60
+wait 250
+turn K4 3 60
+wait 250
+turn K4 3 60
+wait 90
+turn K2 -1 60
+wait 250
+turn K3 -3 60
+wait 20
+turn K2 6 20
+wait 90
+turn K3 -3 60
+wait 250
+wait 50
+release REC
+wait 20
+turn K2 4 60
+press EDIT
+wait 900
+release EDIT
+press ENV
+wait 700
+tapkey w1
+release ENV
+press REC
+turn ALGO 5 60
+wait 300
+wait 2700
+release REC
+wait 60
+press FX
+wait 50
+wait 30
+tapkey w4
+wait 30
+tapkey w7
+wait 300
+tapkey w4
+wait 120
+wait 100
+release FX
+wait 20
+press REC
+turn K4 6 60
+wait 90
+turn K4 3 20
+wait 20
+turn K1 1 60
+wait 250
+turn K3 -6 60
+wait 90
+turn K2 6 60
+wait 250
+turn K1 -3 20
+wait 20
+wait 50
+release REC
+wait 20
+turn K3 -4 60
+press ARP
+tapkey w0
+release ARP
+press ARP
+wait 50
+wait 120
+wait 50
+wait 30
+wait 400
+release ARP
+wait 60
+press REC
+turn K3 1 20
+wait 90
+turn K2 -3 60
+wait 250
+turn K4 3 60
+wait 90
+wait 2700
+release REC
+wait 20
+turn K1 4 60
+turn SELECT -1
+press ARP
+tapkey w1
+release ARP
+key w15 down 111
+wait 400
+key w5 up
+wait 20
+wait 800
+wait 20
+press LFO
+wait 50
+wait 120
+wait 50
+wait 30
+wait 50
+wait 120
+tapkey w3
+wait 30
+wait 100
+release LFO
+wait 60
+press REC
+turn K3 -6 20
+wait 250
+turn K1 1 20
+wait 20
+turn K2 6 20
+wait 90
+turn K2 6 60
+wait 20
+turn K1 -6 20
+wait 250
+wait 50
+release REC
+wait 20
+turn K2 -4 60
+key w1 down 42
+wait 100
+key w15 up
+wait 5
+tap SEQ
+wait 20
+key w9 down 120
+wait 20
+key w13 up
+wait 20
+press REC
+turn K4 1 60
+wait 90
+turn K4 6 60
+wait 90
+wait 300
+release REC
+wait 400
+turn K1 -4 60
+wait 50
+wait 60
+press REC
+turn K3 6 20
+wait 250
+turn K4 -6 60
+wait 20
+turn K4 3 20
+wait 20
+wait 50
+release REC
+wait 20
+wait 5
+wait 5
+tap EDIT
+wait 5
+key w10 down 114
+wait 400
+key w11 up
+wait 5
+press REC
+turn K1 -6 20
+wait 250
+turn K1 6 60
+wait 250
+turn K4 -6 20
+wait 20
+wait 2700
+release REC
+wait 400
+turn K4 -4 60
+turn SELECT -1
+wait 200
+wait 20
+press REC
+turn K1 -3 20
+wait 90
+turn K2 3 20
+wait 20
+turn K1 -6 20
+wait 90
+turn K3 3 60
+wait 20
+turn K3 6 60
+wait 20
+turn K2 1 60
+wait 90
+turn K3 -6 60
+wait 250
+wait 50
+release REC
+wait 400
+turn K3 4 60
+turn SELECT -1
+key w10 down 96
+wait 20
+key w0 up
+wait 20
+press REC
+turn K2 3 20
+wait 20
+turn K2 3 60
+wait 20
+turn K4 6 60
+wait 250
+turn K3 -3 60
+wait 250
+turn K3 -1 60
+wait 250
+turn K1 3 20
+wait 90
+turn K2 1 60
+wait 20
+turn K1 6 20
+wait 20
+wait 300
+release REC
+wait 20
+press EDIT
+wait 900
+release EDIT
+press REC
+turn K1 -1 60
+wait 90
+turn K2 6 60
+wait 90
+turn K1 -3 60
+wait 90
+turn K1 -6 60
+wait 250
+turn K3 -6 20
+wait 90
+turn K1 1 20
+wait 90
+wait 300
+release REC
+wait 20
+turn K1 -4 60
+tap FX
+expect inv 0
+press REC
+turn K2 3 20
+wait 250
+turn K1 -6 20
+wait 90
+turn K2 -6 60
+wait 250
+wait 1100
+release REC
+wait 20
+tap FX
+press ARP
+tapkey w0
+release ARP
+press REC
+turn K2 3 60
+wait 250
+turn K4 -3 60
+wait 20
+turn K4 6 20
+wait 250
+turn K2 -1 60
+wait 90
+wait 300
+release REC
+wait 400
+press REC
+turn K2 -1 20
+wait 20
+turn K4 -6 60
+wait 20
+wait 50
+release REC
+wait 20
+tap OCT-
+wait 20
+press REC
+turn K3 -6 20
+wait 20
+turn K1 1 20
+wait 90
+wait 2700
+release REC
+wait 20
+press ENV
+wait 700
+tapkey w5
+release ENV
+press REC
+turn K4 -1 60
+wait 250
+turn K1 1 20
+wait 20
+turn K4 1 20
+wait 20
+wait 50
+release REC
+wait 20
+turn K4 4 60
+press REC
+tap SEQ
+wait 120
+turn ALGO -2 60
+wait 120
+wait 100
+release REC
+wait 60
+press ARP
+tapkey w2
+wait 30
+tapkey w6
+wait 120
+turn K2 -5 60
+wait 300
+wait 50
+wait 300
+tapkey w2
+wait 120
+wait 400
+release ARP
+wait 20
+press REC
+turn K4 3 20
+wait 90
+turn K4 6 60
+wait 90
+turn K1 6 60
+wait 90
+turn K2 6 20
+wait 20
+turn K4 6 60
+wait 20
+turn K1 -6 20
+wait 90
+wait 1100
+release REC
+wait 400
+tap FX
+press ARP
+tapkey w1
+release ARP
+tap SEL
+wait 60
+key w5 down 45
+wait 20
+key w6 up
+wait 60
+tap LFO
+wait 5
+press REC
+turn K3 -1 60
+wait 250
+turn K2 6 60
+wait 250
+turn K1 3 60
+wait 90
+turn K1 -6 60
+wait 250
+page 11
+tap EDIT
+tapkey w12
+tapkey w11
+wait 300
+release REC
+wait 20
+turn K4 4 60
+tap FX
+press REC
+tapkey w2
+wait 300
+wait 2700
+release REC
+wait 20
+press REC
+turn K4 -3 60
+wait 90
+turn K1 -1 60
+wait 250
+turn K3 6 60
+wait 250
+turn K1 -3 20
+wait 20
+turn K4 6 20
+wait 250
+turn K2 3 20
+wait 250
+wait 50
+release REC
+wait 400
+turn K4 -4 60
+turn SELECT 1
+key w8 down 87
+wait 100
+key w0 up
+wait 5
+press REC
+turn K2 6 60
+wait 250
+turn K3 6 20
+wait 90
+turn K2 -3 20
+wait 90
+turn K1 -3 20
+wait 250
+turn K4 3 60
+wait 20
+turn K2 -1 60
+wait 250
+wait 1100
+release REC
+wait 20
+press LFO
+tapkey w1
+wait 120
+wait 50
+wait 30
+wait 50
+wait 120
+tapkey w0
+wait 30
+wait 50
+wait 30
+wait 400
+release LFO
+wait 20
+tap ARP
+wait 20
+press REC
+turn K4 -3 20
+wait 250
+turn K1 3 20
+wait 250
+turn K1 3 60
+wait 90
+turn K3 -6 20
+wait 90
+page 11
+tap EDIT
+tapkey w13
+tapkey w12
+wait 2700
+release REC
+wait 400
+turn K4 4 60
+turn SELECT 2
+expect inv 0
+tap ARP
+wait 60
+press REC
+turn K1 -3 20
+wait 90
+turn K2 -6 60
+wait 250
+turn K1 6 60
+wait 250
+turn K2 -6 60
+wait 90
+turn K3 1 20
+wait 20
+turn K1 -3 60
+wait 90
+turn K4 -6 60
+wait 90
+turn K4 -3 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K2 4 60
+press REC
+turn K1 1 60
+wait 90
+turn K4 3 20
+wait 250
+turn K4 3 20
+wait 90
+turn K3 -1 20
+wait 90
+turn K2 -1 60
+wait 90
+turn K4 3 60
+wait 20
+turn K3 3 60
+wait 90
+wait 1100
+release REC
+wait 20
+turn K3 -4 60
+key w12 down 48
+wait 100
+key w9 up
+wait 20
+tap EDIT
+wait 20
+wait 50
+wait 20
+press REC
+turn K2 -6 60
+wait 250
+turn K1 -3 60
+wait 90
+turn K3 -1 20
+wait 20
+turn K1 1 60
+wait 20
+turn K3 6 60
+wait 20
+wait 50
+release REC
+wait 400
+tap SEQ
+wait 20
+press REC
+turn K2 -3 20
+wait 250
+turn K4 -3 60
+wait 20
+turn K1 -1 20
+wait 250
+turn K2 3 60
+wait 20
+turn K2 -1 60
+wait 250
+turn K1 -6 60
+wait 250
+turn K3 -3 60
+wait 20
+turn K3 6 20
+wait 250
+wait 50
+release REC
+wait 400
+turn K2 -4 60
+press HOME
+turn PRESET 5 60
+wait 300
+wait 50
+wait 120
+wait 50
+wait 30
+turn K2 5 60
+wait 300
+wait 50
+wait 300
+wait 100
+release HOME
+wait 60
+press REC
+turn K4 6 20
+wait 90
+turn K4 1 60
+wait 250
+turn K4 -1 20
+wait 250
+turn K2 6 20
+wait 90
+turn K3 3 60
+wait 90
+turn K1 -1 20
+wait 90
+turn K2 3 60
+wait 90
+turn K1 -3 60
+wait 90
+wait 2700
+release REC
+wait 20
+turn K1 -4 60
+wait 50
+wait 5
+press REC
+turn K3 -3 60
+wait 20
+turn K1 1 60
+wait 90
+turn K3 3 60
+wait 20
+page 11
+tap EDIT
+tapkey w12
+tapkey w12
+wait 2700
+release REC
+wait 400
+turn K3 -4 60
+tap SEQ
+press REC
+turn K3 -3 60
+wait 20
+turn K2 3 20
+wait 250
+turn K1 3 60
+wait 90
+wait 2700
+release REC
+wait 20
+press REC
+turn K1 1 60
+wait 20
+turn K1 -3 20
+wait 90
+turn K4 -1 20
+wait 90
+wait 300
+release REC
+wait 400
+turn K4 -4 60
+press REC
+turn K3 6 20
+wait 90
+turn K1 -1 60
+wait 250
+turn K4 -1 20
+wait 250
+wait 1100
+release REC
+wait 400
+turn K1 4 60
+press REC
+wait 1200
+release REC
+press REC
+turn K3 -1 20
+wait 250
+turn K4 -3 60
+wait 90
+turn K4 3 20
+wait 20
+turn K4 -6 20
+wait 90
+turn K2 3 20
+wait 250
+wait 300
+release REC
+wait 400
+press EDIT
+wait 900
+release EDIT
+tap SEL
+wait 60
+tap LFO
+wait 20
+press REC
+turn K2 -1 20
+wait 250
+turn K4 -6 60
+wait 250
+turn K3 1 20
+wait 90
+turn K2 3 60
+wait 250
+turn K4 3 20
+wait 250
+turn K2 -1 60
+wait 250
+turn K4 3 20
+wait 20
+page 11
+tap EDIT
+tapkey w11
+tapkey w13
+wait 1100
+release REC
+wait 20
+expect inv 0
+press REC
+turn K4 3 60
+wait 20
+turn K3 -3 60
+wait 250
+turn K4 -3 20
+wait 20
+turn K1 1 20
+wait 90
+turn K3 -1 20
+wait 20
+wait 50
+release REC
+wait 20
+press REC
+turn K4 -3 60
+wait 250
+turn K3 -1 60
+wait 250
+turn K4 1 60
+wait 20
+turn K2 -6 20
+wait 90
+turn K2 -1 60
+wait 20
+turn K4 -6 60
+wait 250
+turn K4 6 20
+wait 250
+turn K4 3 60
+wait 250
+wait 50
+release REC
+wait 400
+tap FX
+press REC
+turn K3 1 60
+wait 20
+turn K1 6 20
+wait 20
+turn K2 -1 20
+wait 20
+turn K4 3 20
+wait 90
+turn K3 -1 20
+wait 250
+turn K1 6 20
+wait 250
+wait 50
+release REC
+wait 20
+turn K2 -4 60
+wait 800
+wait 20
+press REC
+turn K4 -1 60
+wait 250
+turn K1 -3 20
+wait 250
+turn K2 -1 20
+wait 250
+wait 300
+release REC
+wait 20
+tap LFO
+key w4 down 82
+wait 20
+key w13 up
+wait 5
+wait 200
+wait 20
+press REC
+turn K1 6 20
+wait 250
+turn K4 -6 20
+wait 250
+turn K2 -1 20
+wait 20
+turn K1 -3 20
+wait 90
+turn K1 -1 60
+wait 90
+turn K4 1 20
+wait 90
+turn K4 6 20
+wait 90
+turn K2 -3 20
+wait 250
+wait 2700
+release REC
+wait 20
+press REC
+turn K4 -3 20
+wait 20
+turn K3 -1 60
+wait 250
+wait 1100
+release REC
+wait 400
+tap FX
+turn SELECT 2
+press ARP
+tapkey w3
+release ARP
+tap PLAY
+wait 20
+press REC
+turn ALGO -5 60
+wait 300
+tap FX
+wait 30
+tapkey w3
+wait 120
+wait 400
+release REC
+wait 20
+wait 200
+wait 60
+press REC
+turn K1 -3 60
+wait 20
+turn K4 -6 60
+wait 250
+turn K1 6 60
+wait 90
+turn K4 -3 20
+wait 20
+wait 1100
+release REC
+wait 400
+press ENV
+wait 700
+tapkey w6
+release ENV
+press REC
+turn K2 3 20
+wait 20
+turn K4 -3 60
+wait 20
+turn K1 -3 20
+wait 250
+turn K3 1 60
+wait 20
+wait 1100
+release REC
+wait 20
+press ARP
+tapkey w2
+release ARP
+wait 50
+wait 60
+press LFO
+wait 50
+wait 30
+wait 1200
+release LFO
+wait 60
+wait 200
+wait 60
+press GLO
+wait 400
+release GLO
+wait 20
+press REC
+turn K4 -6 20
+wait 250
+turn K2 -6 20
+wait 250
+turn K3 1 20
+wait 250
+turn K3 -1 20
+wait 90
+turn K2 6 60
+wait 20
+wait 300
+release REC
+wait 20
+tap FX
+tap FX
+wait 60
+press REC
+tapkey w3
+wait 120
+tap FX
+wait 120
+tapkey w4
+wait 30
+wait 2700
+release REC
+wait 20
+press REC
+turn K1 1 20
+wait 20
+turn K3 1 20
+wait 250
+turn K3 6 60
+wait 20
+wait 1100
+release REC
+wait 400
+turn K2 4 60
+tap PLAY
+wait 20
+press GLO
+turn K1 2 60
+wait 120
+turn SELECT 2 60
+wait 120
+wait 1200
+release GLO
+wait 5
+tap SEQ
+wait 60
+press REC
+turn K3 3 20
+wait 20
+turn K2 -1 60
+wait 250
+turn K3 -6 20
+wait 20
+turn K1 -6 60
+wait 250
+turn K1 -3 60
+wait 90
+wait 300
+release REC
+wait 20
+press REC
+turn K2 -1 60
+wait 250
+turn K3 6 20
+wait 20
+turn K2 3 60
+wait 90
+turn K3 1 60
+wait 20
+turn K4 -3 60
+wait 20
+turn K4 -1 20
+wait 20
+turn K4 6 60
+wait 90
+wait 2700
+release REC
+wait 400
+turn K4 -4 60
+press EDIT
+turn PRESET -5 60
+wait 300
+tapkey w4
+wait 300
+wait 400
+release EDIT
+wait 5
+press REC
+tap EDIT
+wait 120
+tapkey w7
+wait 300
+tap FX
+wait 30
+tapkey w5
+wait 300
+wait 100
+release REC
+wait 5
+tap ARP
+wait 20
+press REC
+turn K1 6 20
+wait 250
+turn K1 -6 60
+wait 250
+turn K3 -1 20
+wait 20
+wait 2700
+release REC
+wait 400
+turn K3 -4 60
+press EDIT
+wait 900
+release EDIT
+press REC
+wait 1200
+release REC
+wait 50
+wait 20
+press REC
+turn K2 6 20
+wait 90
+turn K1 3 60
+wait 250
+turn K3 -6 20
+wait 250
+turn K4 -3 60
+wait 90
+wait 300
+release REC
+wait 400
+tap FX
+press ARP
+tapkey w1
+release ARP
+tap SEQ
+wait 60
+tap HOME
+wait 60
+press REC
+turn K3 -3 60
+wait 250
+turn K1 -1 60
+wait 90
+turn K3 -6 60
+wait 90
+turn K4 -3 20
+wait 90
+turn K2 3 20
+wait 20
+turn K2 -3 20
+wait 250
+turn K1 -6 20
+wait 20
+turn K3 3 20
+wait 90
+wait 300
+release REC
+wait 20
+press REC
+turn K4 -6 20
+wait 90
+turn K4 -1 60
+wait 250
+turn K4 -1 60
+wait 20
+turn K1 -1 60
+wait 20
+wait 50
+release REC
+wait 20
+tap LFO
+press REC
+turn K1 6 20
+wait 90
+turn K1 6 20
+wait 20
+turn K4 3 60
+wait 20
+wait 50
+release REC
+wait 400
+tap FX
+turn SELECT 1
+press ARP
+turn SELECT 5 60
+wait 300
+wait 2700
+release ARP
+wait 5
+press REC
+turn K2 6 60
+wait 250
+turn K2 6 20
+wait 250
+turn K1 -1 60
+wait 20
+page 11
+tap EDIT
+tapkey w12
+tapkey w13
+wait 50
+release REC
+wait 400
+expect inv 0
+press REC
+turn K4 -1 20
+wait 90
+turn K1 -6 20
+wait 20
+turn K1 6 60
+wait 250
+turn K3 1 60
+wait 90
+turn K4 6 60
+wait 250
+turn K2 1 60
+wait 250
+wait 2700
+release REC
+wait 400
+turn K3 4 60
+tap LFO
+turn SELECT 2
+press REC
+turn K2 3 60
+wait 250
+turn K1 -1 20
+wait 90
+wait 50
+release REC
+wait 400
+press REC
+turn K4 6 20
+wait 250
+turn K1 -3 20
+wait 20
+turn K2 1 20
+wait 250
+turn K4 1 20
+wait 90
+turn K3 3 60
+wait 250
+turn K1 -1 60
+wait 20
+turn K1 1 60
+wait 90
+wait 1100
+release REC
+wait 400
+turn SELECT 1
+press REC
+turn K4 -6 60
+wait 90
+turn K2 -1 20
+wait 20
+wait 2700
+release REC
+wait 20
+press REC
+turn K2 3 20
+wait 90
+turn K2 1 60
+wait 90
+wait 1100
+release REC
+wait 20
+turn SELECT 1
+press REC
+turn K3 1 60
+wait 250
+turn K3 3 20
+wait 20
+turn K2 -3 20
+wait 90
+turn K4 6 60
+wait 250
+turn K2 6 20
+wait 90
+turn K1 1 60
+wait 20
+turn K1 -1 20
+wait 250
+wait 50
+release REC
+wait 20
+turn K3 -4 60
+press REC
+turn K2 -1 20
+wait 20
+turn K2 1 20
+wait 90
+turn K3 1 60
+wait 250
+turn K1 1 60
+wait 250
+turn K3 3 20
+wait 90
+turn K4 1 20
+wait 250
+turn K3 -6 60
+wait 250
+wait 300
+release REC
+wait 20
+tap ARP
+wait 5
+press REC
+turn K4 3 20
+wait 90
+turn K4 6 60
+wait 250
+turn K2 3 20
+wait 20
+turn K3 -6 60
+wait 250
+turn K2 1 20
+wait 250
+turn K2 6 20
+wait 250
+turn K1 3 60
+wait 250
+turn K1 6 20
+wait 20
+wait 2700
+release REC
+wait 20
+press REC
+turn K4 3 20
+wait 90
+turn K3 1 60
+wait 250
+turn K3 3 60
+wait 20
+turn K2 3 60
+wait 90
+turn K2 1 20
+wait 250
+turn K3 6 20
+wait 20
+wait 1100
+release REC
+wait 400
+press REC
+turn K2 -3 20
+wait 20
+turn K4 -6 20
+wait 20
+turn K3 1 60
+wait 250
+turn K1 6 60
+wait 250
+wait 50
+release REC
+wait 400
+turn K1 4 60
+key w8 down 42
+wait 100
+key w2 up
+wait 5
+tap REC
+wait 20
+tap REC
+wait 20
+press REC
+turn K3 -1 20
+wait 20
+turn K4 1 60
+wait 20
+turn K1 -1 60
+wait 90
+turn K2 1 60
+wait 250
+turn K4 -6 20
+wait 20
+wait 2700
+release REC
+wait 400
+turn SELECT -1
+wait 2000
+wait 5
+press REC
+turn K2 -1 20
+wait 90
+turn K2 3 20
+wait 250
+turn K4 6 20
+wait 20
+turn K1 -6 60
+wait 90
+turn K4 1 60
+wait 90
+turn K1 -1 60
+wait 20
+turn K3 3 60
+wait 20
+wait 2700
+release REC
+wait 20
+turn K1 -4 60
+press REC
+turn K2 2 60
+wait 120
+tapkey w0
+wait 30
+tapkey w3
+wait 300
+wait 2700
+release REC
+wait 60
+press REC
+turn K1 3 20
+wait 20
+turn K1 6 60
+wait 90
+turn K2 -1 20
+wait 250
+turn K2 1 60
+wait 250
+turn K1 6 20
+wait 250
+turn K3 1 60
+wait 90
+wait 1100
+release REC
+wait 20
+tap SEQ
+press ARP
+tapkey w3
+release ARP
+tap SEL
+wait 5
+press REC
+turn K3 -1 20
+wait 20
+turn K2 -6 60
+wait 20
+wait 50
+release REC
+wait 20
+turn K4 4 60
+key w0 down 42
+wait 400
+key w8 up
+wait 20
+tap OCT-
+wait 60
+press HOME
+tapkey w5
+wait 120
+tapkey w3
+wait 30
+turn K3 2 60
+wait 30
+wait 400
+release HOME
+wait 20
+press REC
+turn K3 6 20
+wait 250
+turn K2 3 60
+wait 20
+turn K2 -6 20
+wait 90
+turn K2 -1 20
+wait 20
+turn K3 -1 20
+wait 20
+turn K3 6 20
+wait 250
+wait 300
+release REC
+wait 20
+wait 800
+wait 60
+press REC
+turn K2 -1 60
+wait 20
+turn K1 -3 20
+wait 20
+turn K2 -1 20
+wait 250
+turn K3 1 60
+wait 90
+wait 300
+release REC
+wait 400
+turn SELECT 2
+wait 800
+wait 20
+press LFO
+turn SELECT 5 60
+wait 120
+tapkey w5
+wait 120
+turn K4 -5 60
+wait 120
+tapkey w1
+wait 120
+wait 100
+release LFO
+wait 20
+press EDIT
+turn K4 2 60
+wait 120
+tapkey w2
+wait 30
+tapkey w3
+wait 300
+turn K2 -2 60
+wait 120
+wait 50
+wait 30
+wait 1200
+release EDIT
+wait 20
+press REC
+tap EDIT
+wait 30
+tap EDIT
+wait 120
+turn K2 2 60
+wait 300
+turn K4 -2 60
+wait 30
+wait 100
+release REC
+wait 5
+press LFO
+turn SELECT -2 60
+wait 120
+tapkey w3
+wait 30
+turn K3 -5 60
+wait 120
+wait 100
+release LFO
+wait 20
+key w1 down 101
+wait 400
+key w12 up
+wait 5
+key w1 down 34
+wait 400
+key w5 up
+wait 20
+press REC
+turn K4 1 20
+wait 250
+turn K2 3 60
+wait 250
+turn K4 -1 20
+wait 250
+turn K2 -3 20
+wait 20
+turn K3 -3 60
+wait 20
+turn K4 -1 20
+wait 250
+wait 300
+release REC
+wait 20
+tap LFO
+press REC
+turn K1 6 60
+wait 250
+turn K3 -6 20
+wait 250
+page 11
+tap EDIT
+tapkey w11
+tapkey w12
+wait 1100
+release REC
+wait 400
+turn K1 4 60
+key w13 down 20
+wait 20
+key w4 up
+wait 20
+press LFO
+turn K3 2 60
+wait 30
+wait 50
+wait 300
+tapkey w7
+wait 300
+wait 50
+wait 30
+wait 400
+release LFO
+wait 60
+tap SEL
+wait 60
+tap HOME
+wait 60
+expect inv 0
+expect voices <25
+press REC
+turn K3 -3 20
+wait 20
+turn K4 1 20
+wait 20
+wait 2700
+release REC
+wait 20
+press ARP
+tapkey w7
+release ARP
+wait 2000
+wait 20
+press REC
+turn K3 -3 20
+wait 90
+turn K1 3 20
+wait 250
+turn K2 -6 60
+wait 20
+turn K4 -6 20
+wait 90
+wait 2700
+release REC
+wait 20
+turn K2 -4 60
+tap ENV
+wait 60
+press GLO
+turn K1 -5 60
+wait 120
+wait 400
+release GLO
+wait 5
+tap PLAY
+wait 20
+press REC
+turn K2 3 20
+wait 250
+turn K1 -1 60
+wait 20
+turn K4 -6 20
+wait 250
+turn K1 -1 20
+wait 90
+turn K3 6 60
+wait 250
+turn K4 -3 60
+wait 250
+turn K2 6 20
+wait 90
+turn K3 -6 20
+wait 250
+wait 1100
+release REC
+wait 400
+press ENV
+wait 700
+tapkey w5
+release ENV
+press REC
+turn K1 -3 20
+wait 20
+turn K1 6 20
+wait 20
+turn K4 6 60
+wait 250
+turn K2 -3 20
+wait 250
+wait 50
+release REC
+wait 20
+turn SELECT 1
+press SEQ
+tapkey w2
+wait 30
+turn K4 5 60
+wait 300
+turn K1 -2 60
+wait 300
+turn K1 -5 60
+wait 30
+wait 2700
+release SEQ
+wait 60
+key w7 down 50
+wait 100
+key w9 up
+wait 5
+press REC
+turn K1 -6 60
+wait 90
+turn K1 -3 60
+wait 250
+page 11
+tap EDIT
+tapkey w11
+tapkey w11
+wait 300
+release REC
+wait 20
+turn K1 4 60
+press REC
+turn K2 1 20
+wait 90
+turn K2 1 20
+wait 90
+turn K3 -1 60
+wait 90
+wait 50
+release REC
+wait 20
+tap OCT-
+wait 20
+press REC
+turn K2 6 60
+wait 90
+turn K2 -1 60
+wait 20
+turn K4 6 20
+wait 90
+turn K2 1 20
+wait 250
+turn K3 3 60
+wait 250
+turn K3 1 20
+wait 250
+turn K4 3 20
+wait 90
+turn K1 3 60
+wait 250
+wait 1100
+release REC
+wait 400
+turn SELECT 1
+press REC
+wait 1200
+release REC
+wait 5
+press FX
+turn PRESET 5 60
+wait 30
+wait 50
+wait 120
+tapkey w7
+wait 300
+wait 2700
+release FX
+wait 5
+press REC
+turn K3 6 60
+wait 20
+turn K2 -6 60
+wait 250
+turn K2 1 60
+wait 250
+turn K3 -3 60
+wait 90
+turn K4 -6 20
+wait 250
+turn K1 1 20
+wait 90
+wait 50
+release REC
+wait 400
+key w1 down 23
+wait 400
+key w10 up
+wait 20
+press REC
+turn K3 -6 20
+wait 20
+turn K4 -6 60
+wait 250
+wait 300
+release REC
+wait 400
+press ARP
+tapkey w0
+release ARP
+press REC
+turn K3 -6 60
+wait 20
+turn K1 6 60
+wait 90
+turn K4 -3 60
+wait 250
+turn K1 -3 20
+wait 250
+wait 2700
+release REC
+wait 20
+expect inv 0
+key w12 down 82
+wait 20
+key w10 up
+wait 20
+press REC
+turn K1 1 60
+wait 20
+turn K3 6 20
+wait 20
+turn K4 -1 20
+wait 90
+turn K1 6 60
+wait 250
+turn K4 -3 20
+wait 20
+turn K4 6 20
+wait 20
+turn K3 -6 20
+wait 250
+wait 1100
+release REC
+wait 20
+press REC
+turn K4 -1 60
+wait 250
+turn K4 -1 60
+wait 250
+turn K1 -3 60
+wait 20
+turn K2 -1 20
+wait 250
+wait 2700
+release REC
+wait 20
+press ENV
+wait 700
+tapkey w6
+release ENV
+press REC
+turn K4 -1 20
+wait 20
+turn K2 1 60
+wait 250
+turn K4 -6 20
+wait 90
+turn K2 -3 20
+wait 90
+turn K4 -6 60
+wait 20
+turn K3 6 60
+wait 250
+turn K3 1 20
+wait 90
+turn K4 -1 60
+wait 90
+wait 50
+release REC
+wait 20
+tap SEQ
+press EDIT
+wait 900
+release EDIT
+tap ENV
+wait 5
+press REC
+turn K4 -3 60
+wait 90
+turn K4 3 20
+wait 20
+turn K4 -1 20
+wait 20
+turn K3 6 20
+wait 250
+turn K4 6 20
+wait 20
+turn K2 6 60
+wait 20
+turn K4 1 20
+wait 90
+turn K2 6 20
+wait 90
+wait 50
+release REC
+wait 400
+turn K4 -4 60
+press REC
+turn K4 3 60
+wait 250
+turn K2 3 60
+wait 250
+turn K1 -1 20
+wait 90
+turn K4 3 60
+wait 20
+turn K4 -3 20
+wait 90
+turn K4 3 20
+wait 250
+turn K3 -6 60
+wait 20
+turn K3 -1 60
+wait 90
+wait 300
+release REC
+wait 20
+press REC
+turn K1 -3 20
+wait 90
+turn K2 -3 20
+wait 90
+wait 50
+release REC
+wait 20
+turn K2 -4 60
+key w9 down 105
+wait 20
+key w1 up
+wait 60
+wait 2000
+wait 20
+press ARP
+turn K2 2 60
+wait 30
+wait 1200
+release ARP
+wait 5
+press REC
+turn K2 6 60
+wait 90
+turn K1 6 60
+wait 20
+turn K4 6 20
+wait 90
+wait 2700
+release REC
+wait 400
+tap LFO
+press REC
+turn K3 3 60
+wait 250
+turn K2 6 60
+wait 90
+turn K3 -6 20
+wait 250
+turn K2 1 20
+wait 20
+wait 1100
+release REC
+wait 400
+turn K1 -4 60
+tap EDIT
+wait 60
+press REC
+turn K1 -3 20
+wait 250
+turn K3 -6 20
+wait 20
+turn K4 6 20
+wait 250
+turn K3 -6 60
+wait 90
+turn K2 3 20
+wait 20
+turn K3 6 60
+wait 90
+wait 50
+release REC
+wait 20
+press REC
+turn K4 -1 60
+wait 250
+turn K2 -1 60
+wait 250
+turn K2 6 20
+wait 90
+turn K2 3 60
+wait 250
+page 11
+tap EDIT
+tapkey w13
+tapkey w13
+wait 300
+release REC
+wait 400
+turn K2 4 60
+press REC
+turn K2 -1 60
+wait 90
+turn K4 -1 60
+wait 20
+turn K1 -1 20
+wait 250
+turn K2 1 60
+wait 20
+turn K1 -1 20
+wait 90
+turn K1 -3 60
+wait 20
+wait 2700
+release REC
+wait 20
+turn K2 4 60
+press REC
+turn K4 -1 60
+wait 250
+turn K2 -1 20
+wait 20
+turn K2 6 60
+wait 90
+turn K3 -1 20
+wait 90
+turn K2 6 60
+wait 90
+page 11
+tap EDIT
+tapkey w13
+tapkey w13
+wait 1100
+release REC
+wait 20
+press ENV
+wait 700
+tapkey w0
+release ENV
+wait 2000
+wait 20
+press REC
+turn K3 6 60
+wait 250
+turn K4 -3 20
+wait 250
+turn K4 6 20
+wait 20
+turn K4 -3 20
+wait 90
+turn K2 3 20
+wait 20
+turn K3 -1 20
+wait 20
+turn K4 -6 60
+wait 90
+turn K1 3 20
+wait 20
+wait 1100
+release REC
+wait 20
+turn K2 -4 60
+expect inv 0
+press REC
+tapkey w2
+wait 300
+wait 2700
+release REC
+wait 5
+key w7 down 28
+wait 100
+key w4 up
+wait 20
+press REC
+turn K3 -3 20
+wait 90
+turn K4 3 60
+wait 90
+turn K3 -6 60
+wait 250
+turn K4 -1 60
+wait 250
+turn K1 -1 60
+wait 20
+wait 2700
+release REC
+wait 20
+press REC
+turn K3 6 20
+wait 250
+turn K1 -1 60
+wait 20
+turn K3 3 60
+wait 90
+turn K4 -6 60
+wait 90
+turn K2 -3 60
+wait 20
+turn K2 -3 20
+wait 90
+turn K1 1 60
+wait 250
+turn K2 1 60
+wait 90
+wait 50
+release REC
+wait 20
+turn K2 4 60
+key w14 down 101
+wait 100
+key w5 up
+wait 20
+tap OCT-
+wait 60
+key w15 down 88
+wait 100
+key w11 up
+wait 5
+wait 2000
+wait 5
+press REC
+turn K2 -1 20
+wait 20
+turn K1 3 20
+wait 90
+wait 2700
+release REC
+wait 400
+tap FX
+tap REC
+wait 20
+key w7 down 63
+wait 100
+key w11 up
+wait 60
+tap SEL
+wait 60
+press REC
+turn K2 6 60
+wait 250
+turn K4 6 60
+wait 20
+turn K1 1 60
+wait 250
+turn K3 3 60
+wait 90
+turn K4 -1 60
+wait 90
+turn K4 -3 60
+wait 20
+wait 2700
+release REC
+wait 400
+tap ENV
+wait 60
+key w11 down 60
+wait 100
+key w13 up
+wait 20
+press REC
+turn K4 1 60
+wait 20
+turn K3 6 20
+wait 20
+turn K4 6 60
+wait 250
+turn K4 6 20
+wait 250
+turn K1 3 20
+wait 20
+wait 2700
+release REC
+wait 20
+turn K3 4 60
+tap OCT+
+wait 20
+press REC
+turn K1 -6 60
+wait 20
+turn K3 3 60
+wait 90
+turn K3 -1 20
+wait 250
+wait 2700
+release REC
+wait 400
+turn K4 -4 60
+turn SELECT -1
+tap HOME
+wait 60
+press REC
+turn K1 -1 60
+wait 250
+turn K2 3 20
+wait 90
+turn K3 -1 20
+wait 90
+turn K3 1 20
+wait 20
+turn K1 -3 20
+wait 250
+turn K4 3 60
+wait 250
+wait 50
+release REC
+wait 400
+expect inv 0
+press REC
+turn K4 6 20
+wait 20
+turn K3 3 60
+wait 250
+turn K2 -6 60
+wait 90
+turn K2 -6 20
+wait 250
+turn K4 -6 20
+wait 20
+turn K1 1 20
+wait 90
+wait 2700
+release REC
+wait 20
+turn K1 4 60
+turn SELECT -1
+press REC
+turn K1 1 60
+wait 90
+turn K4 3 20
+wait 90
+turn K4 3 60
+wait 250
+turn K3 6 20
+wait 20
+turn K1 -1 20
+wait 20
+turn K1 1 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K3 4 60
+tap LFO
+wait 20
+press REC
+turn K3 -1 20
+wait 90
+turn K4 -1 60
+wait 20
+turn K2 -3 60
+wait 90
+wait 50
+release REC
+wait 400
+wait 50
+wait 60
+press REC
+turn K1 3 20
+wait 90
+turn K2 3 20
+wait 20
+turn K1 1 60
+wait 250
+turn K3 -3 20
+wait 20
+turn K4 6 60
+wait 90
+turn K2 -1 60
+wait 250
+turn K1 -6 60
+wait 90
+wait 50
+release REC
+wait 20
+press REC
+turn K1 -6 60
+wait 250
+turn K1 -3 60
+wait 250
+wait 1100
+release REC
+wait 400
+turn K3 -4 60
+tap LFO
+wait 20
+press REC
+turn K1 -6 60
+wait 250
+turn K1 -6 20
+wait 20
+wait 1100
+release REC
+wait 20
+tap SEQ
+press REC
+turn K1 1 60
+wait 20
+turn K4 1 20
+wait 20
+turn K3 6 20
+wait 250
+turn K2 3 20
+wait 250
+wait 300
+release REC
+wait 400
+press REC
+turn K1 -3 60
+wait 90
+turn K4 6 20
+wait 250
+page 11
+tap EDIT
+tapkey w11
+tapkey w13
+wait 2700
+release REC
+wait 400
+turn K2 4 60
+press ARP
+tapkey w5
+release ARP
+press ARP
+wait 100
+release ARP
+wait 20
+key w9 down 72
+wait 20
+key w3 up
+wait 5
+tap SEL
+wait 60
+press REC
+wait 100
+release REC
+wait 60
+press ENV
+tapkey w3
+wait 120
+tapkey w4
+wait 300
+wait 50
+wait 30
+wait 400
+release ENV
+wait 20
+press LFO
+wait 50
+wait 120
+turn ALGO 5 60
+wait 30
+turn SELECT -5 60
+wait 30
+wait 2700
+release LFO
+wait 5
+key w3 down 58
+wait 100
+key w4 up
+wait 60
+tap ARP
+wait 20
+tap SEL
+wait 60
+expect inv 0
+expect voices <25
+key w11 down 73
+wait 100
+key w5 up
+wait 5
+press REC
+turn K1 1 60
+wait 20
+turn K2 1 20
+wait 90
+turn K4 -6 60
+wait 90
+turn K1 1 20
+wait 250
+wait 50
+release REC
+wait 20
+tap SEQ
+turn SELECT 2
+press ARP
+wait 100
+release ARP
+wait 5
+wait 50
+wait 20
+press REC
+turn K2 1 60
+wait 250
+turn K3 -1 20
+wait 250
+turn K1 -6 20
+wait 90
+wait 300
+release REC
+wait 20
+press REC
+turn K4 -1 20
+wait 250
+turn K2 -3 60
+wait 250
+wait 1100
+release REC
+wait 400
+turn K1 -4 60
+tap EDIT
+wait 20
+wait 2000
+wait 5
+press REC
+turn K1 6 60
+wait 20
+turn K3 1 60
+wait 90
+turn K4 3 20
+wait 90
+turn K1 6 60
+wait 250
+turn K4 -3 20
+wait 20
+turn K4 3 60
+wait 90
+wait 1100
+release REC
+wait 20
+tap LFO
+press REC
+turn K3 -3 60
+wait 90
+turn K3 1 60
+wait 20
+wait 300
+release REC
+wait 400
+turn K2 4 60
+press REC
+turn K2 -6 60
+wait 20
+turn K4 3 20
+wait 20
+turn K3 6 60
+wait 90
+turn K1 -3 20
+wait 90
+turn K3 6 60
+wait 20
+wait 300
+release REC
+wait 20
+press REC
+tap FX
+wait 30
+wait 1200
+release REC
+wait 60
+tap FX
+wait 20
+tap OCT+
+wait 5
+press REC
+turn K1 -1 60
+wait 20
+turn K4 -3 60
+wait 90
+turn K1 -1 60
+wait 20
+turn K4 -6 20
+wait 90
+turn K2 -3 60
+wait 250
+turn K2 -1 60
+wait 90
+wait 1100
+release REC
+wait 20
+turn K3 -4 60
+tap SEL
+wait 5
+press REC
+turn K1 3 60
+wait 90
+turn K3 -3 60
+wait 250
+turn K3 -3 60
+wait 20
+turn K3 -6 20
+wait 20
+wait 1100
+release REC
+wait 20
+turn K1 4 60
+tap EDIT
+wait 60
+key w0 down 121
+wait 100
+key w13 up
+wait 20
+tap FX
+wait 5
+press REC
+turn K3 -3 60
+wait 90
+turn K1 6 60
+wait 90
+turn K2 -6 20
+wait 20
+turn K1 1 60
+wait 250
+turn K1 3 20
+wait 250
+turn K2 6 20
+wait 20
+turn K2 1 60
+wait 90
+wait 300
+release REC
+wait 400
+turn K3 -4 60
+tap FX
+press REC
+turn K4 -6 60
+wait 90
+turn K1 -1 20
+wait 90
+turn K2 -1 20
+wait 250
+turn K1 3 60
+wait 90
+turn K3 -6 20
+wait 250
+turn K3 -6 60
+wait 250
+turn K3 3 20
+wait 20
+wait 300
+release REC
+wait 400
+tap SEL
+wait 20
+press LFO
+tapkey w3
+wait 300
+turn K2 -2 60
+wait 300
+tapkey w2
+wait 120
+tapkey w3
+wait 120
+turn K2 -2 60
+wait 300
+wait 2700
+release LFO
+wait 60
+press REC
+turn K2 3 60
+wait 250
+turn K4 -1 60
+wait 20
+turn K1 3 60
+wait 90
+turn K1 -6 20
+wait 20
+turn K3 -6 60
+wait 20
+wait 2700
+release REC
+wait 400
+turn SELECT 2
+tap GLO
+wait 60
+wait 50
+wait 5
+tap ARP
+wait 60
+tap REC
+wait 5
+press REC
+turn K1 6 60
+wait 90
+turn K3 -6 60
+wait 20
+turn K4 3 20
+wait 90
+turn K2 -6 20
+wait 20
+turn K4 6 60
+wait 90
+turn K3 -6 60
+wait 90
+turn K4 -6 20
+wait 20
+turn K4 3 60
+wait 250
+wait 50
+release REC
+wait 400
+turn K1 4 60
+key w8 down 31
+wait 400
+key w12 up
+wait 60
+wait 50
+wait 60
+press REC
+turn K3 -1 60
+wait 90
+turn K4 -3 60
+wait 90
+turn K4 -1 20
+wait 90
+turn K1 6 20
+wait 250
+wait 50
+release REC
+wait 20
+press REC
+turn K4 1 20
+wait 90
+turn K4 -1 60
+wait 20
+turn K2 6 60
+wait 20
+wait 2700
+release REC
+wait 20
+wait 200
+wait 20
+press REC
+turn K3 -1 20
+wait 20
+turn K3 -1 60
+wait 250
+turn K1 -3 60
+wait 250
+turn K3 -1 60
+wait 20
+turn K2 -3 20
+wait 20
+turn K3 6 60
+wait 20
+turn K3 -3 60
+wait 250
+turn K2 6 60
+wait 250
+wait 50
+release REC
+wait 20
+turn SELECT -1
+tap LFO
+wait 20
+tap EDIT
+wait 5
+press REC
+turn K3 -6 60
+wait 90
+turn K4 1 60
+wait 90
+turn K2 -1 20
+wait 20
+turn K2 6 20
+wait 20
+turn K1 3 60
+wait 250
+turn K1 6 20
+wait 20
+turn K2 6 60
+wait 250
+turn K4 6 60
+wait 90
+wait 50
+release REC
+wait 20
+tap FX
+press REC
+wait 2800
+release REC
+tap ARP
+wait 5
+wait 50
+wait 60
+key w0 down 106
+wait 100
+key w8 up
+wait 5
+press REC
+turn K3 6 60
+wait 90
+turn K4 -6 60
+wait 90
+turn K3 -6 20
+wait 20
+wait 1100
+release REC
+wait 20
+turn K2 4 60
+press ARP
+tapkey w2
+release ARP
+press REC
+turn K4 6 20
+wait 90
+turn K4 -6 20
+wait 90
+turn K4 -1 20
+wait 90
+turn K2 1 60
+wait 20
+turn K3 -3 60
+wait 90
+wait 2700
+release REC
+wait 20
+turn K4 4 60
+tap OCT+
+wait 60
+press REC
+turn K1 1 60
+wait 20
+turn K4 6 60
+wait 20
+turn K3 -1 60
+wait 250
+turn K1 6 60
+wait 20
+turn K2 1 60
+wait 90
+turn K4 1 20
+wait 20
+turn K4 3 20
+wait 250
+turn K3 -3 20
+wait 250
+wait 50
+release REC
+wait 400
+turn K4 4 60
+turn SELECT 2
+tap SEQ
+wait 5
+press ARP
+wait 50
+wait 30
+wait 1200
+release ARP
+wait 60
+press REC
+turn K3 -6 20
+wait 20
+turn K2 1 20
+wait 20
+turn K2 6 60
+wait 90
+turn K2 -6 60
+wait 20
+turn K2 6 60
+wait 20
+turn K4 1 60
+wait 90
+turn K3 -6 60
+wait 250
+turn K3 3 20
+wait 20
+wait 2700
+release REC
+wait 400
+tap LFO
+press REC
+turn K4 1 60
+wait 250
+turn K4 -3 60
+wait 90
+turn K1 6 60
+wait 20
+turn K1 3 60
+wait 20
+turn K3 1 20
+wait 20
+turn K4 -6 20
+wait 20
+turn K1 -3 60
+wait 90
+turn K3 1 20
+wait 90
+wait 2700
+release REC
+wait 20
+turn K4 4 60
+key w8 down 30
+wait 100
+key w13 up
+wait 5
+tap REC
+wait 5
+tap SEL
+wait 60
+press REC
+turn K2 6 60
+wait 250
+turn K1 -3 60
+wait 20
+turn K4 -3 60
+wait 90
+turn K3 1 20
+wait 90
+turn K3 1 20
+wait 90
+page 11
+tap EDIT
+tapkey w11
+tapkey w12
+wait 2700
+release REC
+wait 20
+tap LFO
+press REC
+tapkey w4
+wait 300
+tap EDIT
+wait 120
+wait 2700
+release REC
+wait 5
+press REC
+turn K1 -6 60
+wait 20
+turn K2 -1 60
+wait 90
+turn K3 3 60
+wait 20
+turn K4 -1 60
+wait 250
+turn K1 3 60
+wait 90
+turn K3 3 60
+wait 20
+wait 2700
+release REC
+wait 400
+tap HOME
+wait 60
+press REC
+turn K4 1 20
+wait 20
+turn K1 6 60
+wait 20
+turn K4 3 60
+wait 20
+wait 1100
+release REC
+wait 400
+key w4 down 109
+wait 400
+key w3 up
+wait 5
+wait 50
+wait 5
+press REC
+turn K2 1 60
+wait 250
+turn K1 -1 60
+wait 20
+turn K2 -1 60
+wait 90
+turn K1 6 20
+wait 250
+turn K2 -1 60
+wait 250
+turn K2 6 60
+wait 90
+wait 300
+release REC
+wait 20
+press REC
+turn K3 3 60
+wait 250
+turn K1 -3 20
+wait 20
+turn K4 6 60
+wait 20
+turn K1 1 60
+wait 90
+turn K4 3 60
+wait 20
+turn K1 -1 60
+wait 20
+turn K1 6 60
+wait 90
+turn K1 -3 20
+wait 250
+wait 1100
+release REC
+wait 400
+press REC
+turn K1 6 20
+wait 90
+turn K4 3 60
+wait 20
+wait 2700
+release REC
+wait 20
+press REC
+turn K1 -1 60
+wait 20
+turn K2 3 60
+wait 90
+turn K4 -3 20
+wait 20
+turn K4 -3 20
+wait 90
+turn K3 -3 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn SELECT 2
+press REC
+wait 2800
+release REC
+press REC
+turn K1 -3 20
+wait 90
+turn K4 -3 60
+wait 20
+turn K4 -6 20
+wait 20
+turn K2 -3 20
+wait 90
+turn K3 3 20
+wait 90
+wait 300
+release REC
+wait 400
+turn K1 4 60
+press REC
+turn K2 1 20
+wait 20
+turn K4 -6 60
+wait 90
+turn K2 -1 60
+wait 250
+turn K1 -6 20
+wait 20
+turn K4 1 20
+wait 20
+turn K4 -3 20
+wait 90
+wait 1100
+release REC
+wait 20
+press ENV
+wait 700
+tapkey w0
+release ENV
+press REC
+turn K3 -3 20
+wait 90
+turn K3 6 60
+wait 250
+turn K4 6 60
+wait 20
+wait 1100
+release REC
+wait 400
+tap SEQ
+press ARP
+tapkey w7
+release ARP
+press REC
+turn K2 1 60
+wait 90
+turn K3 6 20
+wait 20
+turn K1 1 60
+wait 250
+turn K4 -6 20
+wait 90
+turn K3 3 20
+wait 90
+wait 50
+release REC
+wait 20
+turn K3 4 60
+turn SELECT -1
+press REC
+turn K1 -1 20
+wait 250
+turn K1 -1 20
+wait 20
+wait 1100
+release REC
+wait 20
+turn K2 -4 60
+press ARP
+tapkey w1
+wait 300
+tapkey w5
+wait 30
+wait 100
+release ARP
+wait 20
+press REC
+turn K2 -6 20
+wait 90
+turn K2 -1 20
+wait 250
+turn K4 1 60
+wait 20
+turn K3 -3 20
+wait 90
+turn K3 -6 20
+wait 250
+turn K1 6 60
+wait 20
+turn K3 6 20
+wait 20
+turn K2 3 60
+wait 250
+page 11
+tap EDIT
+tapkey w12
+tapkey w13
+wait 2700
+release REC
+wait 400
+turn K2 4 60
+press REC
+turn K2 -3 60
+wait 250
+turn K1 -1 20
+wait 250
+turn K1 6 20
+wait 90
+turn K3 -1 20
+wait 20
+turn K4 6 20
+wait 250
+turn K4 6 20
+wait 20
+turn K2 1 60
+wait 250
+wait 50
+release REC
+wait 20
+tap LFO
+wait 800
+wait 5
+tap REC
+wait 60
+press ARP
+turn ALGO 2 60
+wait 300
+turn K4 5 60
+wait 120
+turn K1 -2 60
+wait 300
+tapkey w4
+wait 30
+wait 2700
+release ARP
+wait 20
+tap SEQ
+wait 5
+press REC
+turn K3 1 60
+wait 20
+turn K1 -6 60
+wait 20
+turn K1 -6 20
+wait 20
+wait 50
+release REC
+wait 20
+turn SELECT 2
+press EDIT
+wait 900
+release EDIT
+key w12 down 98
+wait 20
+key w5 up
+wait 60
+press LFO
+wait 50
+wait 30
+wait 2700
+release LFO
+wait 20
+press REC
+turn K3 3 20
+wait 20
+turn K4 -3 60
+wait 90
+turn K4 3 20
+wait 90
+turn K3 -3 20
+wait 250
+turn K4 -6 60
+wait 20
+turn K2 6 60
+wait 20
+wait 50
+release REC
+wait 20
+turn K3 -4 60
+tap FX
+expect inv 0
+press REC
+turn K3 -1 60
+wait 250
+turn K1 6 20
+wait 90
+turn K1 6 20
+wait 250
+turn K4 -1 20
+wait 90
+turn K4 1 60
+wait 20
+turn K3 1 60
+wait 250
+turn K1 6 20
+wait 90
+wait 50
+release REC
+wait 400
+turn K4 -4 60
+turn SELECT 1
+tap REC
+wait 60
+press GLO
+tapkey w2
+wait 120
+wait 400
+release GLO
+wait 5
+tap GLO
+wait 5
+press REC
+turn K4 6 60
+wait 90
+turn K2 -1 60
+wait 90
+turn K4 -1 60
+wait 20
+wait 50
+release REC
+wait 20
+turn K1 -4 60
+key w11 down 48
+wait 100
+key w15 up
+wait 20
+press HOME
+turn K1 2 60
+wait 120
+tapkey w4
+wait 300
+turn K3 2 60
+wait 300
+tapkey w4
+wait 120
+wait 100
+release HOME
+wait 20
+press REC
+turn K4 -1 60
+wait 250
+turn K1 -6 20
+wait 250
+turn K1 6 20
+wait 20
+turn K4 6 20
+wait 250
+turn K2 6 60
+wait 250
+wait 50
+release REC
+wait 20
+turn SELECT 2
+press REC
+turn K2 -3 20
+wait 20
+turn K4 -1 20
+wait 250
+wait 300
+release REC
+wait 400
+press ARP
+tapkey w3
+release ARP
+press REC
+turn K1 -1 20
+wait 90
+turn K4 -3 20
+wait 250
+turn K2 -1 60
+wait 250
+turn K4 -6 20
+wait 250
+turn K4 -6 60
+wait 90
+wait 1100
+release REC
+wait 20
+press REC
+turn K1 3 20
+wait 20
+turn K4 -6 60
+wait 20
+turn K4 -1 20
+wait 250
+turn K2 1 20
+wait 20
+turn K4 1 60
+wait 90
+turn K1 3 20
+wait 250
+turn K4 -6 20
+wait 20
+turn K3 -3 60
+wait 20
+wait 1100
+release REC
+wait 400
+wait 5
+wait 60
+press REC
+turn K1 6 20
+wait 250
+turn K2 -6 20
+wait 250
+turn K3 6 20
+wait 20
+turn K1 -1 60
+wait 90
+turn K4 -6 20
+wait 20
+wait 2700
+release REC
+wait 400
+turn K2 -4 60
+press REC
+turn K2 -6 60
+wait 20
+turn K1 -6 20
+wait 90
+turn K3 -6 20
+wait 90
+turn K4 6 20
+wait 20
+turn K2 6 60
+wait 90
+turn K4 -3 60
+wait 90
+turn K4 6 20
+wait 20
+turn K4 -3 60
+wait 90
+wait 1100
+release REC
+wait 400
+turn K4 4 60
+turn SELECT 2
+wait 5
+wait 60
+press REC
+tapkey w2
+wait 120
+turn K1 2 60
+wait 30
+wait 2700
+release REC
+wait 60
+press REC
+turn K4 -1 20
+wait 250
+turn K1 1 60
+wait 90
+wait 300
+release REC
+wait 400
+turn K3 -4 60
+press REC
+turn K1 6 20
+wait 250
+turn K3 -3 20
+wait 250
+turn K3 3 60
+wait 20
+turn K2 1 20
+wait 20
+wait 1100
+release REC
+wait 20
+turn K1 -4 60
+tap PLAY
+wait 60
+wait 2000
+wait 60
+tap SEL
+wait 5
+press FX
+tapkey w6
+wait 120
+turn PRESET -5 60
+wait 300
+wait 100
+release FX
+wait 5
+press REC
+turn K4 -3 60
+wait 90
+turn K1 3 20
+wait 20
+turn K2 3 60
+wait 250
+turn K4 1 60
+wait 250
+wait 2700
+release REC
+wait 400
+press REC
+turn K2 3 20
+wait 250
+turn K4 -6 60
+wait 20
+turn K4 -1 20
+wait 90
+turn K2 -3 60
+wait 250
+turn K1 -1 60
+wait 90
+turn K4 -1 60
+wait 20
+turn K1 -1 20
+wait 90
+wait 1100
+release REC
+wait 400
+tap FX
+press ARP
+tapkey w3
+release ARP
+tap SEL
+wait 20
+press REC
+turn K2 -3 20
+wait 250
+turn K4 -1 20
+wait 250
+turn K3 3 20
+wait 250
+turn K3 -1 60
+wait 90
+turn K3 -1 60
+wait 90
+turn K2 1 20
+wait 90
+turn K4 6 20
+wait 20
+turn K4 -6 60
+wait 90
+wait 1100
+release REC
+wait 20
+tap ARP
+wait 20
+press REC
+turn K4 -3 60
+wait 250
+turn K4 1 60
+wait 90
+turn K1 -1 20
+wait 250
+turn K1 3 20
+wait 90
+turn K2 6 60
+wait 20
+turn K4 -6 20
+wait 90
+turn K4 -3 60
+wait 90
+turn K4 -3 20
+wait 250
+wait 1100
+release REC
+wait 20
+press REC
+turn K2 -6 20
+wait 20
+turn K2 -3 60
+wait 20
+turn K2 1 20
+wait 90
+wait 1100
+release REC
+wait 400
+press REC
+turn K1 -3 20
+wait 250
+turn K1 6 60
+wait 20
+turn K4 6 60
+wait 20
+turn K3 1 20
+wait 250
+turn K3 -6 60
+wait 20
+turn K1 -3 20
+wait 90
+turn K2 -1 20
+wait 250
+wait 2700
+release REC
+wait 20
+turn K3 4 60
+tap FX
+turn SELECT 1
+wait 50
+wait 60
+tap OCT-
+wait 60
+press REC
+turn K4 -1 60
+wait 20
+turn K1 -1 60
+wait 90
+turn K3 -3 60
+wait 250
+turn K3 6 20
+wait 250
+turn K1 3 20
+wait 250
+wait 300
+release REC
+wait 400
+turn K3 4 60
+tap FX
+press REC
+tap SEQ
+wait 300
+tap SEQ
+wait 30
+wait 400
+release REC
+wait 5
+press REC
+turn K1 1 60
+wait 20
+turn K1 -6 60
+wait 90
+turn K3 3 60
+wait 90
+turn K4 -6 60
+wait 90
+turn K4 6 20
+wait 90
+turn K2 -1 20
+wait 250
+turn K3 3 20
+wait 250
+turn K2 -6 60
+wait 20
+wait 50
+release REC
+wait 20
+press REC
+tapkey w2
+wait 300
+tap FX
+wait 300
+turn K2 -2 60
+wait 120
+tap EDIT
+wait 120
+tap SEQ
+wait 300
+wait 100
+release REC
+wait 60
+tap PLAY
+wait 5
+press REC
+turn K4 -6 20
+wait 250
+turn K3 -6 20
+wait 250
+turn K2 -6 20
+wait 90
+turn K1 3 60
+wait 250
+wait 300
+release REC
+wait 20
+turn K1 4 60
+tap FX
+press ARP
+tapkey w0
+release ARP
+press REC
+turn K2 -6 60
+wait 250
+turn K4 -1 60
+wait 90
+turn K3 6 60
+wait 20
+turn K4 -1 20
+wait 90
+turn K1 3 60
+wait 250
+turn K1 -3 20
+wait 90
+turn K2 -6 20
+wait 250
+wait 50
+release REC
+wait 20
+turn K2 4 60
+tap ENV
+wait 60
+press REC
+turn K4 3 20
+wait 20
+turn K4 -6 20
+wait 250
+turn K1 -6 60
+wait 20
+turn K2 6 20
+wait 20
+turn K4 3 60
+wait 20
+turn K2 6 20
+wait 250
+wait 300
+release REC
+wait 400
+press REC
+turn K3 3 20
+wait 250
+turn K4 -6 20
+wait 250
+turn K2 1 60
+wait 90
+page 11
+tap EDIT
+tapkey w13
+tapkey w12
+wait 50
+release REC
+wait 400
+press ENV
+wait 700
+tapkey w7
+release ENV
+press REC
+turn K4 3 20
+wait 250
+turn K3 6 60
+wait 20
+wait 1100
+release REC
+wait 400
+turn K2 4 60
+tap FX
+turn SELECT -1
+press REC
+turn K2 -6 20
+wait 250
+turn K3 6 20
+wait 20
+turn K2 6 20
+wait 90
+turn K4 6 60
+wait 90
+turn K2 -6 60
+wait 20
+wait 50
+release REC
+wait 20
+turn K1 4 60
+wait 2000
+wait 5
+press REC
+turn K3 1 20
+wait 90
+turn K3 3 60
+wait 250
+wait 300
+release REC
+wait 400
+tap FX
+tap GLO
+wait 5
+press REC
+turn K3 -1 60
+wait 20
+turn K4 1 20
+wait 20
+turn K1 -3 20
+wait 90
+turn K3 1 20
+wait 20
+turn K4 -6 20
+wait 20
+turn K4 -3 20
+wait 250
+wait 2700
+release REC
+wait 20
+tap LFO
+press REC
+turn K2 -6 20
+wait 90
+turn K1 6 60
+wait 250
+turn K4 -6 60
+wait 20
+wait 2700
+release REC
+wait 400
+turn K1 -4 60
+turn SELECT -1
+press REC
+turn K1 1 20
+wait 90
+turn K1 -3 20
+wait 20
+turn K3 -3 20
+wait 90
+turn K1 3 20
+wait 20
+turn K4 1 60
+wait 250
+turn K4 -1 60
+wait 90
+wait 2700
+release REC
+wait 400
+turn K1 4 60
+press REC
+tap FX
+wait 120
+tapkey w7
+wait 300
+tap EDIT
+wait 30
+wait 1200
+release REC
+wait 5
+press REC
+tapkey w2
+wait 120
+turn PRESET 5 60
+wait 120
+tapkey w3
+wait 300
+wait 400
+release REC
+wait 60
+tap PLAY
+wait 60
+press REC
+wait 400
+release REC
+wait 5
+press REC
+turn K2 -3 20
+wait 90
+turn K3 -3 20
+wait 20
+wait 1100
+release REC
+wait 400
+tap SEQ
+turn SELECT 2
+press REC
+turn K2 -1 20
+wait 20
+turn K4 3 20
+wait 250
+turn K1 3 60
+wait 20
+turn K4 3 60
+wait 90
+turn K3 -3 20
+wait 250
+wait 300
+release REC
+wait 400
+press REC
+wait 100
+release REC
+wait 60
+press REC
+turn K3 -1 20
+wait 250
+turn K1 -1 60
+wait 250
+turn K1 -3 20
+wait 90
+turn K4 -3 20
+wait 20
+turn K1 3 20
+wait 20
+turn K1 -3 20
+wait 20
+wait 2700
+release REC
+wait 400
+turn K1 -4 60
+tap FX
+press REC
+turn K2 -1 20
+wait 90
+turn K4 -3 20
+wait 20
+turn K1 -1 60
+wait 20
+turn K2 -1 60
+wait 90
+turn K2 1 20
+wait 250
+wait 300
+release REC
+wait 400
+turn K1 -4 60
+tap LFO
+wait 60
+press REC
+turn K3 3 60
+wait 20
+turn K4 -3 20
+wait 90
+turn K1 -6 20
+wait 20
+page 11
+tap EDIT
+tapkey w13
+tapkey w12
+wait 50
+release REC
+wait 20
+turn K1 -4 60
+turn SELECT 1
+press ARP
+tapkey w0
+release ARP
+press EDIT
+wait 900
+release EDIT
+press EDIT
+wait 50
+wait 30
+tapkey w3
+wait 30
+turn K1 5 60
+wait 120
+tapkey w7
+wait 300
+wait 400
+release EDIT
+wait 20
+tap OCT+
+wait 5
+press REC
+turn K1 3 20
+wait 20
+turn K4 1 60
+wait 250
+turn K1 1 60
+wait 20
+turn K2 6 20
+wait 90
+turn K3 6 60
+wait 20
+turn K1 6 60
+wait 20
+turn K1 -1 60
+wait 250
+wait 1100
+release REC
+wait 400
+press REC
+turn K2 -6 20
+wait 20
+turn K4 6 60
+wait 20
+turn K4 3 20
+wait 20
+turn K4 6 20
+wait 250
+wait 300
+release REC
+wait 400
+turn K1 4 60
+press REC
+turn K3 -3 60
+wait 20
+turn K4 -6 60
+wait 250
+turn K1 -1 60
+wait 90
+page 11
+tap EDIT
+tapkey w11
+tapkey w13
+wait 2700
+release REC
+wait 400
+press ARP
+tapkey w2
+release ARP
+press REC
+turn K1 6 60
+wait 250
+turn K4 -6 20
+wait 20
+turn K3 3 60
+wait 20
+wait 300
+release REC
+wait 400
+press REC
+turn K4 1 60
+wait 250
+turn K1 3 60
+wait 90
+turn K2 -1 60
+wait 250
+turn K3 1 60
+wait 20
+turn K4 -1 20
+wait 250
+turn K3 1 60
+wait 20
+turn K1 1 60
+wait 250
+wait 300
+release REC
+wait 400
+turn K1 -4 60
+turn SELECT -1
+press REC
+turn K2 -6 20
+wait 250
+turn K4 -6 20
+wait 90
+turn K3 -3 60
+wait 90
+turn K1 -6 20
+wait 250
+wait 1100
+release REC
+wait 20
+turn K3 -4 60
+tap LFO
+press REC
+turn K2 -1 20
+wait 250
+turn K4 -3 20
+wait 20
+turn K2 1 60
+wait 90
+turn K2 -1 20
+wait 250
+turn K4 1 20
+wait 20
+turn K1 6 20
+wait 90
+turn K3 6 20
+wait 90
+wait 2700
+release REC
+wait 20
+turn K1 4 60
+wait 50
+wait 5
+press REC
+turn K4 3 60
+wait 250
+turn K3 1 20
+wait 250
+page 11
+tap EDIT
+tapkey w12
+tapkey w13
+wait 1100
+release REC
+wait 20
+press ARP
+tapkey w4
+release ARP
+press ENV
+wait 700
+tapkey w4
+release ENV
+press REC
+turn K2 6 20
+wait 250
+turn K4 3 60
+wait 20
+turn K4 -3 60
+wait 250
+turn K3 -1 20
+wait 90
+turn K3 -1 20
+wait 250
+wait 1100
+release REC
+wait 400
+press EDIT
+wait 900
+release EDIT
+tap SEQ
+wait 5
+press REC
+turn K1 3 20
+wait 250
+turn K3 1 20
+wait 20
+turn K1 6 20
+wait 250
+turn K1 -1 60
+wait 250
+wait 1100
+release REC
+wait 400
+turn K3 4 60
+tap FX
+turn SELECT 2
+tap OCT+
+wait 60
+press REC
+turn K2 -1 60
+wait 20
+turn K1 -3 20
+wait 250
+turn K4 -6 60
+wait 250
+turn K1 1 60
+wait 250
+turn K3 6 60
+wait 90
+turn K4 3 60
+wait 20
+turn K4 -3 60
+wait 90
+page 11
+tap EDIT
+tapkey w13
+tapkey w12
+wait 2700
+release REC
+wait 20
+tap FX
+press REC
+turn K1 1 20
+wait 90
+turn K3 1 60
+wait 90
+turn K3 1 20
+wait 90
+turn K3 -3 20
+wait 90
+turn K1 -6 20
+wait 20
+turn K1 -1 60
+wait 250
+turn K3 1 60
+wait 90
+turn K3 3 60
+wait 90
+wait 300
+release REC
+wait 20
+turn SELECT 1
+press GLO
+turn K4 2 60
+wait 30
+wait 100
+release GLO
+wait 20
+press REC
+wait 2700
+release REC
+wait 60
+expect inv 0
+expect voices <25
+wait 5
+wait 20
+press REC
+turn K3 6 20
+wait 90
+turn K2 1 60
+wait 90
+turn K1 1 20
+wait 250
+turn K3 -3 60
+wait 250
+wait 300
+release REC
+wait 20
+press REC
+wait 1200
+release REC
+key w12 down 98
+wait 100
+key w8 up
+wait 5
+press REC
+turn K2 -1 20
+wait 20
+turn K2 -6 60
+wait 20
+turn K1 -6 60
+wait 20
+turn K4 6 20
+wait 20
+turn K3 3 20
+wait 250
+wait 2700
+release REC
+wait 400
+turn SELECT -1
+press ARP
+tapkey w3
+release ARP
+wait 200
+wait 20
+press REC
+turn K1 -2 60
+wait 30
+tapkey w6
+wait 120
+tap FX
+wait 120
+tapkey w5
+wait 30
+wait 400
+release REC
+wait 60
+press REC
+turn K4 1 20
+wait 20
+turn K4 -3 60
+wait 20
+turn K2 1 60
+wait 250
+turn K4 -6 60
+wait 20
+turn K3 6 60
+wait 250
+wait 1100
+release REC
+wait 20
+press ARP
+tapkey w3
+release ARP
+press ENV
+wait 700
+tapkey w3
+release ENV
+key w9 down 68
+wait 100
+key w4 up
+wait 60
+press REC
+turn K2 -3 20
+wait 250
+turn K3 1 60
+wait 250
+turn K4 6 20
+wait 250
+turn K1 3 60
+wait 250
+turn K2 -6 20
+wait 250
+wait 1100
+release REC
+wait 400
+tap SEQ
+press EDIT
+wait 900
+release EDIT
+press REC
+turn K2 -3 20
+wait 250
+turn K3 -3 60
+wait 250
+turn K4 -1 60
+wait 90
+turn K3 -3 60
+wait 20
+wait 2700
+release REC
+wait 20
+turn K3 4 60
+key w11 down 38
+wait 20
+key w13 up
+wait 20
+press REC
+turn K3 -6 20
+wait 20
+turn K1 6 60
+wait 90
+turn K3 1 60
+wait 250
+wait 50
+release REC
+wait 20
+turn K2 4 60
+tap FX
+press REC
+turn K1 -3 60
+wait 90
+turn K3 1 20
+wait 90
+wait 2700
+release REC
+wait 400
+turn K2 4 60
+press REC
+turn K4 1 60
+wait 250
+turn K2 -6 60
+wait 20
+turn K1 -6 20
+wait 250
+turn K4 3 20
+wait 20
+turn K1 -6 60
+wait 20
+turn K4 6 20
+wait 90
+turn K1 6 60
+wait 250
+wait 50
+release REC
+wait 20
+turn K2 4 60
+press REC
+turn K3 -3 60
+wait 20
+turn K3 3 20
+wait 90
+turn K3 -3 60
+wait 250
+wait 2700
+release REC
+wait 400
+turn K2 -4 60
+wait 5
+wait 60
+tap PLAY
+wait 20
+press REC
+tap EDIT
+wait 120
+tap EDIT
+wait 300
+tap SEQ
+wait 120
+tap SEQ
+wait 300
+wait 400
+release REC
+wait 20
+press REC
+turn K4 -6 60
+wait 250
+turn K2 3 60
+wait 20
+turn K4 1 60
+wait 90
+turn K1 3 60
+wait 20
+turn K3 6 20
+wait 250
+turn K3 1 20
+wait 20
+turn K2 3 20
+wait 20
+wait 300
+release REC
+wait 400
+turn K4 -4 60
+tap SEQ
+turn SELECT -1
+tap SEL
+wait 5
+press REC
+tapkey w7
+wait 300
+tap SEQ
+wait 30
+turn PRESET -5 60
+wait 30
+wait 2700
+release REC
+wait 20
+press HOME
+wait 50
+wait 300
+tapkey w7
+wait 30
+wait 100
+release HOME
+wait 5
+wait 5
+wait 5
+press REC
+turn K2 3 60
+wait 20
+turn K3 1 20
+wait 90
+turn K4 -1 60
+wait 250
+turn K2 -1 60
+wait 20
+wait 1100
+release REC
+wait 400
+turn K3 -4 60
+turn SELECT 1
+press REC
+wait 2800
+release REC
+press REC
+turn K3 -1 60
+wait 90
+turn K1 -6 20
+wait 20
+turn K3 1 60
+wait 90
+turn K3 6 20
+wait 90
+turn K3 1 60
+wait 90
+turn K1 -3 60
+wait 250
+turn K4 1 60
+wait 250
+wait 1100
+release REC
+wait 20
+turn SELECT 2
+press LFO
+tapkey w0
+wait 30
+wait 400
+release LFO
+wait 5
+press REC
+turn K4 1 20
+wait 250
+turn K2 6 20
+wait 90
+turn K2 -6 60
+wait 20
+turn K4 1 20
+wait 250
+turn K3 -6 20
+wait 90
+turn K4 -6 20
+wait 90
+turn K3 6 60
+wait 90
+wait 1100
+release REC
+wait 400
+turn K4 4 60
+tap FX
+press REC
+turn K3 3 20
+wait 20
+turn K3 -6 60
+wait 250
+turn K2 -6 20
+wait 250
+turn K1 -3 60
+wait 20
+turn K1 3 60
+wait 20
+turn K4 1 20
+wait 20
+turn K1 -3 20
+wait 250
+turn K3 1 60
+wait 20
+wait 300
+release REC
+wait 20
+tap SEQ
+press SEQ
+tapkey w5
+wait 30
+turn ALGO 2 60
+wait 30
+wait 400
+release SEQ
+wait 20
+key w12 down 22
+wait 100
+key w8 up
+wait 20
+press REC
+turn K1 -3 20
+wait 250
+turn K2 -1 60
+wait 90
+turn K3 -6 60
+wait 20
+turn K4 1 60
+wait 90
+turn K2 -6 20
+wait 90
+wait 1100
+release REC
+wait 20
+tap FX
+press REC
+turn K1 -1 20
+wait 20
+turn K4 -6 60
+wait 20
+turn K4 -6 60
+wait 250
+turn K2 -1 20
+wait 90
+turn K1 3 20
+wait 90
+turn K3 6 60
+wait 20
+turn K1 -1 60
+wait 250
+turn K2 -3 60
+wait 90
+wait 2700
+release REC
+wait 400
+turn K1 4 60
+turn SELECT -1
+press EDIT
+wait 900
+release EDIT
+tap GLO
+wait 5
+press REC
+turn K3 3 20
+wait 20
+turn K3 1 60
+wait 250
+turn K1 1 60
+wait 90
+turn K1 3 60
+wait 250
+turn K1 6 60
+wait 20
+turn K2 -1 60
+wait 250
+turn K4 -3 20
+wait 20
+wait 300
+release REC
+wait 20
+press REC
+turn K1 -6 20
+wait 90
+turn K4 3 60
+wait 90
+turn K4 -6 60
+wait 90
+turn K2 1 20
+wait 90
+turn K2 -6 20
+wait 90
+turn K2 -6 20
+wait 20
+turn K3 -6 20
+wait 90
+turn K1 -1 60
+wait 20
+wait 50
+release REC
+wait 400
+tap LFO
+turn SELECT -1
+press REC
+tap EDIT
+wait 120
+wait 2700
+release REC
+wait 60
+press REC
+turn K3 -1 20
+wait 20
+turn K3 3 20
+wait 90
+turn K1 -6 20
+wait 20
+wait 300
+release REC
+wait 20
+press ARP
+tapkey w6
+release ARP
+press REC
+turn K1 -3 20
+wait 20
+turn K2 -3 60
+wait 90
+turn K3 1 60
+wait 20
+turn K4 -1 20
+wait 90
+turn K1 6 20
+wait 90
+turn K2 -3 60
+wait 90
+turn K4 -1 60
+wait 90
+turn K4 -3 20
+wait 90
+wait 2700
+release REC
+wait 20
+tap FX
+press REC
+turn K4 -1 60
+wait 20
+turn K2 -3 20
+wait 90
+turn K1 6 60
+wait 250
+turn K4 -6 20
+wait 250
+turn K3 6 60
+wait 250
+wait 50
+release REC
+wait 400
+tap FX
+press REC
+turn K4 3 20
+wait 90
+turn K1 -3 20
+wait 250
+turn K2 1 60
+wait 20
+turn K1 6 20
+wait 20
+turn K1 3 60
+wait 90
+turn K2 -6 20
+wait 90
+wait 300
+release REC
+wait 20
+turn K1 4 60
+expect inv 0
+press REC
+turn K3 6 20
+wait 250
+turn K4 6 20
+wait 20
+turn K3 1 60
+wait 20
+turn K3 -3 60
+wait 90
+wait 50
+release REC
+wait 20
+press ARP
+tapkey w2
+release ARP
+press REC
+turn K1 6 60
+wait 20
+turn K3 6 60
+wait 20
+turn K1 -3 20
+wait 20
+turn K4 -3 20
+wait 90
+turn K4 6 60
+wait 20
+turn K1 1 20
+wait 90
+turn K3 1 20
+wait 250
+turn K4 3 60
+wait 20
+wait 2700
+release REC
+wait 400
+turn K4 -4 60
+press REC
+turn K3 6 20
+wait 90
+turn K1 3 60
+wait 250
+turn K1 3 60
+wait 90
+turn K4 3 60
+wait 90
+turn K1 6 60
+wait 90
+turn K1 -3 60
+wait 90
+turn K2 -3 20
+wait 250
+turn K3 -1 20
+wait 20
+wait 50
+release REC
+wait 20
+press REC
+turn K1 6 60
+wait 250
+turn K4 1 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K2 -4 60
+press REC
+turn K2 3 60
+wait 250
+turn K4 3 60
+wait 90
+turn K3 -6 20
+wait 250
+wait 50
+release REC
+wait 400
+press ARP
+turn K2 -2 60
+wait 30
+turn K3 5 60
+wait 30
+wait 400
+release ARP
+wait 20
+press REC
+turn K3 1 20
+wait 20
+turn K1 -3 20
+wait 20
+turn K3 6 60
+wait 90
+turn K2 -3 20
+wait 90
+wait 300
+release REC
+wait 20
+turn K3 -4 60
+press REC
+turn K3 3 20
+wait 20
+turn K4 -3 60
+wait 250
+wait 50
+release REC
+wait 20
+tap FX
+press REC
+turn K2 3 20
+wait 20
+turn K2 1 20
+wait 250
+turn K3 -1 60
+wait 20
+turn K4 -1 20
+wait 20
+turn K2 1 20
+wait 20
+wait 300
+release REC
+wait 400
+press REC
+turn K3 1 60
+wait 20
+turn K1 3 20
+wait 20
+turn K1 -3 20
+wait 90
+wait 2700
+release REC
+wait 20
+tap SEQ
+press REC
+turn K3 6 60
+wait 90
+turn K3 -1 20
+wait 20
+turn K4 6 60
+wait 90
+turn K2 6 20
+wait 90
+turn K2 -6 60
+wait 250
+turn K3 -1 60
+wait 90
+turn K4 3 60
+wait 90
+wait 1100
+release REC
+wait 20
+turn K3 -4 60
+tap SEQ
+press REC
+turn K4 -6 20
+wait 20
+turn K2 -1 60
+wait 250
+wait 2700
+release REC
+wait 400
+turn SELECT 2
+wait 5
+wait 60
+press REC
+turn K1 3 20
+wait 90
+turn K2 1 20
+wait 90
+wait 50
+release REC
+wait 400
+turn K4 -4 60
+press REC
+turn K4 3 20
+wait 250
+turn K2 -1 60
+wait 90
+turn K3 1 60
+wait 250
+turn K2 -3 20
+wait 250
+turn K2 -1 20
+wait 90
+wait 1100
+release REC
+wait 20
+tap FX
+press LFO
+turn K1 5 60
+wait 120
+tapkey w7
+wait 120
+wait 100
+release LFO
+wait 5
+press REC
+turn K3 1 60
+wait 90
+turn K2 -3 60
+wait 250
+turn K3 -3 60
+wait 20
+turn K2 -3 60
+wait 20
+turn K1 -1 20
+wait 20
+turn K3 -3 20
+wait 250
+wait 50
+release REC
+wait 20
+tap SEQ
+tap ARP
+wait 60
+press REC
+turn K1 -6 20
+wait 20
+turn K1 1 60
+wait 250
+turn K3 6 60
+wait 90
+turn K3 -1 60
+wait 250
+turn K1 1 60
+wait 250
+turn K1 1 20
+wait 250
+turn K1 1 20
+wait 90
+turn K1 -6 20
+wait 20
+wait 1100
+release REC
+wait 400
+press ENV
+wait 700
+tapkey w3
+release ENV
+press REC
+turn K4 3 20
+wait 250
+turn K1 -3 60
+wait 20
+turn K1 -1 20
+wait 250
+page 11
+tap EDIT
+tapkey w11
+tapkey w11
+wait 2700
+release REC
+wait 20
+turn K3 4 60
+expect inv 0
+tap PLAY
+wait 60
+press REC
+turn K4 -6 60
+wait 20
+turn K4 -1 60
+wait 20
+turn K4 -6 20
+wait 20
+turn K4 -6 20
+wait 20
+wait 1100
+release REC
+wait 20
+tap FX
+press ARP
+wait 100
+release ARP
+wait 20
+press REC
+turn K3 3 20
+wait 250
+turn K4 6 60
+wait 90
+turn K2 -6 20
+wait 250
+turn K1 1 60
+wait 250
+wait 300
+release REC
+wait 20
+turn K4 -4 60
+tap SEQ
+press REC
+turn K2 3 20
+wait 20
+turn K4 -3 20
+wait 90
+turn K1 -1 60
+wait 250
+turn K1 3 20
+wait 20
+turn K1 6 60
+wait 250
+turn K4 -6 20
+wait 20
+wait 300
+release REC
+wait 400
+turn K4 -4 60
+tap FX
+tap LFO
+wait 60
+press REC
+turn PRESET -5 60
+wait 30
+turn K4 2 60
+wait 120
+turn PRESET -2 60
+wait 300
+tap EDIT
+wait 120
+turn SELECT 2 60
+wait 30
+wait 100
+release REC
+wait 5
+press REC
+turn K1 6 60
+wait 250
+turn K2 -1 60
+wait 250
+turn K1 6 20
+wait 250
+turn K4 6 20
+wait 90
+wait 1100
+release REC
+wait 20
+tap LFO
+press ARP
+tapkey w4
+release ARP
+tap EDIT
+wait 5
+press REC
+turn K3 -1 20
+wait 250
+turn K4 3 60
+wait 20
+turn K4 6 20
+wait 250
+turn K2 3 20
+wait 250
+turn K4 -1 20
+wait 250
+turn K1 -6 60
+wait 250
+turn K1 6 60
+wait 20
+wait 300
+release REC
+wait 20
+tap FX
+wait 60
+press REC
+turn K3 -1 20
+wait 20
+turn K3 -3 60
+wait 20
+turn K3 -3 60
+wait 250
+turn K2 -3 60
+wait 90
+wait 50
+release REC
+wait 400
+turn K2 4 60
+tap SEL
+wait 60
+press REC
+turn K3 -6 20
+wait 20
+turn K3 3 20
+wait 20
+turn K1 3 60
+wait 250
+turn K2 -1 60
+wait 20
+turn K2 6 60
+wait 20
+turn K2 -1 60
+wait 250
+turn K3 1 20
+wait 250
+wait 2700
+release REC
+wait 400
+turn K1 -4 60
+press REC
+turn K2 1 60
+wait 250
+turn K2 3 60
+wait 20
+turn K2 -1 60
+wait 90
+turn K2 -1 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K3 4 60
+press REC
+turn K1 -3 60
+wait 20
+turn K2 1 60
+wait 20
+turn K1 1 60
+wait 20
+turn K2 3 20
+wait 20
+turn K3 3 60
+wait 90
+turn K4 -6 20
+wait 20
+turn K2 3 60
+wait 90
+wait 2700
+release REC
+wait 400
+turn SELECT 1
+press REC
+turn K4 1 60
+wait 90
+turn K1 -3 60
+wait 90
+turn K3 6 20
+wait 250
+turn K3 6 60
+wait 20
+wait 50
+release REC
+wait 20
+turn K3 4 60
+wait 800
+wait 20
+press REC
+turn K2 1 60
+wait 90
+turn K1 6 20
+wait 20
+turn K4 -3 20
+wait 250
+turn K4 -6 60
+wait 20
+turn K4 6 60
+wait 90
+turn K4 1 60
+wait 250
+turn K4 -1 60
+wait 90
+turn K3 -1 20
+wait 250
+wait 300
+release REC
+wait 400
+turn K2 -4 60
+press REC
+turn K3 -3 20
+wait 20
+turn K3 1 60
+wait 20
+turn K3 -1 20
+wait 250
+turn K4 -1 60
+wait 90
+turn K4 -6 60
+wait 90
+turn K1 -1 20
+wait 250
+turn K3 6 20
+wait 250
+wait 300
+release REC
+wait 20
+turn K4 4 60
+expect inv 0
+press REC
+turn K1 6 20
+wait 90
+turn K1 -3 60
+wait 20
+turn K2 1 60
+wait 90
+turn K2 -1 60
+wait 250
+turn K1 1 20
+wait 20
+turn K3 1 20
+wait 20
+page 11
+tap EDIT
+tapkey w12
+tapkey w13
+wait 50
+release REC
+wait 400
+turn K3 4 60
+tap FX
+turn SELECT 2
+press HOME
+tapkey w7
+wait 300
+turn K2 -5 60
+wait 120
+wait 400
+release HOME
+wait 5
+press REC
+turn K4 -6 60
+wait 90
+turn K1 -3 60
+wait 20
+turn K4 -6 60
+wait 250
+turn K1 -1 20
+wait 90
+turn K4 -3 60
+wait 20
+turn K1 -3 60
+wait 250
+turn K3 -3 60
+wait 20
+wait 1100
+release REC
+wait 20
+turn K4 4 60
+tap LFO
+press REC
+turn K1 1 20
+wait 90
+turn K4 3 20
+wait 90
+turn K1 -6 20
+wait 20
+turn K2 -6 60
+wait 20
+turn K4 -6 20
+wait 90
+turn K3 -6 60
+wait 20
+turn K2 6 60
+wait 20
+wait 2700
+release REC
+wait 400
+tap SEQ
+key w7 down 46
+wait 100
+key w3 up
+wait 5
+key w6 down 82
+wait 400
+key w2 up
+wait 20
+press REC
+turn K4 -6 60
+wait 20
+turn K2 -6 20
+wait 250
+turn K4 -1 60
+wait 90
+turn K2 3 60
+wait 20
+wait 1100
+release REC
+wait 400
+turn K4 -4 60
+turn SELECT 1
+tap ARP
+wait 20
+press REC
+turn K3 -3 20
+wait 90
+turn K3 -1 60
+wait 250
+turn K3 1 60
+wait 250
+turn K3 -6 60
+wait 90
+turn K1 -6 20
+wait 250
+turn K4 -3 20
+wait 250
+turn K1 1 20
+wait 250
+wait 300
+release REC
+wait 20
+tap OCT+
+wait 5
+press REC
+turn K4 -1 20
+wait 20
+turn K2 1 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K1 4 60
+turn SELECT 1
+press REC
+turn K1 6 60
+wait 250
+turn K4 -6 20
+wait 20
+turn K4 1 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K3 -4 60
+tap LFO
+wait 20
+press REC
+turn K4 -6 60
+wait 20
+turn K1 1 20
+wait 20
+turn K1 3 60
+wait 250
+turn K4 -6 20
+wait 90
+turn K3 1 20
+wait 20
+wait 2700
+release REC
+wait 400
+turn K3 4 60
+press REC
+turn K3 6 60
+wait 90
+turn K2 6 20
+wait 20
+turn K2 -6 60
+wait 20
+turn K3 -6 20
+wait 90
+turn K2 6 60
+wait 250
+turn K4 3 20
+wait 90
+wait 300
+release REC
+wait 20
+tap FX
+turn SELECT 2
+wait 50
+wait 60
+press REC
+turn K1 1 20
+wait 20
+turn K4 3 20
+wait 90
+turn K2 6 60
+wait 250
+turn K4 1 60
+wait 20
+turn K1 3 20
+wait 20
+turn K1 3 20
+wait 20
+turn K2 6 60
+wait 90
+wait 1100
+release REC
+wait 400
+turn K2 4 60
+wait 5
+wait 60
+tap SEQ
+wait 5
+wait 50
+wait 20
+press REC
+turn K4 -1 20
+wait 250
+turn K4 -6 60
+wait 250
+wait 50
+release REC
+wait 20
+turn K1 -4 60
+press REC
+turn K2 -6 20
+wait 20
+turn K3 1 60
+wait 90
+turn K2 1 60
+wait 20
+turn K2 -1 60
+wait 90
+wait 300
+release REC
+wait 400
+turn K1 -4 60
+press REC
+turn K4 -3 60
+wait 90
+turn K4 3 60
+wait 20
+turn K1 -3 20
+wait 20
+turn K4 3 20
+wait 250
+turn K3 -1 60
+wait 250
+wait 1100
+release REC
+wait 400
+press REC
+turn K3 -6 20
+wait 20
+turn K2 1 60
+wait 250
+turn K4 -3 20
+wait 20
+wait 2700
+release REC
+wait 20
+turn SELECT -1
+press REC
+turn K4 6 20
+wait 90
+turn K4 1 60
+wait 250
+turn K2 -6 20
+wait 250
+wait 300
+release REC
+wait 400
+press ENV
+wait 700
+tapkey w6
+release ENV
+press REC
+turn K3 -1 20
+wait 250
+turn K2 6 20
+wait 20
+turn K2 6 20
+wait 90
+wait 300
+release REC
+wait 400
+turn SELECT 1
+press ENV
+wait 700
+tapkey w5
+release ENV
+press REC
+turn K2 -6 20
+wait 90
+turn K2 -3 20
+wait 20
+turn K2 1 60
+wait 20
+turn K3 3 60
+wait 90
+turn K3 3 60
+wait 20
+turn K1 -6 20
+wait 20
+turn K2 -3 60
+wait 20
+turn K4 6 60
+wait 90
+wait 2700
+release REC
+wait 20
+turn K2 4 60
+tap SEQ
+press REC
+turn K2 1 60
+wait 20
+turn K2 1 60
+wait 90
+turn K4 -3 60
+wait 90
+turn K1 -1 60
+wait 20
+turn K1 6 20
+wait 250
+turn K1 -3 60
+wait 90
+turn K4 3 20
+wait 250
+turn K1 -6 60
+wait 20
+wait 1100
+release REC
+wait 20
+turn K3 4 60
+turn SELECT 2
+press REC
+turn K1 -6 20
+wait 20
+turn K2 -1 20
+wait 90
+wait 50
+release REC
+wait 20
+turn K2 -4 60
+key w6 down 83
+wait 20
+key w1 up
+wait 60
+tap OCT-
+wait 20
+press REC
+turn K4 -6 20
+wait 20
+turn K2 1 60
+wait 250
+turn K3 -3 60
+wait 250
+turn K4 -6 20
+wait 20
+wait 300
+release REC
+wait 400
+turn K1 -4 60
+press REC
+tap SEQ
+wait 30
+turn ALGO -2 60
+wait 300
+wait 1200
+release REC
+wait 20
+tap LFO
+wait 5
+press REC
+turn K3 -3 60
+wait 250
+turn K2 3 60
+wait 250
+turn K3 6 60
+wait 90
+turn K2 -3 20
+wait 20
+turn K3 -3 20
+wait 250
+turn K3 6 60
+wait 90
+wait 1100
+release REC
+wait 400
+turn K1 -4 60
+press REC
+turn K2 -3 60
+wait 90
+turn K3 6 60
+wait 250
+turn K4 1 60
+wait 20
+wait 1100
+release REC
+wait 400
+turn K4 4 60
+press REC
+turn K4 -6 60
+wait 20
+turn K3 6 60
+wait 250
+wait 300
+release REC
+wait 20
+press REC
+turn K4 -3 20
+wait 250
+turn K2 1 60
+wait 90
+turn K3 -6 60
+wait 20
+turn K1 -1 60
+wait 20
+turn K3 -1 20
+wait 250
+turn K1 6 20
+wait 20
+wait 1100
+release REC
+wait 20
+tap ENV
+wait 20
+tap HOME
+wait 5
+tap GLO
+wait 5
+press REC
+turn K1 -1 20
+wait 250
+turn K2 6 60
+wait 250
+wait 2700
+release REC
+wait 20
+tap FX
+press REC
+turn K4 6 60
+wait 20
+turn K1 1 60
+wait 20
+wait 1100
+release REC
+wait 20
+turn K4 4 60
+turn SELECT 1
+press EDIT
+turn K2 -2 60
+wait 30
+wait 1200
+release EDIT
+wait 20
+press REC
+turn K4 -1 60
+wait 90
+turn K1 3 20
+wait 20
+wait 300
+release REC
+wait 20
+turn K1 -4 60
+press LFO
+wait 50
+wait 120
+tapkey w6
+wait 120
+tapkey w7
+wait 300
+tapkey w4
+wait 120
+wait 50
+wait 300
+wait 400
+release LFO
+wait 60
+key w7 down 54
+wait 20
+key w7 up
+wait 20
+press REC
+turn K1 1 60
+wait 250
+turn K2 -3 60
+wait 90
+turn K1 -1 20
+wait 250
+turn K4 1 20
+wait 90
+wait 300
+release REC
+wait 400
+turn K1 4 60
+tap LFO
+press REC
+turn K3 1 60
+wait 90
+turn K3 3 60
+wait 90
+wait 50
+release REC
+wait 20
+press REC
+turn K2 -6 20
+wait 20
+turn K3 6 60
+wait 250
+turn K4 -1 20
+wait 20
+turn K1 -6 20
+wait 250
+wait 300
+release REC
+wait 20
+tap FX
+tap OCT-
+wait 60
+press REC
+turn K4 -3 60
+wait 250
+turn K2 -6 20
+wait 90
+turn K3 -3 60
+wait 250
+turn K1 -3 60
+wait 250
+turn K1 6 60
+wait 90
+turn K2 3 60
+wait 20
+turn K4 3 20
+wait 250
+wait 50
+release REC
+wait 400
+turn K2 -4 60
+press REC
+turn K3 -3 20
+wait 250
+turn K4 1 60
+wait 20
+turn K3 3 60
+wait 250
+turn K4 3 60
+wait 90
+turn K4 1 20
+wait 90
+turn K4 -3 20
+wait 90
+turn K2 -3 60
+wait 250
+wait 1100
+release REC
+wait 400
+turn K1 4 60
+press REC
+turn K4 -3 60
+wait 20
+turn K3 -6 20
+wait 20
+turn K2 1 20
+wait 20
+turn K2 -6 20
+wait 20
+wait 50
+release REC
+wait 20
+tap LFO
+tap LFO
+wait 20
+tap EDIT
+wait 5
+press FX
+tapkey w1
+wait 120
+wait 50
+wait 30
+turn K4 -2 60
+wait 30
+wait 1200
+release FX
+wait 60
+press REC
+turn K4 -3 60
+wait 20
+turn K4 1 60
+wait 250
+turn K4 -3 60
+wait 250
+turn K3 -6 60
+wait 20
+wait 1100
+release REC
+wait 20
+turn K4 4 60
+press REC
+turn K3 -3 20
+wait 250
+turn K1 6 60
+wait 90
+turn K1 1 60
+wait 20
+turn K3 -6 60
+wait 20
+wait 2700
+release REC
+wait 400
+turn K3 4 60
+turn SELECT 2
+press HOME
+wait 50
+wait 120
+wait 50
+wait 120
+tapkey w3
+wait 300
+wait 50
+wait 30
+wait 50
+wait 30
+wait 100
+release HOME
+wait 5
+press EDIT
+tapkey w2
+wait 120
+wait 400
+release EDIT
+wait 60
+press REC
+turn K3 -6 20
+wait 90
+turn K2 6 60
+wait 20
+turn K4 6 60
+wait 90
+turn K1 3 20
+wait 20
+turn K3 -6 60
+wait 90
+turn K2 -1 60
+wait 250
+turn K2 1 60
+wait 250
+wait 2700
+release REC
+wait 20
+turn K1 4 60
+tap SEQ
+turn SELECT 1
+tap EDIT
+wait 5
+press REC
+turn K2 1 60
+wait 90
+turn K3 3 20
+wait 250
+wait 1100
+release REC
+wait 20
+turn K3 4 60
+tap FX
+press REC
+turn K3 -3 60
+wait 20
+turn K2 6 20
+wait 90
+turn K1 -3 60
+wait 90
+turn K2 -6 60
+wait 90
+turn K1 -6 60
+wait 250
+turn K4 3 60
+wait 250
+turn K3 3 20
+wait 250
+wait 300
+release REC
+wait 400
+turn K1 -4 60
+press REC
+turn K2 -6 60
+wait 250
+turn K4 -3 20
+wait 250
+turn K1 -1 20
+wait 20
+turn K2 3 20
+wait 250
+turn K3 -6 60
+wait 20
+turn K4 6 60
+wait 250
+turn K3 1 20
+wait 90
+turn K2 6 60
+wait 250
+wait 1100
+release REC
+wait 20
+turn K4 4 60
+press REC
+turn K4 3 20
+wait 20
+turn K1 3 20
+wait 250
+wait 300
+release REC
+wait 400
+turn K1 4 60
+tap FX
+press REC
+tapkey w0
+wait 30
+turn K2 -5 60
+wait 300
+wait 100
+release REC
+wait 60
+tap OCT+
+wait 5
+wait 50
+wait 20
+tap OCT+
+wait 20
+press REC
+turn K3 -1 20
+wait 20
+turn K1 3 20
+wait 20
+turn K2 -3 20
+wait 250
+turn K2 -6 20
+wait 90
+turn K4 1 60
+wait 90
+turn K1 1 20
+wait 250
+wait 2700
+release REC
+wait 20
+turn K4 -4 60
+press REC
+turn K4 1 20
+wait 250
+turn K2 1 60
+wait 90
+turn K1 -3 60
+wait 20
+turn K3 -3 20
+wait 20
+turn K2 -3 20
+wait 250
+turn K1 -3 60
+wait 90
+turn K2 -3 60
+wait 250
+turn K2 6 60
+wait 250
+wait 2700
+release REC
+wait 400
+tap LFO
+press EDIT
+wait 900
+release EDIT
+press REC
+turn K2 1 20
+wait 90
+turn K2 1 60
+wait 90
+wait 50
+release REC
+wait 20
+turn K1 -4 60
+press ENV
+wait 700
+tapkey w7
+release ENV
+wait 2000
+wait 5
+tap LFO
+wait 60
+wait 50
+wait 5
+press REC
+turn K2 1 60
+wait 20
+turn K2 -6 20
+wait 90
+turn K2 6 60
+wait 20
+turn K4 -3 60
+wait 90
+turn K4 -3 60
+wait 250
+turn K2 -3 20
+wait 250
+turn K3 -1 20
+wait 20
+wait 50
+release REC
+wait 20
+tap PLAY
+wait 20
+tap ENV
+wait 60
+expect inv 0
+expect voices <25
+press ENV
+wait 1200
+release ENV
+wait 5
+press REC
+turn K3 -3 60
+wait 20
+turn K2 -6 20
+wait 90
+turn K1 1 60
+wait 20
+turn K2 3 20
+wait 250
+turn K2 -1 60
+wait 90
+wait 1100
+release REC
+wait 400
+turn K4 4 60
+press REC
+turn K3 -6 20
+wait 20
+turn K1 3 60
+wait 90
+wait 2700
+release REC
+wait 20
+turn K1 -4 60
+wait 50
+wait 60
+tap FX
+wait 20
+press SEQ
+wait 100
+release SEQ
+wait 60
+press REC
+turn K1 -6 60
+wait 90
+turn K1 1 60
+wait 20
+turn K2 -3 20
+wait 90
+turn K4 3 60
+wait 250
+turn K3 6 20
+wait 250
+wait 50
+release REC
+wait 20
+turn K1 -4 60
+press EDIT
+wait 900
+release EDIT
+press REC
+turn K4 -6 20
+wait 250
+turn K4 -1 60
+wait 20
+turn K4 1 20
+wait 20
+turn K2 1 20
+wait 250
+turn K4 6 60
+wait 90
+turn K3 3 60
+wait 20
+turn K1 -6 20
+wait 20
+wait 1100
+release REC
+wait 400
+turn K1 4 60
+tap SEQ
+press ARP
+tapkey w0
+release ARP
+tap ENV
+wait 5
+press REC
+turn K1 6 20
+wait 20
+turn K1 -3 60
+wait 250
+turn K2 -6 60
+wait 250
+turn K4 -6 20
+wait 20
+turn K3 3 60
+wait 250
+wait 50
+release REC
+wait 20
+wait 200
+wait 5
+press EDIT
+wait 50
+wait 30
+turn SELECT 5 60
+wait 120
+wait 1200
+release EDIT
+wait 5
+press GLO
+tapkey w6
+wait 30
+turn ALGO 5 60
+wait 300
+wait 50
+wait 120
+turn K4 2 60
+wait 30
+turn SELECT 5 60
+wait 120
+wait 100
+release GLO
+wait 5
+press REC
+turn K1 3 60
+wait 250
+turn K1 -3 60
+wait 250
+turn K1 -1 20
+wait 20
+turn K4 6 20
+wait 20
+wait 2700
+release REC
+wait 400
+turn K3 -4 60
+tap SEQ
+key w9 down 37
+wait 20
+key w12 up
+wait 20
+press REC
+turn K3 -3 60
+wait 90
+turn K4 -6 20
+wait 20
+turn K1 -6 60
+wait 20
+turn K3 3 20
+wait 90
+turn K4 3 60
+wait 250
+turn K1 6 60
+wait 20
+turn K1 3 60
+wait 250
+turn K2 1 60
+wait 90
+wait 300
+release REC
+wait 400
+turn K1 4 60
+turn SELECT 2
+press REC
+wait 1200
+release REC
+press REC
+turn K2 1 20
+wait 90
+turn K2 -3 60
+wait 20
+turn K3 -6 60
+wait 90
+turn K2 -3 20
+wait 20
+turn K3 -1 20
+wait 90
+turn K4 -6 20
+wait 90
+turn K1 -3 60
+wait 90
+wait 300
+release REC
+wait 400
+press ARP
+wait 50
+wait 300
+wait 50
+wait 120
+wait 50
+wait 300
+wait 50
+wait 120
+wait 2700
+release ARP
+wait 5
+tap ARP
+wait 60
+key w0 down 70
+wait 100
+key w11 up
+wait 20
+press REC
+turn K4 1 20
+wait 90
+turn K1 -6 60
+wait 90
+wait 300
+release REC
+wait 400
+press ENV
+wait 700
+tapkey w2
+release ENV
+press REC
+wait 1200
+release REC
+press REC
+turn K4 -6 20
+wait 20
+turn K2 3 60
+wait 250
+turn K2 -1 20
+wait 250
+wait 2700
+release REC
+wait 20
+press REC
+turn K3 3 20
+wait 90
+turn K3 -1 20
+wait 250
+wait 2700
+release REC
+wait 400
+tap LFO
+press REC
+turn K2 1 60
+wait 90
+turn K2 -6 60
+wait 20
+turn K1 1 20
+wait 90
+turn K1 1 60
+wait 250
+turn K2 3 20
+wait 20
+turn K1 -3 20
+wait 20
+wait 300
+release REC
+wait 400
+turn SELECT 1
+press EDIT
+wait 900
+release EDIT
+press REC
+turn K4 -6 20
+wait 90
+turn K2 6 20
+wait 250
+turn K2 -6 60
+wait 250
+turn K2 -1 60
+wait 90
+wait 1100
+release REC
+wait 20
+tap GLO
+wait 60
+press REC
+turn K1 3 20
+wait 20
+turn K4 -3 20
+wait 90
+turn K4 -6 60
+wait 250
+turn K2 -1 60
+wait 90
+turn K2 3 20
+wait 90
+turn K3 6 20
+wait 250
+turn K3 -3 20
+wait 250
+turn K2 3 20
+wait 250
+wait 1100
+release REC
+wait 400
+press ARP
+tapkey w7
+release ARP
+press REC
+turn K1 -3 60
+wait 20
+turn K1 6 60
+wait 250
+turn K1 1 20
+wait 20
+turn K1 3 20
+wait 20
+page 11
+tap EDIT
+tapkey w12
+tapkey w12
+wait 300
+release REC
+wait 400
+tap LFO
+press REC
+turn K2 -6 60
+wait 20
+turn K3 6 60
+wait 20
+turn K1 -6 20
+wait 250
+turn K3 -1 60
+wait 90
+wait 2700
+release REC
+wait 400
+press REC
+turn K3 -3 60
+wait 250
+turn K1 -3 60
+wait 20
+turn K1 6 60
+wait 20
+turn K3 3 60
+wait 250
+turn K1 1 60
+wait 90
+turn K4 1 20
+wait 20
+turn K4 6 20
+wait 20
+turn K4 1 60
+wait 250
+wait 2700
+release REC
+wait 400
+turn K1 -4 60
+press REC
+turn K3 -1 60
+wait 250
+turn K3 -3 20
+wait 250
+turn K2 -3 20
+wait 250
+turn K3 -1 20
+wait 250
+turn K3 -3 20
+wait 20
+turn K1 3 20
+wait 90
+turn K3 -3 60
+wait 250
+wait 50
+release REC
+wait 20
+turn K4 4 60
+press ENV
+wait 700
+tapkey w2
+release ENV
+tap REC
+wait 5
+tap REC
+wait 60
+tap SEQ
+wait 5
+tap REC
+wait 60
+press REC
+turn K2 -1 60
+wait 20
+turn K4 1 20
+wait 90
+turn K3 -3 20
+wait 20
+wait 1100
+release REC
+wait 20
+turn K4 4 60
+tap SEQ
+wait 20
+press REC
+turn K3 3 20
+wait 250
+turn K3 6 20
+wait 250
+turn K3 -1 60
+wait 250
+wait 2700
+release REC
+wait 400
+turn K3 4 60
+tap FX
+press REC
+turn K3 6 60
+wait 20
+turn K3 -3 20
+wait 20
+turn K3 -6 60
+wait 250
+turn K3 3 60
+wait 20
+wait 2700
+release REC
+wait 400
+tap LFO
+turn SELECT -1
+key w14 down 111
+wait 400
+key w5 up
+wait 20
+press REC
+turn K1 6 20
+wait 250
+turn K3 1 60
+wait 20
+turn K3 -1 20
+wait 20
+turn K3 3 60
+wait 20
+turn K2 -1 20
+wait 20
+turn K1 -6 60
+wait 20
+turn K4 3 20
+wait 250
+turn K3 3 60
+wait 20
+wait 300
+release REC
+wait 20
+turn K3 4 60
+tap FX
+turn SELECT 1
+key w9 down 111
+wait 20
+key w8 up
+wait 60
+wait 200
+wait 5
+key w7 down 106
+wait 100
+key w8 up
+wait 5
+press REC
+turn K4 -1 20
+wait 90
+turn K4 6 60
+wait 250
+turn K2 -1 20
+wait 90
+turn K2 3 60
+wait 20
+turn K3 -3 60
+wait 20
+turn K4 3 20
+wait 20
+turn K3 -3 20
+wait 90
+turn K1 6 20
+wait 250
+wait 2700
+release REC
+wait 20
+turn K2 4 60
+tap LFO
+press REC
+wait 100
+release REC
+wait 5
+wait 800
+wait 60
+press REC
+turn K3 -1 60
+wait 250
+turn K3 3 20
+wait 250
+turn K2 -6 20
+wait 20
+wait 2700
+release REC
+wait 400
+press REC
+turn K4 1 20
+wait 20
+turn K3 6 20
+wait 20
+turn K3 1 20
+wait 90
+turn K2 6 60
+wait 20
+wait 2700
+release REC
+wait 20
+turn K2 4 60
+wait 5
+wait 20
+press REC
+turn K4 -6 60
+wait 250
+turn K2 6 60
+wait 20
+wait 50
+release REC
+wait 20
+press ARP
+tapkey w5
+release ARP
+press REC
+turn K4 1 20
+wait 250
+turn K4 1 60
+wait 250
+turn K3 6 60
+wait 20
+turn K2 3 20
+wait 250
+turn K3 1 20
+wait 90
+wait 300
+release REC
+wait 20
+turn K2 -4 60
+tap LFO
+wait 50
+wait 5
+press HOME
+tapkey w2
+wait 120
+turn K3 5 60
+wait 300
+tapkey w3
+wait 300
+wait 50
+wait 30
+tapkey w4
+wait 120
+wait 400
+release HOME
+wait 20
+press REC
+turn K4 -6 60
+wait 90
+turn K1 -3 20
+wait 20
+turn K1 -1 60
+wait 20
+turn K2 6 60
+wait 250
+turn K2 1 20
+wait 20
+turn K3 6 20
+wait 20
+turn K4 6 60
+wait 90
+wait 1100
+release REC
+wait 400
+tap FX
+press REC
+wait 2800
+release REC
+press REC
+turn K3 1 60
+wait 250
+turn K2 -1 60
+wait 90
+turn K2 3 60
+wait 250
+turn K2 1 60
+wait 250
+turn K1 3 60
+wait 20
+wait 50
+release REC
+wait 20
+turn K2 4 60
+tap FX
+wait 5
+press REC
+turn K3 -3 20
+wait 250
+turn K3 1 60
+wait 250
+turn K3 -1 60
+wait 90
+turn K3 -6 60
+wait 250
+turn K1 1 60
+wait 90
+turn K1 -6 60
+wait 250
+turn K4 6 20
+wait 250
+wait 300
+release REC
+wait 400
+turn K4 -4 60
+press ARP
+tapkey w0
+release ARP
+press REC
+turn K2 6 60
+wait 250
+turn K2 1 60
+wait 90
+turn K2 -6 60
+wait 20
+turn K2 6 60
+wait 250
+turn K4 6 20
+wait 250
+turn K2 -1 60
+wait 90
+page 11
+tap EDIT
+tapkey w13
+tapkey w12
+wait 50
+release REC
+wait 400
+tap FX
+press ENV
+wait 1200
+release ENV
+wait 5
+press GLO
+wait 50
+wait 30
+tapkey w5
+wait 300
+turn ALGO -2 60
+wait 30
+wait 50
+wait 120
+wait 400
+release GLO
+wait 20
+wait 5
+wait 20
+press REC
+turn K2 -3 60
+wait 90
+turn K1 -3 60
+wait 90
+turn K4 -6 60
+wait 250
+wait 300
+release REC
+wait 400
+tap SEL
+wait 20
+press REC
+turn K1 -6 60
+wait 20
+turn K2 -6 60
+wait 20
+turn K4 3 20
+wait 90
+turn K3 6 20
+wait 20
+turn K2 -3 20
+wait 250
+turn K1 -1 20
+wait 90
+turn K4 1 60
+wait 20
+wait 1100
+release REC
+wait 400
+turn K1 -4 60
+tap FX
+key w3 down 51
+wait 100
+key w11 up
+wait 20
+press REC
+turn K1 -1 60
+wait 20
+turn K2 -1 20
+wait 250
+wait 50
+release REC
+wait 400
+press FX
+turn ALGO -2 60
+wait 120
+tapkey w7
+wait 30
+wait 50
+wait 30
+tapkey w1
+wait 30
+wait 100
+release FX
+wait 5
+tap OCT+
+wait 20
+wait 200
+wait 5
+press REC
+turn K3 -1 60
+wait 20
+turn K1 -6 20
+wait 20
+turn K1 6 20
+wait 90
+turn K1 1 20
+wait 20
+turn K4 1 60
+wait 20
+turn K1 -1 20
+wait 90
+turn K2 6 60
+wait 250
+turn K4 -3 60
+wait 20
+wait 50
+release REC
+wait 400
+turn K4 4 60
+press REC
+turn K2 -6 60
+wait 250
+turn K2 -6 60
+wait 90
+turn K4 3 20
+wait 90
+turn K4 1 60
+wait 20
+turn K4 -3 20
+wait 20
+page 11
+tap EDIT
+tapkey w13
+tapkey w11
+wait 1100
+release REC
+wait 400
+press REC
+turn K2 6 60
+wait 20
+turn K3 -6 20
+wait 250
+turn K4 -6 20
+wait 250
+turn K2 -6 20
+wait 20
+turn K1 -6 60
+wait 20
+turn K1 -1 60
+wait 20
+turn K1 3 20
+wait 90
+turn K1 3 20
+wait 250
+page 11
+tap EDIT
+tapkey w11
+tapkey w13
+wait 2700
+release REC
+wait 20
+turn K1 4 60
+tap SEQ
+press REC
+turn K4 3 20
+wait 20
+turn K3 -6 60
+wait 90
+turn K4 -1 60
+wait 20
+turn K3 3 60
+wait 250
+wait 300
+release REC
+wait 20
+press REC
+turn K1 1 20
+wait 90
+turn K1 3 60
+wait 90
+turn K4 -1 60
+wait 250
+turn K3 -1 60
+wait 250
+wait 50
+release REC
+wait 20
+turn K3 -4 60
+press REC
+turn K2 1 60
+wait 250
+turn K2 -1 60
+wait 90
+turn K3 -1 60
+wait 250
+turn K1 -1 20
+wait 20
+turn K3 1 20
+wait 20
+turn K1 1 60
+wait 20
+wait 50
+release REC
+wait 400
+turn K2 -4 60
+tap SEQ
+press REC
+turn K3 1 20
+wait 20
+turn K2 -1 20
+wait 90
+turn K3 -3 20
+wait 90
+turn K4 3 20
+wait 20
+turn K4 -1 60
+wait 250
+turn K3 -3 20
+wait 20
+turn K2 6 60
+wait 90
+turn K2 6 60
+wait 250
+wait 1100
+release REC
+wait 400
+press REC
+turn K3 -6 20
+wait 250
+turn K3 -6 20
+wait 90
+turn K2 1 60
+wait 20
+turn K2 -6 60
+wait 90
+turn K3 -1 20
+wait 20
+turn K2 1 20
+wait 20
+wait 2700
+release REC
+wait 400
+press REC
+wait 2800
+release REC
+key w1 down 76
+wait 400
+key w3 up
+wait 60
+press REC
+turn K4 -1 20
+wait 250
+turn K4 -1 20
+wait 20
+turn K1 -3 60
+wait 20
+wait 1100
+release REC
+wait 20
+turn K1 4 60
+expect inv 0
+press REC
+turn K1 3 60
+wait 90
+turn K4 1 60
+wait 250
+turn K1 -6 60
+wait 20
+turn K2 1 60
+wait 20
+turn K1 3 60
+wait 20
+turn K4 1 20
+wait 90
+wait 300
+release REC
+wait 400
+press REC
+turn K3 -1 60
+wait 20
+turn K3 6 20
+wait 250
+wait 50
+release REC
+wait 20
+press REC
+turn K2 1 60
+wait 250
+turn K2 1 20
+wait 20
+turn K3 -6 60
+wait 20
+turn K2 -3 60
+wait 250
+turn K3 6 20
+wait 20
+turn K4 6 20
+wait 20
+wait 300
+release REC
+wait 20
+key w14 down 94
+wait 100
+key w10 up
+wait 20
+press REC
+turn K4 -1 20
+wait 90
+turn K1 1 20
+wait 250
+wait 1100
+release REC
+wait 20
+wait 800
+wait 5
+press SEQ
+wait 400
+release SEQ
+wait 20
+press REC
+turn K2 -1 60
+wait 20
+turn K4 3 20
+wait 20
+turn K1 1 20
+wait 250
+turn K2 6 20
+wait 90
+turn K1 6 60
+wait 250
+wait 2700
+release REC
+wait 400
+turn K4 4 60
+press REC
+turn K4 -6 20
+wait 250
+turn K3 6 60
+wait 90
+turn K3 3 20
+wait 90
+turn K3 1 60
+wait 20
+turn K1 -6 20
+wait 20
+page 11
+tap EDIT
+tapkey w13
+tapkey w13
+wait 50
+release REC
+wait 400
+tap SEQ
+press ENV
+wait 700
+tapkey w5
+release ENV
+key w14 down 112
+wait 20
+key w11 up
+wait 5
+press FX
+wait 50
+wait 300
+tapkey w0
+wait 300
+tapkey w2
+wait 120
+turn ALGO 2 60
+wait 120
+wait 100
+release FX
+wait 20
+wait 2000
+wait 5
+press REC
+turn K3 1 60
+wait 250
+turn K3 -3 20
+wait 90
+turn K1 -6 60
+wait 250
+wait 300
+release REC
+wait 20
+turn K3 4 60
+press ENV
+wait 700
+tapkey w3
+release ENV
+press EDIT
+wait 50
+wait 30
+turn SELECT 5 60
+wait 120
+wait 100
+release EDIT
+wait 60
+tap FX
+wait 20
+tap ARP
+wait 5
+press REC
+turn K2 -6 60
+wait 90
+turn K2 1 20
+wait 20
+turn K3 1 20
+wait 20
+turn K2 1 20
+wait 20
+turn K2 1 20
+wait 250
+wait 1100
+release REC
+wait 400
+wait 800
+wait 20
+press REC
+turn K4 -6 20
+wait 250
+turn K1 -1 60
+wait 20
+turn K3 1 60
+wait 90
+wait 300
+release REC
+wait 400
+turn K4 -4 60
+press REC
+turn K1 1 20
+wait 90
+turn K4 1 60
+wait 90
+turn K3 -1 60
+wait 250
+turn K2 6 60
+wait 90
+wait 2700
+release REC
+wait 400
+tap FX
+turn SELECT 1
+expect inv 0
+press ENV
+tapkey w2
+wait 300
+turn K1 5 60
+wait 300
+tapkey w3
+wait 120
+turn K2 5 60
+wait 30
+wait 1200
+release ENV
+wait 20
+press REC
+turn K4 1 60
+wait 250
+turn K3 -3 20
+wait 250
+turn K3 -1 20
+wait 90
+turn K1 -6 60
+wait 250
+turn K2 1 20
+wait 90
+turn K4 -3 60
+wait 90
+wait 50
+release REC
+wait 400
+press REC
+tap FX
+wait 30
+turn PRESET 2 60
+wait 120
+tap SEQ
+wait 120
+turn K3 -2 60
+wait 300
+wait 400
+release REC
+wait 60
+press REC
+turn K4 6 60
+wait 250
+turn K2 -6 60
+wait 20
+wait 1100
+release REC
+wait 20
+turn K4 4 60
+tap REC
+wait 5
+press EDIT
+wait 50
+wait 30
+tapkey w2
+wait 300
+turn ALGO 5 60
+wait 30
+wait 50
+wait 300
+wait 2700
+release EDIT
+wait 20
+press REC
+turn K1 -6 20
+wait 20
+turn K1 6 60
+wait 90
+turn K1 -3 60
+wait 90
+wait 2700
+release REC
+wait 20
+turn K3 4 60
+press REC
+turn K2 -1 20
+wait 20
+turn K1 -1 20
+wait 90
+wait 50
+release REC
+wait 20
+press ARP
+tapkey w3
+release ARP
+press REC
+turn K2 6 20
+wait 90
+turn K1 -3 20
+wait 90
+turn K3 1 20
+wait 250
+turn K3 -6 60
+wait 20
+turn K1 1 60
+wait 20
+wait 2700
+release REC
+wait 400
+tap FX
+press REC
+turn K3 -1 60
+wait 250
+turn K1 -6 60
+wait 90
+turn K4 -1 20
+wait 90
+turn K1 3 20
+wait 90
+turn K4 3 20
+wait 250
+wait 2700
+release REC
+wait 400
+press REC
+turn K2 6 20
+wait 90
+turn K3 1 20
+wait 250
+turn K2 1 20
+wait 90
+turn K1 -3 60
+wait 20
+turn K3 3 20
+wait 250
+wait 50
+release REC
+wait 20
+tap OCT-
+wait 20
+press REC
+turn K3 -3 60
+wait 20
+turn K4 1 20
+wait 20
+turn K3 6 20
+wait 250
+turn K1 3 20
+wait 250
+turn K3 -1 60
+wait 20
+turn K3 3 60
+wait 250
+turn K3 1 60
+wait 20
+wait 2700
+release REC
+wait 400
+turn K3 4 60
+tap SEQ
+turn SELECT -1
+press ARP
+tapkey w7
+release ARP
+press ENV
+wait 700
+tapkey w2
+release ENV
+press REC
+turn K1 -6 20
+wait 20
+turn K4 6 20
+wait 90
+turn K4 3 60
+wait 250
+turn K1 -1 60
+wait 250
+turn K1 -1 60
+wait 250
+turn K3 6 20
+wait 90
+turn K2 6 20
+wait 20
+turn K4 -6 20
+wait 90
+wait 2700
+release REC
+wait 400
+turn K4 4 60
+press ARP
+tapkey w1
+release ARP
+wait 5
+wait 5
+press REC
+turn K4 3 60
+wait 90
+turn K3 1 20
+wait 20
+turn K4 3 60
+wait 250
+turn K3 3 60
+wait 20
+turn K3 -3 20
+wait 250
+turn K4 -6 20
+wait 90
+turn K1 1 60
+wait 90
+wait 300
+release REC
+wait 400
+press ARP
+tapkey w3
+release ARP
+tap LFO
+wait 5
+tap LFO
+wait 60
+tap EDIT
+wait 5
+press REC
+turn K4 -6 60
+wait 250
+turn K1 3 60
+wait 250
+turn K4 -6 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K2 -4 60
+expect inv 0
+press ENV
+wait 50
+wait 120
+turn SELECT 5 60
+wait 300
+wait 50
+wait 300
+wait 50
+wait 120
+wait 50
+wait 300
+wait 400
+release ENV
+wait 5
+press REC
+turn K4 -3 20
+wait 90
+turn K1 1 20
+wait 90
+turn K1 -1 20
+wait 90
+wait 1100
+release REC
+wait 400
+turn K3 -4 60
+press REC
+turn K4 1 60
+wait 20
+turn K4 -1 60
+wait 90
+turn K4 -1 60
+wait 20
+turn K1 6 20
+wait 90
+wait 1100
+release REC
+wait 400
+tap OCT+
+wait 20
+press REC
+turn K3 -1 60
+wait 20
+turn K3 3 60
+wait 250
+turn K1 3 60
+wait 250
+turn K3 -1 20
+wait 90
+turn K1 3 60
+wait 90
+turn K1 -1 60
+wait 90
+turn K4 3 60
+wait 20
+turn K3 -3 60
+wait 250
+wait 2700
+release REC
+wait 20
+turn K4 4 60
+tap FX
+press EDIT
+wait 900
+release EDIT
+press REC
+turn K4 -6 20
+wait 250
+turn K3 -3 60
+wait 90
+turn K1 -6 60
+wait 20
+turn K1 6 20
+wait 20
+turn K2 -3 20
+wait 20
+turn K2 -1 20
+wait 250
+turn K4 6 60
+wait 90
+turn K1 3 20
+wait 250
+wait 50
+release REC
+wait 400
+tap ARP
+wait 20
+press REC
+turn K4 6 20
+wait 20
+turn K1 3 60
+wait 250
+turn K2 -3 60
+wait 90
+turn K2 -1 60
+wait 90
+turn K4 -6 20
+wait 90
+turn K4 1 20
+wait 20
+wait 2700
+release REC
+wait 400
+press REC
+turn K2 1 20
+wait 20
+turn K1 -6 60
+wait 250
+turn K3 1 20
+wait 20
+turn K2 -6 60
+wait 90
+turn K2 -6 20
+wait 90
+turn K1 -1 60
+wait 90
+turn K4 3 20
+wait 250
+turn K3 1 20
+wait 20
+wait 300
+release REC
+wait 20
+tap FX
+press REC
+turn K2 3 20
+wait 250
+turn K2 1 60
+wait 90
+turn K3 1 60
+wait 90
+turn K3 1 20
+wait 20
+turn K3 6 20
+wait 20
+turn K3 3 60
+wait 20
+turn K1 -1 20
+wait 20
+wait 50
+release REC
+wait 20
+turn K4 4 60
+press REC
+turn K1 -1 20
+wait 90
+turn K1 1 60
+wait 90
+turn K3 -3 20
+wait 250
+turn K1 -1 60
+wait 20
+turn K3 -6 60
+wait 250
+turn K3 1 60
+wait 20
+turn K2 -6 60
+wait 90
+turn K4 -6 60
+wait 250
+wait 50
+release REC
+wait 20
+press REC
+turn K1 -1 60
+wait 250
+turn K2 6 60
+wait 20
+wait 2700
+release REC
+wait 400
+turn K1 4 60
+tap SEQ
+press REC
+turn K2 -3 60
+wait 20
+turn K4 6 20
+wait 20
+wait 300
+release REC
+wait 400
+press REC
+turn K3 -3 20
+wait 20
+turn K3 6 20
+wait 20
+turn K3 6 60
+wait 90
+turn K1 -3 20
+wait 20
+turn K4 -1 20
+wait 90
+turn K3 -6 20
+wait 90
+turn K1 -3 20
+wait 90
+turn K2 3 60
+wait 90
+wait 2700
+release REC
+wait 20
+turn K2 -4 60
+press REC
+turn K2 3 20
+wait 90
+turn K4 6 60
+wait 90
+turn K3 1 20
+wait 90
+turn K1 1 60
+wait 250
+turn K1 1 20
+wait 250
+turn K1 -6 60
+wait 250
+turn K1 -6 60
+wait 90
+page 11
+tap EDIT
+tapkey w13
+tapkey w11
+wait 50
+release REC
+wait 20
+turn K1 -4 60
+tap FX
+press REC
+turn K2 -3 20
+wait 90
+turn K2 -3 60
+wait 20
+turn K3 -3 20
+wait 90
+turn K2 1 20
+wait 20
+turn K3 -6 20
+wait 20
+turn K1 -6 20
+wait 250
+turn K4 -1 20
+wait 90
+turn K4 1 20
+wait 20
+wait 2700
+release REC
+wait 20
+tap LFO
+turn SELECT -1
+key w1 down 120
+wait 20
+key w1 up
+wait 5
+tap ARP
+wait 5
+tap FX
+wait 5
+tap ENV
+wait 5
+wait 500
+expect inv 0
+expect autoall >0

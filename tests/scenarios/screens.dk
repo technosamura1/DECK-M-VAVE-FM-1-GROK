@@ -1,4 +1,4 @@
-# the pictures for the report (not a test): every page clean, the tape, TOMBOLA, the garden by day and by night
+# the pictures for the report (not a test): every page clean, the tape, the garden by day and by night
 wait 300
 flower 300
 wait 1500
@@ -62,7 +62,7 @@ shot p12_project.png
 tap PLAY
 wait 300
 # the tape (REC) with its count-in, then recording
-tap HOME
+page 0
 wait 300
 tap REC
 wait 1200
@@ -74,12 +74,18 @@ key w2 up
 key w4 down 80
 wait 1400
 shot p14_tape_rec.png
+# TRACKS while it records (HOME on the tape page): the row of the track red, the take red
+tap HOME
+wait 600
+shot p30_tracks_rec.png
+tap HOME
+wait 100
 key w4 up
 tap REC
 wait 4000
 tap PLAY
 wait 300
-# TOMBOLA, ARP, DRIVE, FINGER views (a new song: the tape's tracks)
+# ARP, DRIVE, FINGER views (a new song: the tape's tracks)
 tap SAVE
 wait 100
 tapkey w4
@@ -90,23 +96,13 @@ press HOME
 tapkey b1
 release HOME
 wait 50
-press SEQ
-tapkey w4
-release SEQ
-wait 50
 tap SEQ
-tap PLAY
-tapkey w2
-tapkey w5
-tapkey w7
-tapkey w9
-wait 3000
-shot p15_seq_tombola.png
-press SEQ
-tapkey w1
-release SEQ
+wait 50
+seqtype 1
 wait 50
 tap ARP
+wait 50
+turn K4 1
 wait 50
 key w0 down 90
 key w4 down 90
@@ -127,9 +123,7 @@ tapkey w6
 tapkey w11
 wait 1200
 shot p17_seq_finger.png
-press SEQ
-tapkey w2
-release SEQ
+seqtype 2
 wait 50
 turn K2 1
 wait 1500
@@ -172,7 +166,9 @@ tapkey b1
 release HOME
 wait 50
 tap ARP
-wait 1500
+wait 100
+turn K4 1
+wait 1400
 key w0 down 90
 key w2 down 90
 key w4 down 90

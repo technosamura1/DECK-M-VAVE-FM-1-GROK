@@ -33,7 +33,15 @@ FINISH_CHECK, FINISH_WRITE = 0xE0000000, 0xF0000000
 MAXDATA = 512
 BLOCKS, BLK, KEEP = 20, 0x30, 0x2F
 LOADER_MARK = b"FELUCCA-LOADER-1"
-PORT_RE = re.compile(r"fm-?1|felucca|ota|composite|sinco|usb-midi", re.I)   # never probe other gear
+PORT_RE = re.compile(r"fm-?1|felucca|clipper|ota|composite|sinco|usb-midi", re.I)   # ports probed first
+# Fallback when no port above answers: a custom firmware names its port freely ("Clipper 4"), so the other
+# ports are tried too, one by one, with the same read-only identity handshake. Well-known other gear and
+# virtual ports are never probed. Nothing is written unless a port answers as an FM-1 (model check in install()).
+SKIP_RE = re.compile(r"minilab|arturia|keylab|midi through|microsoft gs|wavetable|iac driver|loopmidi|rtpmidi|"
+                     r"network session|bluetooth|launchpad|launchkey|novation|akai|\bmpk\b|\bapc\b|korg|roland|yamaha|"
+                     r"behringer|focusrite|scarlett|nektar|keystation|oxygen|m-audio|native instruments|maschine|"
+                     r"traktor|push|ableton|reaper|virtual|loopback|dlight|mcu|hui|din thru|midiin|midiout", re.I)
+FALLBACK_HS = 0.6      # seconds to wait for an answer on a fallback port
 
 # seconds; the tests shorten them
 DELAY = {"open": 0.3, "start": 2.0, "reply": 0.01, "loader": 3.0, "reboot": 3.0, "retry": 1.0,
@@ -216,14 +224,15 @@ class MidoBackend:
         return MidoLink(self, in_name, out_name)
 
 
-def pair_output(name, outs):
+def pair_output(name, outs, strict=False):
+    """the output of the same device; strict: only a port with the same name (never another device's)"""
     if name in outs:
         return name
     base = re.sub(r"\s+\d+$", "", name)     # Windows numbers each port
     same = [o for o in outs if re.sub(r"\s+\d+$", "", o) == base]
     if len(same) == 1:
         return same[0]
-    return outs[0] if len(outs) == 1 else None
+    return outs[0] if len(outs) == 1 and not strict else None
 
 
 # --------------------------------------------------------------- updater ---
@@ -277,6 +286,8 @@ class Updater:
     def __init__(self, backend, port=None):
         self.backend = backend
         self.port = port
+        self.tried, self.skipped = [], []    # for the "not found" message
+        self.last_name = None
 
     def candidates(self, only_port):
         names = self.backend.input_names()
@@ -287,27 +298,65 @@ class Updater:
             return mine + [n for n in names if n not in mine and PORT_RE.search(n)]
         return [n for n in names if PORT_RE.search(n)]
 
-    def find(self, want=None, only_port=True):
-        """the first matching port that answers the handshake (and want(identity))"""
-        outs = self.backend.output_names()
-        for name in self.candidates(only_port):
-            out = pair_output(name, outs)
-            if not out:
-                continue
-            try:
-                link = self.backend.open(name, out)
-            except Exception:
-                continue
+    def probe(self, name, outs, strict=False, hs_wait=None):
+        """open one port and run the read-only handshake -> (Device, answered)"""
+        out = pair_output(name, outs, strict)
+        if name not in self.tried:
+            self.tried.append(name)
+        if not out:
+            return None
+        try:
+            link = self.backend.open(name, out)
+        except Exception:
+            return None
+        if hs_wait is None:
             ident = handshake(link, 2)
-            if ident and (want is None or want(ident)):
-                return Device(link, ident, name)
-            link.close()
+        else:
+            old = DELAY["hs"]
+            DELAY["hs"] = hs_wait
+            try:
+                ident = handshake(link, 1)
+            finally:
+                DELAY["hs"] = old
+        if ident:
+            return Device(link, ident, name)
+        link.close()
+        return None
+
+    def find(self, want=None, only_port=True, fallback=False, extra=()):
+        """the first matching port that answers the handshake (and want(identity)).
+        fallback: when no port picked by name answers, try the other ports too (not the skip list)"""
+        outs = self.backend.output_names()
+        names = self.candidates(only_port)
+        names += [n for n in extra if n not in names]
+        for name in names:
+            dev = self.probe(name, outs)
+            if dev and (want is None or want(dev.id)):
+                self.last_name = dev.name
+                return dev
+            if dev:
+                dev.link.close()
+        if fallback and not self.port:
+            for name in self.backend.input_names():
+                if name in names:
+                    continue
+                if SKIP_RE.search(name):
+                    if name not in self.skipped:
+                        self.skipped.append(name)
+                    continue
+                dev = self.probe(name, outs, strict=True, hs_wait=FALLBACK_HS)
+                if dev and (want is None or want(dev.id)):
+                    self.last_name = dev.name
+                    return dev
+                if dev:
+                    dev.link.close()
         return None
 
     def wait_for(self, want, secs):
+        """after a restart the port may be renamed: names that look like an FM-1, and the old name, again"""
         end = time.monotonic() + secs
         while time.monotonic() < end:
-            dev = self.find(want, only_port=False)
+            dev = self.find(want, only_port=False, extra=[self.last_name] if self.last_name else ())
             if dev:
                 return dev
             time.sleep(DELAY["retry"])
@@ -438,8 +487,15 @@ def load_package(path, force):
 def not_found(up):
     names = up.backend.input_names()
     where = f"no MIDI port matching {up.port!r} answered" if up.port else "FM-1 not found"
-    return InstallError("notfound", f"{where} (USB data cable? another app using it?)"
-                        f"\n  MIDI inputs: {', '.join(names) if names else '(none)'}")
+    tried = [n for n in names if n in up.tried]
+    msg = (f"{where} (USB data cable? another app using it?)"
+           f"\n  MIDI inputs: {', '.join(names) if names else '(none)'}"
+           f"\n  tried (no answer): {', '.join(tried) if tried else '(none)'}")
+    if up.skipped:
+        msg += f"\n  skipped (other gear): {', '.join(up.skipped)}"
+    if not up.port:
+        msg += "\n  if the FM-1 is listed under another name, run again with --port NAME (part of the name)"
+    return InstallError("notfound", msg)
 
 
 class Progress:
@@ -470,7 +526,7 @@ class Progress:
 def run(a, backend, out, ask):
     up = Updater(backend, a.port)
     if a.info:
-        dev = up.find()
+        dev = up.find(fallback=True)
         if not dev:
             raise not_found(up)
         dev.link.close()
@@ -479,7 +535,7 @@ def run(a, backend, out, ask):
         return 0
     product, image, digest = load_package(a.package, a.force)
     print(f"package: {product}  ({a.package})", file=out)
-    dev = up.find()
+    dev = up.find(fallback=True)
     if not dev:
         raise not_found(up)
     print(f"device:  {dev.id.text}  ({dev.name})" + ("  in update mode: the write will be finished" if dev.id.loader else ""),

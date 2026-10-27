@@ -1,0 +1,76 @@
+# a page change redraws the WHOLE screen: HOME HOME HOME in a quick row left the garden over the TRACKS rows (a band a frame)
+wait 600
+tap HOME
+wait 40
+tap HOME
+wait 40
+tap HOME
+wait 40
+snap 0
+wait 500
+snap 1
+expect page 11
+expect_snap
+# and back to the garden (it moves: the header and the foot are compared), then through a hold
+tap HOME
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap 0 28
+expect_snap 172 240
+tap HOME
+wait 30
+press HOME
+wait 700
+release HOME
+wait 150
+snap 0
+wait 500
+snap 1
+expect_snap
+# any page to any page: SEQ, SOUND, MIX, ROAD, KEYS, SAVE, REC, ARP, GLOBAL, ATMO, TRACKS, the garden
+tap SEQ
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap
+tap FX
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap
+tap EDIT
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap
+tap ARP
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap
+tap GLO
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap
+tap SEL
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap 0 100
+expect_snap 140 240
+tap HOME
+wait 40
+snap 0
+wait 500
+snap 1
+expect_snap 0 28
+expect_snap 172 240

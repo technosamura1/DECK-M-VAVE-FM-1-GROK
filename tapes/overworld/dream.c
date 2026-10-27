@@ -216,7 +216,6 @@ static void lh(const dk_drive_t *d, const dk_harm_t *h, dream_t *m)
 static void drums(const dk_drive_t *d)
 {
     static const int8_t LOFI_OF[6] = {1, 4, 6, 8, 10, 12}, CAMP_OF[3] = {2, 3, 5};
-    const dk_finger_t *f;
     int pat, step, lane;
     if (d->tick % DK_T16 || d->breath)
         return;
@@ -232,9 +231,8 @@ static void drums(const dk_drive_t *d)
     step = (int)(d->bar_tick / DK_T16);
     if (d->fill && step >= 12)
         pat = 13 + (int)((d->tick / DK_TPB) % 3u);
-    f = &FINGER_DRUM[pat];
     for (lane = 0; lane < 8; lane++) {
-        int v = f->lanes[lane][step];
+        int c = dk_fch(FD_SRC[pat][lane + 1], step), v = c >= '1' && c <= '9' ? c - '0' : 0;
         if (v)
             dk_emit(d->trk, KIT_NOTE[lane], hvel(v * 13), DK_T16, jit() / 2 + ((step & 1) && d->style == ST_LOFI ? (int)(0.16f * dk_ctx.spb * 0.25f) : 0));
     }

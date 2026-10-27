@@ -1,0 +1,27 @@
+# the pool full and nothing old to drop (one take in every clip): what fits is kept, the rest is lost WITH a message
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+qnt 0
+ballast 4090
+wait 100
+tap REC
+wait 3500
+key w0 down 90
+key w2 down 90
+key w4 down 90
+wait 700
+shot recfull_full.png
+key w0 up
+key w2 up
+key w4 up
+wait 300
+shot recfull_msg.png
+tap REC
+wait 500
+expect recording 0
+expect nev 4096
+expect events 6
+expect textfit 0

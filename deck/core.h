@@ -12,8 +12,8 @@ void dk_shed(void);
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (from the render) */
 
 /* commands (main loop -> render) */
-enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_TOMBOLA, C_SEED, C_PEDAL,
-       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE };
+enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
+       C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK };
 void dk_cmd(int c, int a, int b, int d);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
 
@@ -39,8 +39,18 @@ extern volatile uint32_t dk_seen[DK_SEEN];
 
 /* state for the screen */
 extern volatile uint8_t dk_playing, dk_recording, dk_counting, dk_rec_trk, dk_pass;
+extern volatile uint16_t dk_rec_tick0;   /* the clip tick the take started at */
+extern volatile uint32_t dk_fired;          /* the takes (bit) whose notes the sequencer has fired since the host cleared it (tests) */
+extern volatile uint8_t dk_lsolo_clip, dk_lsolo_take;   /* LAYERS solo (not saved): that clip plays only that take (clip 0xFF: none) */
+extern volatile uint8_t dk_rec_pass0;    /* the pass number the REC press started with (REPLACE: older takes are the ones it erases) */
+extern volatile uint8_t dk_rec_mask;     /* the tracks being recorded (bit t): the armed ones and the track the take began on */
+extern volatile uint8_t dk_rec_take[DK_NTRACK];  /* the layer this track writes while recording (0: not this take) */
+extern volatile uint8_t dk_rec_floor[DK_NTRACK]; /* REPLACE erases takes below this; set when the track joins the take */
+extern uint8_t dk_rec_mode;              /* REC MODE: 0 OVERDUB (default), 1 REPLACE (the take erases the armed tracks' old notes it passes over) */
 extern volatile uint8_t dk_cur_part, dk_next_part, dk_road_i, dk_road_rep, dk_stems;
 extern volatile uint16_t dk_part_tick, dk_part_len;
+void dk_auto_hold(int t, int target);                  /* AUTOMATION: a knob turned by hand: its value is heard till the bar's end */
+int dk_auto_live(int t, int target);                   /* the curve's value now, tenths of a percent of the range (-1 none) */
 extern volatile uint32_t dk_ticks;                      /* since the transport started */
 extern volatile uint32_t dk_clock;                      /* ticks since boot (the free clock) */
 extern volatile uint8_t dk_beat_flash;                  /* the metronome's beat: 2 the bar's first, 1 the others */
@@ -56,17 +66,18 @@ extern volatile uint8_t dk_perform;                     /* the performance effec
 extern volatile uint8_t dk_open_n;                      /* notes held while recording (the tape's red) */
 extern volatile uint16_t dk_open_pos[8];
 extern volatile uint8_t dk_open_note[8];
+extern volatile uint8_t dk_open_trk[8];                 /* which track each held note belongs to */
 extern volatile uint8_t dk_voices_on;
+extern volatile uint8_t dk_trk_voices[];
+extern volatile uint8_t dk_live_voices;
+void dk_budget_force(int b);
+extern volatile uint8_t dk_voices_frozen;   /* (of them, with a frozen sound) */
 extern volatile uint8_t dk_fill;
 extern volatile uint32_t dk_rec_hits;                   /* notes recorded (the head blinks) */
-/* TOMBOLA for the screen: the drum's turn (turns) and its balls (x, y in -1..1, 0 none) */
-#define DK_NBALL 12
-extern volatile float dk_tmb_angle;
-extern volatile int16_t dk_tmb_x[DK_NBALL], dk_tmb_y[DK_NBALL];
-extern volatile uint8_t dk_tmb_note[DK_NBALL], dk_tmb_n, dk_tmb_hit[DK_NBALL];
 /* ARP / HOLD: the notes held for them */
 extern volatile uint8_t dk_held_n[DK_NTRACK];
 extern volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* ARP: its rhythm's step, a note just now */
+extern uint8_t dk_arp_step[DK_NTRACK];                       /* ARP: the pattern's step (0 = the first) */
 extern const uint8_t DK_ARP_DIV[DK_ARP_NDIV], DK_ARP_RHY[ARPR_N][16];
 extern volatile uint8_t dk_held[DK_NTRACK][8];
 /* the metronome (global settings, not the song's) */
@@ -81,11 +92,28 @@ typedef struct {
 extern dk_metro_t dk_metro;
 /* MIDI out settings */
 extern uint8_t dk_midi_notes, dk_midi_clock;
+/* recording: the audio's latency made up, ms (GLOBAL: REC LAT; 0..30): a played note is put that much earlier */
+extern uint8_t dk_rec_lat;
+extern uint8_t dk_rec_arm;              /* REC ARM: two steps (REC arms, PLAY records) when stopped (1); default 0: REC records at once */
+extern uint8_t dk_lock_take;             /* LOCK TAKE: a take keeps the sound it was recorded with (1) */
+extern uint8_t dk_newpart_copy;          /* NEW PART (GLOBAL): 1 COPY (switching to an empty part while playing copies the part you leave), 0 EMPTY */
+/* a part's track mutes (dk_song.part[p].mute): a change made while playing waits for the bar's end (C_PMUTE a = track, b = part);
+ * the pending one (dk_pm_part's tracks in dk_pm_x flip at the bar's end) is shown on MIX; dk_pm_gen counts the changes made */
+extern volatile uint8_t dk_pm_part, dk_pm_x, dk_pm_gen;
 extern volatile uint32_t dk_metro_clicks;               /* clicks made (tests) */
 extern volatile uint32_t dk_metro_err_max;              /* the worst offset of a click from its tick, samples */
 
 /* the engine of a track and the values its voices get */
 const dk_engine_t *dk_engine(int trk);
+/* FINGER's banks (the tape's text patterns, decoded here) */
+const char *dk_fb_bankname(int bank);
+const char *dk_fb_banksub(int bank);
+int dk_fb_bank(int t);                  /* the track's bank (0 LOFI 1 8BIT 2 SYNTH 3 CINEMA) */
+int dk_fb_set(int t);                   /* the track's set: 0 drums 1 keys 2 bass 3 pad */
+const char *dk_fb_name(int t, int p);
+int dk_fb_drum(int t, int p, int lane, int step);
+int dk_fb_mel(int t, int p, int step, int *len, int *oct, int *vel, int *deg2);
+int dk_param_static(int trk, int target);               /* the knobs and the MACRO only (what a take is frozen with) */
 int dk_param_value(int trk, int target);                /* the value now (MACRO, motion and modulation applied) */
 uint32_t dk_cpu_cost(void);
 /* the CPU's load (the render's %, the device's measure) to the voices' budget: it sheds sooner when the render runs

@@ -1,0 +1,232 @@
+# FX automation on every track: REC held + a FX knob (TONE, DEPTH, SPACE, SEND; TYPE's second knob) records a curve (T_FXA 13, T_FXAMT 12, T_REV 15, T_ECHO 16, T_FXB 14)
+wait 300
+demo
+wait 100
+tap PLAY
+wait 500
+turn SELECT -8
+wait 100
+tap FX
+expect page 2
+expect track 0
+row 2
+press REC
+turn K1 5
+wait 150
+turn K1 -3
+wait 150
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+turn K3 5
+wait 150
+turn K3 -3
+wait 150
+turn K4 5
+wait 150
+turn K4 -3
+wait 150
+release REC
+wait 200
+expect atgt12 >=2
+expect atgt13 >=2
+expect atgt15 >=2
+expect atgt16 >=2
+row 3
+press REC
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+release REC
+wait 200
+expect atgt14 >=2
+expect textfit 0
+turn SELECT 1
+wait 100
+expect track 1
+row 2
+press REC
+turn K1 5
+wait 150
+turn K1 -3
+wait 150
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+turn K3 5
+wait 150
+turn K3 -3
+wait 150
+turn K4 5
+wait 150
+turn K4 -3
+wait 150
+release REC
+wait 200
+expect atgt12 >=2
+expect atgt13 >=2
+expect atgt15 >=2
+expect atgt16 >=2
+row 3
+press REC
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+release REC
+wait 200
+expect atgt14 >=2
+expect textfit 0
+turn SELECT 1
+wait 100
+expect track 2
+row 2
+press REC
+turn K1 5
+wait 150
+turn K1 -3
+wait 150
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+turn K3 5
+wait 150
+turn K3 -3
+wait 150
+turn K4 5
+wait 150
+turn K4 -3
+wait 150
+release REC
+wait 200
+expect atgt12 >=2
+expect atgt13 >=2
+expect atgt15 >=2
+expect atgt16 >=2
+row 3
+press REC
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+release REC
+wait 200
+expect atgt14 >=2
+expect textfit 0
+turn SELECT 1
+wait 100
+expect track 3
+row 2
+press REC
+turn K1 5
+wait 150
+turn K1 -3
+wait 150
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+turn K3 5
+wait 150
+turn K3 -3
+wait 150
+turn K4 5
+wait 150
+turn K4 -3
+wait 150
+release REC
+wait 200
+expect atgt12 >=2
+expect atgt13 >=2
+expect atgt15 >=2
+expect atgt16 >=2
+row 3
+press REC
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+release REC
+wait 200
+expect atgt14 >=2
+expect textfit 0
+turn SELECT 1
+wait 100
+expect track 4
+row 2
+press REC
+turn K1 5
+wait 150
+turn K1 -3
+wait 150
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+turn K3 5
+wait 150
+turn K3 -3
+wait 150
+turn K4 5
+wait 150
+turn K4 -3
+wait 150
+release REC
+wait 200
+expect atgt12 >=2
+expect atgt13 >=2
+expect atgt15 >=2
+expect atgt16 >=2
+row 3
+press REC
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+release REC
+wait 200
+expect atgt14 >=2
+expect textfit 0
+turn SELECT 1
+wait 100
+expect track 5
+row 2
+press REC
+turn K1 5
+wait 150
+turn K1 -3
+wait 150
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+turn K3 5
+wait 150
+turn K3 -3
+wait 150
+turn K4 5
+wait 150
+turn K4 -3
+wait 150
+release REC
+wait 200
+expect atgt12 >=2
+expect atgt13 >=2
+expect atgt15 >=2
+expect atgt16 >=2
+row 3
+press REC
+turn K2 5
+wait 150
+turn K2 -3
+wait 150
+release REC
+wait 200
+expect atgt14 >=2
+expect textfit 0
+turn SELECT 1
+wait 100

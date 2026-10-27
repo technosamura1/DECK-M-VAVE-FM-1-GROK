@@ -1,0 +1,41 @@
+# a bass track plays LOW and ONE note at a time: a white key (CHORDS) used to send a four-note stack into the one-voice
+# SOFTBASS, which kept only the top of it (E5, 659 Hz); and the keys started at C4. Now: the key's root, two octaves down
+wait 300
+tap HOME
+wait 100
+tapkey w3
+wait 100
+tap HOME
+wait 100
+expect track 3
+expect eng 4
+key w0 down 100
+wait 200
+expect voices 1
+expect_out USB 93 1D 63
+key w0 up
+wait 800
+tapkey b0
+wait 200
+expect_out USB 93 18 63
+wait 800
+# OCT lifts it by an octave, and the other tracks keep their chords
+trkoct 1
+key w0 down 100
+wait 200
+expect_out USB 93 29 63
+key w0 up
+wait 500
+tap HOME
+wait 100
+tapkey w0
+wait 100
+tap HOME
+wait 100
+expect track 0
+key w0 down 100
+wait 200
+expect_out USB 90 35 63
+expect voices >1
+key w0 up
+wait 300
