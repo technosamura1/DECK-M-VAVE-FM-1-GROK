@@ -15,6 +15,7 @@ static uint8_t touch_live;
 static int8_t touch_c, touch_s;
 static uint32_t touch_held;              /* state: the sensed keys held (from the events) */
 static uint8_t touch_v[NKEYS];
+static uint32_t mx_seen[NKEYS];          /* matrix went down, the scan has not seated: when (0 = up) */
 
 /* Velo's settings, as MONK-1 and CTL-1 use them; the curve's exponent x 2 at +5, / 2 at -5 */
 static void touch_config(void)
@@ -135,12 +136,33 @@ void touch_poll(void)
 }
 uint32_t touch_keys(void)
 {
-    uint32_t k = plat_keys(), mask = 0, i;
+    uint32_t k = plat_keys(), hide = 0, add = 0, i, now;
     if (!touch_live)
         return k;
-    for (i = 0; i < NKEYS; i++)
-        mask |= (uint32_t)sense_is_analog(i) << i;
-    return (k & ~mask) | touch_held | plat_remote_keys();   /* (remote keys: as pressed, no reading) */
+    /* The scan owns a key it has seated (its velocity is the event's). It used to hide the matrix the
+     * whole time it was on, so a pill that never crossed the seat line made that key silent: the matrix
+     * had closed and nobody played it. The matrix is given a few milliseconds, then it plays anyway. */
+    now = plat_ms();
+    for (i = 0; i < NKEYS; i++) {
+        uint32_t bit = 1u << i;
+        if (!sense_is_analog(i))
+            continue;
+        if (sn_key[i].st == SN_DOWN || sn_key[i].st == SN_LIFT) {
+            add |= bit;
+            mx_seen[i] = 0;
+            hide |= bit;
+        } else if (k & bit) {
+            if (!mx_seen[i])
+                mx_seen[i] = now | 1u;
+            if ((uint32_t)(now - mx_seen[i]) < 14u)
+                hide |= bit;
+            else
+                touch_v[i] = 0;            /* no seat: not the previous note's velocity */
+        } else {
+            mx_seen[i] = 0;
+        }
+    }
+    return (k & ~hide) | add | plat_remote_keys();
 }
 uint8_t touch_vel(uint32_t key)
 {

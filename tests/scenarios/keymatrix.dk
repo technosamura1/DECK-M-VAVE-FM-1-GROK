@@ -1,0 +1,26 @@
+# a key whose velocity scan never seats must still play. the scan used to hide the matrix, so the key was silent.
+# the matrix is given 14 ms (the scan seats a real press sooner, and keeps its velocity); then it plays.
+wait 400
+matrix w0 down
+wait 8
+expect livev <1
+wait 30
+expect livev >0
+expect voices >0
+matrix w0 up
+wait 40
+expect livev <1
+# a press the scan does seat still plays at once (not after the matrix's wait)
+key w2 down 90
+wait 20
+expect livev >0
+key w2 up
+wait 40
+expect livev <1
+# the top row has no pill: the matrix, at once
+matrix w14 down
+wait 8
+expect livev >0
+matrix w14 up
+wait 40
+expect livev <1

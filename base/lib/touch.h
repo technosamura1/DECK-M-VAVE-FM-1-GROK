@@ -12,8 +12,9 @@
  *   events    touch_take: each press (TOUCH_PRESS, with its velocity) and release of a sensed key, in order; a key
  *             that bounces open is pressed again without a release (a retrigger). Call touch_update every frame
  *             for the pressure.
- *   state     touch_poll every frame, then touch_keys (every key held, sensed or not: plat_keys for the top row)
- *             and touch_vel (the velocity of a key's last press); touch_poll keeps the pressure too. */
+ *   state     touch_poll every frame, then touch_keys (every key held, sensed or not: the scan while it has
+ *             seated, otherwise the matrix — a pill that never seats no longer swallows the key) and
+ *             touch_vel (the velocity of a key's last press); touch_poll keeps the pressure too. */
 #pragma once
 #include <stdint.h>
 
