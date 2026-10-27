@@ -280,8 +280,8 @@ static int page_field(int i, int home)
             return F[i];
         }
         switch (k->seq) {
-        case SQ_GROOVE: {                    /* the drummer: how loud, how it swings, its room */
-            static const uint8_t F[5] = {F_VOL, F_TSWING, F_REV, F_ECHO, F_NONE};
+        case SQ_GROOVE: {                    /* the drummer: a fill by itself, its hits changing, following the others; how loud */
+            static const uint8_t F[5] = {F_GRFILL, F_GRMUT, F_GRFOL, F_VOL, F_TSWING};
             return F[i];
         }
         case SQ_STEP:
@@ -348,7 +348,7 @@ static const char *hint(void)
         if (k->seq == SQ_STEP)
             return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "SEQ AGAIN x2 = STEP EDIT";
         if (k->seq == SQ_GROOVE)
-            return "W1-15 GROOVE  W16 END  BLACK FILL";
+            return "W GROOVE  B1-10 FILL  B11 DICE";
         if (k->seq == SQ_ENDLESS)
             return ui.endl_on ? "OCT- REST  OCT+ TIE  REC = DONE" : "REC = PLAY IN STEPS  KEY = TRANSPOSE";
         return "HOME x2, EDIT = COOK RANDOM QUANTIZE";
@@ -1144,6 +1144,7 @@ static void draw_endless(const dk_clip_t *c)
 static void draw_groove(void)
 {
     static const char *const SEC[5] = {"INTRO", "VERSE", "CHORUS", "BRIDGE", "OUTRO"};
+    const dk_track_t *k = cur();
     int t = dk_song.cur_track, cur = dk_gr_cur[t], nx = dk_gr_next[t], fl = dk_gr_fill[t], i, j;
     int blink = (plat_ms() / 200u) & 1u, step = (int)(dk_part_tick / DK_T16) % 16;
     for (i = 0; i < 5; i++) {
@@ -1178,9 +1179,18 @@ static void draw_groove(void)
             else
                 cv_rect(x, y + 8, 18, 2, i >= 5 ? W_GRAY : W_LINE);
         }
-        text_box(WX + 4, y + 13, 150, 0, &FONT_XS, &FONT_XS,
-                 fl && fl <= TAPE.nfill ? TAPE.fill[fl - 1].name : nx == 0 ? "END NEXT BAR" : cur ? TAPE.groove[cur - 1].name : "PLAY A WHITE KEY",
-                 fl ? TH_ENC[1] : TH_TEXT);
+        {
+            char nm[24];
+            const char *base = fl && fl <= TAPE.nfill ? TAPE.fill[fl - 1].name : nx == 0 ? "END NEXT BAR" : cur ? TAPE.groove[cur - 1].name : "PLAY A WHITE KEY";
+            char *p = cpy(nm, base);
+            if (cur && !fl && dk_gr_mod[t])  /* changed by DICE / MUTATE: its white key brings it back */
+                cpy(p, " *");
+            text_box(WX + 4, y + 13, 110, 0, &FONT_XS, &FONT_XS, nm, fl ? TH_ENC[1] : TH_TEXT);
+        }
+        if (cur && k->drv[2]) {               /* FOLLOW: how busy the others are */
+            cv_rect(WX + 118, y + 16, 38, 2, W_LINE);
+            cv_rect(WX + 118, y + 16, dk_gr_dens[t] * 38 / 100, 2, TH_ENC[2]);
+        }
         for (i = 0; i < 16 && cur; i++)       /* the bar: sixteen steps, where it is */
             cv_rect(WX + 160 + i * 4, y + 15, 3, i % 4 ? 3 : 5, i == step && dk_playing ? TH_ENC[2] : W_LINE);
     }

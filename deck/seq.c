@@ -406,10 +406,13 @@ static void rec_stop(void)
 /* ---------------------------------------------------------------- playing --- */
 static uint32_t ch_bits(void) { return 0; }
 static uint8_t ev_snd;                   /* the sound of the event being played (fire): 0 the track's own */
+static uint16_t gr_act;
 static void note_play(int t, int note, float vel, int32_t gate, int32_t delay, int src)
 {
     if (!track_audible(t) && src)
         return;
+    if (!(dk_engine(t)->flags & EF_DRUM))
+        gr_act++;                              /* (GROOVE's FOLLOW: how much the others play) */
     voice_start(t, note, vel, gate, delay, src, ev_snd);
 }
 void dk_emit(int t, int note, int vel, int dur, int delay)
@@ -664,14 +667,27 @@ static void fill_tick(int t)
 
 
 /* ----------------------------------------------------------------- GROOVE --- */
-/* A drum track played as EZdrummer: the tape's grooves (white 1-15), fills (black), the ending (white 16). A new groove
- * comes in on the next bar (from silence, stopped: on the next 1/16); a fill from the next beat to the bar's end, the
- * groove under it stopped there, then on (a long fill: a crash on the next one). Stopped it runs on the free clock.
- * Recording, its notes go into the clip as any generator's. */
+/* A drum track played as EZdrummer: the tape's grooves (white 1-15), fills (black 1-10), DICE (black 11), the ending
+ * (white 16). A new groove comes in on the next bar (from silence at once: stopped, on the free clock from the next 1/16);
+ * a fill from the next beat to the bar's end, the groove under it stopped there, then on (a long fill: a crash on the
+ * next one). Stopped with the transport. Recording, its notes go into the clip as any generator's.
+ * The groove plays from a copy (gp[t]) the drummer can change: DICE (the same drums, other hits), MUTATE (a hit or two
+ * moved every two bars), FOLLOW (fewer hits when the others play little, ghosts when they play a lot); its white key
+ * again brings the written one back. AUTO FILL: a fill every 4 / 8 / 16 bars, a long one before a new section.
+ * The track's drv[]: 0 AUTO FILL (0 off, 1 4 bars, 2 8, 3 16), 1 MUTATE 0..100, 2 FOLLOW 0..100. */
+#define GP_ROWS 8
+typedef struct {
+    uint8_t n, note[GP_ROWS], len[GP_ROWS], v[GP_ROWS][32], mod;   /* v: 0 none, else 1..9 */
+} gpat_t;
+static gpat_t gp[DK_NTRACK] DK_POOL;
 volatile uint8_t dk_gr_cur[DK_NTRACK], dk_gr_next[DK_NTRACK] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, dk_gr_fill[DK_NTRACK];
+volatile uint8_t dk_gr_mod[DK_NTRACK], dk_gr_dens[DK_NTRACK];   /* changed from the written one; FOLLOW's level 0..100 */
 volatile uint32_t dk_gr_hits;                         /* (the drummer's notes so far: the tests) */
 static uint8_t gr_fst[DK_NTRACK], gr_from[DK_NTRACK];   /* the fill: 1 this bar (from gr_from), 2 the next bar */
 static uint32_t gr_bar0[DK_NTRACK];                    /* stopped: the free clock's tick its first step was */
+static uint16_t gr_bars[DK_NTRACK];                    /* bars since it started (AUTO FILL, MUTATE) */
+static uint16_t gr_act_at[DK_NTRACK];          /* FOLLOW: the other tracks' notes, counted; at the bar line */
+static float gr_dens[DK_NTRACK];                       /* their density, smoothed, 0..1 */
 static int groove_note(char c)
 {
     switch (c) {
@@ -691,16 +707,120 @@ static int groove_note(char c)
     default: return -1;
     }
 }
+static int grand(int n) { return n > 0 ? (int)(dk_frand() * (float)n) % n : 0; }
 static void groove_hit(int t, int note, int d, int step)
 {
-    int vel = 30 + 10 * d + (int)(dk_frand() * 8.0f) - 4;
+    int vel = 30 + 10 * d + grand(9) - 4;
     vel = vel < 1 ? 1 : vel > 127 ? 127 : vel;
     dk_gr_hits++;
     note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)DK_T16 * tick_len), jitter() / 3 + swing_delay(t, step * DK_T16), 2);
     if (rec_track_of(t))
         rec_done(t, note, vel, DK_T16);
 }
-/* the rows of g at 1/16 q (its own length, 16 or 32); `once`: the short rows only (a fill's after, the ending), at its one */
+/* the written groove into the copy (its full rows; the short ones are a fill's / the ending's) */
+static void gp_load(int t, const dk_groove_t *g)
+{
+    gpat_t *p = &gp[t];
+    const char *r = g->rows;
+    p->n = 0;
+    p->mod = 0;
+    dk_gr_mod[t] = 0;
+    while (*r && p->n < GP_ROWS) {
+        const char *e = r + 1;
+        int n, note = groove_note(*r), i;
+        while (*e && *e != '|')
+            e++;
+        n = (int)(e - r) - 1;
+        if (note >= 0 && n >= 16) {
+            n = n >= 32 ? 32 : 16;
+            p->note[p->n] = (uint8_t)note;
+            p->len[p->n] = (uint8_t)n;
+            for (i = 0; i < 32; i++)
+                p->v[p->n][i] = (uint8_t)(i < n && r[1 + i] >= '1' && r[1 + i] <= '9' ? r[1 + i] - '0' : 0);
+            p->n++;
+        }
+        r = *e ? e + 1 : e;
+    }
+}
+/* a step that holds the groove up: the kick on the one, the snare's backbeats, the crash */
+static int gp_strong(int note, int i)
+{
+    return (note == 36 && i % 16 == 0) || (note == 38 && (i % 16 == 4 || i % 16 == 12)) || note == 49;
+}
+static int gp_keeper(int note) { return note == 42 || note == 46 || note == 51 || note == 70; }   /* the hats, the ride, the shaker */
+/* DICE: the same drums, other hits: each row keeps how many it has (its strong ones where they are), the rest put again
+ * where that drum would go (the kick on 8ths, the snare's ghosts between, the hats their grid, an accent moved) */
+static void gp_dice(int t)
+{
+    gpat_t *p = &gp[t];
+    int r, i, bar;
+    for (r = 0; r < p->n; r++) {
+        int note = p->note[r], len = p->len[r];
+        for (bar = 0; bar < len; bar += 16) {
+            uint8_t *v = &p->v[r][bar], vel[16];
+            int nv = 0, free = 0, k;
+            if (gp_keeper(note)) {           /* the time keepers: the grid stays, a hit or two in or out, the accents moved */
+                int sh = grand(3) * 2;
+                uint8_t w[16];
+                for (i = 0; i < 16; i++)
+                    w[i] = v[(i + 16 - sh) % 16] && v[i] ? v[(i + 16 - sh) % 16] : v[i];
+                for (i = 0; i < 16; i++)
+                    v[i] = w[i];
+                for (k = 0; k < 2; k++) {
+                    i = grand(16);
+                    if (v[i] && i % 4)
+                        v[i] = 0;
+                    else if (!v[i] && i % 2)
+                        v[i] = 3;
+                }
+                continue;
+            }
+            for (i = 0; i < 16; i++)         /* the rest: keep the strong, gather the others' forces */
+                if (v[i] && !gp_strong(note, i))
+                    vel[nv++] = v[i], v[i] = 0;
+            for (k = 0; k < nv; k++) {       /* each again on a free step that suits the drum */
+                int tries;
+                for (tries = 0; tries < 24; tries++) {
+                    int c = note == 36 ? grand(8) * 2 + (grand(4) == 0) : note == 38 ? grand(16) : grand(8) * 2;
+                    c &= 15;
+                    if (!v[c] && !(note == 36 && (c == 4 || c == 12))) {
+                        v[c] = note == 38 && vel[k] > 5 && c % 4 ? 2 : vel[k];   /* (an off snare: a ghost) */
+                        break;
+                    }
+                }
+                free += tries == 24;
+            }
+            (void)free;
+        }
+    }
+    p->mod = 1;
+    dk_gr_mod[t] = 1;
+}
+/* MUTATE: one or two hits moved a step or two, a ghost in, a weak one out */
+static void gp_mutate(int t, int amount)
+{
+    gpat_t *p = &gp[t];
+    int k, n = 1 + (amount > 60) + (amount > 90);
+    if (!p->n)
+        return;
+    for (k = 0; k < n; k++) {
+        int r = grand(p->n), len = p->len[r], i = grand(len), note = p->note[r], j, what = grand(3);
+        uint8_t *v = p->v[r];
+        if (note == 49)
+            continue;
+        if (what == 0 && v[i] && !gp_strong(note, i)) {   /* moved */
+            j = (i + (grand(2) ? 1 : -1) * (1 + grand(2)) + len) % len;
+            if (!v[j] && !gp_strong(note, j))
+                v[j] = v[i], v[i] = 0;
+        } else if (what == 1 && !v[i] && i % 2 && (note == 38 || gp_keeper(note)))   /* a ghost */
+            v[i] = 2;
+        else if (what == 2 && v[i] && v[i] <= 5 && !gp_strong(note, i))   /* a weak one out */
+            v[i] = 0;
+    }
+    p->mod = 1;
+    dk_gr_mod[t] = 1;
+}
+/* the rows of a written groove (`once`: its short rows only, at the one: a fill's after, the ending) */
 static void groove_rows(int t, const dk_groove_t *g, uint32_t q, int step, int once)
 {
     const char *r = g->rows;
@@ -723,6 +843,24 @@ static void groove_rows(int t, const dk_groove_t *g, uint32_t q, int step, int o
         r = *e ? e + 1 : e;
     }
 }
+/* the copy at 1/16 q, FOLLOW's level on it: below the middle the weak hits thin out, above it ghosts come in */
+static void gp_play(int t, uint32_t q, int step)
+{
+    const gpat_t *p = &gp[t];
+    int r, fol = dk_song.trk[t].drv[2];
+    float lvl = 0.5f + (gr_dens[t] - 0.5f) * (float)(fol > 100 ? 100 : fol) * 0.01f;   /* 0.5: as written */
+    for (r = 0; r < p->n; r++) {
+        int note = p->note[r], i = (int)(q % p->len[r]), d = p->v[r][i];
+        if (d) {
+            if (fol && lvl < 0.5f && !gp_strong(note, i) && (i % 4 || d <= 5) && dk_frand() > lvl * 2.0f)
+                continue;                    /* the others quiet: the drummer plays less */
+            groove_hit(t, note, d, step);
+        } else if (fol && lvl > 0.5f && step % 2 && dk_frand() < (lvl - 0.5f) * 0.7f) {
+            if (note == 42 || (note == 38 && dk_frand() < 0.4f))
+                groove_hit(t, note, note == 38 ? 2 : 3, step);   /* the others busy: ghosts, the hat in 16ths */
+        }
+    }
+}
 static int fill_first(const dk_groove_t *f)   /* the step its notes start (the full rows) */
 {
     const char *r = f->rows;
@@ -743,6 +881,8 @@ static int fill_first(const dk_groove_t *f)   /* the step its notes start (the f
     return first;
 }
 static uint32_t groove_pos(int t) { return dk_playing ? part_tick : gt - gr_bar0[t]; }
+static void groove_fill_at(int t, int b, uint32_t pos);
+static int groove_section(int g) { return g ? (g - 1) / 3 : -1; }
 static void groove_tick(int t)
 {
     uint32_t pos = groove_pos(t), q;
@@ -751,71 +891,101 @@ static void groove_tick(int t)
         return;
     q = pos / DK_T16;
     step = (int)(q % 16u);
-    if (step == 0) {                           /* the bar line: the fill done (its crash), the groove queued */
-        if (gr_fst[t] == 1) {
+    if (step == 0) {                           /* the bar line */
+        const dk_track_t *k = &dk_song.trk[t];
+        uint16_t act = (uint16_t)(gr_act - gr_act_at[t]);
+        gr_act_at[t] = gr_act;                 /* FOLLOW: the others' notes this bar (16 a bar: busy) */
+        gr_dens[t] += ((float)(act > 24 ? 24 : act) / 24.0f - gr_dens[t]) * 0.5f;
+        dk_gr_dens[t] = (uint8_t)(gr_dens[t] * 100.0f);
+        if (gr_fst[t] == 1) {                  /* the fill done (its crash) */
             if (dk_gr_fill[t] && dk_gr_fill[t] <= TAPE.nfill)
                 groove_rows(t, &TAPE.fill[dk_gr_fill[t] - 1], q, 0, 1);
             gr_fst[t] = 0;
             dk_gr_fill[t] = 0;
         } else if (gr_fst[t] == 2)
             gr_fst[t] = 1;
-        if (dk_gr_next[t] != 0xFF) {
+        if (dk_gr_next[t] != 0xFF) {           /* the groove queued */
             if (dk_gr_next[t] == 0) {
                 if (dk_gr_cur[t] && TAPE.groove_end)
                     groove_rows(t, TAPE.groove_end, q, 0, 1);
                 dk_gr_cur[t] = 0;
                 gr_fst[t] = 0;
                 dk_gr_fill[t] = 0;
-            } else
+            } else if (dk_gr_next[t] <= TAPE.ngroove) {
                 dk_gr_cur[t] = dk_gr_next[t];
+                gp_load(t, &TAPE.groove[dk_gr_cur[t] - 1]);
+                gr_bars[t] = 0;
+            }
             dk_gr_next[t] = 0xFF;
+        } else if (dk_gr_cur[t]) {
+            gr_bars[t]++;
+            if (k->drv[1] && gr_bars[t] % 2 == 0 && grand(100) < k->drv[1])
+                gp_mutate(t, k->drv[1]);
+            if ((k->drv[0] & 3) && !gr_fst[t] && TAPE.nfill) {   /* AUTO FILL: in the last bar of 4 / 8 / 16 */
+                int every = 4 << ((k->drv[0] & 3) - 1);
+                if ((gr_bars[t] + 1) % every == 0)
+                    groove_fill_at(t, 1 + grand(TAPE.nfill > 4 ? 4 : TAPE.nfill), pos);
+            }
         }
     }
+    if (!dk_gr_cur[t])
+        return;
     if (gr_fst[t] == 1 && step >= gr_from[t] && dk_gr_fill[t] && dk_gr_fill[t] <= TAPE.nfill) {
         groove_rows(t, &TAPE.fill[dk_gr_fill[t] - 1], (uint32_t)step, step, 0);
         return;
     }
-    if (dk_gr_cur[t] && dk_gr_cur[t] <= TAPE.ngroove)
-        groove_rows(t, &TAPE.groove[dk_gr_cur[t] - 1], q, step, 0);
+    gp_play(t, q, step);
 }
-/* C_GROOVE: kind 0 a groove (b 1..15; 0 the ending), 1 a fill (b 1..), 2 off at once */
-static void groove_cmd(int t, int kind, int b)
+/* a fill b (1..): from the next beat, or where its notes start; too late in the bar: the whole next bar */
+static void groove_fill_at(int t, int b, uint32_t pos)
 {
-    uint32_t pos, q;
-    int step, nb, first;
-    t %= DK_NTRACK;
-    if (kind == 2) {
-        dk_gr_cur[t] = 0, dk_gr_next[t] = 0xFF, dk_gr_fill[t] = 0, gr_fst[t] = 0;
-        return;
-    }
-    if (kind == 0) {
-        if (!dk_gr_cur[t] && b) {              /* from silence: at once (playing: where the bar is; stopped: its bar from the next 1/16) */
-            if (!dk_playing)
-                gr_bar0[t] = gt + (DK_T16 - gt % DK_T16) % DK_T16;
-            dk_gr_cur[t] = (uint8_t)b;
-            dk_gr_next[t] = 0xFF;
-            return;
-        }
-        dk_gr_next[t] = (uint8_t)b;            /* on the next bar */
-        return;
-    }
-    if (!dk_gr_cur[t] || b < 1 || b > TAPE.nfill)
-        return;
-    pos = groove_pos(t);
-    q = (pos + DK_T16 - 1) / DK_T16;           /* the next 1/16 not played yet */
-    step = (int)(q % 16u);
-    nb = (step + 3) / 4 * 4;                   /* the next beat */
-    first = fill_first(&TAPE.fill[b - 1]);
+    uint32_t q = (pos + DK_T16 - 1) / DK_T16;
+    int step = (int)(q % 16u), nb = (step + 3) / 4 * 4, first = fill_first(&TAPE.fill[b - 1]);
     dk_gr_fill[t] = (uint8_t)b;
     if (q % 16u == 0 && pos % DK_T16 == 0)
         nb = 0;
-    if (nb >= 16 || (step > first && nb > 12)) {   /* too late in this bar: the next one, whole */
+    if (nb >= 16 || (step > first && nb > 12)) {
         gr_fst[t] = 2;
         gr_from[t] = (uint8_t)first;
     } else {
         gr_fst[t] = 1;
         gr_from[t] = (uint8_t)(nb > first ? nb : first);
     }
+}
+/* C_GROOVE: kind 0 a groove (b 1..15; 0 the ending), 1 a fill (b 1..), 2 off at once, 3 DICE */
+static void groove_cmd(int t, int kind, int b)
+{
+    t %= DK_NTRACK;
+    if (kind == 2) {
+        dk_gr_cur[t] = 0, dk_gr_next[t] = 0xFF, dk_gr_fill[t] = 0, gr_fst[t] = 0;
+        return;
+    }
+    if (kind == 3) {
+        if (dk_gr_cur[t])
+            gp_dice(t);
+        return;
+    }
+    if (kind == 0) {
+        if (b > TAPE.ngroove)
+            return;
+        if (!dk_gr_cur[t] && b) {              /* from silence: at once (playing: where the bar is; stopped: its bar from the next 1/16) */
+            if (!dk_playing)
+                gr_bar0[t] = gt + (DK_T16 - gt % DK_T16) % DK_T16;
+            dk_gr_cur[t] = (uint8_t)b;
+            dk_gr_next[t] = 0xFF;
+            gp_load(t, &TAPE.groove[b - 1]);
+            gr_bars[t] = 0;
+            return;
+        }
+        if (b && (dk_song.trk[t].drv[0] & 3) && !gr_fst[t] && groove_section(b) != groove_section(dk_gr_cur[t]) &&
+            TAPE.nfill > 4)                    /* AUTO FILL: a new section: a long fill into it */
+            groove_fill_at(t, 5 + grand(TAPE.nfill - 4), groove_pos(t));
+        dk_gr_next[t] = (uint8_t)b;            /* on the next bar (the same one again: the written one back) */
+        return;
+    }
+    if (!dk_gr_cur[t] || b < 1 || b > TAPE.nfill)
+        return;
+    groove_fill_at(t, b, groove_pos(t));
 }
 
 /* -------------------------------------------------------------------- ARP --- */
@@ -1038,6 +1208,8 @@ static void live_note(int t, int note, int vel, int delay)
     const dk_engine_t *e = dk_engine(t);
     if ((unsigned)t >= DK_NTRACK)
         return;
+    if (vel && !(e->flags & EF_DRUM))
+        gr_act++;                              /* (GROOVE's FOLLOW: the hands count too) */
     if (vel) {
         if (rec_wait_note && !dk_playing) {    /* armed: the first note starts the take */
             rec_wait_note = 0;

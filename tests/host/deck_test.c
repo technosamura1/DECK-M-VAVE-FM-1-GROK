@@ -413,6 +413,45 @@ static void groove_demo(const char *out, int preset)
     report("groove: 5 sections x 3, fills, the end");
 }
 
+/* GROOVE by itself: VERSE 2 with AUTO FILL every 4 bars and MUTATE, a DICE, then a new section (a long fill into it) */
+static void groove_auto(const char *out)
+{
+    double bar = 4.0 * 60.0 / 90.0;
+    fresh();
+    dk_lock();
+    dk_song.tempo = 90;
+    dk_song.dust = 0;
+    dk_track_setup(4, 5, 0, SQ_GROOVE, R_DRUM);
+    dk_song.trk[4].vol = 80;
+    dk_song.trk[4].drv[0] = 1;               /* a fill every 4 bars */
+    dk_song.trk[4].drv[1] = 70;              /* MUTATE */
+    dk_song.trk[4].drv[2] = 0;
+    dk_unlock();
+    reset_out();
+    dk_cmd(C_PLAY, 1, 0, 0);
+    dk_cmd(C_GROOVE, 4, 0, 5);
+    {                                        /* the fills that came by themselves: two in 8 bars */
+        int fills = 0, was = 0, i;
+        for (i = 0; i < (int)(bar * 8.0 / 0.05); i++) {
+            run(0.05);
+            if (dk_gr_fill[4] && !was)
+                fills++;
+            was = dk_gr_fill[4];
+        }
+        printf("auto fills in 8 bars: %d%s\n", fills, fills == 2 ? "" : "  BAD");
+    }
+    dk_cmd(C_GROOVE, 4, 3, 0);               /* DICE */
+    run(bar * 4.0);
+    dk_cmd(C_GROOVE, 4, 0, 8);               /* CHORUS 2: a long fill into it by itself */
+    run(bar * 8.0);
+    dk_cmd(C_GROOVE, 4, 0, 0);
+    run(bar * 1.2);
+    dk_cmd(C_PLAY, 0, 0, 0);
+    tail(3.0);
+    wav(out);
+    report("groove auto: fills every 4, mutate 70, dice, a section");
+}
+
 static void chords(const char *out)
 {
     static const int MODES[3] = {0, 1, 4};               /* MAJOR, MINOR, LYDIAN */
@@ -1112,6 +1151,8 @@ int main(int argc, char **argv)
         printf("\n");
     } else if (!strcmp(m, "groove"))
         groove_demo(argc > 2 ? argv[2] : "out/groove.wav", argc > 3 ? atoi(argv[3]) : 0);
+    else if (!strcmp(m, "grooveauto"))
+        groove_auto(argc > 2 ? argv[2] : "out/groove_auto.wav");
     else if (!strcmp(m, "chords"))
         chords(argc > 2 ? argv[2] : "out/chords.wav");
     else if (!strcmp(m, "phrase") && argc > 3)

@@ -25,6 +25,7 @@ enum {
     /* the tape: how many bars a take (AUTO: the first take sets it) */ F_RECBARS,
     /* the clip a scale step up or down (LIVE) */ F_MOVE,
     /* SOUNDS (HOME + PRESET): the instrument, the block, the preset in it */ F_PBENG, F_PBBLK, F_PBPRE,
+    /* GROOVE: AUTO FILL, MUTATE, FOLLOW (the track's drv[0..2]) */ F_GRFILL, F_GRMUT, F_GRFOL,
     F_N
 };
 /* (the SOUNDS page's: ui.c) */
@@ -483,6 +484,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_PBENG:
     case F_PBBLK:
     case F_PBPRE: *hi = pb_hi(f); break;
+    case F_GRFILL: *hi = 3; break;
     case F_MOOD: *hi = TAPE.nmood - 1; break;
     case F_P0:
     case F_P1:
@@ -629,6 +631,9 @@ static int field_get_raw(int f)
     case F_PBENG:
     case F_PBBLK:
     case F_PBPRE: return pb_get(f);
+    case F_GRFILL: return k->drv[0] & 3;
+    case F_GRMUT: return k->drv[1] > 100 ? 100 : k->drv[1];
+    case F_GRFOL: return k->drv[2] > 100 ? 100 : k->drv[2];
     case F_TEMPO: return dk_song.tempo;
     case F_MACRO: return k->macro;
     case F_MOOD: return dk_song.mood;
@@ -786,6 +791,9 @@ static void field_set(int f, int v)
     case F_PBENG:
     case F_PBBLK:
     case F_PBPRE: pb_set(f, v); return;
+    case F_GRFILL:
+    case F_GRMUT:
+    case F_GRFOL: k->drv[f - F_GRFILL] = (uint8_t)v; break;
     case F_TEMPO: dk_song.tempo = (uint8_t)v; break;
     case F_MACRO: k->macro = (int8_t)v; break;
     case F_MOOD:
@@ -877,6 +885,11 @@ static void field_set(int f, int v)
             for (p = 0; p < DK_NPART; p++)
                 dk_song.clip[p * DK_NTRACK + dk_song.cur_track].len = 0;
             dk_unlock();
+        }
+        if (k->seq != SQ_GROOVE && SQ_LIST[v % NSEQ] == SQ_GROOVE) {   /* GROOVE fresh: a fill every 8 bars, as written */
+            k->drv[0] = 2;
+            k->drv[1] = 0;
+            k->drv[2] = 0;
         }
         if (k->seq == SQ_GROOVE && SQ_LIST[v % NSEQ] != SQ_GROOVE)
             dk_cmd(C_GROOVE, dk_song.cur_track, 2, 0);   /* (the drummer stops) */
@@ -1001,6 +1014,9 @@ static const char *field_label(int f)
 {
     switch (f) {
     case F_PBENG: return "INSTR";
+    case F_GRFILL: return "AUTO FILL";
+    case F_GRMUT: return "MUTATE";
+    case F_GRFOL: return "FOLLOW";
     case F_PBBLK: return "BLOCK";
     case F_PBPRE: return "PRESET";
     case F_TEMPO: return "TEMPO";
@@ -1170,6 +1186,11 @@ static void field_text(int f, char *b)
     case F_PBENG:
     case F_PBBLK:
     case F_PBPRE: pb_text(f, b); break;
+    case F_GRFILL: {
+        static const char *const AF[4] = {"OFF", "4 BARS", "8 BARS", "16 BARS"};
+        cpy(b, AF[v & 3]);
+        break;
+    }
     case F_MOOD: cpy(b, TAPE.moods[v % TAPE.nmood].name); break;
     case F_P0:
     case F_P1:

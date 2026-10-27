@@ -61,7 +61,8 @@ extern volatile uint8_t dk_hush, dk_hushed;
 extern volatile uint8_t dk_endl_step[DK_NTRACK];   /* ENDLESS: the step it plays (the page) */
 extern volatile int8_t dk_endl_tr[DK_NTRACK];
 extern volatile uint8_t dk_gr_cur[DK_NTRACK], dk_gr_next[DK_NTRACK], dk_gr_fill[DK_NTRACK];   /* GROOVE: playing, queued (0xFF none), fill */
-extern volatile uint32_t dk_gr_hits;      /* ENDLESS: its transposition now (a key played on it) */
+extern volatile uint32_t dk_gr_hits;
+extern volatile uint8_t dk_gr_mod[DK_NTRACK], dk_gr_dens[DK_NTRACK];   /* GROOVE: diced / mutated; FOLLOW's level 0..100 */      /* ENDLESS: its transposition now (a key played on it) */
 int dk_endl_root(int t);
 extern volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;
 extern volatile uint8_t dk_perform;                     /* the performance effect held (PF_*) */

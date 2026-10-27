@@ -140,6 +140,7 @@ static const char *preset_blk(int slot, int sh);   /* the preset's block, for it
  * wait for its sound. Each band is whole before the next is drawn, so the state may change between them. */
 static void input(void);
 static uint8_t in_input, ui_ready;
+#define DK_GR_DICE 10                    /* GROOVE: black 11 */
 static int pb_user_id(int e, int k);     /* (SOUNDS, for its page) */
 static int pb_shown(void);
 static int pb_place(void);
@@ -1461,6 +1462,13 @@ static void key_down(int k, int vel)
             else {
                 dk_cmd(C_GROOVE, t, 1, b + 1);
                 say("FILL", TAPE.fill[b].name);
+            }
+        } else if (b == DK_GR_DICE) {          /* DICE: the same drums, other hits (its white again: the written one) */
+            if (!dk_gr_cur[t])
+                say("DICE", "PLAY A GROOVE FIRST");
+            else {
+                dk_cmd(C_GROOVE, t, 3, 0);
+                say("DICE", "WHITE AGAIN = BACK");
             }
         }
         return;

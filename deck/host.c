@@ -180,6 +180,9 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "grnext")) g = dk_gr_next[dk_song.cur_track];   /* queued (255 none, 0 the end) */
     else if (!strcmp(what, "grfill")) g = dk_gr_fill[dk_song.cur_track];
     else if (!strcmp(what, "grhits")) g = (int)dk_gr_hits;
+    else if (!strcmp(what, "grmod")) g = dk_gr_mod[dk_song.cur_track];
+    else if (!strcmp(what, "grdens")) g = dk_gr_dens[dk_song.cur_track];
+    else if (!strcmp(what, "grafill")) g = cur()->drv[0] & 3;
     else if (!strcmp(what, "seq")) g = cur()->seq;
     else if (!strcmp(what, "fired")) g = (int)dk_fired;              /* the takes the sequencer has played (bit = take) */
     else if (!strcmp(what, "armtrk")) g = ui.arm_trk;              /* the tracks armed on TRACKS (bit t) */

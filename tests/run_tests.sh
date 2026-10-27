@@ -20,6 +20,7 @@ python tools/dup_check.py out/sounds > build/test/dup_check.txt && echo "  ok   
 build/test/deck_test chords out/chords.wav > /dev/null || fail=1
 build/test/deck_test latency > build/test/latency.txt; n=$(sed -n 's/.* \([0-9]*\) slow.*/\1/p' build/test/latency.txt)
 [ "${n:-99}" -le 13 ] && echo "  ok   LATENCY: key to sound (every preset): $(tail -1 build/test/latency.txt)" || { echo "  FAIL latency: $n slow presets"; grep SLOW build/test/latency.txt | grep -v AIRPAD; fail=1; }
+build/test/deck_test grooveauto out/groove_auto.wav > build/test/groove.txt && ! grep -q BAD build/test/groove.txt && echo "  ok   GROOVE: auto fills on time, dice, mutate" || { echo "  FAIL groove"; cat build/test/groove.txt; fail=1; }
 build/test/deck_test bypass > build/test/bypass.txt && echo "  ok   SOUND bypass: every stage of the chain off and on again: no clicks, peak under -1 dBFS" || { echo "  FAIL bypass"; grep CLICK build/test/bypass.txt | head -5; fail=1; }
 build/test/deck_test automation > build/test/automation.txt && echo "  ok   AUTOMATION: a curve on every target, three engines: no click, peak under -1 dBFS, no DC, not silent" || { echo "  FAIL automation"; grep "BAD\|SILENT" build/test/automation.txt | head -5; fail=1; }
 build/test/deck_test pitch > build/test/pitch.txt && echo "  ok   PITCH: every BASS preset sounds C2, G2, C3 at its pitch (or a sub-octave by design), none above it" || { echo "  FAIL pitch"; grep BAD build/test/pitch.txt | head -5; fail=1; }

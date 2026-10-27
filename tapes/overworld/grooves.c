@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 OVERWORLD / DECK contributors */
 /* GROOVE (the drums played as EZdrummer's): white 1-15 a groove, five song sections of three (light, more, full),
- * white 16 the ending; the black keys fills, short to long. Part of tape_dsp.c.
+ * white 16 the ending; black 1-10 fills, short to long; black 11 DICE (the shell's). Part of tape_dsp.c.
  * A groove: rows "L" + 16 or 32 steps (one or two bars, a 1/16 each), separated by '|'. L is the drum (GM):
  *   K kick 36, S snare 38, R rim 37, P clap 39, H closed hat 42, O open hat 46, L low tom 45, M mid tom 47, T high tom 50,
  *   X crash 49, Y ride 51, Z shaker 70, W wood 76
@@ -31,13 +31,12 @@ static const dk_groove_t GROOVES[15] = {
     {"OUTRO 3", "K6...............|H3.......3.......|Z2...2...2...2..."},
 };
 
-/* the black keys: short to long; the last five (6..11) end in a crash on the next one */
-static const dk_groove_t FILLS[11] = {
+/* black 1-10: short to long; 5..10 end in a crash on the next one (black 11: DICE) */
+static const dk_groove_t FILLS[10] = {
     {"FLAM", "S............7.8."},
     {"SNARE 4", "S............6789"},
     {"KICK SNARE", "K........7...7...|S............7.8."},
     {"TOMS DOWN", "T............7...|M..............7.|L...............8"},
-    {"LIFT", "O..............8.|K............7..."},
     {"ROLL HALF", "S........56677889|K........7.......|X1"},
     {"TOMS HALF", "T........7.7.....|M............7.7.|L..............88|X1"},
     {"CLAPS", "P........7...7.78|K........7...7...|X1"},
