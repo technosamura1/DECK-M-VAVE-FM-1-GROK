@@ -6,8 +6,16 @@
  * pages.c. Part of the unity build. */
 
 enum { PG_PLAY, PG_SEQ, PG_SOUND, PG_MIX, PG_ROAD, PG_KEYS, PG_PROJECT, PG_REC, PG_ARP, PG_GLOB, PG_ATMO, PG_TRACKS, PG_SOUNDS, NPG };
+/* LFO and EDIT trade places (the user's ask): the panel's LFO is the deck's EDIT (KEYS, hold UNDO, the EDIT list) and the
+ * panel's EDIT the deck's LFO (MIX, hold + a SOUND knob = MOD). Swapped where the buttons come in and the lights go out. */
+static uint32_t btn_swap(uint32_t m)
+{
+    uint32_t a = m >> B_LFO & 1u, e = m >> B_EDIT & 1u;
+    m &= ~((1u << B_LFO) | (1u << B_EDIT));
+    return m | e << B_LFO | a << B_EDIT;
+}
 static const char *const PAGE_NAME[NPG] = {"PLAY", "SEQ", "SOUND", "MIX", "ROAD", "KEYS", "PROJECT", "REC", "ARP", "GLOBAL",
-                                          "ATMO", "TRACKS", "SOUNDS"};
+                                          "REC SETUP", "TRACKS", "SOUNDS"};
 
 static struct {
     uint8_t page, prev, row[NPG], garage, dirty, baking, road_rec, root_sel;
@@ -1082,13 +1090,14 @@ static void action(int a, int b)
         ui_slot_sel = -1;
         break;
     case A_PAGE_GLOBAL: page_go(PG_GLOB); break;
-    case A_PAGE_ATMO:                    /* SEL: the TAPE (as OP-1's tape mode); again: TRACKS (the six rows); again: the tape */
-        if (ui.page == PG_REC)
-            page_go(PG_TRACKS);
-        else
-            page_go(PG_REC);
+    case A_PAGE_ATMO:                    /* SEL: REC SETUP (metronome, REC MODE, NEW PART copy, START...); again: its next row */
+        page_go(PG_ATMO);
         break;
     case A_PAGE_PLAY:                    /* HOME: PLAY; on PLAY: TRACKS; on TRACKS: back (to REC while it records) */
+        if (ui.armed && !dk_recording && !dk_counting) {   /* armed and not recording: HOME lets it go */
+            ui.armed = 0;
+            say("REC", "OFF");
+        }
         if (ui.page == PG_SOUNDS) {          /* SOUNDS: back where it was opened */
             page_go(ui.pb_back == PG_SOUNDS ? PG_PLAY : ui.pb_back);
             break;
@@ -1161,16 +1170,15 @@ static void action(int a, int b)
         if (dk_recording || dk_counting)       /* (on ROAD too: a take into the part; its block on the road comes
                                                  * by itself when the take ends, see rec_parts) */
             rec_stop_ui();
-        else if (ui.armed) {                 /* armed: REC again lets it go */
-            ui.armed = 0;
-            say("REC", "OFF");
-        } else if (dk_rec_arm && !dk_playing) {   /* two steps: REC arms, PLAY records */
+        else if (ui.armed)                   /* armed: REC again records (PLAY too) */
+            rec_start();
+        else if (dk_rec_arm) {               /* two steps: REC arms on the tape (part, bars, quant to set), REC again records */
             ui.armed = 1;
             if (ui.page != PG_REC) {
                 ui.prev = ui.page;
                 ui.page = PG_REC;
             }
-            say("REC", dk_metro.on_note ? "ARMED - PLAY A NOTE" : "ARMED - PRESS PLAY");
+            say("REC ARMED", "REC AGAIN = START");
         } else
             rec_start();
         break;
@@ -1370,7 +1378,7 @@ static void edit_list_do(int w)
             itoa_b(cooks, s + 5);
         }
         mark_dirty();
-        say(w == 6 ? s : NM[w - 3], "UNDO: HOLD EDIT");
+        say(w == 6 ? s : NM[w - 3], "UNDO: HOLD LFO");
         return;
     }
     if (w < 10) {                        /* COPY CLIP, PASTE CLIP */
@@ -1423,7 +1431,7 @@ static void edit_list_do(int w)
     }
     undo_group(0);
     mark_dirty();
-    say(w == 11 ? "NOTES ERASED" : "ALL ERASED", "UNDO: HOLD EDIT");
+    say(w == 11 ? "NOTES ERASED" : "ALL ERASED", "UNDO: HOLD LFO");
 }
 
 static void key_down(int k, int vel)
@@ -2206,7 +2214,7 @@ static void lights(void)
     plat_play_red(dk_recording ? 1 : 0);
     /* the glow at DIM HI (as OVERWORLD's): DIM LO's pulse is ~1.6 us, and a busy render (flash cache misses in the
      * scan's shift) made the glowing keys flicker on the device */
-    plat_lights(b, keys, dimb | ((1u << NB) - 1u), dimk, 2);
+    plat_lights(btn_swap(b), keys, btn_swap(dimb | ((1u << NB) - 1u)), dimk, 2);
 }
 
 /* ERASE AUTOMATION (the EDIT list): every curve of this track in this part (the notes stay); one undo step */
@@ -2223,7 +2231,7 @@ static void auto_erase(void)
     auto_clear(clip, 0);
     dk_unlock();
     mark_dirty();
-    say("AUTOMATION CLEARED", "UNDO: HOLD EDIT");
+    say("AUTOMATION CLEARED", "UNDO: HOLD LFO");
 }
 /* a key or a knob used while a button is held is a combo: that button's own tap (its page) and hold (UNDO, FILL...) no longer follow */
 static void combo_used(void)
@@ -2245,7 +2253,7 @@ static void take_erase_ui(void)
     n = take_erase_last();
     if (n) {
         mark_dirty();
-        say("TAKE ERASED", "UNDO: HOLD EDIT");
+        say("TAKE ERASED", "UNDO: HOLD LFO");
     } else
         say("NO TAKE", "RECORD FIRST");
 }
@@ -2260,7 +2268,7 @@ static void input(void)
 static void input_do(void)
 {
     static uint32_t last_in;
-    uint32_t keys, btn = plat_buttons(), k, now = plat_ms();
+    uint32_t keys, btn = btn_swap(plat_buttons()), k, now = plat_ms();
     int32_t e;
     if (last_in && now - last_in > dg_kgap)
         dg_kgap = now - last_in;

@@ -12,14 +12,14 @@ tap FX
 wait 200
 expect page 2
 # every button: held + a white key, released: the page stays
-press EDIT
+press LFO
 tapkey w6
-release EDIT
+release LFO
 wait 100
 expect page 2
-press LFO
+press EDIT
 tapkey w2
-release LFO
+release EDIT
 wait 100
 expect page 2
 press SAVE
@@ -48,14 +48,14 @@ release HOME
 wait 100
 expect page 2
 # held + a knob
-press EDIT
+press LFO
 turn K1 1
-release EDIT
+release LFO
 wait 100
 expect page 2
-press LFO
+press EDIT
 turn K2 1
-release LFO
+release EDIT
 wait 100
 expect page 2
 press SAVE
@@ -87,22 +87,22 @@ expect page 2
 page 11
 wait 200
 expect layview 0
-press EDIT
+press LFO
 tapkey w6
-release EDIT
+release LFO
 wait 100
 expect layview 0
-press EDIT
+press LFO
 turn SELECT 1
-release EDIT
+release LFO
 wait 100
 expect layview 0
 expect page 11
 shot combo_tracks.png
-tap EDIT
+tap LFO
 wait 100
 expect layview 1
-tap EDIT
+tap LFO
 wait 100
 expect layview 0
 # still the plain taps work: a tap on EDIT, FX, GLO changes the page
@@ -116,8 +116,8 @@ tap FX
 wait 100
 expect page 2
 # hold EDIT without a combo is still UNDO; the hint still shows
-press EDIT
+press LFO
 wait 900
-release EDIT
+release LFO
 wait 100
 expect page 2

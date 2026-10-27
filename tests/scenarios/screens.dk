@@ -34,7 +34,7 @@ release HOME
 wait 50
 wait 1600
 shot p07_seq_step_drums.png
-tap LFO
+tap EDIT
 wait 1000
 shot p08_mix.png
 tap ENV
@@ -49,7 +49,7 @@ press HOME
 tapkey b0
 release HOME
 wait 1800
-tap EDIT
+tap LFO
 wait 200
 key w5 down 90
 wait 1000

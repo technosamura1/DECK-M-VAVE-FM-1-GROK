@@ -204,6 +204,9 @@ static int page_rows(int p)
 }
 /* the knobs of the page (its row): K1..K4 (i 0..3) the four main ones, i 4 ALGO's extra. SELECT is the track and
  * PRESET the preset everywhere but PLAY (TEMPO, MACRO, MOOD there) */
+/* SEL's page, REC SETUP: the metronome, the mode, a new part's copy, how a take starts; row 2 the count, the click, LOCK TAKE, latency */
+static const uint8_t RSET_F[2][5] = {{F_METRO, F_RECMODE, F_NEWPART, F_ONNOTE, F_MVOL},
+                                     {F_COUNT, F_CLICK, F_LOCKTAKE, F_RECLAT, F_MDIV}};
 static int page_field(int i, int home)
 {
     const dk_track_t *k = cur();
@@ -220,7 +223,7 @@ static int page_field(int i, int home)
                                          {F_METRO, F_COUNT, F_CLICK, F_MVOL, F_MDIV},
                                          {F_MIDIOUT, F_CLOCK, F_MIDIIN, F_ONNOTE, F_NEWPART},
                                          {F_RECLAT, F_ECHOTIME, F_CPU, F_VERSION, F_LOCKTAKE},
-                                         {F_RECMODE, F_RECARM, F_NONE, F_NONE, F_NONE}};
+                                         {F_RECMODE, F_NEWPART, F_NONE, F_NONE, F_NONE}};
     (void)home;
     switch (ui.page) {
     case PG_PLAY: {                          /* the garden: the track you play, its sound and its space; ALGO the mood */
@@ -228,7 +231,7 @@ static int page_field(int i, int home)
         return F[i];
     }
     case PG_TRACKS: {                        /* the selected track's level and pan */
-        static const uint8_t F[5] = {F_VOL, F_PAN, F_RECMODE, F_RECARM, F_NONE};
+        static const uint8_t F[5] = {F_VOL, F_PAN, F_RECMODE, F_NONE, F_NONE};
         return F[i];
     }
     case PG_ARP: {                           /* the arpeggiator's own page */
@@ -319,18 +322,19 @@ static int page_field(int i, int home)
     case PG_GLOB:
         if (row < 5)
             return GLOB_F[row][i];
-        /* fall through */ /* GLOBAL's rows 6, 7 are ATMO's */
-    case PG_ATMO: {                          /* ATMO (SEL): the place's layers, then the noise and the tape */
-        static const uint8_t F[2][5] = {{F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ALVL},
-                                        {F_ATMO4, F_ATMO5, F_DUST, F_ATAPE, F_ALVL}};
-        return F[row & 1][i];
-    }
+        {                                    /* GLOBAL's rows 6, 7: ATMO (the place's layers, then the noise and the tape) */
+            static const uint8_t F[2][5] = {{F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ALVL},
+                                            {F_ATMO4, F_ATMO5, F_DUST, F_ATAPE, F_ALVL}};
+            return F[(row - 5) & 1][i];
+        }
+    case PG_ATMO:                            /* SEL: REC SETUP - how a take is recorded (the tape page has the take itself) */
+        return RSET_F[row & 1][i];
     case PG_SOUNDS: {
         static const uint8_t F[5] = {F_PBENG, F_PBBLK, F_PBPRE, F_VOL, F_NONE};
         return F[i];
     }
     case PG_REC: {
-        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECMODE, F_METRO, F_ONNOTE};   /* BARS first: how long a take; ALGO how it starts */
+        static const uint8_t F[5] = {F_RECBARS, F_RECPART, F_QNT, F_VOL, F_NONE};   /* BARS how long a take, PART where it goes (SEL: the setup) */
         return F[i];
     }
     default: return F_NONE;
@@ -351,29 +355,31 @@ static const char *hint(void)
             return "W GROOVE  B1-10 FILL  B11 DICE";
         if (k->seq == SQ_ENDLESS)
             return ui.endl_on ? "OCT- REST  OCT+ TIE  REC = DONE" : "REC = PLAY IN STEPS  KEY = TRANSPOSE";
-        return "HOME x2, EDIT = COOK RANDOM QUANTIZE";
+        return "HOME x2, LFO = COOK RANDOM QUANTIZE";
     case PG_SOUND:
         if (plat_ms() / 3000u % 3u == 1u)
             return "HOLD REC + KNOB = AUTOMATION";
         if (plat_ms() / 3000u % 3u == 2u && auto_count(cur_clip(), 0))
-            return "HOME x2, EDIT = ERASE AUTOMATION";
+            return "HOME x2, LFO = ERASE AUTOMATION";
         return "FX = ROW  HOLD FX+WHITE 1-4 = BYPASS";
     case PG_MIX: return "WHITE TRACK  BLACK MUTE  B7 SOLO  B8 ARM";
     case PG_ROAD:
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "W1-8 ADD  W9 COPY  BLACK TRICKS  REC = LIVE";
-    case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
+    case PG_KEYS: return "LFO = NEXT ROW  HOLD LFO = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
     case PG_GLOB: return ui.row[PG_GLOB] % 7 >= 5 ? "ATMO  GLO = NEXT ROW" : "GLO = NEXT ROW  HOLD GLO = FILL";
-    case PG_ATMO: return "SEL = NEXT ROW  KNOBS = HOW MUCH";
+    case PG_ATMO: return "SEL = NEXT ROW  REC = ARM";
     case PG_SOUNDS: return "W PRESET  B BLOCK  OCT INSTR";
     case PG_REC:
         if (ui_auto_on)
             return "REC AGAIN = THE LOOP ENDS HERE";
-        return "K1 BARS  K4 METRONOME  HOLD EDIT = UNDO";
+        if (ui.armed)
+            return "REC = START  K2 PART  SEL = SETUP";
+        return "K1 BARS  K2 PART  SEL = SETUP";
     case PG_TRACKS:
         if (ui.lay)
-            return "HOLD EDIT = UNDO  HOME = BACK";
-        return "EDIT = EDIT LIST  K3 MODE  HOME = BACK";
+            return "HOLD LFO = UNDO  HOME = BACK";
+        return "LFO = EDIT LIST  K3 MODE  HOME = BACK";
     case PG_ARP: return "K4 ON/OFF  ARP=ROW  HOME+ARP=OFF";
     default: return "";
     }
@@ -492,9 +498,9 @@ no_batt:
 static const char *hold_hint(uint32_t now)
 {
     static const char *const H[NB] = {
-        "FX: SOUND  +W1-4 BYPASS", "SEL: TAPE  AGAIN = TRACKS",
-        "ENV: ROAD  REC ON: NEXT PART", "LFO: MIX  +SOUND KNOB = MOD 1",
-        "EDIT: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
+        "FX: SOUND  +W1-4 BYPASS", "SEL: REC SETUP  AGAIN = ROW",
+        "ENV: ROAD  REC ON: NEXT PART", "EDIT: MIX  +SOUND KNOB = MOD 1",
+        "LFO: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
         0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
         "ARP: PAGE  K4 ON/OFF  +WHITE PART", 0,
         "PLAY/STOP  HOLD PART/SONG", "REC +OCT UNDO  +W1-6 LAYER",
@@ -1681,6 +1687,28 @@ static void draw_atmo(void)
     }
 }
 
+/* SEL: REC SETUP - the row's five settings as a list (K1-K4 in their colours, ALGO the fifth), the other row dim under */
+static void draw_recset(void)
+{
+    int r = ui.row[PG_ATMO] & 1, k, i;
+    char v[24];
+    module("REC SETUP", r ? "COUNT  CLICK  LOCK" : "METRO  MODE  PARTS");
+    for (k = 0; k < 2; k++) {
+        int row = k ? r ^ 1 : r, y0 = WY + 4 + k * 58, mine = !k;
+        for (i = 0; i < 5; i++) {
+            int f = RSET_F[row][i], y = y0 + (mine ? i * 11 : (i >> 1) * 11), x = WX + 6 + (mine ? 0 : (i & 1) * 110);
+            uint16_t c = mine ? (i < 4 ? knob_col(i) : TH_TEXT) : W_GRAY;
+            if (!mine && i == 4)
+                break;
+            field_text(f, v);
+            if (mine)
+                cv_rect(x, y + 2, 4, 4, c);
+            text_box(x + (mine ? 8 : 0), y, mine ? 96 : 54, 0, &FONT_T, &FONT_T, field_label(f), mine ? TH_TEXT : W_GRAY);
+            text_box(x + (mine ? 106 : 56), y, mine ? 104 : 50, mine ? 2 : 0, &FONT_T, &FONT_T, v, c);
+        }
+    }
+}
+
 /* GLOBAL: a wooden metronome swinging in time, the tempo big, the metronome's mode */
 static void draw_global(void)
 {
@@ -1954,7 +1982,7 @@ static void draw_layers(void)
             vline(tx + (int)(dk_part_tick % (uint16_t)clen) * (tw - 2) / clen, ry, 23, TH_TEXT);
     }
     text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "W1 MUTE  W2 SOLO  W3 DELETE  W4 MERGE", TH_GRAY);
-    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = LAYER  EDIT = BACK", dimc(TH_GRAY, 8));
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = LAYER  LFO = BACK", dimc(TH_GRAY, 8));
 }
 /* THE EDIT LIST (TRACKS: EDIT): the selected track's clip; one item per white key, two columns. An erase asked once is red. */
 #define ED_N 14
@@ -1979,7 +2007,7 @@ static void draw_edit(void)
         text_box(x + 24, y + 3, 90, 0, &FONT_T, &FONT_T, ED_NAME[i], on ? TH_REC : TH_TEXT);
     }
     text_box(4, 183, 232, 0, &FONT_T, &FONT_T, ask >= 0 ? "AGAIN = ERASE  (3 S)" : "W1-14 = ITEM  ERASE: PRESS TWICE", ask >= 0 ? TH_REC : TH_GRAY);
-    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = TRACK  EDIT = BACK", dimc(TH_GRAY, 8));
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = TRACK  LFO = BACK", dimc(TH_GRAY, 8));
 }
 static int trk_rec(int t) { return (dk_recording || dk_counting) && (dk_rec_mask >> t & 1u); }
 static void draw_tracks(void)
@@ -2142,7 +2170,7 @@ static void draw_body(void)
         else
             draw_global();
         break;
-    case PG_ATMO: draw_atmo(); break;
+    case PG_ATMO: draw_recset(); break;
     case PG_TRACKS: draw_tracks(); break;
     case PG_SOUNDS: draw_sounds(); break;
     default: break;

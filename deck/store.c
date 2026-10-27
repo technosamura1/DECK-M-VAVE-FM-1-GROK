@@ -365,7 +365,7 @@ static void settings_load(void)
     dk_midi_clock = set.midi_clock;
     dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
     dk_lock_take = set.nolock ? 0 : 1;
-    dk_rec_arm = set.recarm == 1 ? 1 : 0;
+    dk_rec_arm = 1;                     /* REC arms (the tape), REC again records: always now (set.recarm no longer read) */
     dk_rec_mode = set.recmode == 1 ? 1 : 0;
     dk_newpart_copy = set.emptypart ? 0 : 1;
     if (set.proj >= DK_NPROJ)

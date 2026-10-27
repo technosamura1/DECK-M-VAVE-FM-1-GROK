@@ -1,0 +1,97 @@
+# SEL = REC SETUP (metronome, REC MODE, NEW PART, START; row 2: count, click, LOCK TAKE, latency). The tape (REC) arms
+# first; there K2 PART picks where the take goes: an empty part becomes a copy of this one (NEW PART = COPY), or stays empty.
+wait 300
+tap SEL
+wait 100
+expect page 10
+shot recsel.png
+turn K1 1
+wait 100
+expect metro 1
+turn K1 -2
+wait 100
+expect metro 0
+turn K3 -1
+wait 100
+expect newpart 0
+turn K3 1
+wait 100
+expect newpart 1
+tap SEL
+wait 100
+expect rowof 1
+shot recsel2.png
+# a new project, notes in A on PIANO
+tap SAVE
+wait 100
+tapkey w4
+wait 300
+recarm 1
+tap HOME
+wait 100
+tap HOME
+wait 100
+turn SELECT -2
+wait 100
+expect track 0
+tap REC
+wait 200
+expect armed 1
+expect page 7
+expect recording 0
+tap REC
+wait 3500
+expect recording 1
+key w0 down 90
+wait 400
+key w0 up
+wait 2000
+tap REC
+wait 300
+tap PLAY
+wait 300
+expect eventsA1 >0
+expect part 0
+# arm, K2 PART: B NEW (a copy of A), then REC records into B
+tap REC
+wait 200
+expect armed 1
+turn K2 1
+wait 200
+expect part 1
+expect eventsB1 >0
+shot recpart.png
+# back to A and on again: B has notes now (it is not NEW any more), C is the next NEW
+turn K2 -1
+wait 100
+expect part 0
+turn K2 1
+wait 100
+expect part 1
+turn K2 1
+wait 100
+expect part 2
+expect eventsC1 >0
+# NEW PART = EMPTY: D stays empty (HOME lets the arming go first)
+tap HOME
+wait 100
+expect armed 0
+tap SEL
+wait 100
+expect rowof 0
+turn K3 -1
+wait 100
+expect newpart 0
+tap REC
+wait 200
+expect armed 1
+turn K2 1
+wait 100
+expect part 3
+expect eventsD1 0
+tap REC
+wait 3500
+expect recording 1
+tap REC
+wait 300
+tap PLAY

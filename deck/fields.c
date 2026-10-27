@@ -26,6 +26,7 @@ enum {
     /* the clip a scale step up or down (LIVE) */ F_MOVE,
     /* SOUNDS (HOME + PRESET): the instrument, the block, the preset in it */ F_PBENG, F_PBBLK, F_PBPRE,
     /* GROOVE: AUTO FILL, MUTATE, FOLLOW (the track's drv[0..2]) */ F_GRFILL, F_GRMUT, F_GRFOL,
+    /* the tape: the part the take goes into */ F_RECPART,
     F_N
 };
 /* (the SOUNDS page's: ui.c) */
@@ -184,6 +185,62 @@ static int part_branch(int p)
         say(s + 3, "");
     dk_cmd(C_PART, p, 2, 0);             /* now, and the loop does not restart */
     return r;
+}
+/* The tape's PART (K2): the part the take goes into. The knob steps through the parts that have notes and the first empty one
+ * (NEW). An empty part becomes a copy of the one you are in (NEW PART = COPY, on SEL's REC SETUP; EMPTY: it stays empty), stopped
+ * too. Stopped: there at once; playing: at the bar's end (part_go); recording: now, the loop and the take go on (part_branch;
+ * a part with notes: the take goes on into it). */
+static int part_empty(int p);
+static void rec_part_pick(int p)
+{
+    int cp = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, r;
+    char s[8] = "A->B";
+    p &= 7;
+    if (p == cp && !(dk_playing && dk_next_part != 0xFF))
+        return;
+    if (dk_recording && dk_playing && !dk_song.play_mode) {
+        if (part_has_events(p) && dk_next_part != p)
+            dk_cmd(C_PART, p, 2, 0);
+        else
+            part_branch(p);
+        return;
+    }
+    if (dk_playing) {
+        part_go(p);
+        return;
+    }
+    s[0] = (char)('A' + cp);
+    s[3] = (char)('A' + p);
+    if (dk_newpart_copy && part_empty(p) && !part_empty(cp)) {
+        r = part_copy(cp, p);
+        if (r > 0)
+            say(s, "COPIED");
+        else if (r < 0)
+            say("NO ROOM", s);
+    } else {
+        char t[4] = "A";
+        t[0] = (char)('A' + p);
+        say("PART", part_empty(p) ? (dk_newpart_copy ? "NEW" : "NEW - EMPTY") : t);
+    }
+    dk_cmd(C_PART, p, 0, 0);
+    dk_song.cur_part = (uint8_t)p;
+}
+static void rec_part_turn(int v)
+{
+    int cur = (dk_playing ? (dk_next_part != 0xFF ? dk_next_part : dk_cur_part) : dk_song.cur_part) & 7;
+    int dir = v > cur ? 1 : -1, i, p = -1, newp = -1;
+    for (i = 0; i < DK_NPART; i++)           /* the first empty part: the one NEW is */
+        if (part_empty(i) && i != cur) {
+            newp = i;
+            break;
+        }
+    for (i = 1; i < DK_NPART && p < 0; i++) {
+        int q = (cur + dir * i + DK_NPART * 2) % DK_NPART;
+        if (!part_empty(q) || q == newp)
+            p = q;
+    }
+    if (p >= 0)
+        rec_part_pick(p);
 }
 static void mark_dirty(void);
 static char *cpy(char *d, const char *s);
@@ -518,6 +575,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_SLEN: *lo = 1; *hi = 16; break;
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_RECBARS: *hi = 16; break;
+    case F_RECPART: *lo = -1; *hi = 8; break;   /* (one past each end: the turn says which way) */
     case F_ARPMODE: *hi = 5; break;
     case F_ARPDIV: *hi = DK_ARP_NDIV - 1; break;
     case F_ARPRHY: *hi = ARPR_N - 1; break;
@@ -676,6 +734,7 @@ static int field_get_raw(int f)
     case F_SHIFT: return se_shift;
     case F_MOVE: return se_moved;
     case F_CLIPLEN: return clip_len(cur_clip()) / DK_TPB;
+    case F_RECPART: return (dk_playing ? (dk_next_part != 0xFF ? dk_next_part : dk_cur_part) : dk_song.cur_part) & 7;
     case F_RECBARS: return ui_auto_on || (ui_rec_auto && part_empty(dk_song.cur_part)) ? 0 : dk_song.part[dk_song.cur_part & 7].bars;
     case F_QNT: return k->qnt;
     case F_TSWING: return k->swing;
@@ -844,6 +903,7 @@ static void field_set(int f, int v)
         part_bars_set(dk_song.cur_part, v);
         ui_rec_auto = 0;
         break;
+    case F_RECPART: rec_part_turn(v); break;
     case F_RECBARS:
         ui_rec_auto = (uint8_t)(v == 0);
         if (v)
@@ -1057,6 +1117,7 @@ static const char *field_label(int f)
     case F_SLEN: return "LENGTH";
     case F_CLIPLEN: return "BARS";
     case F_RECBARS: return "BARS";
+    case F_RECPART: return "PART";
     case F_QNT: return "QUANT";
     case F_TSWING: return "SWING";
     case F_ARPMODE: return "MODE";
@@ -1318,6 +1379,10 @@ static void field_text(int f, char *b)
     case F_METRO: cpy(b, METRO_MODE[v % 3]); break;
     case F_CLIPLEN:
     case F_GBARS: bars_text(v, b); break;
+    case F_RECPART:                      /* the letter; an empty one: NEW */
+        b[0] = (char)('A' + (v & 7));
+        cpy(b + 1, part_empty(v) ? " NEW" : "");
+        break;
     case F_RECBARS:                      /* (the tape's foot is narrow: the number, BARS its name) */
         if (v)
             itoa_b(v, b);

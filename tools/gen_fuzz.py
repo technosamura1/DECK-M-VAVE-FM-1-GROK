@@ -70,18 +70,18 @@ for i in range(n):
             out.append("turn %s %d %d" % (r.choice(["K1", "K2", "K3", "K4"]), r.choice([-6, -3, -1, 1, 3, 6]), r.choice([20, 60])))
             out.append("wait %d" % r.choice([20, 90, 250]))
         if r.random() < 0.08:
-            out += ["page 11", "tap EDIT", "tapkey w%d" % r.choice([11, 12, 13]), "tapkey w%d" % r.choice([11, 12, 13])]   # the EDIT list's erases (ask, then do)
+            out += ["page 11", "tap LFO", "tapkey w%d" % r.choice([11, 12, 13]), "tapkey w%d" % r.choice([11, 12, 13])]   # the EDIT list's erases (ask, then do)
         out += ["wait %d" % r.choice([50, 300, 1100, 2700]), "release REC", "wait %d" % r.choice([20, 400])]
         if r.random() < 0.5:
             out.append("turn %s %d 60" % (r.choice(["K1", "K2", "K3", "K4"]), r.choice([-4, 4])))   # a hand over a curve
         if r.random() < 0.3:
-            out.append(r.choice(["tap FX", "tap LFO", "tap FX", "tap SEQ"]))
+            out.append(r.choice(["tap FX", "tap EDIT", "tap FX", "tap SEQ"]))
         if r.random() < 0.15:
             out.append("turn SELECT %d" % r.choice([-1, 1, 2]))                                      # another track
         if r.random() < 0.10:
             out += ["press ARP", "tapkey w%d" % r.randrange(0, 8), "release ARP"]                  # another part (a copy when empty)
         if r.random() < 0.05:
-            out += ["press EDIT", "wait 900", "release EDIT"]                                       # undo
+            out += ["press LFO", "wait 900", "release LFO"]                                       # undo
         if r.random() < 0.04:
             out += ["press ENV", "wait 700", "tapkey w%d" % r.randrange(0, 8), "release ENV"]       # the garage: copy a part
         if r.random() < 0.03:
@@ -92,7 +92,7 @@ for i in range(n):
         out.append("turn %s %d %d" % (r.choice(ENC), r.choice([-6, -3, -1, 1, 2, 4, 9]), r.choice([10, 40, 80])))
     elif x < 0.50:
         if r.random() < 0.12:               # the EDIT list: any of its 14 items (the erases ask first), now and then the keys of MIX / TRACKS (black 1-8)
-            out += ["page %d" % r.choice([11, 11, 3]), "tap EDIT" if r.random() < 0.7 else "wait 20", "tapkey w%d" % r.randrange(0, 14)]
+            out += ["page %d" % r.choice([11, 11, 3]), "tap LFO" if r.random() < 0.7 else "wait 20", "tapkey w%d" % r.randrange(0, 14)]
             if r.random() < 0.4:
                 out.append("tapkey b%d" % r.randrange(0, 8))
         else:
@@ -106,11 +106,11 @@ for i in range(n):
         out.append("tap %s" % b)
     elif x < 0.92:
         # a hold with knobs turned inside it (REC + a knob is AUTOMATION)
-        b = r.choice(["REC", "REC", "REC", "FX", "EDIT", "HOME", "SEQ", "ENV", "LFO", "GLO", "ARP"])
+        b = r.choice(["REC", "REC", "REC", "FX", "LFO", "HOME", "SEQ", "ENV", "EDIT", "GLO", "ARP"])
         out.append("press %s" % b)
         for _ in range(r.randrange(0, 6)):
             out.append(r.choice(["turn %s %d 60" % (r.choice(ENC), r.choice([-5, -2, 2, 5])), "tapkey w%d" % r.randrange(0, 8),
-                                 "tap %s" % r.choice(["FX", "SEQ", "EDIT"]) if b == "REC" else "wait 50"]))
+                                 "tap %s" % r.choice(["FX", "SEQ", "LFO"]) if b == "REC" else "wait 50"]))
             out.append("wait %d" % r.choice([30, 120, 300]))
         out.append("wait %d" % r.choice([100, 400, 1200, 2700]))
         out.append("release %s" % b)

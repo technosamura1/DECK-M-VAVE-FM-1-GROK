@@ -19,7 +19,7 @@ expect events >0
 expect recording 0
 expect counting 0
 page 11
-tap EDIT
+tap LFO
 wait 100
 expect layview 1
 shot p40_edit_erase.png
@@ -33,9 +33,9 @@ wait 100
 said NOTES ERASED
 expect events 0
 expect eventsB1 >0
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
 expect same 1
 # ALL PARTS: this track in all 8 parts, notes and automation; one undo step
@@ -48,9 +48,9 @@ said ALL ERASED
 expect events 0
 expect eventsB1 0
 expect eventsC1 0
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
 expect same 1
 expect eventsB1 >0
@@ -63,7 +63,7 @@ tapkey w11
 wait 100
 said AGAIN = ERASE
 expect events >0
-tap EDIT
+tap LFO
 wait 50
 expect layview 0
 # a tap is still a recording

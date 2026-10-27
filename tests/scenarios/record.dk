@@ -53,9 +53,9 @@ tap REC
 wait 200
 expect recording 0
 expect events >8
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect events >8
 expect undo >0
@@ -112,12 +112,12 @@ tapkey b0
 release HOME
 wait 50
 page 11
-tap EDIT
+tap LFO
 tapkey w8
 wait 50
 tapkey w3
 wait 100
-tap EDIT
+tap LFO
 expect events >16
 press HOME
 tap OCT+

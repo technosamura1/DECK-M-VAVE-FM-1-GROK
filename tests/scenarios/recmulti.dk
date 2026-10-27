@@ -80,16 +80,16 @@ expect eventsA3 6
 expect eventsA2 6
 expect eventsA1 8
 # UNDO takes the last take of ONE track at a press, and says which
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 said T1
 expect eventsA1 4
 expect eventsA3 6
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect eventsA3 6
 tap PLAY
@@ -108,17 +108,17 @@ expect recording 0
 expect eventsA3 0
 expect eventsA2 6
 expect eventsA1 0
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect eventsA3 6
 expect eventsA1 0
 expect eventsA2 6
 # (one more UNDO: the other armed track's pass)
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 said T1
 expect eventsA1 4

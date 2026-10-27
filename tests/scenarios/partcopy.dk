@@ -78,9 +78,9 @@ wait 100
 expect eventsD1 2
 expect barsD 3
 expect nev 22
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect eventsD1 0
 expect nev 20

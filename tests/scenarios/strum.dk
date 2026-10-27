@@ -7,8 +7,8 @@ wait 200
 press HOME
 tapkey b0
 release HOME
-tap EDIT
-tap EDIT
+tap LFO
+tap LFO
 wait 50
 turn K4 30
 wait 50

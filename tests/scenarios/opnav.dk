@@ -25,13 +25,13 @@ expect rowof 5
 wait 100
 expect textfit 0
 shot glob_atmo.png
-# SEL: the tape; again: TRACKS; again: the tape
+# SEL: REC SETUP; again: its second row
 tap SEL
-expect page 7
+expect page 10
+expect rowof 0
 tap SEL
-expect page 11
-tap SEL
-expect page 7
+expect page 10
+expect rowof 1
 # two takes on the piano (count-in), the second one undone with REC + OCT-, back with REC + OCT+
 qnt 0
 press HOME

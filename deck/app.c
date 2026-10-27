@@ -21,6 +21,7 @@ void app_init(void)
     settings_load();
 #ifdef PLAT_HOST
     dk_metro.on_note = 0;                /* (the scenarios are written with the count-in; the device starts ON NOTE) */
+    dk_rec_arm = 0;                      /* (and with REC at once; the device arms first: recarm.dk, recsel.dk) */
 #endif
     user_load();
     if (project_load(set.proj) != 0) {   /* nothing saved yet: the tape's demo, to play at once */

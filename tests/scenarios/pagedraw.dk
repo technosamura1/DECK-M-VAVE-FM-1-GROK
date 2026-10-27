@@ -42,7 +42,7 @@ snap 0
 wait 500
 snap 1
 expect_snap
-tap EDIT
+tap LFO
 wait 40
 snap 0
 wait 500
@@ -65,8 +65,8 @@ wait 40
 snap 0
 wait 500
 snap 1
-expect page 7
-expect_snap 0 28
+expect page 10
+expect_snap
 tap HOME
 wait 40
 snap 0
