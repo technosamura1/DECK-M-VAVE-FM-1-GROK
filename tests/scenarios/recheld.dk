@@ -1,0 +1,32 @@
+# REC held while the keys play (REC acts on its release): the take starts with the first key, which sounds and is recorded;
+# letting REC go does not stop it. Before: REC + white was a layer's mute - nothing recorded, "the keys do nothing in REC"
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+onnote 1
+tap HOME
+wait 100
+press REC
+wait 100
+key w3 down 90
+wait 200
+expect recording 1
+expect playing 1
+expect livev >0
+release REC
+wait 100
+expect recording 1
+key w3 up
+wait 300
+key w5 down 90
+wait 300
+key w5 up
+wait 1000
+tap REC
+wait 200
+expect recording 0
+tap PLAY
+wait 200
+expect events >1

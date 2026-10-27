@@ -203,8 +203,11 @@ static void track_select(int t)
     t %= DK_NTRACK;
     dk_song.cur_track = (uint8_t)t;
     ui_step_ev = -1;
-    ui.trk_until = plat_ms() + 1400u;    /* the track bar instead of a message */
-    ui.msg_until = 0;
+    if (ui.page != PG_MIX && ui.page != PG_TRACKS) {   /* the track bar instead of a message (MIX and TRACKS show it already:
+                                                        * there the bar, the track and its instrument over the mixer, read as choosing one) */
+        ui.trk_until = plat_ms() + 1400u;
+        ui.msg_until = 0;
+    }
     if (dk_recording || dk_counting)     /* the hand follows the track: a new one records too, not only the one REC began on */
         dk_cmd(C_RECTRK, t, 1, 0);
 }
@@ -777,7 +780,10 @@ static void auto_apply(void)
             dk_ev_t *e = &dk_ev[cl->at + i];
             if (e->pos < len)
                 continue;
-            if (e->pos < 2 * len)
+            /* past the loop's end: folded to its start, unless it is a drummer's (it plays the bar again anyway) or the
+             * same note is there already (a doubled hit) */
+            if (e->pos < 2 * len && dk_song.trk[t].seq != SQ_GROOVE &&
+                ((e->fl & EV_MOTION) || clip_find(c, e->pos - len, e->note, 0) < 0))
                 e->pos = (uint16_t)(e->pos - len);
             else
                 ev_delete(c, i);
@@ -1405,19 +1411,15 @@ static void key_down(int k, int vel)
         say(nm, was ? "ON" : "BYPASSED");
         return;
     }
-    if (held(B_REC) && w >= 0 && w < 6) {   /* REC held + white 1-6: that layer of the track's clip muted / on again */
-        uint8_t tk[40], sd[40];
-        uint16_t cn[40];
-        int clip = lay_clip(), n = layers_list(clip, tk, sd, cn, 40);
-        char st[8] = "L1";
-        st[1] = (char)('1' + w);
-        if (w >= n) {
-            say(st, "NO SUCH LAYER");
-            return;
+    if (held(B_REC)) {                   /* REC held and a key: the take starts now and the key plays into it (REC acts on its
+                                          * release: held while playing, the keys were REC + white = a layer's mute, nothing
+                                          * recorded - "the keys do nothing in REC"). The layers' mutes: TRACKS > EDIT > LAYERS */
+        ui.used[B_REC] = 1;
+        if (!dk_recording && !dk_counting && !dk_rec_pending()) {
+            const ui_map_t *m = map_of(B_REC);
+            if (m)
+                action(m->tap, 1);
         }
-        layer_mute_toggle(clip, tk[w]);
-        say(st, layer_muted(clip, tk[w]) ? "MUTED" : "ON");
-        return;
     }
     if (held(B_HOME)) {                  /* HOME + white: the preset; HOME + black 1-6: the track */
         ui.used[B_HOME] = 1;
@@ -2154,6 +2156,7 @@ static void take_erase_ui(void)
     } else
         say("NO TAKE", "RECORD FIRST");
 }
+#define KEY_BOUNCE 20u
 static void input_do(void);
 static void input(void)
 {
@@ -2171,6 +2174,22 @@ static void input_do(void)
     last_in = now;
     touch_poll();
     keys = touch_keys();
+    {                                    /* a key let go and back within KEY_BOUNCE ms is one press (a contact's bounce: the mono
+                                          * LEAD cut its note and began it again - the crackle at its start and end) */
+        static uint32_t up_t[NKEYS];
+        for (k = 0; k < NKEYS; k++) {
+            uint32_t bit = 1u << k;
+            if ((ui.keys & bit) && !(keys & bit)) {
+                if (!up_t[k])
+                    up_t[k] = now | 1u;
+                if ((int32_t)(now - up_t[k]) < (int32_t)KEY_BOUNCE)   /* (signed: now | 1 may be a tick ahead) */
+                    keys |= bit;         /* (still down, for now) */
+                else
+                    up_t[k] = 0;
+            } else
+                up_t[k] = 0;
+        }
+    }
     for (k = 0; k < NKEYS; k++) {
         uint32_t bit = 1u << k;
         if ((keys & bit) && !(ui.keys & bit)) {

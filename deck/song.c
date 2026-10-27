@@ -601,6 +601,7 @@ static uint8_t snp_pass[DK_NCLIP];       /* per clip: the pass whose undo snapsh
 static uint8_t rep_pass[DK_NCLIP];       /* REPLACE, per clip: the pass the erase is in (0xFF none) */
 static uint8_t rep_started;               /* REPLACE: the first look is done (tracks armed later start from where they are) */
 static uint16_t rep_pos[DK_NCLIP];       /*   and how far it has erased (the take has passed over up to here) */
+static uint8_t rep_wrap[DK_NCLIP];       /*   the next pass told before the loop's tick came round to 0: wait for it */
 /* one undo snapshot per (pass, clip): the first change a pass makes to the clip (a note in, or REPLACE's erase) */
 static void rec_snap(int clip, int pass)
 {
@@ -611,11 +612,14 @@ static void rec_snap(int clip, int pass)
     snp_pass[clip] = (uint8_t)pass;
 }
 /* REPLACE: the notes of the clip from `from` up to `to` that were there before this REC press go (the song is locked) */
+static int rep_groove(int t) { return dk_song.trk[t].seq == SQ_GROOVE && dk_gr_cur[t]; }
 static int rep_erase(int clip, int pass, int from, int to)
 {
     const dk_clip_t *c = &dk_song.clip[clip];
     int i, n = 0, take0 = dk_rec_floor[clip % DK_NTRACK];
-    if (take0 < 1)
+    if (rep_groove(clip % DK_NTRACK))        /* GROOVE: the drummer's last pass is the clip (its earlier passes go too) */
+        take0 = dk_rec_take[clip % DK_NTRACK];
+    else if (take0 < 1)
         take0 = dk_rec_pass0 > 31 ? 31 : dk_rec_pass0;
     if (take0 > 31)
         take0 = 31;
@@ -636,18 +640,26 @@ static void rep_run(void)
     int t;
     for (t = 0; t < DK_NTRACK; t++) {
         int c, len, now;
-        if (!(dk_rec_mask >> t & 1u))
-            continue;
+        if (!(dk_rec_mask >> t & 1u) || !(dk_rec_mode || rep_groove(t)))
+            continue;                    /* (REPLACE: every armed track; OVERDUB: a GROOVE track with its drummer playing) */
         c = (dk_cur_part & 7) * DK_NTRACK + t;
         len = clip_len(c);
         now = (int)(dk_part_tick % (uint16_t)(len ? len : 1));
         if (rep_pass[c] != dk_pass) {    /* the first look, or the next pass: the rest of the last one first */
             if (rep_pass[c] != 0xFF) {
-                rep_erase(c, rep_pass[c], rep_pos[c], len);
+                if (!rep_groove(t))      /* (GROOVE: the last pass's tail is the drummer's own, just played: it stays) */
+                    rep_erase(c, rep_pass[c], rep_pos[c], len);
                 rep_pos[c] = 0;
+                rep_wrap[c] = (uint8_t)(now > len / 2);   /* (the pass counted a tick early: the loop's end is still under it,
+                                                           * and [0, now) would be the whole of the last pass) */
             } else
                 rep_pos[c] = (uint16_t)(rep_started || dk_pass != dk_rec_pass0 ? now : dk_rec_tick0 % (len ? len : 1));
             rep_pass[c] = dk_pass;
+        }
+        if (rep_wrap[c]) {
+            if (now > len / 2)
+                continue;
+            rep_wrap[c] = 0;
         }
         if (now > rep_pos[c]) {
             rep_erase(c, dk_pass, rep_pos[c], now);
@@ -715,7 +727,7 @@ static int rec_flush_do(int only_t)
     uint32_t w;
     int n = 0;
     __asm__ volatile("" ::: "memory");
-    if (rec_on && dk_rec_mode && only_t < 0) {
+    if (rec_on && only_t < 0) {
         dk_lock();
         rep_run();
         dk_unlock();
@@ -762,6 +774,17 @@ static int rec_flush_do(int only_t)
         }
         if (dk_song.clip[r.clip].len == 0 && r.ev.pos + r.ev.dur > clip_len(r.clip))
             r.ev.dur = (uint16_t)(clip_len(r.clip) - r.ev.pos);
+        if (!(r.ev.fl & EV_MOTION)) {    /* the same note at the same place in the same take: there once (a drummer's step
+                                          * caught twice as the take began) */
+            const dk_clip_t *cc = &dk_song.clip[r.clip];
+            int i, dup = 0;
+            for (i = 0; i < cc->n && !dup; i++) {
+                const dk_ev_t *e = &dk_ev[cc->at + i];
+                dup = !(e->fl & EV_MOTION) && e->pos == r.ev.pos && e->note == r.ev.note && DK_L_TAKE(e->layer) == DK_L_TAKE(r.ev.layer);
+            }
+            if (dup)
+                continue;
+        }
         {
             int tries = DK_NCLIP;
             while (dk_song.nev >= DK_NEV && tries-- > 0 && mem_make_room(pass))
@@ -803,6 +826,7 @@ void rec_reset(void)
     for (c = 0; c < DK_NCLIP; c++) {
         snp_pass[c] = 0xFF;
         rep_pass[c] = 0xFF;
+        rep_wrap[c] = 0;
         rep_pos[c] = 0;
     }
 }

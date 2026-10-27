@@ -393,8 +393,7 @@ static void rec_stop(void)
     dk_recording = 0;
     rec_wait_note = 0;
     rec_start_after = 0;
-    rec_bake = 0;
-    rec_loop = 0;
+    rec_bake = 0;                              /* (rec_loop stays: the part goes on round after the take, till the stop) */
     {                                          /* (stopped in the count-in: the early notes forgotten) */
         int n;
         for (n = 0; n < 128; n++)
@@ -956,6 +955,16 @@ static void groove_fill_at(int t, int b, uint32_t pos)
         gr_from[t] = (uint8_t)(nb > first ? nb : first);
     }
 }
+static void play_start(void);
+/* a GROOVE track of the set (bits) whose drummer plays */
+static int groove_in(int mask)
+{
+    int t;
+    for (t = 0; t < DK_NTRACK; t++)
+        if ((mask >> t & 1) && dk_song.trk[t].seq == SQ_GROOVE && dk_gr_cur[t])
+            return 1;
+    return 0;
+}
 /* C_GROOVE: kind 0 a groove (b 1..15; 0 the ending), 1 a fill (b 1..), 2 off at once, 3 DICE */
 static void groove_cmd(int t, int kind, int b)
 {
@@ -972,6 +981,16 @@ static void groove_cmd(int t, int kind, int b)
     if (kind == 0) {
         if (b > TAPE.ngroove)
             return;
+        if (b && rec_wait_note && !dk_playing) {   /* REC waiting for the first note: a groove is one - the take starts with it */
+            rec_wait_note = 0;
+            play_start();
+            rec_on_now();
+            dk_gr_cur[t] = (uint8_t)b;
+            dk_gr_next[t] = 0xFF;
+            gp_load(t, &TAPE.groove[b - 1]);
+            gr_bars[t] = 0;
+            return;
+        }
         if (!dk_gr_cur[t] && b) {              /* from silence: at once (playing: where the bar is; stopped: its bar from the next 1/16) */
             if (!dk_playing)
                 gr_bar0[t] = gt + (DK_T16 - gt % DK_T16) % DK_T16;
@@ -1189,6 +1208,7 @@ static void play_stop(void)
 {
     int i;
     rec_stop();
+    rec_loop = 0;                              /* (the stop gives the road back) */
     pm_apply();
     dk_playing = 0;
     dk_stems = 0;
@@ -1393,10 +1413,11 @@ static void seq_tick(void)
         int fill = dk_fill && (e->flags & EF_DRUM);
         if (fill)
             fill_tick(t);
-        else if (k->seq == SQ_GROOVE) {      /* the groove, over the clip (what was recorded of it plays too) */
+        else if (k->seq == SQ_GROOVE) {      /* the drummer, or (silent) the clip: what was recorded of it */
             if (!(drop_mask >> t & 1u))
                 groove_tick(t);
-            clip_tick(t, t == dk_song.harm_track ? &hp : 0);
+            if (!dk_gr_cur[t])
+                clip_tick(t, t == dk_song.harm_track ? &hp : 0);
         } else if (k->seq == SQ_ENDLESS) {
             if (!(drop_mask >> t & 1u))
                 endless_tick(t);
@@ -1508,7 +1529,10 @@ static void drain(void)
                     rec_on_now();
                 } else if (dk_playing)
                     rec_on_now();
-                else if (dk_metro.on_note)
+                else if (groove_in(m)) {       /* a drummer playing (stopped, its own clock): the take starts now, from the bar */
+                    play_start();
+                    rec_on_now();
+                } else if (dk_metro.on_note)
                     rec_wait_note = 1;
                 else {
                     count_left = (dk_metro.count ? dk_metro.count : 1) * DK_TPB;

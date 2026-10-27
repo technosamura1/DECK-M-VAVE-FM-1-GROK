@@ -69,21 +69,9 @@ release REC
 wait 100
 expect nlay 2
 expect recording 0
-# REC held + white 2: layer 2 muted, again: on
-press REC
-tapkey w1
-release REC
-wait 50
-expect lmute >0
-expect recording 0
-wait 50
+# REC held + a key: the take starts and the key records (no more a layer's mute: that is TRACKS > EDIT > LAYERS)
 wait 1600
 shot tape_layers.png
-press REC
-tapkey w1
-release REC
-wait 50
-expect lmute 0
 # ENV while recording: on into B (a copy of A), the take goes on
 tap PLAY
 wait 200

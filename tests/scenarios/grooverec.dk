@@ -1,0 +1,65 @@
+# GROOVE into REC with no dance: choose a groove, press REC - the take starts at once (also when REC waits for the first
+# note); the loop goes round and the clip holds the drummer's LAST pass (no doubles stacked pass on pass); the clip is
+# silent while the drummer plays, and plays when the drummer stops
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+onnote 1
+tap HOME
+wait 100
+tap HOME
+wait 100
+tapkey w4
+wait 100
+tap HOME
+wait 100
+expect track 4
+tap SEQ
+wait 100
+tap SEQ
+wait 100
+tap SEQ
+wait 100
+seqtype 2
+wait 100
+expect seq 7
+# 1) a groove playing (stopped, its own clock), REC: the take starts now
+tapkey w3
+wait 500
+expect grcur 4
+tap REC
+wait 100
+expect recording 1
+expect playing 1
+# two passes of the one-bar loop: VERSE 1 has 2 kicks, 2 snares, 8 hats = 12 a bar
+wait 7000
+tap REC
+wait 300
+expect events >9
+expect dupes 0
+tap PLAY
+wait 300
+# 2) REC first (waits for the first note), then a groove key: the take starts with it
+tap REC
+wait 200
+expect recording 0
+tapkey w6
+wait 100
+expect recording 1
+expect grcur 7
+wait 7000
+tap REC
+wait 300
+tap PLAY
+wait 300
+expect dupes 0
+expect events >9
+# the drummer stopped: the clip plays what was recorded
+tap PLAY
+wait 2000
+expect grcur 0
+expect tvoices5 >0
+tap PLAY
+wait 200

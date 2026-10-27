@@ -180,6 +180,16 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "grnext")) g = dk_gr_next[dk_song.cur_track];   /* queued (255 none, 0 the end) */
     else if (!strcmp(what, "grfill")) g = dk_gr_fill[dk_song.cur_track];
     else if (!strcmp(what, "grhits")) g = (int)dk_gr_hits;
+    else if (!strcmp(what, "dupes")) {                                 /* the clip's notes doubled: the same note at the same place */
+        const dk_clip_t *cl = &dk_song.clip[cur_clip()];
+        int i, j;
+        g = 0;
+        for (i = 0; i < cl->n; i++)
+            for (j = i + 1; j < cl->n; j++) {
+                const dk_ev_t *a = &dk_ev[cl->at + i], *b = &dk_ev[cl->at + j];
+                g += !(a->fl & EV_MOTION) && !(b->fl & EV_MOTION) && a->pos == b->pos && a->note == b->note;
+            }
+    }
     else if (!strcmp(what, "grmod")) g = dk_gr_mod[dk_song.cur_track];
     else if (!strcmp(what, "grdens")) g = dk_gr_dens[dk_song.cur_track];
     else if (!strcmp(what, "grafill")) g = cur()->drv[0] & 3;

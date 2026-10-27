@@ -23,5 +23,9 @@ wait 14000
 expect part 0
 tap REC
 wait 200
+# the take over: still part A round (not off along the road), till the stop
+wait 15000
+expect part 0
+expect playing 1
 tap PLAY
 wait 200
