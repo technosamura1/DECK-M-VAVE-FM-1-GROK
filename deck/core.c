@@ -386,9 +386,12 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
  * OVERWORLD's busiest moment cost: over it, the quietest tails go first (faded), then a quiet held voice; never a
  * loud note */
 /* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
-#define DK_BUDGET_MAX 130
+/* (the device measured: 11 voices, the effects and the reverb in 2.8 of 5.8 ms; a held piano chord and a keys chord on top -
+ * 8 voices of 13 - did not fit the old 100: the piano gave way to the hand. Now it starts higher and climbs while the load
+ * is under 55 %, falls fast over 68 %) */
+#define DK_BUDGET_MAX 200
 #define DK_BUDGET_MIN 50
-static volatile int dk_budget = 100;     /* (the device's crackles were the flash's erases, not the load: 3.7 of 5.8 ms) */
+static volatile int dk_budget = 140;
 static volatile int dk_budget_hold;      /* (the host's scenarios: a device that holds its budget low, as a CPU load of 45-62% does) */
 void dk_budget_force(int b)
 {
@@ -401,10 +404,10 @@ void dk_set_load(int pct)
     int b = dk_budget;
     if (dk_budget_hold)
         return;
-    if (pct > 62)
-        b -= pct > 80 ? 14 : 5;
-    else if (pct < 45)
-        b += 2;
+    if (pct > 68)
+        b -= pct > 80 ? 14 : 6;
+    else if (pct < 55)
+        b += 3;
     dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
 }
 int dk_get_budget(void) { return dk_budget; }
