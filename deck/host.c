@@ -648,14 +648,6 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_song.biome = (uint8_t)atoi(a);
         return 1;
     }
-    if (!strcmp(cmd, "dayphase")) {
-        gd.phase = (float)atoi(a) * 0.01f;
-        return 1;
-    }
-    if (!strcmp(cmd, "flower")) {
-        fl.grow = fl.shown = (float)atoi(a) * 0.01f;
-        return 1;
-    }
     if (!strcmp(cmd, "uiprof")) {               /* the UI's cost: ms a frame, page by page (host) */
         int pg, i, keep = ui.page;
         for (pg = 0; pg < NPG; pg++) {

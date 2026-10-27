@@ -556,10 +556,10 @@ static void draw_toast(void)
 
 /* ------------------------------------------------------------------- SOUND --- */
 /* the module's own greys: the theme's are for black, on the window's brown they vanish */
-#define W_BG RGB(26, 22, 19)
-#define W_LINE RGB(84, 76, 66)
-#define W_GRAY RGB(156, 146, 130)
-#define W_INK RGB(64, 48, 32)
+#define W_BG RGB(0, 0, 0)
+#define W_LINE RGB(77, 77, 77)
+#define W_GRAY RGB(147, 147, 147)
+#define W_INK RGB(10, 10, 10)
 static void viz(int kind, int x0, int y0, int w, int h, float v, uint16_t c, uint32_t now)
 {
     int i, cx = x0 + w / 2, cy = y0 + h / 2;
@@ -638,21 +638,26 @@ static void viz(int kind, int x0, int y0, int w, int h, float v, uint16_t c, uin
 }
 
 /* the hardware look (the cassette's colours): a plate with its screws, a knob with its value's arc */
-static void plate(int x, int y, int w, int h)
+static void plate(int x, int y, int w, int h)   /* a manga panel: paper, a heavy black frame, a hairline inside */
 {
+    int i, j;
     cv_rect(x, y, w, h, CS_BODY);
-    hline(x, y + h - 1, w, CS_BODY_D);
-    vline(x + w - 1, y, h, CS_BODY_D);
-    disc(x + 5, y + 5, 2, CS_BODY_D);
-    disc(x + w - 6, y + 5, 2, CS_BODY_D);
-    disc(x + 5, y + h - 6, 2, CS_BODY_D);
-    disc(x + w - 6, y + h - 6, 2, CS_BODY_D);
+    cv_rect(x, y, w, 2, CS_INK);
+    cv_rect(x, y + h - 2, w, 2, CS_INK);
+    cv_rect(x, y, 2, h, CS_INK);
+    cv_rect(x + w - 2, y, 2, h, CS_INK);
+    hline(x + 4, y + h - 5, w - 8, CS_INK);
+    vline(x + 4, y + 4, h - 8, CS_INK);
+    vline(x + w - 5, y + 4, h - 8, CS_INK);
+    for (j = y + h - 15; j < y + h - 7; j += 3)  /* screentone at its foot, the dots thinning out upwards */
+        for (i = x + 7 + ((j / 3) & 1) * 2; i < x + w - 7; i += 4 + (y + h - 7 - j) / 3)
+            cv_rect(i, j, 1, 1, CS_BODY_D);
 }
 static void reel(int cx, int cy, float amount, int phase)
 {
     int i, r = 8 + (int)(amount * 6.0f + 0.5f);   /* the tape wound on it: kept inside the window (r <= 14) */
-    disc(cx, cy, 15, RGB(58, 50, 44));       /* the reel itself, the same size full or empty */
-    circle(cx, cy, 15, RGB(86, 76, 66));
+    disc(cx, cy, 15, RGB(51, 51, 51));       /* the reel itself, the same size full or empty */
+    circle(cx, cy, 15, RGB(77, 77, 77));
     disc(cx, cy, r, CS_TAPE);
     disc(cx, cy, 7, CS_LABEL);
     circle(cx, cy, 7, CS_BODY_D);
@@ -676,13 +681,16 @@ static void knob(int cx, int cy, int r, float frac, uint16_t col, int lit)
         a = 2.3561945f + t * 4.712389f;
         x = cx + (int)((float)(r + 4) * fm_cosf(a) + 0.5f);
         y = cy + (int)((float)(r + 4) * fm_sinf(a) + 0.5f);
-        cv_rect(x - 1, y - 1, 3, 3, t <= frac ? col : CS_BODY_D);
+        if (t <= frac)
+            cv_rect(x - 1, y - 1, 3, 3, col);
+        else if (i % 2 == 0)                     /* the rest of the arc: screentone dots */
+            cv_rect(x, y, 1, 1, CS_BODY_D);
     }
-    disc(cx, cy, r, lit ? RGB(64, 58, 52) : CS_WINDOW);
-    circle(cx, cy, r, RGB(20, 18, 16));
+    disc(cx, cy, r, lit ? RGB(59, 59, 59) : CS_WINDOW);
+    circle(cx, cy, r, RGB(18, 18, 18));
     a = 2.3561945f + frac * 4.712389f;
     cv_line(cx + (int)((float)(r / 3) * fm_cosf(a)), cy + (int)((float)(r / 3) * fm_sinf(a)),
-            cx + (int)((float)(r - 2) * fm_cosf(a)), cy + (int)((float)(r - 2) * fm_sinf(a)), RGB(240, 236, 226));
+            cx + (int)((float)(r - 2) * fm_cosf(a)), cy + (int)((float)(r - 2) * fm_sinf(a)), RGB(236, 236, 236));
 }
 /* the four knobs of the page as a row of real ones on the plate: each its name above, its value under */
 static void knob_row(int y)
@@ -697,7 +705,7 @@ static void knob_row(int y)
         field_range(f, &lo, &hi);
         v = field_get(f);
         field_text(f, t);
-        text_box(cx - 28, y - 31, 56, 1, &FONT_T, &FONT_T, field_label(f), lit ? RGB(20, 14, 8) : W_INK);
+        text_box(cx - 28, y - 31, 56, 1, &FONT_T, &FONT_T, field_label(f), lit ? RGB(15, 15, 15) : W_INK);
         knob(cx, y, 15, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, knob_col(i), lit);
         if (ui.page == PG_SOUND && macro_moves(f))   /* the preset's MACRO moves this one: a dot */
             cv_rect(cx + 23, y - 28, 4, 4, TH_ENC[0]);
@@ -711,7 +719,7 @@ static void knob_row(int y)
                 cv_line(cx - 22, y - 13 + d, cx - 19, y - 20 + d, ac);
             }
         }
-        text_box(cx - 28, y + 21, 56, 1, &FONT_XS, &FONT_T, t, RGB(28, 20, 12));
+        text_box(cx - 28, y + 21, 56, 1, &FONT_XS, &FONT_T, t, RGB(21, 21, 21));
     }
 }
 /* ------------------------------------------------------------ the module --- */
@@ -725,17 +733,20 @@ static void knob_row(int y)
 static void module(const char *left, const char *right)
 {
     plate(1, 38, 238, 189);
-    if (left)
-        text_box(14, 41, 120, 0, &FONT_T, &FONT_T, left, W_INK);
+    if (left) {                              /* the page's name in a black caption box, as a manga's narration */
+        int tw = text_w(&FONT_T, left);
+        tw = tw > 116 ? 116 : tw;
+        cv_rect(9, 39, tw + 10, 12, CS_INK);
+        text_box(14, 41, 116, 0, &FONT_T, &FONT_T, left, CS_LABEL);
+    }
     if (right)
         text_box(116, 41, 110, 2, &FONT_T, &FONT_T, right, W_INK);
-    cv_rect(WX, WY, WW, WH, W_BG);
-    hline(WX, WY, WW, RGB(14, 12, 10));      /* the window set into the plate: a shadow on top */
+    cv_rect(WX, WY, WW, WH, W_BG);           /* the window: a black panel */
     {                                        /* the page's rows: a dot each on the plate's right edge, the one you are on dark */
         int n = page_rows(ui.page), r = ui.row[ui.page] % (n ? n : 1), k;
         if (n > 1)
             for (k = 0; k < n; k++)
-                cv_rect(235, WY + 4 + k * 7, 3, 4, k == r ? W_INK : RGB(150, 132, 104));
+                cv_rect(WX + WW - 5, WY + 4 + k * 7, 3, 4, k == r ? CS_LABEL : RGB(84, 84, 84));   /* (inside the window) */
     }
 }
 
@@ -992,11 +1003,11 @@ static void draw_step_grid(const dk_clip_t *c, int len)
         if (i == cur)
             cv_rect(x, gy - 5, cw - 1, gh + 8, dimc(TH_ENC[0], 6));
         else if ((i / 4) & 1)
-            cv_rect(x, gy - 5, cw - 1, gh + 8, RGB(40, 35, 31));
+            cv_rect(x, gy - 5, cw - 1, gh + 8, RGB(36, 36, 36));
         if (i) {                             /* the cells' edges: dotted, a beat's solid */
             int yy;
             for (yy = gy - 5; yy < gy + gh + 3; yy += i % 4 ? 3 : 1)
-                cv_rect(x - 1, yy, 1, 1, i % 4 ? RGB(62, 56, 49) : W_LINE);
+                cv_rect(x - 1, yy, 1, 1, i % 4 ? RGB(57, 57, 57) : W_LINE);
         }
         cv_rect(x + cw / 2 - 1, WY + WH - 8, i == cur ? 3 : 2, i % 4 ? 3 : 5, i == cur ? TH_ENC[0] : i % 4 ? W_LINE : W_GRAY);
     }
@@ -1206,7 +1217,7 @@ static void draw_seq(void)
                         cv_rect(cx - 4, y - 4, 9, 9, on_lane ? TH_ENC[0] : TH_TEXT);
                     else
                         cv_rect(cx - 3, y - 2, 6, 5, on_lane ? dimc(TH_ENC[0], 7)
-                                                    : i % 4 ? RGB(66, 60, 52) : RGB(104, 96, 84));
+                                                    : i % 4 ? RGB(60, 60, 60) : RGB(97, 97, 97));
                 }
             }
             if (dk_playing && ph >= 0 && ph < 16)
@@ -1266,11 +1277,11 @@ static void draw_mix(void)
         int x = WX + 2 + t * 36, cx = x + 15, top = WY + 20, h = 44, fy = top + h - (int)k->vol * h / 100,
             sel = t == dk_song.cur_track, lv = (int)(fm_minf(1.0f, dk_level[t] * 3.0f) * 7.0f), i;
         if (sel)
-            cv_rect(x, WY + 1, 34, WH - 2, RGB(52, 46, 40));
+            cv_rect(x, WY + 1, 34, WH - 2, RGB(47, 47, 47));
         knob(cx, WY + 9, 5, (float)(k->pan + 64) / 128.0f, sel ? TH_ENC[1] : W_GRAY, 0);
-        cv_rect(cx - 1, top, 3, h, RGB(16, 14, 12));      /* the slot */
+        cv_rect(cx - 1, top, 3, h, RGB(14, 14, 14));      /* the slot */
         for (i = 0; i < 7; i++)                            /* the meter: seven lights */
-            cv_rect(x + 27, top + h - 5 - i * 6, 3, 4, i < lv ? (i < 4 ? TH_ENC[0] : i < 6 ? TH_ENC[2] : TH_REC) : RGB(60, 54, 48));
+            cv_rect(x + 27, top + h - 5 - i * 6, 3, 4, i < lv ? (i < 4 ? TH_ENC[0] : i < 6 ? TH_ENC[2] : TH_REC) : RGB(55, 55, 55));
         cv_rect(cx - 8, fy - 4, 17, 8, sel ? CS_LABEL : CS_BODY_D);   /* the cap */
         hline(cx - 8, fy, 17, sel ? TH_ENC[0] : CS_INK);
         cv_rect(x + 4, WY + WH - 14, 24, 12, show ? CS_BODY_D : TH_TRACK[t]);   /* the strip of tape: dark when silent */
@@ -1299,7 +1310,7 @@ static void draw_road(void)
         for (i = 0; i < DK_NPART; i++) {
             int x = WX + 3 + (i / 4) * 113, y = WY + 3 + (i % 4) * 24, t, sel = i == ui_gpart;
             if (sel)
-                cv_rect(x, y, 109, 22, RGB(58, 52, 45));
+                cv_rect(x, y, 109, 22, RGB(53, 53, 53));
             if (ui.dup_t && plat_ms() - ui.dup_t < 3000u && i == ui.dup_to)   /* the overwrite asked: the target red */
                 cv_rect(x, y, 109, 22, dimc(TH_REC, 4));
             cv_rect(x + 3, y + 4, 14, 14, TH_PART[i]);
@@ -1437,7 +1448,7 @@ static void draw_keys(void)
     }
     for (i = 0; i < 11; i++) {
         int k = BLACK_K[i], w = white_of(k - 1), x = WX + 2 + w * 13 + 3 + 8, lit = kh[k].trk >= 0 && kh[k].n;
-        cv_rect(x, ky, 8, kh_ / 2 + 2, lit ? TH_ENC[1] : RGB(24, 20, 18));
+        cv_rect(x, ky, 8, kh_ / 2 + 2, lit ? TH_ENC[1] : RGB(20, 20, 20));
     }
 }
 
@@ -1514,9 +1525,9 @@ static void atmo_icon(int kind, int cx, int cy, int on, uint32_t now)
     int i;
     switch (kind) {
     case 0:                                  /* RAIN: a cloud, the drops falling */
-        disc(cx - 7, cy - 6, 6, on ? RGB(150, 160, 180) : W_LINE);
-        disc(cx + 3, cy - 8, 8, on ? RGB(170, 180, 200) : W_LINE);
-        disc(cx + 10, cy - 5, 5, on ? RGB(150, 160, 180) : W_LINE);
+        disc(cx - 7, cy - 6, 6, on ? RGB(159, 159, 159) : W_LINE);
+        disc(cx + 3, cy - 8, 8, on ? RGB(179, 179, 179) : W_LINE);
+        disc(cx + 10, cy - 5, 5, on ? RGB(159, 159, 159) : W_LINE);
         for (i = 0; i < 4; i++) {
             int y = cy + 1 + (int)((now / 60u + (uint32_t)i * 5u) % 8u);
             vline(cx - 9 + i * 6, on ? y : cy + 4, 3, on ? RGB(110, 186, 244) : W_LINE);
@@ -1555,14 +1566,14 @@ static void atmo_icon(int kind, int cx, int cy, int on, uint32_t now)
         }
         break;
     case 5:                                  /* CRICKETS: the moon, the stars blinking */
-        disc(cx - 4, cy - 2, 9, on ? RGB(246, 236, 210) : W_LINE);
-        disc(cx + 1, cy - 5, 8, on ? RGB(44, 38, 34) : W_BG);
+        disc(cx - 4, cy - 2, 9, on ? RGB(236, 236, 236) : W_LINE);
+        disc(cx + 1, cy - 5, 8, on ? RGB(39, 39, 39) : W_BG);
         for (i = 0; i < 4; i++)
             if (!on || ((now / 300u + (uint32_t)i) % 3u))
                 cv_rect(cx + 6 + (i & 1) * 5, cy - 9 + i * 5, 2, 2, on ? RGB(246, 214, 92) : W_LINE);
         break;
     case 6:                                  /* the DUST: a record turning, its crackle */
-        disc(cx, cy, 11, on ? RGB(24, 22, 20) : W_BG);
+        disc(cx, cy, 11, on ? RGB(22, 22, 22) : W_BG);
         circle(cx, cy, 11, c);
         circle(cx, cy, 8, on ? W_GRAY : W_LINE);
         circle(cx, cy, 5, on ? W_GRAY : W_LINE);
@@ -1591,7 +1602,7 @@ static void draw_atmo(void)
     for (i = 0; i < 8; i++) {
         int x = WX + 1 + (i & 3) * 57, y = WY + 1 + (i >> 2) * 50, f = FLD[i], v = field_get(f), on = v > 0,
             mine = (i >> 2) == row;
-        cv_rect(x, y, 55, 48, on ? RGB(52, 45, 39) : RGB(34, 29, 25));
+        cv_rect(x, y, 55, 48, on ? RGB(46, 46, 46) : RGB(30, 30, 30));
         if (mine)
             cv_rect(x, y, 55, 2, knob_col(i & 3));
         atmo_icon(i, x + 27, y + 17, on, now);
@@ -1623,9 +1634,9 @@ static void draw_global(void)
         hline(px - half, WY + 8 + i, 2 * half, i < 2 ? WOOD_D : WOOD);
     }
     cv_rect(px - 20, py - 2, 40, 4, WOOD_D);
-    cv_rect(px - 6, WY + 18, 12, 44, RGB(232, 222, 196));   /* the scale behind the arm */
+    cv_rect(px - 6, WY + 18, 12, 44, RGB(222, 222, 222));   /* the scale behind the arm */
     for (i = 0; i < 6; i++)
-        hline(px - 4, WY + 22 + i * 7, 8, RGB(150, 140, 120));
+        hline(px - 4, WY + 22 + i * 7, 8, RGB(140, 140, 140));
     {
         int tx = px + (int)(60.0f * fm_sinf(a)), ty = py - 8 - (int)(60.0f * fm_cosf(a));
         int wx = px + (int)(38.0f * fm_sinf(a)), wy = py - 8 - (int)(38.0f * fm_cosf(a));
@@ -1831,7 +1842,7 @@ static void draw_layers(void)
         uint16_t col = dim ? dimc(TH_TRACK[t], 5) : TH_TRACK[t];
         char *q;
         if (k == cur)
-            cv_rect(0, ry, 240, 23, RGB(46, 42, 38));
+            cv_rect(0, ry, 240, 23, RGB(42, 42, 42));
         q = s;
         *q++ = 'L';
         q = itoa_b(k + 1, q);
@@ -1844,7 +1855,7 @@ static void draw_layers(void)
         text_box(4, ry + 13, 76, 0, &FONT_T, &FONT_T, s, TH_GRAY);
         text_box(72, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", muted ? TH_REC : dimc(TH_GRAY, 6));
         text_box(84, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
-        cv_rect(tx, ry + 2, tw, 19, RGB(20, 18, 16));
+        cv_rect(tx, ry + 2, tw, 19, RGB(18, 18, 18));
         for (i = 0; i < c->n; i++) {
             const dk_ev_t *e = &dk_ev[c->at + i];
             if (!(e->fl & EV_MOTION) && (int)DK_L_TAKE(e->layer) == tk[k]) {
@@ -1893,7 +1904,7 @@ static void draw_edit(void)
         int x = 4 + i / 7 * 118, y = 34 + i % 7 * 20, er = i >= 11, on = i == ask;
         uint16_t col = on || er ? TH_REC : TH_TRACK[t];
         char n[4];
-        cv_rect(x, y, 20, 17, on ? TH_REC : er ? dimc(TH_REC, 4) : RGB(52, 46, 40));
+        cv_rect(x, y, 20, 17, on ? TH_REC : er ? dimc(TH_REC, 4) : RGB(47, 47, 47));
         itoa_b(i + 1, n);
         text_box(x, y + 3, 20, 1, &FONT_T, &FONT_T, n, on ? TH_BG : col);
         text_box(x + 24, y + 3, 90, 0, &FONT_T, &FONT_T, ED_NAME[i], on ? TH_REC : TH_TEXT);
@@ -1920,7 +1931,7 @@ static void draw_tracks(void)
         if (rec)
             cv_rect(0, ry, 240, 23, dimc(TH_REC, 4));
         else if (sel)
-            cv_rect(0, ry, 240, 23, RGB(52, 46, 40));
+            cv_rect(0, ry, 240, 23, RGB(47, 47, 47));
         if (rec || (ui.arm_trk >> t & 1))      /* recording, or armed for it: the red stripe */
             cv_rect(0, rec ? ry : ry + 7, 3, rec ? 23 : 9, TH_REC);   /* (armed: a short dash, recording: the whole row) */
         cv_rect(4, ry + 1, 16, 21, col);
@@ -1935,9 +1946,9 @@ static void draw_tracks(void)
             text_box(72, ry + 1, 10, 0, &FONT_T, &FONT_T, "M", show ? TH_REC : dimc(TH_GRAY, 6));
             text_box(84, ry + 1, 10, 0, &FONT_T, &FONT_T, "S", k->solo ? TH_ENC[2] : dimc(TH_GRAY, 6));
         }
-        cv_rect(97, ry + 3, 26, 4, RGB(34, 30, 27));       /* the level */
+        cv_rect(97, ry + 3, 26, 4, RGB(30, 30, 30));       /* the level */
         cv_rect(97, ry + 3, (int)k->vol * 26 / 100, 4, muted ? TH_GRAY : TH_ENC[0]);
-        cv_rect(tx, ry + 2, tw, 19, RGB(20, 18, 16));      /* the thumbnail's window */
+        cv_rect(tx, ry + 2, tw, 19, RGB(18, 18, 18));      /* the thumbnail's window */
         for (i = 0; i < n; i++) {
             const dk_ev_t *e = &dk_ev[c->at + i];
             if (e->fl & EV_MOTION)
