@@ -130,6 +130,7 @@ static void particle_c(float x, float y, float vx, float vy, int life, int kind,
 static void particle(float x, float y, float vx, float vy, int life, int kind) { particle_c(x, y, vx, vy, life, kind, mk(255, 250, 220)); }
 
 #include "flower.c"
+#include "girl.c"
 
 /* the biomes' worlds: a sky by day and by night (top, bottom), the flower's glow, what is in it */
 enum { W_SUN = 1, W_CLOUDS = 2, W_STARS = 4, W_MOON = 8, W_AURORA = 16, W_RAIN = 32, W_SNOW = 64, W_EMBERS = 128,
@@ -516,10 +517,9 @@ static void tape_ui_step(uint32_t dt)
     garden_step(dt);
 }
 /* the PLAY page's art: the garden, rows y0 .. y0 + 143 */
-static void tape_play_draw(int32_t y0)
+static void tape_play_draw(int32_t y0)       /* (the garden still makes the splash) */
 {
-    garden_draw();
-    garden_blit(y0);
+    girl_draw(y0, plat_ms());
 }
 /* the mood changed: its biome */
 static void tape_mood(int m)
