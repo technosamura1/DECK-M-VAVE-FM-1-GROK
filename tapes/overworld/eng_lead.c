@@ -9,6 +9,7 @@ typedef struct {
     float es, att, att_inc, mr, held, kind, t;
     float fe, fe_mul, fc0, fe_oct, q, lo, bp, open;
     float det, vdep, sub, fmi, pwm, kt, lp, lpk;
+    float vt, fup, fct;                                 /* legato: the force, the cut-off's lift and its pitch-follow, eased to */
 } ld_v;
 CHECK_SIZE(ld_v);
 static const char *const LD_WAVES[] = {"SAW", "SQUARE", "PULSE", "SUPER", "TRI", "FM"};
@@ -22,7 +23,7 @@ static void ld_pitch(ld_v *v, int note, const float *p)
     float g = p[6];
     v->tinc = dk_mtof((float)note) * drift_of(p) * (1.0f / DK_SR);
     v->kt = fm_exp2f((float)(note - 60) * (1.0f / 36.0f));
-    v->fc0 = fm_minf(50.0f * fm_exp2f(p[1] * 0.082f) * v->kt, 7400.0f);
+    v->fct = fm_minf(50.0f * fm_exp2f(p[1] * 0.082f) * v->kt, 7400.0f);
     /* GLIDE: 0 jumps; up to about a second (the time to travel most of the way) */
     v->glk = g < 1.0f ? 1.0f : 1.0f - fm_expf(-1.0f / (0.012f * fm_exp2f(g * 0.065f) * DK_SR));
 }
@@ -32,16 +33,21 @@ static void ld_on(float *st, int note, float vel, const float *p, int retrig)
     int k = (int)p[0];
     float spread = p[4] * 0.01f;
     k = k < 0 ? 0 : k > 5 ? 5 : k;
-    if (retrig == 2) {                                  /* legato: the same voice goes to the new pitch */
+    if (retrig == 2) {                                  /* legato: the same voice slides to the new pitch - eased, not jumped */
         ld_pitch(v, note, p);
-        v->vel = vel;
-        v->fe = fm_maxf(v->fe, 0.5f);                   /* (the cut-off opens a little again) */
+        if (v->glk > 0.0035f)                           /* GLIDE 0 too: a short slide (~20 ms), not a step in the wave */
+            v->glk = 0.0035f;
+        v->vt = vel;                                    /* (the force, the cut-off's lift: eased in render, a jump clicked) */
+        v->fup = 0.5f;
         return;
     }
     v->kind = (float)k;
     v->vel = vel;
     ld_pitch(v, note, p);
     v->inc = v->tinc;
+    v->fc0 = v->fct;
+    v->vt = vel;
+    v->fup = 0.0f;
     pan_of((float)note, k == 3 ? 0.7f : 0.45f, &v->gl, &v->gr);
     v->det = k == 3 ? 1.0f + spread * 0.014f : 1.0f + spread * 0.008f;
     v->open = (p[1] >= 97.0f && p[3] < 1.0f) ? 1.0f : 0.0f;
@@ -84,6 +90,14 @@ static int ld_render(float *st, float *l, float *r, int n, const float *p)
     static const uint8_t OSC[6] = {0, 3, 1, 5, 4, 7};     /* syn_osc's kinds: saw, square, pulse, super, tri, sine */
     for (j = 0; j < n; j++) {
         float s, a, d1, d2, d3, vib, vin, pw;
+        if ((j & 15) == 0) {                            /* legato's moves, eased (~3 ms) */
+            v->vel += (v->vt - v->vel) * 0.12f;
+            v->fc0 += (v->fct - v->fc0) * 0.12f;
+            if (v->fup > v->fe)
+                v->fe += (v->fup - v->fe) * 0.15f;
+            if (v->fup > 0.0f && v->fe >= v->fup - 0.01f)
+                v->fup = 0.0f;
+        }
         if ((j & 15) == 0 && filt) {
             float hz = fm_minf(6000.0f, v->fc0 * fm_exp2f(v->fe_oct * v->fe));
             fk = fm_minf(0.8f, dk_svf_f(hz));

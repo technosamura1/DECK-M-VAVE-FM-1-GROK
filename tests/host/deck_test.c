@@ -452,6 +452,46 @@ static void groove_auto(const char *out)
     report("groove auto: fills every 4, mutate 70, dice, a section");
 }
 
+/* LEAD as played: a legato line (each key down before the last let go), then detached notes; every LEAD preset to DIR/NN.wav
+ * (tools/sound_check.py finds the clicks) */
+static void lead_lines(const char *dir)
+{
+    static const int MEL[8] = {60, 62, 64, 67, 65, 64, 62, 60};
+    int p, i;
+    char path[256];
+    MKDIR(dir);
+    for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+        int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT);
+        dk_preset_t tmp;
+        if (p % DK_NFACT >= preset_count(11, blk))
+            continue;
+        fresh();
+        dk_lock();
+        dk_song.dust = 0;
+        dk_track_setup(5, 11, id, SQ_STEP, R_LEAD);
+        dk_unlock();
+        run(0.1);
+        reset_out();
+        for (i = 0; i < 8; i++) {                /* legato: the next down, then the last up */
+            note(5, MEL[i], 80 + (i & 1) * 25);
+            if (i)
+                note(5, MEL[i - 1], 0);
+            run(0.22);
+        }
+        note(5, MEL[7], 0);
+        run(0.4);
+        for (i = 0; i < 8; i++) {                /* detached: up, a short gap, down */
+            note(5, MEL[i], 70 + (i & 1) * 35);
+            run(0.16);
+            note(5, MEL[i], 0);
+            run(0.06);
+        }
+        tail(2.0);
+        snprintf(path, sizeof path, "%s/%02d_%s.wav", dir, p, preset_of(11, id, &tmp)->name);
+        wav(path);
+    }
+}
+
 static void chords(const char *out)
 {
     static const int MODES[3] = {0, 1, 4};               /* MAJOR, MINOR, LYDIAN */
@@ -1153,6 +1193,8 @@ int main(int argc, char **argv)
         groove_demo(argc > 2 ? argv[2] : "out/groove.wav", argc > 3 ? atoi(argv[3]) : 0);
     else if (!strcmp(m, "grooveauto"))
         groove_auto(argc > 2 ? argv[2] : "out/groove_auto.wav");
+    else if (!strcmp(m, "leadlines"))
+        lead_lines(argc > 2 ? argv[2] : "out/leadlines");
     else if (!strcmp(m, "chords"))
         chords(argc > 2 ? argv[2] : "out/chords.wav");
     else if (!strcmp(m, "phrase") && argc > 3)

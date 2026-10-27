@@ -1,0 +1,27 @@
+# REC with BARS set: the part being recorded goes round, also in SONG mode (the demo plays the road: before, the take ran on
+# into the next blocks - "the music flies away"); the punch-out gives the road back
+wait 300
+expect part 0
+tap SEL
+wait 100
+setbars 0 4
+wait 50
+expect barsA 4
+tap REC
+wait 3500
+key w2 down 90
+wait 400
+key w2 up
+# 4 bars at 76 BPM: 12.6 s; well past it, still part A, the loop round
+wait 16000
+expect part 0
+expect ptick <1536
+key w4 down 90
+wait 400
+key w4 up
+wait 14000
+expect part 0
+tap REC
+wait 200
+tap PLAY
+wait 200

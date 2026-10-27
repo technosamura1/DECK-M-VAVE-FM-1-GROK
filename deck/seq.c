@@ -383,6 +383,8 @@ static void open_publish(void)
         }
     dk_open_n = (uint8_t)k;
 }
+/* a take asked for: the part it records goes round (its bars), the road (SONG) set aside till the take ends */
+static uint8_t rec_loop;
 static void rec_stop(void)
 {
     if (dk_recording)
@@ -391,6 +393,7 @@ static void rec_stop(void)
     rec_wait_note = 0;
     rec_start_after = 0;
     rec_bake = 0;
+    rec_loop = 0;
     {                                          /* (stopped in the count-in: the early notes forgotten) */
         int n;
         for (n = 0; n < 128; n++)
@@ -1135,10 +1138,12 @@ static void motion_reset(void)
 }
 
 /* --------------------------------------------------------------- transport --- */
+/* (rec_loop: a take asked for - see rec_stop) */
+static int song_on(void) { return dk_song.play_mode && dk_song.nroad && !rec_loop; }
 static void block_enter(void)
 {
     const dk_block_t *b;
-    if (dk_song.play_mode && dk_song.nroad) {
+    if (song_on()) {
         if (dk_road_i >= dk_song.nroad)
             dk_road_i = 0;
         b = &dk_song.road[dk_road_i];
@@ -1161,7 +1166,7 @@ static void play_start(void)
     part_tick = 0;
     bar_n = 0;
     part_loops = 0;
-    if (dk_song.play_mode) {
+    if (song_on()) {
         dk_road_i = road_from < dk_song.nroad ? road_from : 0;
         road_from = 0;
         dk_road_rep = 0;
@@ -1377,9 +1382,9 @@ static void seq_tick(void)
     motion_expire();
     if (part_tick % DK_TPB == 0)
         harm_bar();
-    block_last = (uint8_t)(dk_song.play_mode && dk_song.nroad &&
+    block_last = (uint8_t)(song_on() &&
                            dk_road_rep + 1 >= (dk_song.road[dk_road_i].reps ? dk_song.road[dk_road_i].reps : 1));
-    if (dk_song.play_mode && (tricks & TR_STOP) && block_last && part_tick >= part_len_of(cur_part) - DK_PPQ)
+    if (song_on() && (tricks & TR_STOP) && block_last && part_tick >= part_len_of(cur_part) - DK_PPQ)
         stop_to = 0.0f;                        /* TAPESTOP: the block's last beat */
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_track_t *k = &dk_song.trk[t];
@@ -1420,7 +1425,7 @@ static void seq_tick(void)
         pm_apply();                            /* the part's mutes asked for during the bar */
         if (rec_bake && --rec_bake == 0)       /* BAKE done (the UI turns the track to STEP) */
             rec_stop();
-        if (!dk_song.play_mode && queued != 0xFF) {   /* PART: the queued part, from the bar's end */
+        if (!song_on() && queued != 0xFF) {   /* PART: the queued part, from the bar's end */
             cur_part = queued;
             queued = 0xFF;
             dk_next_part = 0xFF;
@@ -1450,7 +1455,7 @@ static void seq_tick(void)
     if (part_tick >= part_len_of(cur_part)) {
         part_tick = 0;
         part_loops++;
-        if (dk_song.play_mode && dk_song.nroad)
+        if (song_on())
             road_next();
         for (t = 0; t < DK_NTRACK; t++)
             pedal_v[t][0] = pedal_v[t][1] = 0.0f;
@@ -1480,6 +1485,7 @@ static void drain(void)
         case C_REC:
             if (a) {
                 int t = c.d & 7, bake = (c.d >> 8) & 31;
+                rec_loop = 1;                  /* (the take's part goes round, SONG or not) */
                 int t2 = c.d >> 16 & 0xFF, m = c.d >> 24 & 0x3F, i, lay = 0;
                 if (t >= DK_NTRACK)
                     t = 0;
