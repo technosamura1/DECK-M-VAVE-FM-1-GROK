@@ -73,6 +73,7 @@ extern volatile uint8_t dk_open_note[8];
 extern volatile uint8_t dk_open_trk[8];                 /* which track each held note belongs to */
 extern volatile uint8_t dk_voices_on;
 extern volatile uint8_t dk_trk_voices[];
+int dk_silent_why(int t);
 extern volatile uint8_t dk_live_voices;
 void dk_budget_force(int b);
 extern volatile uint8_t dk_voices_frozen;   /* (of them, with a frozen sound) */

@@ -200,6 +200,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "dirty")) g = ui.dirty;
     else if (!strcmp(what, "voices")) g = dk_voices_on;
     else if (!strncmp(what, "tlevel", 6) && what[6] >= '1' && what[6] <= '6') g = (int)(dk_level[what[6] - '1'] * 1000.0f);   /* the track's output level now (thousandths): audible */
+    else if (!strcmp(what, "why")) g = ui_why_last;           /* a silent track the hand played: why (reason + 1, 0 none) */
     else if (!strcmp(what, "livev")) g = dk_live_voices;      /* the hand's notes still held and sounding */
     else if (!strncmp(what, "tvoices", 7) && what[7] >= '1' && what[7] <= '6') g = dk_trk_voices[what[7] - '1'];   /* voices sounding on track N */
     else if (!strcmp(what, "clicks")) g = (int)dk_metro_clicks;

@@ -36,6 +36,8 @@ static struct {
     uint8_t notes_k;                     /* a PERFORM key held (+1): its name stays up top until it is let go */
     uint8_t auto_fix, auto_prev;         /* (the AUTO take running: ui_auto_on, fields.c) */         /* the tape on AUTO: the first take's bars to set; the bars before it */
     uint16_t auto_max;                   /* the furthest tick of it (a wrap past 16 bars: 16 it is) */
+    uint32_t why_t;                      /* a note of the hand: when (why_tick looks 250 ms later whether its track is heard) */
+    uint8_t why_k, why_trk;
     uint32_t clr_t;                      /* PROJECT, black 4 (CLEAR ALL): when it was pressed once (0: not asked); again within 3 s clears */
     uint8_t dup_from, dup_to;            /* GARAGE: DUPLICATE PART TO a part with notes: asked once (when: dup_t), the second press overwrites */
     uint32_t dup_t;
@@ -1782,6 +1784,59 @@ static void key_down(int k, int vel)
     }
     keys_down(k, vel);
     notes_show(k);
+    if (!(e->flags & EF_DRUM)) {         /* a note of the hand: heard? checked a moment later (why_tick) */
+        ui.why_t = plat_ms() | 1u;
+        ui.why_k = (uint8_t)k;
+        ui.why_trk = (uint8_t)dk_song.cur_track;
+    }
+}
+/* the hand plays and the track stays silent: say why (a mute, a solo, its VOL, a curve...), or that no voice started */
+static int ui_why_last;                  /* (host: the last silence found: reason + 1; 9 no voice, 10 the sound itself) */
+static void why_tick(uint32_t now)
+{
+    static const char *WHY[8] = {"", "MUTED IN PART", "OTHER TRACK SOLO", "DROPPED ON ROAD", "VOLUME AT 0",
+                                 "AUTOMATION: VOL 0", "TREMOLO", "DRUMS MUTED"};
+    int t = ui.why_trk, r;
+    char a[28], b[28], *q;
+    const char *l;
+    if (!ui.why_t || now - ui.why_t < 250u)
+        return;
+    ui.why_t = 0;
+    if (!(ui.keys >> ui.why_k & 1u) || t != dk_song.cur_track || t >= DK_NTRACK)
+        return;
+    if (dk_level[t] > 0.002f)
+        return;
+    r = dk_silent_why(t);
+    ui_why_last = r ? r + 1 : !dk_trk_voices[t] ? 9 : 10;
+    q = a;
+    for (l = track_label(t); *l && q < a + 18; )
+        *q++ = *l++;
+    for (l = " SILENT"; *l; )
+        *q++ = *l++;
+    *q = 0;
+    q = b;
+    if (r)
+        for (l = WHY[r]; *l; )
+            *q++ = *l++;
+    else if (!dk_trk_voices[t]) {        /* no voice started at all */
+        for (l = "NO VOICE "; *l; )
+            *q++ = *l++;
+        q = put_n(q, dk_voices_on);
+        for (l = "/24"; *l; )
+            *q++ = *l++;
+    } else {                             /* voices on, nothing out: the sound itself (the effect, the engine) */
+        for (l = "V"; *l; )
+            *q++ = *l++;
+        q = put_n(q, dk_trk_voices[t]);
+        for (l = " FX"; *l; )
+            *q++ = *l++;
+        q = put_n(q, cur()->fx);
+        for (l = " VOL"; *l; )
+            *q++ = *l++;
+        q = put_n(q, dk_param_value(t, T_VOL) > 99 ? 99 : dk_param_value(t, T_VOL));
+    }
+    *q = 0;
+    say(a, b);
 }
 
 static void key_up(int k)
@@ -2441,6 +2496,7 @@ void ui_frame(void)
     }
     tape_ui_step(dt);
     pb_audition_tick(now);
+    why_tick(now);
     housekeeping(now);
     if (song_layers_full) {              /* the sounds' table of a track is full: the takes after it stay live */
         song_layers_full = 0;

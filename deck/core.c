@@ -813,6 +813,31 @@ static int track_audible(int t)
     return 1;
 }
 
+/* why a track the hand plays is not heard (the "KEYS silent" the device showed and the host did not): 0 nothing found,
+ * 1 muted in the part playing, 2 another track soloed, 3 dropped (a ROAD block), 4 its VOL low, 5 its VOL low by a curve
+ * (automation), 6 a tremolo, 7 the drums muted by a perform key */
+int dk_silent_why(int t)
+{
+    const dk_track_t *k = &dk_song.trk[t & 7];
+    int i;
+    if (t < 0 || t >= DK_NTRACK)
+        return 0;
+    if (dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute >> t & 1u)
+        return 1;
+    if (t_soloed && !k->solo)
+        return 2;
+    if (drop_mask >> t & 1u)
+        return 3;
+    if (perf_mute_drums && (dk_engine(t)->flags & EF_DRUM))
+        return 7;
+    if (t_vol[t] < 0.12f)
+        return mot[t][T_VOL] >= 0 ? 5 : 4;
+    for (i = 0; i < 2; i++)
+        if (k->mod[i][0] == MOD_TREMOLO && k->mod[i][1] > 80)
+            return 6;
+    return 0;
+}
+
 /* a drum sound's own settings beyond its level, tune and decay (those at its start): any to apply while it rings */
 static int lane_fx(const dk_lane_t *ln) { return ln->level || ln->pan || ln->rev || ln->echo || ln->crush; }
 static float xrev[DK_BLK] DK_POOL, xecho[DK_BLK] DK_POOL, atmo_vl[DK_BLK] DK_POOL, atmo_vr[DK_BLK] DK_POOL;
