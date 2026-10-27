@@ -440,7 +440,11 @@ static void budget_make_room(int want, int live)
             }
         if (best < 0) {                          /* 2: a held voice of the sequencer past its attack, from the track with the most */
             int pass;
-            for (pass = 0; pass < 1 + live && best < 0; pass++) {   /* (the quiet ones; for a live note, any) */
+            /* (the quiet ones; for a live note any; any too when the device runs over (its budget lowered by the load):
+             * the sequencer's oldest loud notes give way rather than the render running past its block - a crackle, or
+             * the 5th track's notes lost in it) */
+            int any = live || (!dk_budget_hold && dk_budget < 100) || (dk_budget_hold && dk_budget < 60);
+            for (pass = 0; pass < 1 + any && best < 0; pass++) {
                 most = 0;
                 lo = 1e9f;
                 for (i = 0; i < DK_NVOICE; i++)
