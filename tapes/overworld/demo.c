@@ -167,7 +167,7 @@ static void tape_demo(void)
     dk_song.style = ST_C418;
     dk_song.mood = 0;
     dk_song.biome = 0;
-    dk_song.dust = 25;
+    dk_song.dust = 0;
     dk_song.sleep = 0;
     dk_song.sidechain = 15;
     dk_song.space = 1;

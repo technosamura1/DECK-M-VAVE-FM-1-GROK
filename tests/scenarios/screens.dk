@@ -182,32 +182,9 @@ wait 300
 shot p25_arp_step.png
 tap PLAY
 wait 300
-# the garden: the moods' biomes, by day and by night
+# the PLAY page (the girl) and the splash
 tap HOME
-mood 1
-wait 2500
-shot g_rain_day.png
 wait 1500
-shot g_rain_night.png
-mood 3
-wait 2500
-shot g_snow_day.png
-wait 1500
-shot g_snow_night.png
-mood 4
-wait 2500
-shot g_ocean_day.png
-mood 5
-wait 2500
-shot g_night.png
-mood 6
-wait 2500
-shot g_campfire.png
-mood 2
-wait 2500
-shot g_cave.png
-mood 7
-wait 2500
-shot g_study_dusk.png
+shot g_play.png
 splash
 shot splash.png

@@ -222,7 +222,7 @@ static int page_field(int i, int home)
     (void)home;
     switch (ui.page) {
     case PG_PLAY: {                          /* the garden: the track you play, its sound and its space; ALGO the mood */
-        static const uint8_t F[5] = {F_MACRO, F_REV, F_ECHO, F_VOL, F_MOOD};
+        static const uint8_t F[5] = {F_MACRO, F_REV, F_ECHO, F_VOL, F_NONE};   /* (MOOD gone: the sound stays clean) */
         return F[i];
     }
     case PG_TRACKS: {                        /* the selected track's level and pan */
@@ -640,7 +640,6 @@ static void viz(int kind, int x0, int y0, int w, int h, float v, uint16_t c, uin
 /* the hardware look (the cassette's colours): a plate with its screws, a knob with its value's arc */
 static void plate(int x, int y, int w, int h)   /* a manga panel: paper, a heavy black frame, a hairline inside */
 {
-    int i, j;
     cv_rect(x, y, w, h, CS_BODY);
     cv_rect(x, y, w, 2, CS_INK);
     cv_rect(x, y + h - 2, w, 2, CS_INK);
@@ -649,9 +648,6 @@ static void plate(int x, int y, int w, int h)   /* a manga panel: paper, a heavy
     hline(x + 4, y + h - 5, w - 8, CS_INK);
     vline(x + 4, y + 4, h - 8, CS_INK);
     vline(x + w - 5, y + 4, h - 8, CS_INK);
-    for (j = y + h - 15; j < y + h - 7; j += 3)  /* screentone at its foot, the dots thinning out upwards */
-        for (i = x + 7 + ((j / 3) & 1) * 2; i < x + w - 7; i += 4 + (y + h - 7 - j) / 3)
-            cv_rect(i, j, 1, 1, CS_BODY_D);
 }
 static void reel(int cx, int cy, float amount, int phase)
 {
@@ -733,10 +729,10 @@ static void knob_row(int y)
 static void module(const char *left, const char *right)
 {
     plate(1, 38, 238, 189);
-    if (left) {                              /* the page's name in a black caption box, as a manga's narration */
+    if (left) {                              /* the page's name in a grey caption box, as a manga's narration */
         int tw = text_w(&FONT_T, left);
         tw = tw > 116 ? 116 : tw;
-        cv_rect(9, 39, tw + 10, 12, CS_INK);
+        cv_rect(9, 39, tw + 10, 12, RGB(104, 104, 104));
         text_box(14, 41, 116, 0, &FONT_T, &FONT_T, left, CS_LABEL);
     }
     if (right)

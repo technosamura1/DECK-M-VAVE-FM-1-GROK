@@ -1353,7 +1353,7 @@ void dk_song_clear(void)
     dk_song.dim = 1;
     dk_song.harm_track = 0;   /* SPLIT: the chords to the piano */
     dk_song.style = 0;
-    dk_song.dust = 25;
+    dk_song.dust = 0;                    /* the sound clean: no dust unless you add it (GLOBAL) */
     dk_song.sidechain = 15;
     dk_song.space = 1;
     dk_song.cur_track = 2;
@@ -1449,7 +1449,7 @@ void song_mood(int m)
     dk_song.mode = md->mode;
     dk_song.style = md->style;
     dk_song.biome = md->biome;
-    dk_song.dust = md->dust;
+    dk_song.dust = 0;                    /* (a mood's dust no more: the sound clean) */
     dk_song.space = md->space;
     for (t = 0; t < DK_NTRACK; t++) {
         track_sound_to(t);

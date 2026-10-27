@@ -179,6 +179,8 @@ int project_load(int slot)
         dk_song.part[i].mute &= DK_PMUTE_ALL;
     dk_pm_x = 0;
     song_track_order();
+    if (dk_song.dust == 25)                /* the old default dust (every song had it): off, the sound clean */
+        dk_song.dust = 0;
     for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer; LIVE, DREAM, FINGER, HOLD, TOMBOLA are SEQ now */
         dk_track_t *k = &dk_song.trk[i];
         if (k->seq == SQ_ARP)

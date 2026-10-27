@@ -132,6 +132,8 @@ static void fresh(void)
     TAPE.init();
     dk_lock();
     dk_song_clear();
+    dk_song.dust = 25;   /* (the old default: its noise draws on the random numbers in quiet_all, and the calibrated
+                          * renders were made with that sequence; each render sets its own dust after) */
     dk_unlock();
     quiet_all();
 }
