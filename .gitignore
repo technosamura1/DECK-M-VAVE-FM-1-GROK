@@ -4,3 +4,4 @@ deck/fm1.toml
 *.wav
 *.exe
 __pycache__/
+out/sounds/
