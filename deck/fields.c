@@ -461,7 +461,8 @@ static void part_bars_set(int p, int v)
     dk_lock();
     dk_song.part[p & 7].bars = (uint8_t)(v < 1 ? 1 : v > 16 ? 16 : v);
     for (t = 0; t < DK_NTRACK; t++)
-        dk_song.clip[(p & 7) * DK_NTRACK + t].len = 0;
+        if (dk_song.trk[t].seq != SQ_ENDLESS)   /* (ENDLESS: its length is its steps, the part's bars do not touch it) */
+            dk_song.clip[(p & 7) * DK_NTRACK + t].len = 0;
     dk_unlock();
 }
 static void bars_text(int v, char *b) { cpy(itoa_b(v, b), v == 1 ? " BAR" : " BARS"); }
@@ -853,6 +854,13 @@ static void field_set(int f, int v)
             k->drv[0] = 0;
             k->drv[1] = 0;
             k->drv[2] = 3;
+        }
+        if (k->seq == SQ_ENDLESS && SQ_LIST[v % NSEQ] != SQ_ENDLESS) {   /* ENDLESS to SEQ: its steps in the part's bars */
+            int p;
+            dk_lock();
+            for (p = 0; p < DK_NPART; p++)
+                dk_song.clip[p * DK_NTRACK + dk_song.cur_track].len = 0;
+            dk_unlock();
         }
         k->seq = SQ_LIST[v % NSEQ];
         dk_cmd(C_ENDLTR, dk_song.cur_track, 0, 0);
