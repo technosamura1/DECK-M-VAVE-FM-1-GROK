@@ -24,6 +24,7 @@ static void pm_apply(void)
 }
 static int32_t count_left;
 static uint8_t rec_start_after, rec_wait_note, rec_bake;
+int dk_rec_pending(void) { return rec_wait_note || rec_start_after; }   /* REC pressed: the first note / the count-in awaited */
 static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
 static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */

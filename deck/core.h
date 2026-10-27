@@ -15,6 +15,7 @@ void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (
 enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_ENDLTR, C_GROOVE, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
        C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK };
 void dk_cmd(int c, int a, int b, int d);
+int dk_rec_pending(void);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
 
 /* the song locked: the render's sequencer waits (the sound goes on) */

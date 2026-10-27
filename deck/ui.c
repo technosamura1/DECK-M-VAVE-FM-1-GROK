@@ -1478,7 +1478,10 @@ static void key_down(int k, int vel)
             ui.lay == 1 ? edit_list_do(w) : lay_do(w);
         return;
     }
-    if (ui.page == PG_MIX || ui.page == PG_TRACKS) {   /* THE track keys (MIX and TRACKS alike): white 1-6 select the track,
+    if ((ui.page == PG_MIX || ui.page == PG_TRACKS) && !dk_recording && !dk_counting && !dk_rec_pending() && !ui.armed) {
+        /* THE track keys (MIX and TRACKS alike) - not while a take records or waits for its first note: then they play
+         * (a take begun on TRACKS stays there; its keys picked tracks and muted them, the take was silent) */
+        /* white 1-6 select the track,
                                                         * black 1-6 mute it in the part, black 7 solo, black 8 arm the selected one */
         if (w >= 0 && w < DK_NTRACK) {
             track_select(w);
