@@ -33,7 +33,7 @@
 #define DK_NFACT 12                     /* factory presets an engine; + 4 the user's = 16 slots, the white keys */
 #define DK_NSLOT 16
 #define DK_NP 8                         /* engine parameters (the first three on the ENGINE tab) */
-#define DK_NVOICE 24                    /* the voices' pool, shared by the tracks */
+#define DK_NVOICE 32                    /* the voices' pool, shared by the tracks (the CPU budget decides how many sound) */
 #define DK_NBLK 4                       /* a tape's preset blocks (an engine has up to DK_NFACT presets in each) */
 #define DK_PBASE 16                     /* the preset id of block 1's first: 0..11 block 0, 12..15 the user's, then 12 a block */
 #define DK_VSTATE 76                    /* an engine's voice state, floats */

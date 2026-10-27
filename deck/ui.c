@@ -1837,8 +1837,8 @@ static void why_tick(uint32_t now)
         for (l = "NO VOICE "; *l; )
             *q++ = *l++;
         q = put_n(q, dk_voices_on);
-        for (l = "/24"; *l; )
-            *q++ = *l++;
+        *q++ = '/';
+        q = put_n(q, DK_NVOICE);
     } else {                             /* voices on, nothing out: the sound itself (the effect, the engine) */
         for (l = "V"; *l; )
             *q++ = *l++;

@@ -808,3 +808,25 @@ SELECT во время записи добавлял дорожку в маск�
 - Нашлось на железе: «DROPPED ON ROAD» — у блока ROAD стоял DROP на KEYS (ROAD, чёрная 7 по выбранной дорожке), а играли в SONG.
   Запись (`C_REC`, `rec_loop`) теперь гасит `drop_mask` и трюки: часть пишется и звучит чистой (раньше DROP блока, в котором нажали REC,
   глушил записываемую дорожку до STOP). Тост DROP: «DROP KEYS / ON: SILENT IN THIS BLOCK» или «OFF». Тест `whysilent.dk` (host `rdropN`).
+
+## REC SETUP на SEL, REC в два нажатия, PART на кассете, LFO⇄EDIT, LEAD, порядок дорожек, 32 голоса (op1-core, 2026-10-28)
+- **SEL = REC SETUP** (`PG_ATMO` теперь эта страница, `draw_recset`, `RSET_F` в pages.c): ряд 1 K1 METRO, K2 REC MODE, K3 NEW PART (COPY/EMPTY),
+  K4 START, ALGO M VOL; ряд 2 COUNT IN, CLICK, LOCK TAKE, REC LAT, ALGO M DIV. Кассета/TRACKS с SEL убраны (TRACKS — HOME на PLAY). ATMO — GLOBAL ряды 6–7.
+- **REC в два шага на устройстве всегда** (`dk_rec_arm = 1` в store.c, сохранённое не читается): REC — кассета и «REC ARMED», REC ещё раз (или PLAY) —
+  запись; при игре тоже. HOME при взводе — снять. Хост-сценарии по-прежнему REC сразу (`dk_rec_arm = 0` в app.c), `recarm 1` — как на устройстве.
+  Поля REC ARM убраны с TRACKS и GLOBAL. Тесты `recarm.dk`, `recsel.dk`.
+- **Кассета K2 PART** (`F_RECPART`, `rec_part_turn`/`rec_part_pick` в fields.c): части с нотами + первая пустая (NEW). Пустая становится копией текущей
+  (NEW PART = COPY; и на остановленном), EMPTY — остаётся пустой. Стоит — сразу; играет — с конца такта (`part_go`); пишет — сразу, дубль идёт (`part_branch`,
+  в непустую — переход без копии). Кассета: K1 BARS, K2 PART, K3 QUANT, K4 VOL.
+- **LFO ⇄ EDIT**: физические кнопки поменяны в `btn_swap` (ui.c, на входе и на подсветке). Внутри B_LFO = MIX (+ ручка = MOD), B_EDIT = KEYS/UNDO/EDIT-список;
+  на панели теперь LFO = KEYS, удержать — UNDO, на TRACKS — EDIT-список; EDIT = MIX. Подсказки на экране — с панельными именами. Сценарии: в `tap/press/release`
+  токены EDIT и LFO переставлены (и в `tools/gen_fuzz.py`).
+- **LEAD**: `EF_LEGATO` (deck_api.h). Нота, пока звучит хвост прошлой, берёт тот же голос (`retrig 3` в `ld_on`: фаза, фильтр, уровень — откуда есть);
+  легато — слайд ~60 мс и при GLIDE 0 (`glk ≤ 0.0012`); отпустил верхнюю, держишь другую — голос возвращается к ней (`mono_stk` в seq.c); на LEAD клавиша
+  = одна нота (аккорд → корень, как у баса, keys.c); звучащий моно-голос не ставится на паузу задержкой страма (`voice_start`: было два щелчка). SOFT LEAD GLIDE 12.
+  Тест `leadlegato.dk`.
+- **Дорожки PIANO KEYS PAD BASS LEAD DRUMKIT** (DEF_ENG/DEF_ROLE, demo `DT_LEAD 4`, `DT_DRUMS 5`). Старые проекты переставляются (`song_track_order`, RANK DRUM 5 LEAD 4);
+  теперь переезжают и мьюты слоёв, замороженные звуки, мьюты частей, байпасы `rsv`, `fbank` (раньше не переезжали). NATURE → LEAD по `def_role`.
+- **Имена**: движки FELT→PIANO, TINE→KEYS, AIRPAD→PAD, SOFTBASS→BASS, DUSTKIT→DRUMKIT (остальные как были); роль барабанов — DRUMKIT. Инструменты
+  в tools/*.py переименованы так же (WAV лежат в `out/sounds/<имя движка>`).
+- **Голосов 32** (`DK_NVOICE`; пул 298840 из 344064, RAM 38080). Сколько звучит на самом деле, решает бюджет CPU (`dk_budget`), не пул.
