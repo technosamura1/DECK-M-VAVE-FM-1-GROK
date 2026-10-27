@@ -7,6 +7,19 @@
 
 #define GIRL_MS 5200u                           /* one sway, there and back */
 static uint8_t girl_line[240];
+void ui_mid_poll(void);                         /* (the keys read between the halves: ui.c) */
+/* the hair's weight by the squared distance from the face's ellipse, d2 in 1 .. 2.1025 (past it: 1): t^1.5,
+ * t = (sqrt(d2) - 1) / 0.45 -- a table of 64, so no root a pixel */
+#define GW_N 64
+static float girl_w[GW_N + 1];
+static void girl_wtab(void)
+{
+    int i;
+    for (i = 0; i <= GW_N; i++) {
+        float d2 = 1.0f + 1.1025f * (float)i / (float)GW_N, t = fm_clampf((fm_sqrtf(d2) - 1.0f) * (1.0f / 0.45f), 0.0f, 1.0f);
+        girl_w[i] = t * fm_sqrtf(t);
+    }
+}
 
 static void girl_row(int y)
 {
@@ -31,6 +44,8 @@ static void girl_draw(int32_t y0, uint32_t now)
     int half, x, y, i;
     for (i = 0; i < 4; i++)
         pal[i] = swap16(PAL4[i]);
+    if (girl_w[GW_N] == 0.0f)
+        girl_wtab();
     for (half = 0; half < 2; half++) {
         cv_begin(240, 72, 0);
         for (y = 0; y < 72; y++) {
@@ -44,8 +59,8 @@ static void girl_draw(int32_t y0, uint32_t now)
                 float dx = ((float)x - fcx) / frx, d2 = dx * dx + dy * dy, w = 0.0f;
                 int sx = x;
                 if (d2 > 1.0f) {                /* outside the face: the hair, moving */
-                    float t = fm_clampf((fm_sqrtf(d2) - 1.0f) * (1.0f / 0.45f), 0.0f, 1.0f);
-                    w = t * fm_sqrtf(t) * down;
+                    float f = (d2 - 1.0f) * ((float)GW_N / 1.1025f);
+                    w = (f >= (float)GW_N ? 1.0f : girl_w[(int)f]) * down;
                     sx = x - (int)(w * wave + (w * wave >= 0.0f ? 0.5f : -0.5f));
                     sx = sx < 0 ? 0 : sx > 239 ? 239 : sx;
                 }
@@ -54,5 +69,6 @@ static void girl_draw(int32_t y0, uint32_t now)
         }
         garden_overlay(y0 + half * 72, 72);
         cv_blit(0, (uint32_t)(y0 + half * 72));
+        ui_mid_poll();
     }
 }

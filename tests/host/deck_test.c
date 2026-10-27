@@ -9,6 +9,9 @@
  *   deck_test bench                    the render's cost: the demo's busiest, and all voices busy
  *   deck_test metro                    the metronome's clicks against the clock
  * It prints the peak, the rms and the cost (us a 128-frame block, host). */
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 199309L   /* clock_gettime under -std=c99 */
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -866,6 +869,71 @@ static double fundamental(int f0, double *conf)
 }
 /* every BASS-role preset (all blocks): the notes C2, G2, C3 sound at their pitch (a quarter tone); every other melodic engine's
  * presets: a report line (the octave off by more than one in a periodic sound is an error too). Written to the output. */
+
+/* the time from a key to its sound: each preset, one note from silence, rendered alone. `first`: the first sample over
+ * -60 dBFS; `-20`: the level reaches a tenth of the note's own peak (what the ear calls "it started"). A preset whose
+ * -20 point is later than LAT_SLOW ms is listed as SLOW (by design only for pads, swells, bowed sounds). */
+#define LAT_SLOW 25.0
+static int latency_test(int verbose)
+{
+    int e, p, slow = 0, n = 0;
+    double worst = 0.0;
+    for (e = 0; e < TAPE.neng; e++) {
+        const dk_engine_t *eng = TAPE.eng[e];
+        if (eng->flags & EF_CONT)
+            continue;
+        for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+            int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT), i, pk = 0, pk0, i0 = -1, i20 = -1;
+            int nn = eng->flags & EF_DRUM ? 36 : eng->role == R_BASS ? 36 : 60;
+            dk_preset_t tmp;
+            const dk_preset_t *pr;
+            double t0, t20;
+            if (p % DK_NFACT >= preset_count(e, blk))
+                continue;
+            pr = preset_of(e, id, &tmp);
+            fresh();
+            dk_lock();
+            dk_song.dust = 0;
+            dk_track_setup(2, e, id, SQ_STEP, eng->role);
+            dk_song.trk[2].vol = 80;
+            dk_unlock();
+            run(2.0);
+            reset_out();
+            run(0.05);
+            for (i = 0; i < 2 * frames; i++)
+                if (abs(buf[i]) > pk) pk = abs(buf[i]);
+            pk0 = pk;                                  /* (a preset's own crackle, VINYL, or hiss under the note) */
+            pk = 0;
+            reset_out();
+            note(2, nn, 100);
+            run(0.6);
+            note(2, nn, 0);
+            for (i = 0; i < 2 * frames; i++)
+                if (abs(buf[i]) > pk) pk = abs(buf[i]);
+            for (i = 0; i < 2 * frames; i++) {
+                int a = abs(buf[i]);
+                if (i0 < 0 && a > 33 && a > 2 * pk0)
+                    i0 = i / 2;
+                if (a * 10 >= pk && a > 3 * pk0) {
+                    i20 = i / 2;
+                    break;
+                }
+            }
+            t0 = i0 < 0 ? -1.0 : i0 / 44.1;
+            t20 = i20 < 0 ? -1.0 : i20 / 44.1;
+            n++;
+            if (t20 > worst && eng->role != R_PAD)
+                worst = t20;
+            if (verbose || t20 > LAT_SLOW || t20 < 0.0)
+                printf("%-5s %-9s %-22s first %5.1f ms  -20dB %6.1f ms  peak %5d\n", t20 > LAT_SLOW || t20 < 0 ? "SLOW" : "",
+                       eng->name, pr->name, t0, t20, pk);
+            if ((t20 > LAT_SLOW || t20 < 0.0) && eng->role != R_PAD)
+                slow++;
+        }
+    }
+    printf("%d presets, %d slow (pads not counted), worst non-pad %.1f ms\n", n, slow, worst);
+    return 0;
+}
 static int pitch_test(void)
 {
     static const int N[3] = {36, 43, 48};
@@ -1007,6 +1075,8 @@ int main(int argc, char **argv)
 #endif
     else if (!strcmp(m, "metro"))
         metro();
+    else if (!strcmp(m, "latency"))
+        return latency_test(argc > 2);
     else if (!strcmp(m, "pitch"))
         return pitch_test();
     else if (!strcmp(m, "fxlong"))

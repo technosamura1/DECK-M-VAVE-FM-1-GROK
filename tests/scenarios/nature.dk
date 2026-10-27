@@ -1,0 +1,30 @@
+# NATURE is gone: a project saved with a NATURE (WORLD) track opens with a LEAD there, its drones gone (the demo's
+# track 6 was NATURE / BIRDS until op1-core-2)
+wait 300
+trkset 6 6 0 0
+seed 0 6 4 0
+expect eventsA6 4
+roundtrip
+wait 100
+expect eventsA6 0
+tap HOME
+wait 100
+tapkey w5
+wait 100
+tap HOME
+wait 100
+expect track 5
+expect eng 11
+# the demo itself: track 6 a LEAD
+tap SAVE
+wait 100
+tapkey w5
+wait 300
+tap HOME
+wait 100
+tap HOME
+wait 100
+tapkey w5
+wait 100
+expect track 5
+expect eng 11

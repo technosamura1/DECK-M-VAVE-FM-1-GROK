@@ -21,6 +21,7 @@ static void band_end(void)
 {
     cv_oy = 0;
     cv_blit(0, (uint32_t)band_y0);
+    ui_mid_poll();
 }
 
 /* --------------------------------------------------------------- drawing --- */

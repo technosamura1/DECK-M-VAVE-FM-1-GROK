@@ -187,6 +187,12 @@ int project_load(int slot)
             k->arp_opt |= ARPO_ON;
         if (k->seq != SQ_STEP && k->seq != SQ_ENDLESS)
             k->seq = SQ_STEP;
+        if (k->role == R_NATURE || TAPE.eng[k->eng % TAPE.neng]->role == R_NATURE) {   /* NATURE is gone: LEAD there */
+            int p;                                                         /* (its notes were the world's drones) */
+            for (p = 0; p < DK_NPART; p++)
+                clip_clear_all(p * DK_NTRACK + i);
+            dk_track_setup(i, TAPE.def_eng[DK_NTRACK - 1], 0, k->seq, R_LEAD);
+        }
     }
     dk_unlock();
     return 0;

@@ -5,7 +5,7 @@
  * (no drums, the snow, a music box) - BREAK (the campfire: wood, a marimba) - CHORUS - OUTRO (the piano alone).
  * Written into the clips as notes (the UI thread, the song locked). Part of tape_dsp.c. */
 
-enum { DT_PIANO, DT_BELLS, DT_PAD, DT_BASS, DT_DRUMS, DT_NATURE };   /* (the KEYS track plays the bells) */
+enum { DT_PIANO, DT_BELLS, DT_PAD, DT_BASS, DT_DRUMS, DT_LEAD };   /* (the KEYS track plays the bells) */
 enum { P_INTRO, P_PRE, P_VERSE, P_CHORUS, P_BRIDGE, P_BREAK, P_OUTRO };
 #define E8 (DK_PPQ / 2)
 
@@ -177,13 +177,14 @@ static void tape_demo(void)
     dk_track_setup(DT_PIANO, 0, 1, SQ_STEP, R_KEYS);
     dk_track_setup(DT_PAD, 2, 0, SQ_STEP, R_PAD);
     dk_track_setup(DT_BELLS, 3, 0, SQ_STEP, R_ARP);    /* the KEYS track: GLASS (bells) */
-    dk_track_setup(DT_NATURE, 6, 6, SQ_STEP, R_NATURE);
+    dk_track_setup(DT_LEAD, 11, 0, SQ_STEP, R_LEAD);     /* SOFT LEAD */
     dk_song.trk[DT_DRUMS].vol = 62;
     dk_song.trk[DT_BASS].vol = 70;
     dk_song.trk[DT_PIANO].vol = 82;
     dk_song.trk[DT_PAD].vol = 64;
     dk_song.trk[DT_BELLS].vol = 58;
-    dk_song.trk[DT_NATURE].vol = 44;
+    dk_song.trk[DT_LEAD].vol = 52;
+    dk_song.atmo[2] = 30;                              /* the birds: ATMO, under it all */
     dk_song.harm_track = DT_PIANO;
     for (k = 0; k < 7; k++) {
         dk_song.part[k].bars = BARS[k];
@@ -195,11 +196,6 @@ static void tape_demo(void)
         dk_song.road[k].reps = 1;
         dk_song.road[k].tricks = 0;
         dk_song.road[k].drop = 0;
-    }
-    /* the world under it all: the birds, the snow, the fire */
-    for (k = 0; k < 7; k++) {
-        motion(k, DT_NATURE, T_P0, k == P_BRIDGE ? 100 : k == P_BREAK ? 22 : 67);
-        dn_tick(k, DT_NATURE, 0, 60, BARS[k] * DK_TPB - 1, 96);
     }
     /* INTRO: the piano alone */
     chords4(P_INTRO, DT_PIANO, 0, C_MAJ7, E_M7, F_MAJ7, F_M6, 52);
@@ -228,6 +224,11 @@ static void tape_demo(void)
         int b0 = 8 * k;
         chords4(P_CHORUS, DT_PIANO, b0, C_MAJ7, E_M7, F_MAJ7, F_M6, 50);
         melody_put(P_CHORUS, DT_PIANO, b0, k ? M_CHORUS2 : M_CHORUS, 18, 2);
+        if (k)                                         /* the lead sings the long notes an octave under */
+            for (i = 0; i < 18; i++)
+                if (M_CHORUS2[i].len >= 4)
+                    dn(P_CHORUS, DT_LEAD, b0 + M_CHORUS2[i].bar, M_CHORUS2[i].e8, M_CHORUS2[i].note - 12, M_CHORUS2[i].len,
+                       M_CHORUS2[i].vel - 8);
         pad4(P_CHORUS, b0, PD_C, PD_EM, PD_F, PD_FM, 60);
         bass4(P_CHORUS, b0, R_CH, 1);
         for (i = 0; i < 8; i++)
@@ -243,6 +244,8 @@ static void tape_demo(void)
     /* BRIDGE: no drums, the snow, a music box */
     chords4(P_BRIDGE, DT_PIANO, 0, D_MAJ7, F_C, A_M9, G_SUS, 46);
     melody_put(P_BRIDGE, DT_PIANO, 0, M_BRIDGE, 8, 0);
+    for (i = 0; i < 8; i++)
+        dn(P_BRIDGE, DT_LEAD, M_BRIDGE[i].bar, M_BRIDGE[i].e8, M_BRIDGE[i].note - 12, M_BRIDGE[i].len, M_BRIDGE[i].vel - 4);
     pad4(P_BRIDGE, 0, PD_D, PD_F, PD_A9, PD_GS, 58);
     for (k = 0; k < 4; k++)
         dn(P_BRIDGE, DT_BASS, 2 * k, 0, R_BR[k], 15, 74);

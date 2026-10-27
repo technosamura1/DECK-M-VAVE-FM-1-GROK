@@ -134,6 +134,15 @@ static void snapshot_key(int w)
 }
 
 static const char *preset_blk(int slot, int sh);   /* the preset's block, for its label (green) */
+/* the keys read between the bands of a frame too: a frame (a whole page, the picture) can take longer than a key may
+ * wait for its sound. Each band is whole before the next is drawn, so the state may change between them. */
+static void input(void);
+static uint8_t in_input, ui_ready;
+void ui_mid_poll(void)
+{
+    if (!in_input && ui_ready)            /* (not before ui_init: the splash) */
+        input();
+}
 #include "pages.c"
 
 /* ------------------------------------------------------------------ actions --- */
@@ -1782,7 +1791,7 @@ static void midi_in(void)
 
 /* the device's own diagnostics (tools/deck_diag.py): F0 7D 44 4B 53 F7 asks, the answer is one line of text in
  * F0 7D 44 4B 53 <ASCII> F7; the maxima are cleared by each ask. Filled by app.c (the render's and the frame's times) */
-static volatile uint32_t dg_rmax, dg_rsum, dg_rn, dg_fmax, dg_fn, dg_vmax;
+static volatile uint32_t dg_rmax, dg_rsum, dg_rn, dg_fmax, dg_fn, dg_vmax, dg_kgap;   /* kgap: longest wait between key reads */
 static char *dg_kv(char *p, const char *k, uint32_t v)
 {
     p = cpy(p, k);
@@ -1807,6 +1816,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
     q = dg_kv(q, "xrun=", plat_xruns());
     q = dg_kv(q, "ui_max_ms=", dg_fmax);
     q = dg_kv(q, "frames=", dg_fn);
+    q = dg_kv(q, "key_gap_ms=", dg_kgap);
     q = dg_kv(q, "voices_max=", dg_vmax);
     q = dg_kv(q, "budget=", (uint32_t)dk_get_budget());
     q = dg_kv(q, "play=", dk_playing);
@@ -1817,7 +1827,7 @@ int app_sysex(const uint8_t *p, uint32_t n)
     lock_max = 0;
     fm1_in_stat.gap_max = 0;
 #endif
-    dg_rmax = dg_rsum = dg_rn = dg_fmax = dg_fn = dg_vmax = 0;
+    dg_rmax = dg_rsum = dg_rn = dg_fmax = dg_fn = dg_vmax = dg_kgap = 0;
     for (i = k; f[i]; i++)
         f[i] &= 0x7Fu;
     k = i;
@@ -1919,10 +1929,21 @@ static void take_erase_ui(void)
     } else
         say("NO TAKE", "RECORD FIRST");
 }
+static void input_do(void);
 static void input(void)
 {
+    in_input = 1;
+    input_do();
+    in_input = 0;
+}
+static void input_do(void)
+{
+    static uint32_t last_in;
     uint32_t keys, btn = plat_buttons(), k, now = plat_ms();
     int32_t e;
+    if (last_in && now - last_in > dg_kgap)
+        dg_kgap = now - last_in;
+    last_in = now;
     touch_poll();
     keys = touch_keys();
     for (k = 0; k < NKEYS; k++) {
@@ -2032,6 +2053,7 @@ void ui_init(void)
 {
     int k;
     touch_on(1);
+    ui_ready = 1;
     for (k = 0; k < NKEYS; k++)
         kh[k].trk = -1;
     ui.page = PG_PLAY;
