@@ -280,6 +280,10 @@ static int page_field(int i, int home)
             return F[i];
         }
         switch (k->seq) {
+        case SQ_GROOVE: {                    /* the drummer: how loud, how it swings, its room */
+            static const uint8_t F[5] = {F_VOL, F_TSWING, F_REV, F_ECHO, F_NONE};
+            return F[i];
+        }
         case SQ_STEP:
             if (drum) {
                 static const uint8_t F[5] = {F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE};
@@ -343,6 +347,8 @@ static const char *hint(void)
             return "K2 NOTE +/-  K3 TIE/CUT  K4 PITCH";
         if (k->seq == SQ_STEP)
             return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "SEQ AGAIN x2 = STEP EDIT";
+        if (k->seq == SQ_GROOVE)
+            return "W1-15 GROOVE  W16 END  BLACK FILL";
         if (k->seq == SQ_ENDLESS)
             return ui.endl_on ? "OCT- REST  OCT+ TIE  REC = DONE" : "REC = PLAY IN STEPS  KEY = TRANSPOSE";
         return "HOME x2, EDIT = COOK RANDOM QUANTIZE";
@@ -1133,6 +1139,53 @@ static void draw_endless(const dk_clip_t *c)
     }
 }
 
+/* GROOVE: the song's sections in five columns (INTRO .. OUTRO), three grooves each, light at the top; the one playing lit,
+ * the one coming blinking; under it the fills as the black keys, the one playing lit, and where the bar is */
+static void draw_groove(void)
+{
+    static const char *const SEC[5] = {"INTRO", "VERSE", "CHORUS", "BRIDGE", "OUTRO"};
+    int t = dk_song.cur_track, cur = dk_gr_cur[t], nx = dk_gr_next[t], fl = dk_gr_fill[t], i, j;
+    int blink = (plat_ms() / 200u) & 1u, step = (int)(dk_part_tick / DK_T16) % 16;
+    for (i = 0; i < 5; i++) {
+        int x = WX + 4 + i * 44;
+        text_box(x, WY + 3, 42, 1, &FONT_XS, &FONT_XS, SEC[i], cur && (cur - 1) / 3 == i ? TH_ENC[2] : W_GRAY);
+        for (j = 0; j < 3; j++) {
+            int g = i * 3 + j + 1, y = WY + 15 + j * 17, on = g == cur, next = g == nx && nx != 0xFF;
+            char nm[4];
+            nm[0] = (char)('1' + j);
+            nm[1] = 0;
+            if (on)
+                cv_rect(x, y, 41, 14, TH_ENC[2]);
+            else if (next && blink)
+                cv_rect(x, y, 41, 14, dimc(TH_ENC[2], 8));
+            else {
+                hline(x, y, 41, W_LINE);
+                hline(x, y + 13, 41, W_LINE);
+                vline(x, y, 14, W_LINE);
+                vline(x + 40, y, 14, W_LINE);
+            }
+            for (int d = 0; d <= j; d++)        /* how full: one, two, three dots */
+                disc(x + 8 + d * 6, y + 7, 2, on ? W_INK : W_GRAY);
+            text_box(x + 28, y + 2, 12, 0, &FONT_XS, &FONT_XS, nm, on ? W_INK : W_GRAY);
+        }
+    }
+    {                                         /* the fills: the black keys, a box each */
+        int y = WY + 69;
+        for (i = 0; i < TAPE.nfill && i < 11; i++) {
+            int x = WX + 4 + i * 20, on = fl == i + 1;
+            if (on)
+                cv_rect(x, y, 18, 10, TH_ENC[1]);
+            else
+                cv_rect(x, y + 8, 18, 2, i >= 5 ? W_GRAY : W_LINE);
+        }
+        text_box(WX + 4, y + 13, 150, 0, &FONT_XS, &FONT_XS,
+                 fl && fl <= TAPE.nfill ? TAPE.fill[fl - 1].name : nx == 0 ? "END NEXT BAR" : cur ? TAPE.groove[cur - 1].name : "PLAY A WHITE KEY",
+                 fl ? TH_ENC[1] : TH_TEXT);
+        for (i = 0; i < 16 && cur; i++)       /* the bar: sixteen steps, where it is */
+            cv_rect(WX + 160 + i * 4, y + 15, 3, i % 4 ? 3 : 5, i == step && dk_playing ? TH_ENC[2] : W_LINE);
+    }
+}
+
 static void draw_seq(void)
 {
     const dk_track_t *k = cur();
@@ -1181,6 +1234,9 @@ static void draw_seq(void)
         return;
     }
     switch (view) {
+    case SQ_GROOVE:
+        draw_groove();
+        break;
     case SQ_STEP:
         if (drum) {                          /* the lanes, the steps: on a dot, off a small grey one */
             int lanes = e->nlanes ? e->nlanes : 8, l, ph = (int)(dk_part_tick % (uint16_t)len) / DK_T16 - ui_step_page * 16;

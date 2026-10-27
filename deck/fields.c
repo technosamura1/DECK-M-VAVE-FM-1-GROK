@@ -33,11 +33,12 @@ static int pb_get(int f);
 static void pb_set(int f, int v);
 static void pb_text(int f, char *b);
 
-static const char *const SEQ_NAME[SQ_N] = {"SEQ", "SEQ", "ENDLESS", "ARP", "SEQ", "SEQ", "SEQ", "-"};
+static const char *const SEQ_NAME[SQ_N] = {"SEQ", "SEQ", "ENDLESS", "ARP", "SEQ", "SEQ", "SEQ", "GROOVE"};
 /* the sequencers offered: SEQ (a clip, as a DAW's: REC into it, the step editor, the drum grid) and ENDLESS (OP-1's);
  * ARP is a layer over them. LIVE, DREAM, FINGER, HOLD and TOMBOLA are gone (an old project's track loads as SEQ) */
-#define NSEQ 2
-static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_ENDLESS};
+#define NSEQ 3                          /* (GROOVE: the drums only) */
+static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_ENDLESS, SQ_GROOVE};
+static int nseq_here(void) { return (dk_engine(dk_song.cur_track)->flags & EF_DRUM) ? 3 : 2; }
 static const char *const EDIR_NAME[4] = {"FORWARD", "BACKWARD", "PINGPONG", "RANDOM"};
 static const char *const EGATE_NAME[4] = {"NORMAL", "SHORT", "FULL", "TIE"};
 static const char *const ERATE_NAME[6] = {"1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32"};
@@ -545,7 +546,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_PLAYMODE: *hi = 1; break;
     case F_STYLE:
     case F_SONGSTYLE: *hi = TAPE.nstyle - 1; break;
-    case F_SEQTYPE: *hi = NSEQ - 1; break;
+    case F_SEQTYPE: *hi = nseq_here() - 1; break;
     case F_OCT:
     case F_KOCT: *lo = -3; *hi = 3; break;
     case F_MIDICH: *lo = 1; *hi = 16; break;
@@ -877,6 +878,8 @@ static void field_set(int f, int v)
                 dk_song.clip[p * DK_NTRACK + dk_song.cur_track].len = 0;
             dk_unlock();
         }
+        if (k->seq == SQ_GROOVE && SQ_LIST[v % NSEQ] != SQ_GROOVE)
+            dk_cmd(C_GROOVE, dk_song.cur_track, 2, 0);   /* (the drummer stops) */
         k->seq = SQ_LIST[v % NSEQ];
         dk_cmd(C_ENDLTR, dk_song.cur_track, 0, 0);
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);

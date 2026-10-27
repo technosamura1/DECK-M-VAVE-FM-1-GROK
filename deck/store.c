@@ -185,7 +185,8 @@ int project_load(int slot)
         dk_track_t *k = &dk_song.trk[i];
         if (k->seq == SQ_ARP)
             k->arp_opt |= ARPO_ON;
-        if (k->seq != SQ_STEP && k->seq != SQ_ENDLESS)
+        if (k->seq != SQ_STEP && k->seq != SQ_ENDLESS &&
+            !(k->seq == SQ_GROOVE && (TAPE.eng[k->eng % TAPE.neng]->flags & EF_DRUM)))   /* GROOVE: a drum track's */
             k->seq = SQ_STEP;
         if (k->role == R_NATURE || TAPE.eng[k->eng % TAPE.neng]->role == R_NATURE) {   /* NATURE is gone: LEAD there */
             int p;                                                         /* (its notes were the world's drones) */

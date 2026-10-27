@@ -176,6 +176,11 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "lsolo")) g = dk_lsolo_clip == lay_clip() ? dk_lsolo_take + 1 : 0;
     else if (!strcmp(what, "laycur")) g = ui.lay_cur;
     else if (!strcmp(what, "layview")) g = ui.lay;
+    else if (!strcmp(what, "grcur")) g = dk_gr_cur[dk_song.cur_track];     /* GROOVE: playing (0 none) */
+    else if (!strcmp(what, "grnext")) g = dk_gr_next[dk_song.cur_track];   /* queued (255 none, 0 the end) */
+    else if (!strcmp(what, "grfill")) g = dk_gr_fill[dk_song.cur_track];
+    else if (!strcmp(what, "grhits")) g = (int)dk_gr_hits;
+    else if (!strcmp(what, "seq")) g = cur()->seq;
     else if (!strcmp(what, "fired")) g = (int)dk_fired;              /* the takes the sequencer has played (bit = take) */
     else if (!strcmp(what, "armtrk")) g = ui.arm_trk;              /* the tracks armed on TRACKS (bit t) */
     else if (!strcmp(what, "recmode")) g = dk_rec_mode;            /* 0 OVERDUB, 1 REPLACE */
@@ -663,6 +668,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "splash")) {
         app_splash();
+        return 1;
+    }
+    if (!strcmp(cmd, "grclr")) {
+        dk_gr_hits = 0;
         return 1;
     }
     if (!strcmp(cmd, "seqtype")) {            /* seqtype N: the sequencer by its SEQ page index (0 STEP 1 LIVE 2 DRIVE 3 FINGER), as K1 of its row */

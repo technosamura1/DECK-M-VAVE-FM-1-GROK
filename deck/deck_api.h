@@ -102,7 +102,7 @@ typedef struct {
 } dk_fx_t;
 
 /* ------------------------------------------------------------------ the song --- */
-enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_RSV7, SQ_N };
+enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_GROOVE, SQ_N };   /* (7: GROOVE, a drum track's; was TOMBOLA) */
 
 /* an event: a note, or (EV_MOTION) a knob's move: note = its target (T_*), vel = the value 0..100, dur 0 a move,
  * dur > 0 a p-lock held that long. EV_MOTION|EV_RAMP (dur 0): a point of an AUTOMATION curve: the value moves in a straight line
@@ -268,6 +268,10 @@ typedef struct {
 int dk_fch(const char *s, int step);    /* a pattern string's character at a step ('.' past its end) */
 
 /* an ATMO layer: an engine's voice that keeps going (WORLD's rain, its fire...) at a level of its own */
+/* GROOVE: a drum pattern; rows "L" + 16 or 32 steps ('.' or '1'..'9'), '|' between (the letters: seq.c groove_note) */
+typedef struct dk_groove_s {
+    const char *name, *rows;
+} dk_groove_t;
 typedef struct dk_atmo_s {
     const char *name;
     uint8_t eng;
@@ -311,6 +315,9 @@ typedef struct {
     const dk_preset_t *presets2;        /* the blocks 1..DK_NBLK-1: the engines' blocks 1.. one after the other, as many as pcount says (no padding) */
     const uint8_t *pcount;              /* presets in a block: DK_NBLK an engine (block 0: its DK_NFACT, or fewer) */
     const char *const *block_name;      /* DK_NBLK names: AMBIENT LOFI, 8-16 BIT, SYNTHWAVE, CINEMATIC */
+    const struct dk_groove_s *groove;   /* GROOVE (a drum track): white 1-15 the grooves, black the fills, white 16 the end */
+    uint8_t ngroove, nfill;
+    const struct dk_groove_s *fill, *groove_end;
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 

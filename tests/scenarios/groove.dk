@@ -1,0 +1,79 @@
+# GROOVE (the drums as EZdrummer): white 1-15 grooves (INTRO VERSE CHORUS BRIDGE OUTRO x3), white 16 the end, black fills.
+# Stopped it plays on its own clock; playing, a new groove waits for the bar; a fill runs to the bar's end, then the groove.
+wait 300
+tap HOME
+wait 100
+tapkey w4
+wait 100
+tap HOME
+wait 100
+expect track 4
+tap SEQ
+wait 100
+tap SEQ
+wait 100
+tap SEQ
+wait 100
+seqtype 2
+wait 100
+expect seq 7
+tap SEQ
+wait 100
+shot groove_empty.png
+# a fill from silence: nothing (a groove first)
+tapkey b0
+wait 100
+expect grfill 0
+# stopped: white 4 (VERSE 1) starts on the next 1/16
+grclr
+tapkey w3
+wait 60
+expect grcur 4
+wait 1500
+expect grhits >4
+shot groove_verse.png
+# white 7 (CHORUS 1): queued, then in on the bar
+tapkey w6
+wait 40
+expect grnext 7
+expect grcur 4
+wait 3000
+expect grcur 7
+expect grnext 255
+# a long fill (black 9): it plays, then the groove goes on
+tapkey b8
+wait 40
+expect grfill 9
+shot groove_fill.png
+wait 3000
+expect grfill 0
+expect grcur 7
+# a melodic track has no GROOVE: two sequencers there
+# white 16: the end on the next bar, then quiet
+tapkey w15
+wait 40
+expect grnext 0
+wait 3000
+expect grcur 0
+grclr
+wait 1000
+expect grhits 0
+# playing and recording: the drummer's notes go into the clip
+tap PLAY
+wait 100
+expect events 0
+tapkey w9
+wait 100
+tap REC
+wait 8000
+tap REC
+wait 300
+expect events >4
+tap PLAY
+wait 200
+# the transport stopped: the drummer too
+expect grcur 0
+# saved and loaded: still GROOVE
+roundtrip
+wait 100
+expect seq 7

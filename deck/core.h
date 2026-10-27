@@ -12,7 +12,7 @@ void dk_shed(void);
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (from the render) */
 
 /* commands (main loop -> render) */
-enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_ENDLTR, C_FREE7, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
+enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_ENDLTR, C_GROOVE, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
        C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK };
 void dk_cmd(int c, int a, int b, int d);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
@@ -59,7 +59,9 @@ extern volatile float dk_level[DK_NTRACK], dk_master_level;
  * waits for silent blocks, erases, lets go; the cut is then silence, not a click (dust, tape hiss, a tail) */
 extern volatile uint8_t dk_hush, dk_hushed;
 extern volatile uint8_t dk_endl_step[DK_NTRACK];   /* ENDLESS: the step it plays (the page) */
-extern volatile int8_t dk_endl_tr[DK_NTRACK];      /* ENDLESS: its transposition now (a key played on it) */
+extern volatile int8_t dk_endl_tr[DK_NTRACK];
+extern volatile uint8_t dk_gr_cur[DK_NTRACK], dk_gr_next[DK_NTRACK], dk_gr_fill[DK_NTRACK];   /* GROOVE: playing, queued (0xFF none), fill */
+extern volatile uint32_t dk_gr_hits;      /* ENDLESS: its transposition now (a key played on it) */
 int dk_endl_root(int t);
 extern volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;
 extern volatile uint8_t dk_perform;                     /* the performance effect held (PF_*) */

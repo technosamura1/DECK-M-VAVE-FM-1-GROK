@@ -377,6 +377,42 @@ static void balance(void)
 }
 
 
+/* GROOVE: the drummer through the song: each section's three grooves a bar each, a fill at the end of each section,
+ * the ending; on DUSTKIT (track 5), 90 BPM */
+static void groove_demo(const char *out, int preset)
+{
+    double bar;
+    int sec, j;
+    fresh();
+    dk_lock();
+    dk_song.tempo = 90;
+    dk_song.dust = 0;
+    dk_track_setup(4, 5, preset, SQ_GROOVE, R_DRUM);
+    dk_song.trk[4].vol = 80;
+    dk_unlock();
+    bar = 4.0 * 60.0 / 90.0;
+    reset_out();
+    dk_cmd(C_PLAY, 1, 0, 0);
+    dk_cmd(C_GROOVE, 4, 0, 1);
+    run(0.02);
+    for (sec = 0; sec < 5; sec++)
+        for (j = 0; j < 3; j++) {
+            int g = sec * 3 + j + 1;
+            if (g > 1)
+                dk_cmd(C_GROOVE, 4, 0, g);          /* (on the next bar) */
+            run(bar * 0.5);
+            if (j == 2)                              /* the section's end: a fill, longer each time */
+                dk_cmd(C_GROOVE, 4, 1, 2 + sec * 2);
+            run(bar * 0.5);
+        }
+    dk_cmd(C_GROOVE, 4, 0, 0);
+    run(bar * 1.2);
+    dk_cmd(C_PLAY, 0, 0, 0);
+    tail(3.0);
+    wav(out);
+    report("groove: 5 sections x 3, fills, the end");
+}
+
 static void chords(const char *out)
 {
     static const int MODES[3] = {0, 1, 4};               /* MAJOR, MINOR, LYDIAN */
@@ -1055,7 +1091,28 @@ int main(int argc, char **argv)
     else if (!strcmp(m, "demo"))
         demo(argc > 2 ? argv[2] : "out/demo.wav");
     else if (0) {
-    } else if (!strcmp(m, "chords"))
+    } else if (!strcmp(m, "gmlev")) {                 /* the kit's GM notes, each alone: how loud (the grooves' balance) */
+        static const int N[13] = {36, 38, 37, 39, 42, 46, 45, 47, 50, 49, 51, 70, 76};
+        int i, j;
+        for (i = 0; i < 13; i++) {
+            fresh();
+            dk_lock();
+            dk_song.dust = 0;
+            dk_track_setup(4, 5, argc > 2 ? atoi(argv[2]) : 0, SQ_STEP, R_DRUM);
+            dk_unlock();
+            run(0.1);
+            reset_out();
+            note(4, N[i], 100);
+            run(0.05);
+            note(4, N[i], 0);
+            run(0.6);
+            j = peak;
+            printf("%d:%.1f ", N[i], 20.0 * log10((j + 1) / 32768.0));
+        }
+        printf("\n");
+    } else if (!strcmp(m, "groove"))
+        groove_demo(argc > 2 ? argv[2] : "out/groove.wav", argc > 3 ? atoi(argv[3]) : 0);
+    else if (!strcmp(m, "chords"))
         chords(argc > 2 ? argv[2] : "out/chords.wav");
     else if (!strcmp(m, "phrase") && argc > 3)
         phrase(atoi(argv[2]) & 3, argv[3]);

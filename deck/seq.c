@@ -662,6 +662,162 @@ static void fill_tick(int t)
               jitter() / 3 + swing_delay(t, step * DK_T16), 1);
 }
 
+
+/* ----------------------------------------------------------------- GROOVE --- */
+/* A drum track played as EZdrummer: the tape's grooves (white 1-15), fills (black), the ending (white 16). A new groove
+ * comes in on the next bar (from silence, stopped: on the next 1/16); a fill from the next beat to the bar's end, the
+ * groove under it stopped there, then on (a long fill: a crash on the next one). Stopped it runs on the free clock.
+ * Recording, its notes go into the clip as any generator's. */
+volatile uint8_t dk_gr_cur[DK_NTRACK], dk_gr_next[DK_NTRACK] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, dk_gr_fill[DK_NTRACK];
+volatile uint32_t dk_gr_hits;                         /* (the drummer's notes so far: the tests) */
+static uint8_t gr_fst[DK_NTRACK], gr_from[DK_NTRACK];   /* the fill: 1 this bar (from gr_from), 2 the next bar */
+static uint32_t gr_bar0[DK_NTRACK];                    /* stopped: the free clock's tick its first step was */
+static int groove_note(char c)
+{
+    switch (c) {
+    case 'K': return 36;
+    case 'S': return 38;
+    case 'R': return 37;
+    case 'P': return 39;
+    case 'H': return 42;
+    case 'O': return 46;
+    case 'L': return 45;
+    case 'M': return 47;
+    case 'T': return 50;
+    case 'X': return 49;
+    case 'Y': return 51;
+    case 'Z': return 70;
+    case 'W': return 76;
+    default: return -1;
+    }
+}
+static void groove_hit(int t, int note, int d, int step)
+{
+    int vel = 30 + 10 * d + (int)(dk_frand() * 8.0f) - 4;
+    vel = vel < 1 ? 1 : vel > 127 ? 127 : vel;
+    dk_gr_hits++;
+    note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)DK_T16 * tick_len), jitter() / 3 + swing_delay(t, step * DK_T16), 2);
+    if (rec_track_of(t))
+        rec_done(t, note, vel, DK_T16);
+}
+/* the rows of g at 1/16 q (its own length, 16 or 32); `once`: the short rows only (a fill's after, the ending), at its one */
+static void groove_rows(int t, const dk_groove_t *g, uint32_t q, int step, int once)
+{
+    const char *r = g->rows;
+    while (*r) {
+        const char *e = r + 1;
+        int n, note = groove_note(*r);
+        while (*e && *e != '|')
+            e++;
+        n = (int)(e - r) - 1;
+        if (note >= 0 && n > 0) {
+            if (once) {
+                if (n < 16 && r[1] >= '1' && r[1] <= '9')
+                    groove_hit(t, note, r[1] - '0', 0);
+            } else if (n >= 16) {
+                char c = r[1 + (int)(q % (uint32_t)(n >= 32 ? 32 : 16))];
+                if (c >= '1' && c <= '9')
+                    groove_hit(t, note, c - '0', step);
+            }
+        }
+        r = *e ? e + 1 : e;
+    }
+}
+static int fill_first(const dk_groove_t *f)   /* the step its notes start (the full rows) */
+{
+    const char *r = f->rows;
+    int first = 15;
+    while (*r) {
+        const char *e = r + 1;
+        int n, i;
+        while (*e && *e != '|')
+            e++;
+        n = (int)(e - r) - 1;
+        for (i = 0; n >= 16 && i < 16; i++)
+            if (r[1 + i] != '.') {
+                first = i < first ? i : first;
+                break;
+            }
+        r = *e ? e + 1 : e;
+    }
+    return first;
+}
+static uint32_t groove_pos(int t) { return dk_playing ? part_tick : gt - gr_bar0[t]; }
+static void groove_tick(int t)
+{
+    uint32_t pos = groove_pos(t), q;
+    int step;
+    if (!TAPE.groove || pos % DK_T16)
+        return;
+    q = pos / DK_T16;
+    step = (int)(q % 16u);
+    if (step == 0) {                           /* the bar line: the fill done (its crash), the groove queued */
+        if (gr_fst[t] == 1) {
+            if (dk_gr_fill[t] && dk_gr_fill[t] <= TAPE.nfill)
+                groove_rows(t, &TAPE.fill[dk_gr_fill[t] - 1], q, 0, 1);
+            gr_fst[t] = 0;
+            dk_gr_fill[t] = 0;
+        } else if (gr_fst[t] == 2)
+            gr_fst[t] = 1;
+        if (dk_gr_next[t] != 0xFF) {
+            if (dk_gr_next[t] == 0) {
+                if (dk_gr_cur[t] && TAPE.groove_end)
+                    groove_rows(t, TAPE.groove_end, q, 0, 1);
+                dk_gr_cur[t] = 0;
+                gr_fst[t] = 0;
+                dk_gr_fill[t] = 0;
+            } else
+                dk_gr_cur[t] = dk_gr_next[t];
+            dk_gr_next[t] = 0xFF;
+        }
+    }
+    if (gr_fst[t] == 1 && step >= gr_from[t] && dk_gr_fill[t] && dk_gr_fill[t] <= TAPE.nfill) {
+        groove_rows(t, &TAPE.fill[dk_gr_fill[t] - 1], (uint32_t)step, step, 0);
+        return;
+    }
+    if (dk_gr_cur[t] && dk_gr_cur[t] <= TAPE.ngroove)
+        groove_rows(t, &TAPE.groove[dk_gr_cur[t] - 1], q, step, 0);
+}
+/* C_GROOVE: kind 0 a groove (b 1..15; 0 the ending), 1 a fill (b 1..), 2 off at once */
+static void groove_cmd(int t, int kind, int b)
+{
+    uint32_t pos, q;
+    int step, nb, first;
+    t %= DK_NTRACK;
+    if (kind == 2) {
+        dk_gr_cur[t] = 0, dk_gr_next[t] = 0xFF, dk_gr_fill[t] = 0, gr_fst[t] = 0;
+        return;
+    }
+    if (kind == 0) {
+        if (!dk_gr_cur[t] && b) {              /* from silence: at once (playing: where the bar is; stopped: its bar from the next 1/16) */
+            if (!dk_playing)
+                gr_bar0[t] = gt + (DK_T16 - gt % DK_T16) % DK_T16;
+            dk_gr_cur[t] = (uint8_t)b;
+            dk_gr_next[t] = 0xFF;
+            return;
+        }
+        dk_gr_next[t] = (uint8_t)b;            /* on the next bar */
+        return;
+    }
+    if (!dk_gr_cur[t] || b < 1 || b > TAPE.nfill)
+        return;
+    pos = groove_pos(t);
+    q = (pos + DK_T16 - 1) / DK_T16;           /* the next 1/16 not played yet */
+    step = (int)(q % 16u);
+    nb = (step + 3) / 4 * 4;                   /* the next beat */
+    first = fill_first(&TAPE.fill[b - 1]);
+    dk_gr_fill[t] = (uint8_t)b;
+    if (q % 16u == 0 && pos % DK_T16 == 0)
+        nb = 0;
+    if (nb >= 16 || (step > first && nb > 12)) {   /* too late in this bar: the next one, whole */
+        gr_fst[t] = 2;
+        gr_from[t] = (uint8_t)first;
+    } else {
+        gr_fst[t] = 1;
+        gr_from[t] = (uint8_t)(nb > first ? nb : first);
+    }
+}
+
 /* -------------------------------------------------------------------- ARP --- */
 /* the rates (ticks), 1/4 .. 1/32 in the order the encoder turns */
 const uint8_t DK_ARP_DIV[DK_ARP_NDIV] = {96, 48, 32, 24, 16, 12};
@@ -860,6 +1016,8 @@ static void play_stop(void)
     pm_apply();
     dk_playing = 0;
     dk_stems = 0;
+    for (i = 0; i < DK_NTRACK; i++)        /* GROOVE: the drummer stops with the song */
+        groove_cmd(i, 2, 0);
     stems_solo = 0xFF;
     queued = 0xFF;
     dk_next_part = 0xFF;
@@ -1022,6 +1180,8 @@ static void seq_tick(void)
             const dk_track_t *k = &dk_song.trk[t];
             if (dk_arp_on(k))
                 arp_tick(t);
+            if (k->seq == SQ_GROOVE)
+                groove_tick(t);
         }
         mods_tick();
         return;
@@ -1055,7 +1215,11 @@ static void seq_tick(void)
         int fill = dk_fill && (e->flags & EF_DRUM);
         if (fill)
             fill_tick(t);
-        else if (k->seq == SQ_ENDLESS) {
+        else if (k->seq == SQ_GROOVE) {      /* the groove, over the clip (what was recorded of it plays too) */
+            if (!(drop_mask >> t & 1u))
+                groove_tick(t);
+            clip_tick(t, t == dk_song.harm_track ? &hp : 0);
+        } else if (k->seq == SQ_ENDLESS) {
             if (!(drop_mask >> t & 1u))
                 endless_tick(t);
         } else
@@ -1254,6 +1418,9 @@ static void drain(void)
                 vc[i].on = 0;
             break;
         }
+        case C_GROOVE:                         /* GROOVE: track a, kind b, which d */
+            groove_cmd(a, b, c.d);
+            break;
         case C_ENDLTR:                         /* ENDLESS: the transposition (semitones) of track a */
             dk_endl_tr[a % DK_NTRACK] = (int8_t)(b < -48 ? -48 : b > 48 ? 48 : b);
             break;

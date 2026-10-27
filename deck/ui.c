@@ -1446,6 +1446,25 @@ static void key_down(int k, int vel)
     }
     if (ui.page == PG_SOUNDS && pb_key(w, b))   /* SOUNDS: the keys choose, the choice is heard */
         return;
+    if (trk->seq == SQ_GROOVE && (e->flags & EF_DRUM) && TAPE.groove && ui.page != PG_MIX && ui.page != PG_TRACKS &&
+        ui.page != PG_PROJECT && ui.page != PG_ROAD) {   /* GROOVE: white 1-15 the grooves, 16 the end, black the fills */
+        int t = dk_song.cur_track;
+        if (w >= 0 && w < TAPE.ngroove) {
+            dk_cmd(C_GROOVE, t, 0, w + 1);
+            say(TAPE.groove[w].name, dk_gr_cur[t] || dk_playing ? "NEXT BAR" : "");
+        } else if (w >= 0) {
+            dk_cmd(C_GROOVE, t, 0, 0);
+            say("END", "NEXT BAR");
+        } else if (b >= 0 && b < TAPE.nfill) {
+            if (!dk_gr_cur[t])
+                say("FILL", "PLAY A GROOVE FIRST");
+            else {
+                dk_cmd(C_GROOVE, t, 1, b + 1);
+                say("FILL", TAPE.fill[b].name);
+            }
+        }
+        return;
+    }
     if (ui.page == PG_TRACKS && ui.lay) {   /* the lists: the white keys are their numbered items (EDIT, LAYERS) */
         if (w >= 0)
             ui.lay == 1 ? edit_list_do(w) : lay_do(w);

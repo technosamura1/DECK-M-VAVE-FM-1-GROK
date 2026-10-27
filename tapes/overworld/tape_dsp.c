@@ -578,6 +578,7 @@ static const dk_atmo_t ATMO[6] = {
     {"WIND", 6, {W_WIND, 50, 45}, 0.8f},     {"CRICKETS", 6, {W_CRICKETS, 50, 55}, 0.7f},
 };
 
+#include "grooves.c"
 #include "demo.c"
 
 static void tape_init(void)
@@ -590,5 +591,5 @@ const dk_tape_t TAPE = {
     "OVERWORLD", tape_init, ENGINES, 12, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, 0, PROGS, 5, STYLE_CHORD,
     STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, 0, PERFORM, PERFORM_ACT, MOODS, 8,
     BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
-    ATMO, 6, PRESETS2, PCOUNT, BLOCK_NAME,
+    ATMO, 6, PRESETS2, PCOUNT, BLOCK_NAME, GROOVES, 15, 11, FILLS, &GROOVE_END,
 };
