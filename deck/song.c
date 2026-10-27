@@ -794,6 +794,8 @@ static int rec_flush_do(int only_t)
                 continue;
             }
         }
+        if (!(r.ev.fl & EV_MOTION))              /* a take is never born muted (a layer mute left on that number from before) */
+            dk_song.lmute[r.clip] &= ~(1u << DK_L_TAKE(r.ev.layer));
         if (dk_song_insert(r.clip, &r.ev) >= 0 && !(r.ev.fl & EV_MOTION) && !DK_L_SND(r.ev.layer)) {
             take_pend[r.clip] = (uint8_t)(DK_L_TAKE(r.ev.layer) + 1u);
             if (last_sess[r.clip] != rec_sess) {     /* the first note of this REC press in the clip: its take is where it starts */

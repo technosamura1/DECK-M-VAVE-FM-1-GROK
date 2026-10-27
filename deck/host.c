@@ -591,6 +591,14 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_song.part[atoi(a) & 7].mute = (uint8_t)atoi(b);
         return 1;
     }
+    if (!strcmp(cmd, "setlmute")) {             /* setlmute CLIP MASK: the clip's muted takes (as a project saved so) */
+        dk_song.lmute[atoi(a) % DK_NCLIP] = (uint32_t)atol(b);
+        return 1;
+    }
+    if (!strcmp(cmd, "setsolo")) {              /* setsolo T V (T 0..5) */
+        dk_song.trk[atoi(a) % DK_NTRACK].solo = (uint8_t)atoi(b);
+        return 1;
+    }
     if (!strcmp(cmd, "newpart")) {              /* newpart N: NEW PART COPY (1) / EMPTY (0) */
         dk_newpart_copy = (uint8_t)atoi(a);
         return 1;

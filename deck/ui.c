@@ -686,6 +686,36 @@ static void preset_save(int slot)        /* SAVE held + white 13..16 */
     say(s, u->name);
 }
 
+/* the tracks REC writes are heard: a mute in the part (or another track's solo) left on from before made them silent */
+static void rec_audible(int t, int t2)
+{
+    int p = (dk_playing ? dk_cur_part : dk_song.cur_part) & 7, i, solo = 0;
+    uint8_t m = (uint8_t)((1u << t) | (ui.arm_trk & 0x3F) | (t2 < DK_NTRACK ? 1u << t2 : 0u)), was;
+    char s[28] = "A: ";
+    const char *l = track_label(t);
+    uint32_t j = 3;
+    dk_lsolo_clip = 0xFF;                       /* (a layer soloed on LAYERS: the new take is heard too) */
+    for (i = 0; i < DK_NTRACK; i++)
+        solo |= dk_song.trk[i].solo;
+    was = (uint8_t)(dk_song.part[p].mute & m);
+    if (!was && !(solo && !dk_song.trk[t].solo))
+        return;
+    dk_lock();
+    dk_song.part[p].mute &= (uint8_t)~m;
+    if (dk_pm_x && dk_pm_part == p)
+        dk_pm_x &= (uint8_t)~m;
+    if (solo && !dk_song.trk[t].solo)
+        for (i = 0; i < DK_NTRACK; i++)
+            dk_song.trk[i].solo = 0;
+    dk_unlock();
+    s[0] = (char)('A' + p);
+    while (*l && j < 26u)
+        s[j++] = *l++;
+    s[j] = 0;
+    say(s, was ? "UNMUTED" : "SOLO OFF");
+    mark_dirty();
+}
+
 static void rec_start(void)
 {
     int t = dk_song.cur_track, clip = cur_clip(), t2 = dk_song.split && dk_song.harm_track != t ? dk_song.harm_track : 0xFF;
@@ -697,6 +727,7 @@ static void rec_start(void)
         ui_auto_on = 1;
         ui.auto_max = 0;
     }
+    rec_audible(t, t2);
     dk_cmd(C_REC, 1, 0, t | t2 << 16 | (ui.arm_trk & 0x3F) << 24);   /* (the selected track is always in it) */
     ui.rec_end = 0;
     if (ui.page != PG_REC && ui.page != PG_TRACKS) {
