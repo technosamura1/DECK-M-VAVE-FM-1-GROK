@@ -70,11 +70,11 @@ expect page 0
 # the drums: one instrument, OCT does nothing; their blocks
 tap HOME
 wait 100
-tapkey w4
+tapkey w5
 wait 100
 tap HOME
 wait 100
-expect track 4
+expect track 5
 press HOME
 turn PRESET 1
 release HOME

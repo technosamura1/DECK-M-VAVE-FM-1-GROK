@@ -169,7 +169,7 @@ static float pad_level(const float *st)
     const pad_v *v = (const pad_v *)st;
     return v->es * v->es * v->vel * 0.5f;
 }
-const dk_engine_t ENG_AIRPAD = {"AIRPAD", EF_POLY, 4, 7, 5, PAD_P, pad_on, pad_off, pad_render, pad_level, 0, 0, 0, 0,
+const dk_engine_t ENG_AIRPAD = {"PAD", EF_POLY, 4, 7, 5, PAD_P, pad_on, pad_off, pad_render, pad_level, 0, 0, 0, 0,
                                 R_PAD};
 
 /* ------------------------------------------------------------------- GLASS --- */
@@ -381,5 +381,5 @@ static float bass_level(const float *st)
     const bass_v *v = (const bass_v *)st;
     return v->es * v->vel;
 }
-const dk_engine_t ENG_SOFTBASS = {"SOFTBASS", EF_MONO, 2, 10, 5, BASS_P, bass_on, bass_off, bass_render, bass_level, 0,
+const dk_engine_t ENG_SOFTBASS = {"BASS", EF_MONO, 2, 10, 5, BASS_P, bass_on, bass_off, bass_render, bass_level, 0,
                                   0, 0, 0, R_BASS};

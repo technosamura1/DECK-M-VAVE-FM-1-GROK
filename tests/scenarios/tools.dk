@@ -134,7 +134,7 @@ tap HOME
 wait 50
 expect eng 0
 press HOME
-tapkey b4
+tapkey b5
 release HOME
 press HOME
 turn PRESET 1

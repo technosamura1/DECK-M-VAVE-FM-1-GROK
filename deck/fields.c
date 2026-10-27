@@ -1235,7 +1235,7 @@ static char *cpy(char *d, const char *s)
 /* a track's name: its role's (the tape's layout: DRUMS BASS PIANO KEYS BELLS NATURE) */
 static const char *track_label(int t)
 {
-    static const char *const RN[R_N] = {"DRUMS", "BASS", "PIANO", "KEYS", "PAD", "LEAD", "KEYS", "NATURE"};
+    static const char *const RN[R_N] = {"DRUMKIT", "BASS", "PIANO", "KEYS", "PAD", "LEAD", "KEYS", "LEAD"};
     return RN[dk_song.trk[t % DK_NTRACK].role % R_N];
 }
 

@@ -41,11 +41,12 @@ expect sndeng 0
 press HOME
 turn PRESET -1
 turn PRESET -1
+turn PRESET -1
 release HOME
 wait 30
 tap HOME
 wait 100
-expect eng 11
+expect eng 10
 expect evsnd 1
 expect nfrozen 4
 expect sndeng 0
@@ -104,6 +105,7 @@ wait 500
 key w0 up
 wait 200
 press HOME
+turn PRESET 1
 turn PRESET 1
 turn PRESET 1
 release HOME

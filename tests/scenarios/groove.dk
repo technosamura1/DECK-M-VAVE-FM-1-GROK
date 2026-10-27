@@ -3,11 +3,11 @@
 wait 300
 tap HOME
 wait 100
-tapkey w4
+tapkey w5
 wait 100
 tap HOME
 wait 100
-expect track 4
+expect track 5
 tap SEQ
 wait 100
 tap SEQ

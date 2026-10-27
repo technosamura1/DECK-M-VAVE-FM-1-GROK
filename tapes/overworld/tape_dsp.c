@@ -227,7 +227,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"FELT HARP", 10, {1, 25, 50, 30, 40, 0}, E50, FX_N_TAPE, 25, 30, 25, 60, 20, PLK_M, -13},
     {"TINY LUTE", 10, {0, 60, 35, 50, 35, 0}, E50, FX_N_NONE, 0, 0, 0, 40, 10, PLK_M, -4},
     /* LEAD */
-    {"SOFT LEAD", 11, {0, 40, 10, 20, 25, 30, 0, 0}, E50, FX_N_TAPE, 20, 25, 20, 50, 20, LD_M, 15},
+    {"SOFT LEAD", 11, {0, 40, 10, 20, 25, 30, 12, 0}, E50, FX_N_TAPE, 20, 25, 20, 50, 20, LD_M, 15},
     {"LOFI SQUARE LEAD", 11, {1, 38, 10, 15, 15, 25, 10, 0}, E50, FX_N_LOFI, 35, 30, 30, 40, 20, LD_M, 6},
     {"DUSTY MONO", 11, {0, 34, 15, 25, 0, 35, 35, 20}, E50, FX_N_VINYL, 25, 30, 25, 45, 20, LD_M, 15},
     {"WARM SUPERLEAD", 11, {3, 42, 10, 15, 35, 25, 10, 0}, E50, FX_N_CHORUS, 35, 30, 45, 55, 25, LD_M, 17},
@@ -564,9 +564,9 @@ static const dk_mood_t MOODS[8] = {
 };
 
 /* the tracks by default: PIANO KEYS PAD BASS DRUMS NATURE (the piano first: it is played the most) */
-static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 5, 11}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 0},
+static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 11, 5}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 0},
                      DEF_SEQ[DK_NTRACK] = {SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP},
-                     DEF_ROLE[DK_NTRACK] = {R_KEYS, R_ARP, R_PAD, R_BASS, R_DRUM, R_LEAD};
+                     DEF_ROLE[DK_NTRACK] = {R_KEYS, R_ARP, R_PAD, R_BASS, R_LEAD, R_DRUM};
 /* the KEYS track's twelve: electric pianos, bells, kalimbas (HOME + white 1-12, the PRESET knob) */
 static const uint8_t KEYS_SET[DK_NFACT][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9},  {3, 0}, {3, 1},
                                               {3, 3}, {3, 4}, {7, 0}, {7, 1}, {7, 7}, {7, 9}};

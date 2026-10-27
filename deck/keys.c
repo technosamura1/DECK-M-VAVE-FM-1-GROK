@@ -158,7 +158,8 @@ static int chord_build(int d, int base, int *out)
 static void notes_post(int k, int t, const int *nt, int n, int vel, int strum)
 {
     int i, one[1];
-    if (n > 1 && is_bass(t)) {               /* a chord on a bass: its lowest note (the root) */
+    if (n > 1 && (is_bass(t) || (TAPE.eng[dk_song.trk[t].eng % TAPE.neng]->flags & EF_LEGATO))) {   /* a chord on a bass (or a mono
+                                                                       * lead): its lowest note (the root) */
         one[0] = nt[0];
         for (i = 1; i < n; i++)
             if (nt[i] < one[0])

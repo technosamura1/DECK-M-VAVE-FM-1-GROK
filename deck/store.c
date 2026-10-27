@@ -90,11 +90,12 @@ static void clips_repack(void)
     }
 }
 
-/* older projects: the tracks in the order of today's (PIANO KEYS PAD BASS DRUMS NATURE), by their roles, when the
- * six roles are six different places; the clips, the road's drops, SPLIT's track and FOLLOW's sources go with them */
+/* older projects: the tracks in the order of today's (PIANO KEYS PAD BASS LEAD DRUMKIT), by their roles, when the
+ * six roles are six different places; the clips (their layer mutes), the frozen sounds, the parts' mutes, the road's drops,
+ * the bypasses, SPLIT's track and FOLLOW's sources go with them */
 static void song_track_order(void)
 {
-    static const uint8_t RANK[R_N] = {4, 3, 0, 1, 2, 1, 1, 5};   /* DRUM BASS KEYS(piano) ARP PAD LEAD BELL NATURE */
+    static const uint8_t RANK[R_N] = {5, 3, 0, 1, 2, 4, 1, 4};   /* DRUM BASS KEYS(piano) ARP PAD LEAD BELL NATURE (-> LEAD) */
     static dk_track_t tk[DK_NTRACK];
     static dk_clip_t cl[DK_NCLIP];
     uint8_t to[DK_NTRACK], seen = 0, same = 1;
@@ -130,6 +131,35 @@ static void song_track_order(void)
     }
     for (p = 0; p < DK_NCLIP; p++)
         dk_song.clip[p] = cl[p];
+    {                                    /* the rest that is a track's: layer mutes (per clip), frozen sounds, bypasses, banks */
+        static uint32_t lm[DK_NCLIP];
+        static dk_snd_t sn[DK_NTRACK][DK_NSND];
+        uint8_t rs[DK_NTRACK], fb[DK_NTRACK];
+        for (p = 0; p < DK_NPART; p++)
+            for (t = 0; t < DK_NTRACK; t++)
+                lm[p * DK_NTRACK + to[t]] = dk_song.lmute[p * DK_NTRACK + t];
+        for (p = 0; p < DK_NCLIP; p++)
+            dk_song.lmute[p] = lm[p];
+        for (t = 0; t < DK_NTRACK; t++) {
+            for (j = 0; j < DK_NSND; j++)
+                sn[to[t]][j] = dk_song.snd[t][j];
+            rs[to[t]] = dk_song.rsv[t];
+            fb[to[t]] = dk_song.fbank[t];
+        }
+        for (t = 0; t < DK_NTRACK; t++) {
+            for (j = 0; j < DK_NSND; j++)
+                dk_song.snd[t][j] = sn[t][j];
+            dk_song.rsv[t] = rs[t];
+            dk_song.fbank[t] = fb[t];
+        }
+        for (p = 0; p < DK_NPART; p++) {
+            uint8_t m = dk_song.part[p].mute, n = 0;
+            for (t = 0; t < DK_NTRACK; t++)
+                if (m >> t & 1u)
+                    n |= (uint8_t)(1u << to[t]);
+            dk_song.part[p].mute = n;
+        }
+    }
     clips_repack();
     for (j = 0; j < DK_NROAD; j++) {
         uint8_t d = dk_song.road[j].drop, n = 0;
@@ -192,7 +222,13 @@ int project_load(int slot)
             int p;                                                         /* (its notes were the world's drones) */
             for (p = 0; p < DK_NPART; p++)
                 clip_clear_all(p * DK_NTRACK + i);
-            dk_track_setup(i, TAPE.def_eng[DK_NTRACK - 1], 0, k->seq, R_LEAD);
+            {
+                int d, le = 11;                          /* the tape's default LEAD engine (where its LEAD track is) */
+                for (d = 0; d < DK_NTRACK; d++)
+                    if (TAPE.def_role[d] == R_LEAD)
+                        le = TAPE.def_eng[d];
+                dk_track_setup(i, le, 0, k->seq, R_LEAD);
+            }
         }
     }
     dk_unlock();

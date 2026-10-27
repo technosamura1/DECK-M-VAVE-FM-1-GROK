@@ -35,10 +35,22 @@ static void ld_on(float *st, int note, float vel, const float *p, int retrig)
     k = k < 0 ? 0 : k > 5 ? 5 : k;
     if (retrig == 2) {                                  /* legato: the same voice slides to the new pitch - eased, not jumped */
         ld_pitch(v, note, p);
-        if (v->glk > 0.0035f)                           /* GLIDE 0 too: a short slide (~20 ms), not a step in the wave */
-            v->glk = 0.0035f;
+        if (v->glk > 0.0012f)                           /* GLIDE 0 too: a slide (~60 ms to arrive), a singer's, not a step */
+            v->glk = 0.0012f;
         v->vt = vel;                                    /* (the force, the cut-off's lift: eased in render, a jump clicked) */
         v->fup = 0.5f;
+        return;
+    }
+    if (retrig == 3) {                                  /* played again while the last note still rings out: that voice goes on -
+                                                         * no restart from zero, the wave and the filter where they are */
+        ld_pitch(v, note, p);
+        if (v->glk > 0.004f)                            /* GLIDE 0: a quick slide (~20 ms); GLIDE up: its own */
+            v->glk = 0.004f;
+        v->held = 1.0f;
+        v->att = v->es;                                 /* the attack from the level it has */
+        v->vt = vel;
+        v->fup = 0.8f;                                  /* the cut-off's lift again, eased */
+        v->t = 0.0f;
         return;
     }
     v->kind = (float)k;
@@ -161,4 +173,4 @@ static float ld_level(const float *st)
     const ld_v *v = (const ld_v *)st;
     return v->es * v->vel * 0.5f;
 }
-const dk_engine_t ENG_LEAD = {"LEAD", EF_MONO, 2, 9, 8, LD_P, ld_on, ld_off, ld_render, ld_level, 0, 0, 0, 0, R_LEAD};
+const dk_engine_t ENG_LEAD = {"LEAD", EF_MONO | EF_LEGATO, 2, 9, 8, LD_P, ld_on, ld_off, ld_render, ld_level, 0, 0, 0, 0, R_LEAD};

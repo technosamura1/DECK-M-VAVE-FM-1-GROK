@@ -1,0 +1,25 @@
+# LEAD as a mono synth: a key let go while another is still held slides back to that one (the voice goes on); a note
+# played while the last one rings out takes that voice on (one voice, no second start)
+wait 300
+turn SELECT 2
+wait 100
+expect track 4
+expect eng 11
+key w0 down 100
+wait 200
+key w4 down 100
+wait 200
+expect livev 1
+key w4 up
+wait 200
+expect livev 1
+expect tlevel5 >2
+key w0 up
+wait 30
+expect livev 0
+key w2 down 100
+wait 100
+expect tvoices5 1
+key w2 up
+wait 1500
+expect tvoices5 0

@@ -11,11 +11,11 @@ tap HOME
 wait 100
 tap HOME
 wait 100
-tapkey w4
+tapkey w5
 wait 100
 tap HOME
 wait 100
-expect track 4
+expect track 5
 tap SEQ
 wait 100
 tap SEQ
@@ -60,6 +60,6 @@ expect events >9
 tap PLAY
 wait 2000
 expect grcur 0
-expect tvoices5 >0
+expect tvoices6 >0
 tap PLAY
 wait 200

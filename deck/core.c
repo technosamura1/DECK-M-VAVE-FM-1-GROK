@@ -326,10 +326,11 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
     if (e->flags & EF_MONO) {                  /* one voice: played again while held (legato glides); a sound that
                                                 * goes on (the world) whenever it still sounds */
         for (i = 0; i < DK_NVOICE; i++)
-            if (vc[i].on && vc[i].trk == t && vc[i].eng == eng && vc[i].snd == snd && (vc[i].held || (e->flags & EF_CONT))) {
+            if (vc[i].on && vc[i].trk == t && vc[i].eng == eng && vc[i].snd == snd &&
+                (vc[i].held || (e->flags & EF_CONT) || ((e->flags & EF_LEGATO) && vc[i].delay <= 0))) {
                 if (vc[i].held)
                     midi(0x80u | ch_of(t), vc[i].note, 0);
-                *retrig = vc[i].held ? 2 : 1;
+                *retrig = vc[i].held ? 2 : (e->flags & EF_CONT) ? 1 : 3;   /* (3: a lead's tail taken on, no restart) */
                 return &vc[i];
             }
     }
@@ -537,6 +538,9 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
     v->eng = (uint8_t)eng;
     v->snd = (uint8_t)snd;
     v->gate = gate;
+    if (retrig && v->delay <= 0)              /* a voice already sounding (legato, a tail taken on): never paused - a strum's delay
+                                             * on it cut the sound out and back (two clicks) */
+        delay = 0;
     v->delay = delay > 0 ? delay : 0;
     v->age = age_ctr + (uint32_t)(delay > 0 ? delay : 0);
     v->lane = 0;

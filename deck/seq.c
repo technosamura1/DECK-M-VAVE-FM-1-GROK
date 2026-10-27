@@ -1228,6 +1228,17 @@ static void play_stop(void)
         dk_midi_out(0xFC, 0, 0);
 }
 
+/* a mono lead's keys held (the hand's), the last on top: let the top one go and the voice slides back to the one still
+ * held, as a mono synth does (EF_LEGATO) */
+static uint8_t mono_stk[DK_NTRACK][8], mono_n[DK_NTRACK], mono_vel[DK_NTRACK];
+static void mono_drop(int t, int note)
+{
+    int i, j = 0;
+    for (i = 0; i < mono_n[t]; i++)
+        if (mono_stk[t][i] != note)
+            mono_stk[t][j++] = mono_stk[t][i];
+    mono_n[t] = (uint8_t)j;
+}
 static void live_note(int t, int note, int vel, int delay)
 {
     dk_track_t *k = &dk_song.trk[t];
@@ -1277,6 +1288,13 @@ static void live_note(int t, int note, int vel, int delay)
             arp_publish(t);
             return;
         }
+        if (e->flags & EF_LEGATO) {
+            mono_drop(t, note);
+            if (mono_n[t] >= 8)
+                mono_drop(t, mono_stk[t][0]);
+            mono_stk[t][mono_n[t]++] = (uint8_t)note;
+            mono_vel[t] = (uint8_t)vel;
+        }
         voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0, 0);
         if (rec_track_of(t))
             rec_open(t, note, vel, delay);
@@ -1300,6 +1318,20 @@ static void live_note(int t, int note, int vel, int delay)
             }
             arp_publish(t);
             return;
+        }
+        if (e->flags & EF_LEGATO) {
+            int top = mono_n[t] ? mono_stk[t][mono_n[t] - 1] : -1, i, back = 0;
+            mono_drop(t, note);
+            if (top == note && mono_n[t])          /* the top key let go, another still held: back to it, legato */
+                for (i = 0; i < DK_NVOICE && !back; i++)
+                    if (vc[i].on && vc[i].held && vc[i].trk == t && vc[i].note == note && vc[i].gate < 0 && !vc[i].src)
+                        back = 1;
+            if (back) {
+                voice_start(t, mono_stk[t][mono_n[t] - 1], (float)mono_vel[t] * (1.0f / 127.0f), -1, 0, 0, 0);
+                if (rec_track_of(t))
+                    rec_close(note, 0);
+                return;
+            }
         }
         voices_off_note(t, note);
         if (rec_track_of(t))
