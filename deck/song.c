@@ -6,7 +6,7 @@
  * build) and the tests. */
 #include "song.h"
 
-dk_user_t dk_user;                       /* the user's presets: 4 an engine */
+dk_user_t dk_user DK_POOL;                       /* the user's presets: 4 an engine */
 static dk_ev_t ubuf[1024] DK_POOL;       /* undo: snapshots back to back (entries below) */
 static dk_ev_t rbuf[512] DK_POOL;        /* redo */
 static dk_ev_t clipboard[384] DK_POOL;
@@ -973,7 +973,7 @@ int clip_paste(int clip)
     undo_push(clip);
     dk_lock();
     if (clip_src_t != clip % DK_NTRACK) {   /* on another track: the frozen sounds go with the notes (its table's places) */
-        static dk_ev_t pt[384];
+        static dk_ev_t pt[384] DK_POOL;
         int i, to = clip % DK_NTRACK;
         for (i = 0; i < clip_n; i++) {
             pt[i] = clipboard[i];
@@ -991,7 +991,7 @@ void clip_double(int clip)
 {
     dk_clip_t *c = &dk_song.clip[clip];
     int len = clip_len(clip), n = c->n, i;
-    static dk_ev_t tmp[384];
+    static dk_ev_t tmp[384] DK_POOL;
     if (n > 192 || len * 2 > 16 * DK_TPB)
         return;
     undo_push(clip);

@@ -15,7 +15,7 @@ static double prof_t0;
 
 #define BARRIER() __asm__ volatile("" ::: "memory")
 
-dk_song_t dk_song;
+dk_song_t dk_song DK_POOL;   /* (the big state in the pool: plain RAM kept for the rest) */
 dk_ev_t dk_ev[DK_NEV] DK_POOL;
 dk_ctx_t dk_ctx;
 dk_metro_t dk_metro = {0, 1, METRO_WOOD, 0, 40, 0};
@@ -44,7 +44,7 @@ float dk_white(void) { return (float)(int32_t)dk_rnd() * (1.0f / 2147483648.0f);
 static int irand(int n) { return n > 0 ? (int)((dk_rnd() >> 8) % (uint32_t)n) : 0; }
 
 #define SN 1024
-float dk_sint[SN + 1];
+float dk_sint[SN + 1] DK_POOL;
 float dk_sine(float ph) { return dk_sinx(ph); }
 float dk_mtof(float n) { return 440.0f * dk_ctx.tune * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
 float dk_decay(float tau) { return fm_expf(-1.0f / (fm_maxf(tau, 0.0001f) * DK_SR)); }
@@ -73,7 +73,7 @@ typedef struct {
     int32_t d;
 } cmd_t;
 #define QN 256u
-static cmd_t q[QN];
+static cmd_t q[QN] DK_POOL;
 static volatile uint32_t q_w, q_r;
 void dk_cmd(int c, int a, int b, int d)
 {
@@ -101,7 +101,7 @@ void dk_unlock(void)
 }
 
 /* ------------------------------------------------------------------- state --- */
-volatile dk_recev_t dk_recq[DK_RECQ];
+volatile dk_recev_t dk_recq[DK_RECQ] DK_POOL;
 volatile uint32_t dk_recq_w;
 volatile uint32_t dk_seen_w;
 volatile uint32_t dk_seen[DK_SEEN];
@@ -249,12 +249,12 @@ typedef struct {
     float ch_l, ch_r, ch_c;                            /* a drum sound's CRUSH: the sample held, its count */
     float st[DK_VSTATE];
 } voice_t;
-static voice_t vc[DK_NVOICE];
+static voice_t vc[DK_NVOICE] DK_POOL;
 static uint32_t age_ctr;
 static uint8_t shed;
 /* a voice taken while it still sounds fades out over a few milliseconds here, from a copy (no click) */
 #define NFADE 4
-static voice_t fv[NFADE];
+static voice_t fv[NFADE] DK_POOL;
 static float fv_g[NFADE];
 static void voice_fade(const voice_t *v)
 {
@@ -678,7 +678,7 @@ static void plate_init(void)
 }
 /* SHIMMER: an octave up fed into the plate (two heads gliding through a short line, crossfaded) */
 #define SH_N 1024
-static float sh_buf[SH_N];
+static float sh_buf[SH_N] DK_POOL;
 static int sh_w;
 static float sh_ph;
 static uint8_t shimmer;
@@ -783,7 +783,7 @@ static inline float metro_step(void)
 }
 
 /* -------------------------------------------------------------- the tracks --- */
-static dk_fxst_t fxs[DK_NTRACK];
+static dk_fxst_t fxs[DK_NTRACK] DK_POOL;
 static uint8_t fx_prev[DK_NTRACK];
 static float fx_byp[DK_NTRACK];            /* the insert's bypass, faded: 0 in, 1 out */
 static int16_t fxbuf[DK_NTRACK][DK_FXBUF] DK_POOL;
