@@ -24,8 +24,14 @@ enum {
     /* the step editor (SEQ's third row) */ F_SENOTE, F_SETIE, F_SEPITCH, F_SHIFT,
     /* the tape: how many bars a take (AUTO: the first take sets it) */ F_RECBARS,
     /* the clip a scale step up or down (LIVE) */ F_MOVE,
+    /* SOUNDS (HOME + PRESET): the instrument, the block, the preset in it */ F_PBENG, F_PBBLK, F_PBPRE,
     F_N
 };
+/* (the SOUNDS page's: ui.c) */
+static int pb_hi(int f);
+static int pb_get(int f);
+static void pb_set(int f, int v);
+static void pb_text(int f, char *b);
 
 static const char *const SEQ_NAME[SQ_N] = {"SEQ", "SEQ", "ENDLESS", "ARP", "SEQ", "SEQ", "SEQ", "-"};
 /* the sequencers offered: SEQ (a clip, as a DAW's: REC into it, the step editor, the drum grid) and ENDLESS (OP-1's);
@@ -473,6 +479,9 @@ static void field_range(int f, int *lo, int *hi)
     *hi = 100;
     switch (f) {
     case F_TEMPO: *lo = 40; *hi = 200; break;
+    case F_PBENG:
+    case F_PBBLK:
+    case F_PBPRE: *hi = pb_hi(f); break;
     case F_MOOD: *hi = TAPE.nmood - 1; break;
     case F_P0:
     case F_P1:
@@ -616,6 +625,9 @@ static int field_get_raw(int f)
     dk_track_t *k = cur();
     dk_ev_t *e;
     switch (f) {
+    case F_PBENG:
+    case F_PBBLK:
+    case F_PBPRE: return pb_get(f);
     case F_TEMPO: return dk_song.tempo;
     case F_MACRO: return k->macro;
     case F_MOOD: return dk_song.mood;
@@ -770,6 +782,9 @@ static void field_set(int f, int v)
     if (field_get(f) == v && f != F_SLOT && f != F_TEMPLATE)
         return;
     switch (f) {
+    case F_PBENG:
+    case F_PBBLK:
+    case F_PBPRE: pb_set(f, v); return;
     case F_TEMPO: dk_song.tempo = (uint8_t)v; break;
     case F_MACRO: k->macro = (int8_t)v; break;
     case F_MOOD:
@@ -982,6 +997,9 @@ static void field_set(int f, int v)
 static const char *field_label(int f)
 {
     switch (f) {
+    case F_PBENG: return "INSTR";
+    case F_PBBLK: return "BLOCK";
+    case F_PBPRE: return "PRESET";
     case F_TEMPO: return "TEMPO";
     case F_MACRO: return "MACRO";
     case F_MOOD: return "MOOD";
@@ -1146,6 +1164,9 @@ static void field_text(int f, char *b)
     int v = field_get(f);
     b[0] = 0;
     switch (f) {
+    case F_PBENG:
+    case F_PBBLK:
+    case F_PBPRE: pb_text(f, b); break;
     case F_MOOD: cpy(b, TAPE.moods[v % TAPE.nmood].name); break;
     case F_P0:
     case F_P1:

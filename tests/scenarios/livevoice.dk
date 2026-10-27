@@ -17,7 +17,10 @@ page 0
 wait 100
 press HOME
 turn PRESET 1
+turn PRESET 1
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -161,8 +164,11 @@ wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 2
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -306,8 +312,11 @@ wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 3
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -451,8 +460,11 @@ wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 4
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -602,8 +614,11 @@ wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 5
 release HOME
+wait 30
+tap HOME
 wait 100
 key w0 down 100
 wait 60

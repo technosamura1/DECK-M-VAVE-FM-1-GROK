@@ -40,7 +40,10 @@ expect sndeng 0
 # the track takes another engine: the take is the same, it is still the piano
 press HOME
 turn PRESET -1
+turn PRESET -1
 release HOME
+wait 30
+tap HOME
 wait 100
 expect eng 11
 expect evsnd 1
@@ -102,7 +105,10 @@ key w0 up
 wait 200
 press HOME
 turn PRESET 1
+turn PRESET 1
 release HOME
+wait 30
+tap HOME
 wait 100
 expect eng 0
 key w0 down 90

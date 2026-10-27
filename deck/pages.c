@@ -118,6 +118,7 @@ static int shorten(const felucca_font_t *f, const char *s, char *out, int w)
     }
     return cut;
 }
+static uint8_t fit_cut_ok;               /* SOUNDS: its grid of presets cuts long names (vowels first) by design */
 /* a text in a box (x, w; align 0 left 1 centre 2 right), the biggest font from pref down to min that fits */
 static void text_box(int x, int y, int w, int align, const felucca_font_t *pref, const felucca_font_t *min,
                      const char *s, uint16_t c)
@@ -132,7 +133,7 @@ static void text_box(int x, int y, int w, int align, const felucca_font_t *pref,
             break;
     }
     if (text_w(f, s) > w) {
-        if (shorten(f, s, b, w))
+        if (shorten(f, s, b, w) && !fit_cut_ok)
             ui.fit_over++;
         t = b;
     }
@@ -195,7 +196,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 static int seq_edit_row(void);
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 5, 1, 1, 4, 1, 1, 2, 7, 2, 1};   /* (GLOBAL: its 5, then ATMO's 2) */
+    static const uint8_t ROWS[NPG] = {1, 2, 5, 1, 1, 4, 1, 1, 2, 7, 2, 1, 1};   /* (GLOBAL: its 5, then ATMO's 2) */
     if (p == PG_SEQ && ((cur_eng()->flags & EF_DRUM) || cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE))
         return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings;
                                               * STEP and LIVE: their own, the settings, the step editor */
@@ -320,6 +321,10 @@ static int page_field(int i, int home)
                                         {F_ATMO4, F_ATMO5, F_DUST, F_ATAPE, F_ALVL}};
         return F[row & 1][i];
     }
+    case PG_SOUNDS: {
+        static const uint8_t F[5] = {F_PBENG, F_PBBLK, F_PBPRE, F_VOL, F_NONE};
+        return F[i];
+    }
     case PG_REC: {
         static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECMODE, F_METRO, F_ONNOTE};   /* BARS first: how long a take; ALGO how it starts */
         return F[i];
@@ -332,7 +337,7 @@ static const char *hint(void)
 {
     const dk_track_t *k = cur();
     switch (ui.page) {
-    case PG_PLAY: return "HOME+WHITE PRESET  HOME+BLACK TRACK";
+    case PG_PLAY: return "HOME+PRESET = SOUNDS";
     case PG_SEQ:
         if (seq_edit_row())
             return "K2 NOTE +/-  K3 TIE/CUT  K4 PITCH";
@@ -354,6 +359,7 @@ static const char *hint(void)
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
     case PG_GLOB: return ui.row[PG_GLOB] % 7 >= 5 ? "ATMO  GLO = NEXT ROW" : "GLO = NEXT ROW  HOLD GLO = FILL";
     case PG_ATMO: return "SEL = NEXT ROW  KNOBS = HOW MUCH";
+    case PG_SOUNDS: return "W PRESET  B BLOCK  OCT INSTR";
     case PG_REC:
         if (ui_auto_on)
             return "REC AGAIN = THE LOOP ENDS HERE";
@@ -2001,10 +2007,60 @@ static void draw_tracks(void)
     }
 }
 
+/* SOUNDS (HOME + PRESET): the blocks as tabs (an empty one dashed), the shown block's presets in a grid as the white keys
+ * 1-12, the one on the track lit */
+static void draw_sounds(void)
+{
+    static const char *const SH[DK_NBLK + 1] = {"AMB", "8BIT", "SYN", "CINE", "USER"};
+    dk_preset_t tmp;
+    int e = cur()->eng, sh = pb_shown(), place = pb_place(), b, i, n;
+    module(cur_eng()->name, track_label(dk_song.cur_track));
+    for (b = 0; b <= DK_NBLK; b++) {         /* the tabs: black 1-5 */
+        int x = WX + 4 + b * 44, y = WY + 4, w = 41, has = pb_count(e, b) > 0;
+        if (b == sh) {
+            cv_rect(x, y, w, 13, TH_ENC[1]);
+            text_box(x, y + 1, w, 1, &FONT_XS, &FONT_XS, SH[b], W_INK);
+        } else if (has) {
+            hline(x, y, w, W_GRAY);
+            hline(x, y + 12, w, W_GRAY);
+            vline(x, y, 13, W_GRAY);
+            vline(x + w - 1, y, 13, W_GRAY);
+            text_box(x, y + 1, w, 1, &FONT_XS, &FONT_XS, SH[b], W_GRAY);
+        } else {
+            for (i = 0; i < w; i += 4)
+                hline(x + i, y + 12, 2, W_LINE);
+            text_box(x, y + 1, w, 1, &FONT_XS, &FONT_XS, SH[b], W_LINE);
+        }
+    }
+    n = pb_count(e, sh);
+    for (i = 0; i < DK_NFACT; i++) {         /* the presets: white 1-12, three columns */
+        int x = WX + 4 + (i % 3) * 74, y = WY + 21 + (i / 3) * 19, w = 71, id;
+        char num[4];
+        if (i >= n) {
+            hline(x, y + 16, w, W_LINE);
+            continue;
+        }
+        id = sh >= DK_NBLK ? pb_user_id(e, i) : preset_id(sh, i);
+        num[0] = (char)(i < 9 ? '1' + i : '1');
+        num[1] = (char)(i < 9 ? 0 : '0' + i - 9);
+        num[2] = 0;
+        if (i == place && sh == pb_shown() && id == cur()->preset) {
+            cv_rect(x, y, w, 17, TH_ENC[2]);
+            text_box(x + 2, y + 2, 12, 0, &FONT_XS, &FONT_XS, num, W_INK);
+            text_box(x + 16, y + 2, w - 18, 0, &FONT_XS, &FONT_XS, preset_of(e, id, &tmp)->name, W_INK);
+        } else {
+            hline(x, y + 16, w, W_LINE);
+            text_box(x + 2, y + 2, 12, 0, &FONT_XS, &FONT_XS, num, W_GRAY);
+            text_box(x + 16, y + 2, w - 18, 0, &FONT_XS, &FONT_XS, preset_of(e, id, &tmp)->name, TH_TEXT);
+        }
+    }
+}
+
 /* -------------------------------------------------------------------- frame --- */
 static void draw_body(void)
 {
     fg_live = (uint8_t)(dk_playing && (ui.page == PG_SOUND || ui.page == PG_MIX));   /* a curve's value on the knobs */
+    fit_cut_ok = ui.page == PG_SOUNDS;
     switch (ui.page) {
     case PG_SEQ: draw_seq(); break;
     case PG_SOUND: draw_sound(); break;
@@ -2022,11 +2078,13 @@ static void draw_body(void)
         break;
     case PG_ATMO: draw_atmo(); break;
     case PG_TRACKS: draw_tracks(); break;
+    case PG_SOUNDS: draw_sounds(); break;
     default: break;
     }
     if (ui.page != PG_PLAY && ui.page != PG_REC && ui.page != PG_TRACKS)
         knob_row(KNOB_Y);                    /* the module's four knobs, on its plate */
     fg_live = 0;
+    fit_cut_ok = 0;
 }
 
 /* over the PLAY page's art, before each of its bands goes out: the message (in the band's rows y0 .. y0+h) */
