@@ -1080,7 +1080,7 @@ static const char *field_label(int f)
     case F_CLICK: return "CLICK";
     case F_MDIV: return "M DIV";
     case F_MVOL: return "M VOL";
-    case F_ONNOTE: return "ON NOTE";
+    case F_ONNOTE: return "START";
     case F_LOCKTAKE: return "LOCK TAKE";
     case F_RECARM: return "REC ARM";
     case F_RECMODE: return "REC MODE";
@@ -1316,13 +1316,13 @@ static void field_text(int f, char *b)
     case F_SPLIT:
     case F_BASS:
     case F_DIM:
-    case F_ONNOTE:
     case F_LOCKTAKE:
     case F_RECARM:
     case F_MIDIOUT:
     case F_CLOCK:
     case F_MIDIIN: cpy(b, ONOFF[v & 1]); break;
     case F_NEWPART: cpy(b, v ? "COPY" : "EMPTY"); break;
+    case F_ONNOTE: cpy(b, v ? "1ST NOTE" : "COUNT IN"); break;
     case F_RECMODE: cpy(b, v ? "REPLACE" : "OVERDUB"); break;
     default: itoa_b(v, b); break;
     }

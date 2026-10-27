@@ -194,7 +194,7 @@ static void text2x(int x, int y, const char *s, uint16_t c)
 static int seq_edit_row(void);
 static int page_rows(int p)
 {
-    static const uint8_t ROWS[NPG] = {1, 2, 5, 1, 1, 4, 1, 1, 2, 5, 2, 1};
+    static const uint8_t ROWS[NPG] = {1, 2, 5, 1, 1, 4, 1, 1, 2, 7, 2, 1};   /* (GLOBAL: its 5, then ATMO's 2) */
     if (p == PG_SEQ && ((cur_eng()->flags & EF_DRUM) || cur()->seq == SQ_STEP || cur()->seq == SQ_LIVE))
         return 3;                            /* drums: the sequencer, its sounds (KIT), the sequencer's settings;
                                               * STEP and LIVE: their own, the settings, the step editor */
@@ -232,7 +232,7 @@ static int page_field(int i, int home)
     case PG_ARP: {                           /* the arpeggiator's own page */
         static const uint8_t F[2][5] = {{F_ARPMODE, F_ARPDIV, F_ARPGATE, F_ARPON, F_ARPRHY},   /* K1-K4: MODE RATE GATE ARP (on/off: the page switches it) */
                                         {F_ARPOCT, F_ARPLATCH, F_ARPSRC, F_NONE, F_NONE}};
-        return F[row & 1][i];
+        return F[(ui.page == PG_GLOB ? row - 5 : row) & 1][i];
     }
     case PG_SOUND: {
         int fav[4], more[5], drum = (e->flags & EF_DRUM) != 0;
@@ -310,14 +310,17 @@ static int page_field(int i, int home)
         }
     case PG_KEYS: return KEYS_F[row & 3][i];
     case PG_PROJECT: return PROJ_F[0][i];
-    case PG_GLOB: return GLOB_F[row % 5][i];
+    case PG_GLOB:
+        if (row < 5)
+            return GLOB_F[row][i];
+        /* fall through */ /* GLOBAL's rows 6, 7 are ATMO's */
     case PG_ATMO: {                          /* ATMO (SEL): the place's layers, then the noise and the tape */
         static const uint8_t F[2][5] = {{F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ALVL},
                                         {F_ATMO4, F_ATMO5, F_DUST, F_ATAPE, F_ALVL}};
         return F[row & 1][i];
     }
     case PG_REC: {
-        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECMODE, F_METRO, F_RECARM};   /* BARS first: how long a take */
+        static const uint8_t F[5] = {F_RECBARS, F_QNT, F_RECMODE, F_METRO, F_ONNOTE};   /* BARS first: how long a take; ALGO how it starts */
         return F[i];
     }
     default: return F_NONE;
@@ -348,7 +351,7 @@ static const char *hint(void)
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "W1-8 ADD  W9 COPY  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "EDIT = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
-    case PG_GLOB: return "GLO = NEXT ROW  HOLD GLO = FILL";
+    case PG_GLOB: return ui.row[PG_GLOB] % 7 >= 5 ? "ATMO  GLO = NEXT ROW" : "GLO = NEXT ROW  HOLD GLO = FILL";
     case PG_ATMO: return "SEL = NEXT ROW  KNOBS = HOW MUCH";
     case PG_REC:
         if (ui_auto_on)
@@ -476,12 +479,12 @@ no_batt:
 static const char *hold_hint(uint32_t now)
 {
     static const char *const H[NB] = {
-        "FX: SOUND  +W1-4 BYPASS", "SEL: ATMO  HOME+SEL = PREV BANK",
-        "ENV: ROAD  HOLD = GARAGE", "LFO: MIX  +SOUND KNOB = MOD 1",
+        "FX: SOUND  +W1-4 BYPASS", "SEL: TAPE  AGAIN = TRACKS",
+        "ENV: ROAD  REC ON: NEXT PART", "LFO: MIX  +SOUND KNOB = MOD 1",
         "EDIT: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
         0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
         "ARP: PAGE  K4 ON/OFF  +WHITE PART", 0,
-        "PLAY/STOP  HOLD PART/SONG", "REC: HOLD = ERASE TAKE  +KNOB = AUTO",
+        "PLAY/STOP  HOLD PART/SONG", "REC +OCT UNDO  +W1-6 LAYER",
         "OCT-: OCTAVE  HOME+ SCALE STEP", "OCT+: OCTAVE  HOME+ SCALE STEP"};
     int b, best = -1;
     for (b = 0; b < NB; b++)
@@ -728,6 +731,12 @@ static void module(const char *left, const char *right)
         text_box(116, 41, 110, 2, &FONT_T, &FONT_T, right, W_INK);
     cv_rect(WX, WY, WW, WH, W_BG);
     hline(WX, WY, WW, RGB(14, 12, 10));      /* the window set into the plate: a shadow on top */
+    {                                        /* the page's rows: a dot each on the plate's right edge, the one you are on dark */
+        int n = page_rows(ui.page), r = ui.row[ui.page] % (n ? n : 1), k;
+        if (n > 1)
+            for (k = 0; k < n; k++)
+                cv_rect(235, WY + 4 + k * 7, 3, 4, k == r ? W_INK : RGB(150, 132, 104));
+    }
 }
 
 /* the sound's chain, in the order the audio takes it: the insert effect, the echo, the reverb, the tape (the whole song's) */
@@ -1576,7 +1585,7 @@ static void atmo_icon(int kind, int cx, int cy, int on, uint32_t now)
 static void draw_atmo(void)
 {
     static const uint8_t FLD[8] = {F_ATMO0, F_ATMO1, F_ATMO2, F_ATMO3, F_ATMO4, F_ATMO5, F_DUST, F_ATAPE};
-    int i, row = ui.row[PG_ATMO] & 1;
+    int i, row = (ui.page == PG_GLOB ? ui.row[PG_GLOB] - 5 : ui.row[PG_ATMO]) & 1;
     uint32_t now = plat_ms();
     module("ATMO", row ? "5-6  DUST  TAPE" : "LAYERS 1-4");
     for (i = 0; i < 8; i++) {
@@ -1635,6 +1644,7 @@ static void draw_global(void)
 }
 
 /* ------------------------------------------------------------- REC: the tape --- */
+static int lay_clip(void);
 static void draw_tape(void)
 {
     char s[24];
@@ -1712,6 +1722,21 @@ static void draw_tape(void)
             flash = now + 120u;
         }
         cv_rect(110, 126, 20, 12, now < flash ? RGB(255, 140, 120) : dk_recording ? TH_REC : CS_BODY_D);
+    }
+    {                                         /* the track's layers (takes), 1-6 as the white keys REC + white mutes them */
+        uint8_t tk[40], sd[40];
+        uint16_t cn[40];
+        int clip = lay_clip(), n = layers_list(clip, tk, sd, cn, 40), k;
+        for (k = 0; k < n && k < 6; k++) {
+            int x = 24 + k * 14, y = 128, off = layer_muted(clip, tk[k]);
+            char ln[2] = {(char)('1' + k), 0};
+            cv_rect(x, y, 12, 10, off ? CS_BODY_D : TH_TRACK[dk_song.cur_track]);
+            text_box(x, y + 1, 12, 1, &FONT_XS, &FONT_XS, ln, off ? CS_BODY : TH_BG);
+            if (off)
+                hline(x + 1, y + 5, 10, CS_BODY);
+        }
+        if (n > 6)
+            text_box(100, 128, 10, 0, &FONT_XS, &FONT_XS, "+", CS_INK);
     }
     /* the six tracks as tapes under it: the current part's notes, this pass's red, the one recording lit */
     for (t = 0; t < DK_NTRACK; t++) {
@@ -1981,7 +2006,12 @@ static void draw_body(void)
     case PG_PROJECT: draw_project(); break;
     case PG_REC: draw_tape(); break;
     case PG_ARP: draw_seq(); break;
-    case PG_GLOB: draw_global(); break;
+    case PG_GLOB:
+        if (ui.row[PG_GLOB] % 7 >= 5)        /* GLOBAL's last two rows: ATMO (the place's layers, the dust, the tape) */
+            draw_atmo();
+        else
+            draw_global();
+        break;
     case PG_ATMO: draw_atmo(); break;
     case PG_TRACKS: draw_tracks(); break;
     default: break;

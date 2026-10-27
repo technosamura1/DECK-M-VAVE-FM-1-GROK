@@ -19,6 +19,9 @@ void app_init(void)
 {
     dk_init();
     settings_load();
+#ifdef PLAT_HOST
+    dk_metro.on_note = 0;                /* (the scenarios are written with the count-in; the device starts ON NOTE) */
+#endif
     user_load();
     if (project_load(set.proj) != 0) {   /* nothing saved yet: the tape's demo, to play at once */
         dk_lock();

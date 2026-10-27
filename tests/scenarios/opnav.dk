@@ -1,0 +1,118 @@
+# OP-1 style controls (op1-core): a button opens its page's first screen; SEL = the TAPE, again TRACKS; GLOBAL's last rows
+# are ATMO; REC + OCT- / OCT+ undo / redo the take; REC + white N mutes layer N; ENV while recording = on into the next
+# empty part (a copy), the take goes on; START 1ST NOTE: REC stopped, the first note starts the take
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+tap HOME
+# rows: SEQ again = its next row; from another page it opens on its first
+tap SEQ
+tap SEQ
+expect rowof 1
+tap FX
+tap SEQ
+expect rowof 0
+# GLOBAL: rows 6 and 7 are ATMO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+expect rowof 5
+wait 100
+expect textfit 0
+shot glob_atmo.png
+# SEL: the tape; again: TRACKS; again: the tape
+tap SEL
+expect page 7
+tap SEL
+expect page 11
+tap SEL
+expect page 7
+# two takes on the piano (count-in), the second one undone with REC + OCT-, back with REC + OCT+
+qnt 0
+press HOME
+tapkey b0
+release HOME
+tap REC
+wait 4000
+key w0 down 100
+wait 300
+key w0 up
+wait 3000
+tap REC
+wait 300
+expect nlay 1
+tap REC
+wait 500
+key w2 down 100
+wait 300
+key w2 up
+wait 3500
+tap REC
+wait 300
+expect nlay 2
+tap PLAY
+wait 200
+press REC
+tap OCT-
+release REC
+wait 100
+expect nlay 1
+expect recording 0
+press REC
+tap OCT+
+release REC
+wait 100
+expect nlay 2
+expect recording 0
+# REC held + white 2: layer 2 muted, again: on
+press REC
+tapkey w1
+release REC
+wait 50
+expect lmute >0
+expect recording 0
+wait 50
+wait 1600
+shot tape_layers.png
+press REC
+tapkey w1
+release REC
+wait 50
+expect lmute 0
+# ENV while recording: on into B (a copy of A), the take goes on
+tap PLAY
+wait 200
+tap REC
+wait 300
+expect recording 1
+wait 1000
+tap ENV
+wait 200
+expect part 1
+expect recording 1
+tap REC
+wait 300
+tap PLAY
+wait 200
+# START 1ST NOTE: REC stopped waits for a note, the note starts it
+onnote 1
+press HOME
+tapkey b1
+release HOME
+tap REC
+wait 500
+expect recording 0
+key w0 down 100
+wait 300
+expect recording 1
+key w0 up
+wait 1000
+tap REC
+wait 300
+tap PLAY
+expect textfit 0

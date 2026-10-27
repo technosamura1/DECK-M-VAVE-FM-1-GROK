@@ -150,9 +150,11 @@ static void page_go(int p)
             ui.touched = -1;
             say("SOUND", TAB[ui.row[p] % 5]);
         }
-    } else {
+    } else {                             /* from another page: its own first screen (as OP-1's modes; no row left hidden) */
         if (p != PG_REC)
             ui.prev = (uint8_t)p;
+        if (p != PG_SEQ || !seq_edit_row())
+            ui.row[p] = 0;
         ui.page = (uint8_t)p;
     }
     ui.garage = 0;
@@ -805,7 +807,20 @@ static void action(int a, int b)
         }
         page_go(PG_SEQ);
         break;
-    case A_PAGE_ROAD: page_go(PG_ROAD); break;
+    case A_PAGE_ROAD:
+        if (dk_recording && dk_playing && !dk_song.play_mode) {   /* recording: on to the next empty part (a copy of this one) */
+            int i, p = -1;
+            for (i = 1; i < DK_NPART && p < 0; i++)
+                if (!part_has_events((dk_cur_part + i) & 7))
+                    p = (dk_cur_part + i) & 7;
+            if (p < 0)
+                say("PARTS", "ALL HAVE NOTES");
+            else
+                part_branch(p);
+            break;
+        }
+        page_go(PG_ROAD);
+        break;
     case A_PAGE_MIX: page_go(PG_MIX); break;
     case A_PAGE_KEYS:
         if (ui.page == PG_TRACKS) {          /* TRACKS: EDIT opens the EDIT list of the selected track's clip (again: the rows; from LAYERS: back) */
@@ -836,7 +851,12 @@ static void action(int a, int b)
         ui_slot_sel = -1;
         break;
     case A_PAGE_GLOBAL: page_go(PG_GLOB); break;
-    case A_PAGE_ATMO: page_go(PG_ATMO); break;
+    case A_PAGE_ATMO:                    /* SEL: the TAPE (as OP-1's tape mode); again: TRACKS (the six rows); again: the tape */
+        if (ui.page == PG_REC)
+            page_go(PG_TRACKS);
+        else
+            page_go(PG_REC);
+        break;
     case A_PAGE_PLAY:                    /* HOME: PLAY; on PLAY: TRACKS; on TRACKS: back (to REC while it records) */
         if (ui.page == PG_PLAY || (ui.page == PG_REC && (dk_recording || dk_counting)))
             page_go(PG_TRACKS);
@@ -1183,6 +1203,20 @@ static void key_down(int k, int vel)
             dk_song.rsv[dk_song.cur_track] ^= (uint8_t)(1u << w);
         mark_dirty();
         say(nm, was ? "ON" : "BYPASSED");
+        return;
+    }
+    if (held(B_REC) && w >= 0 && w < 6) {   /* REC held + white 1-6: that layer of the track's clip muted / on again */
+        uint8_t tk[40], sd[40];
+        uint16_t cn[40];
+        int clip = lay_clip(), n = layers_list(clip, tk, sd, cn, 40);
+        char st[8] = "L1";
+        st[1] = (char)('1' + w);
+        if (w >= n) {
+            say(st, "NO SUCH LAYER");
+            return;
+        }
+        layer_mute_toggle(clip, tk[w]);
+        say(st, layer_muted(clip, tk[w]) ? "MUTED" : "ON");
         return;
     }
     if (held(B_HOME)) {                  /* HOME + white: the preset; HOME + black 1-6: the track */
@@ -1917,7 +1951,11 @@ static void input(void)
             ui.combo &= (uint16_t)~(1u << k);
             ui.held_done[k] = 0;
             ui.btn |= bit;
-            if (k != B_HOME && (btn >> B_HOME & 1u) && m->home != A_NONE) {
+            if ((k == B_OCTDN || k == B_OCTUP) && (btn >> B_REC & 1u)) {   /* REC + OCT-: the last take undone; OCT+: back */
+                ui.used[B_REC] = 1;
+                ui.used[k] = 1;
+                action(k == B_OCTDN ? A_UNDO : A_REDO, 1);
+            } else if (k != B_HOME && (btn >> B_HOME & 1u) && m->home != A_NONE) {
                 ui.used[B_HOME] = 1;
                 ui.used[k] = 1;
                 action(m->home, 1);

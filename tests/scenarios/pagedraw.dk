@@ -29,7 +29,7 @@ snap 0
 wait 500
 snap 1
 expect_snap
-# any page to any page: SEQ, SOUND, MIX, ROAD, KEYS, SAVE, REC, ARP, GLOBAL, ATMO, TRACKS, the garden
+# any page to any page: SEQ, SOUND, MIX, ROAD, KEYS, SAVE, REC, ARP, GLOBAL, the TAPE (SEL; its reels move), the garden
 tap SEQ
 wait 40
 snap 0
@@ -65,8 +65,8 @@ wait 40
 snap 0
 wait 500
 snap 1
-expect_snap 0 100
-expect_snap 140 240
+expect page 7
+expect_snap 0 28
 tap HOME
 wait 40
 snap 0

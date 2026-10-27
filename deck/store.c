@@ -305,7 +305,7 @@ void settings_save(void)
     set.metro[2] = dk_metro.sound;
     set.metro[3] = dk_metro.div;
     set.metro[4] = dk_metro.vol;
-    set.metro[5] = dk_metro.on_note;
+    set.metro[5] = dk_metro.on_note ? 1 : 2;   /* (2 = COUNT IN; 0, as in any older store, is ON NOTE now: the default) */
     set.midi_notes = dk_midi_notes;
     set.midi_clock = dk_midi_clock;
     set.lat = (uint8_t)(dk_rec_lat + 1u);
@@ -351,7 +351,7 @@ static void settings_load(void)
     dk_metro.sound = set.metro[2] % METRO_N;
     dk_metro.div = set.metro[3] % 3;
     dk_metro.vol = set.metro[4] > 100 ? 100 : set.metro[4];
-    dk_metro.on_note = set.metro[5] ? 1 : 0;
+    dk_metro.on_note = set.metro[5] != 2;   /* REC stopped: the take starts with the first note, as on OP-1 */
     dk_midi_notes = set.midi_notes;
     dk_midi_clock = set.midi_clock;
     dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
