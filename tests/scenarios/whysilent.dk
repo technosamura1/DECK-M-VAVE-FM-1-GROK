@@ -36,3 +36,56 @@ wait 400
 expect why 5
 key w0 up
 tap PLAY
+wait 300
+turn K1 100 10
+wait 100
+# a ROAD block drops KEYS: SONG plays it silent (said), a take (REC) plays the part plain: heard
+tap SAVE
+wait 100
+tapkey w4
+wait 300
+tap HOME
+wait 100
+turn SELECT -1
+wait 100
+expect track 1
+tap ENV
+wait 100
+tapkey w0
+wait 100
+expect nroad 2
+turn K1 -10
+wait 100
+tapkey b6
+wait 100
+expect rdrop0 2
+expect rdrop1 0
+expect playmode 0
+press PLAY
+wait 1000
+release PLAY
+wait 100
+expect playmode 1
+tap PLAY
+wait 200
+turn K1 -10
+wait 100
+tap PLAY
+wait 200
+expect playing 1
+tap HOME
+wait 100
+expect page 0
+wait 300
+key w0 down 100
+wait 400
+expect why 4
+key w0 up
+wait 300
+tap REC
+wait 300
+key w0 down 100
+wait 400
+expect tlevel2 >2
+key w0 up
+tap PLAY

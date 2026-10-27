@@ -1508,6 +1508,8 @@ static void drain(void)
             if (a) {
                 int t = c.d & 7, bake = (c.d >> 8) & 31;
                 rec_loop = 1;                  /* (the take's part goes round, SONG or not) */
+                drop_mask = 0;                 /* (and plain: a ROAD block's DROP and tricks do not silence what is recorded) */
+                tricks = 0;
                 int t2 = c.d >> 16 & 0xFF, m = c.d >> 24 & 0x3F, i, lay = 0;
                 if (t >= DK_NTRACK)
                     t = 0;

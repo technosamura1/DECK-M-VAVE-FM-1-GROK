@@ -1625,7 +1625,14 @@ static void key_down(int k, int vel)
             } else if (b == 6) {
                 undo_push_road();
                 dk_song.road[ui_road_cur].drop ^= (uint8_t)(1u << dk_song.cur_track);
-                say("DROP", track_label(dk_song.cur_track));
+                {
+                    char d[24] = "DROP ", *q = d + 5;
+                    const char *l = track_label(dk_song.cur_track);
+                    while (*l && q < d + 22)
+                        *q++ = *l++;
+                    *q = 0;
+                    say(d, dk_song.road[ui_road_cur].drop >> dk_song.cur_track & 1u ? "ON: SILENT IN THIS BLOCK" : "OFF");
+                }
             } else if (b == 7) {
                 road_delete(0);
                 say("BLOCK", "DELETED");

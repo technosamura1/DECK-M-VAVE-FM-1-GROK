@@ -805,3 +805,6 @@ SELECT во время записи добавлял дорожку в маск�
   причина (`dk_silent_why` в core.c): MUTED IN PART / OTHER TRACK SOLO / DROPPED ON ROAD / VOLUME AT 0 / AUTOMATION: VOL 0 / TREMOLO /
   DRUMS MUTED; иначе «NO VOICE n/24» (голос не стартовал) или «Vn FXn VOLn» (голоса есть, звука нет: эффект/движок). `why_tick` в ui.c,
   host `expect why` (причина + 1; 9 нет голоса, 10 сам звук). Тест `whysilent.dk`.
+- Нашлось на железе: «DROPPED ON ROAD» — у блока ROAD стоял DROP на KEYS (ROAD, чёрная 7 по выбранной дорожке), а играли в SONG.
+  Запись (`C_REC`, `rec_loop`) теперь гасит `drop_mask` и трюки: часть пишется и звучит чистой (раньше DROP блока, в котором нажали REC,
+  глушил записываемую дорожку до STOP). Тост DROP: «DROP KEYS / ON: SILENT IN THIS BLOCK» или «OFF». Тест `whysilent.dk` (host `rdropN`).
