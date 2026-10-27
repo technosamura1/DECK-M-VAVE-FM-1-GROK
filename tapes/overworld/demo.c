@@ -174,10 +174,10 @@ static void tape_demo(void)
     dk_song.play_mode = 1;
     dk_track_setup(DT_DRUMS, 5, 4, SQ_STEP, R_DRUM);
     dk_track_setup(DT_BASS, 4, 1, SQ_STEP, R_BASS);
-    dk_track_setup(DT_PIANO, 0, 1, SQ_LIVE, R_KEYS);
-    dk_track_setup(DT_PAD, 2, 0, SQ_LIVE, R_PAD);
-    dk_track_setup(DT_BELLS, 3, 0, SQ_LIVE, R_ARP);    /* the KEYS track: GLASS (bells) */
-    dk_track_setup(DT_NATURE, 6, 6, SQ_LIVE, R_NATURE);
+    dk_track_setup(DT_PIANO, 0, 1, SQ_STEP, R_KEYS);
+    dk_track_setup(DT_PAD, 2, 0, SQ_STEP, R_PAD);
+    dk_track_setup(DT_BELLS, 3, 0, SQ_STEP, R_ARP);    /* the KEYS track: GLASS (bells) */
+    dk_track_setup(DT_NATURE, 6, 6, SQ_STEP, R_NATURE);
     dk_song.trk[DT_DRUMS].vol = 62;
     dk_song.trk[DT_BASS].vol = 70;
     dk_song.trk[DT_PIANO].vol = 82;

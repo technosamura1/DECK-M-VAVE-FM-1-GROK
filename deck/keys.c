@@ -205,20 +205,6 @@ void keys_down(int k, int vel)
     int harm = dk_song.split ? dk_song.harm_track : t;
     kh[k].trk = -1;
     kh[k].n = 0;
-    if (trk->seq == SQ_FINGER) {                /* FINGER: patterns on the white keys, variations on the black */
-        if (w >= 0) {
-            dk_cmd(C_FINGER, t, trk->arp[3] ? 2 : 1, w);
-            kh[k].kind = 2;
-            kh[k].notes[0] = (uint8_t)w;
-            kh[k].trk = (int8_t)t;
-        } else if (b < 6) {
-            dk_cmd(C_FVAR, t, 1, b);
-            kh[k].kind = 3;
-            kh[k].notes[0] = (uint8_t)b;
-            kh[k].trk = (int8_t)t;
-        }
-        return;
-    }
     if (e->flags & EF_DRUM) {
         nt[0] = key_note_of(k, t);
         notes_post(k, t, nt, 1, vel, 0);
@@ -266,11 +252,6 @@ void keys_up(int k)
         else
             dk_cmd(C_PERFORM, kh[k].notes[0], 0, 0);
         break;
-    case 2:
-        if (!dk_song.trk[kh[k].trk].arp[3])
-            dk_cmd(C_FINGER, kh[k].trk, 0, kh[k].notes[0]);
-        break;
-    case 3: dk_cmd(C_FVAR, kh[k].trk, 0, kh[k].notes[0]); break;
     default:
         for (i = 0; i < kh[k].n; i++)
             dk_note(kh[k].trk, kh[k].notes[i], 0, 0);

@@ -371,31 +371,6 @@ static void balance(void)
     }
 }
 
-static void drive_all(int mood, int style, double secs, const char *out)
-{
-    int t;
-    fresh();
-    dk_lock();
-    song_mood(mood);
-    if (style >= 0)
-        dk_song.style = (uint8_t)style;
-    for (t = 0; t < DK_NTRACK; t++) {
-        dk_song.trk[t].seq = SQ_DRIVE;
-        dk_song.trk[t].drv[0] = 55;
-        dk_song.trk[t].drv[1] = dk_song.style;
-        dk_song.trk[t].drv[2] = 50;
-    }
-    dk_unlock();
-    dk_cmd(C_SEED, 0, 0, 1234 + mood * 7 + style);
-    dk_cmd(C_RETUNE, 0, 0, 0);
-    run(0.1);
-    reset_out();
-    dk_cmd(C_PLAY, 1, 0, 0);
-    run(secs);
-    dk_cmd(C_PLAY, 0, 0, 0);
-    tail(12.0);
-    wav(out);
-}
 
 static void chords(const char *out)
 {
@@ -494,53 +469,6 @@ static void phrase(int inst, const char *out)
 
 /* FINGER's banks: every pattern of every bank (a drum, a bass, a pad, a melody track) held for two bars on the default
  * engines, one WAV each in <dir>/<BANK>_<ROLE>/pNN.wav; sound_check.py --nolevel checks them. Silence fails the run. */
-static int fingerbank(const char *dir)
-{
-    static const struct { int t; const char *tag; } TR[4] = {{4, "DRUM_DUSTKIT"}, {3, "BASS"}, {2, "PAD"}, {0, "MEL"}};
-    int b, k, p, bad = 0, n = 0;
-    char cmd[256], fn[320];
-    for (b = 0; b < DK_NFBANK; b++)
-        for (k = 0; k < 4; k++) {
-            int t = TR[k].t;
-            snprintf(fn, sizeof fn, "%s/%s_%s", dir, dk_fb_bankname(b), TR[k].tag);
-            snprintf(cmd, sizeof cmd, "mkdir -p '%s'", fn);
-            if (system(cmd))
-                return 2;
-            for (p = 0; p < 16; p++) {
-                double bar;
-                int v, vmax;
-                fresh();
-                dk_lock();
-                dk_song.trk[t].seq = SQ_FINGER;
-                dk_song.fbank[t] = (uint8_t)b;
-                dk_song.dust = 0;
-                dk_unlock();
-                bar = 4.0 * 60.0 / (dk_song.tempo > 0 ? dk_song.tempo : 100);
-                run(0.05);
-                reset_out();
-                dk_cmd(C_FINGER, t, 1, p);
-                for (vmax = 0, v = 0; v < 20; v++) {       /* two bars, the busiest moment's voices counted */
-                    run(0.1 * bar);
-                    vmax = (int)dk_voices_on > vmax ? (int)dk_voices_on : vmax;
-                }
-                dk_cmd(C_FINGER, t, 0, p);
-                tail(8.0);
-                snprintf(fn, sizeof fn, "%s/%s_%s/p%02d.wav", dir, dk_fb_bankname(b), TR[k].tag, p + 1);
-                wav(fn);
-                n++;
-                if (vmax >= DK_NVOICE) {
-                    printf("VOICES FULL %s\n", fn);
-                    bad++;
-                }
-                if (peak < 200) {
-                    printf("SILENT %s (peak %d)\n", fn, peak);
-                    bad++;
-                }
-            }
-        }
-    printf("fingerbank: %d patterns rendered, %d silent\n", n, bad);
-    return bad ? 1 : 0;
-}
 
 /* ATMO to listen to: the demo's chorus three times: dry; with RAIN and the FIRE under it; with the TAPE as well */
 static void atmo_demo(const char *out)
@@ -1056,13 +984,7 @@ int main(int argc, char **argv)
         kitvoices(argc > 2 ? argv[2] : "out/kits");
     else if (!strcmp(m, "demo"))
         demo(argc > 2 ? argv[2] : "out/demo.wav");
-    else if (!strcmp(m, "drive") && argc > 4) {
-        int st = atoi(argv[2]), mood = st == 0 ? 0 : st == 1 ? 7 : st == 2 ? 3 : 6;
-        drive_all(mood, st, atof(argv[3]), argv[4]);
-        report(TAPE.style_name[st]);
-    } else if (!strcmp(m, "mood") && argc > 4) {
-        drive_all(atoi(argv[2]), -1, atof(argv[3]), argv[4]);
-        report(TAPE.moods[atoi(argv[2]) % TAPE.nmood].name);
+    else if (0) {
     } else if (!strcmp(m, "chords"))
         chords(argc > 2 ? argv[2] : "out/chords.wav");
     else if (!strcmp(m, "phrase") && argc > 3)
@@ -1071,8 +993,6 @@ int main(int argc, char **argv)
         balance();
     else if (!strcmp(m, "atmo"))
         atmo_demo(argc > 2 ? argv[2] : "out/atmo.wav");
-    else if (!strcmp(m, "fingerbank"))
-        return fingerbank(argc > 2 ? argv[2] : "out/fingerbanks");
     else if (!strcmp(m, "bypass"))
         return bypass_test();
     else if (!strcmp(m, "automation"))
@@ -1092,7 +1012,7 @@ int main(int argc, char **argv)
     else if (!strcmp(m, "stress24"))
         return stress24();
     else {
-        fprintf(stderr, "deck_test sounds|demo|drive|mood|chords|phrase|fingerbank|bench|metro\n");
+        fprintf(stderr, "deck_test sounds|demo|chords|phrase|bench|metro\n");
         return 2;
     }
     return 0;

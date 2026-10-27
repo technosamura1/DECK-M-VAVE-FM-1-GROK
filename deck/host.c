@@ -208,7 +208,10 @@ int app_expect(const char *what, int *got)
     }
     else if (!strncmp(what, "clen", 4) && what[4] >= 'A' && what[4] <= 'H' && what[5] >= '1')
         g = dk_song.clip[(what[4] - 'A') * DK_NTRACK + (what[5] - '1') % DK_NTRACK].len;
-    else if (!strcmp(what, "fbank")) g = dk_fb_bank(dk_song.cur_track);        /* FINGER's bank of the track */
+    else if (!strcmp(what, "endlsteps")) g = dk_song.clip[cur_clip()].len / DK_T16;   /* ENDLESS: the steps played in */
+    else if (!strcmp(what, "endltr")) g = dk_endl_tr[dk_song.cur_track];       /* ENDLESS: the transposition now */
+    else if (!strcmp(what, "endlstep")) g = dk_endl_step[dk_song.cur_track];   /* ENDLESS: the step playing */
+    else if (!strcmp(what, "endlon")) g = ui.endl_on;
     else if (!strncmp(what, "fbank", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.fbank[what[5] - '0'];   /* the song's byte, raw */
     else if (!strcmp(what, "preset")) g = cur()->preset;
     else if (!strcmp(what, "eng")) g = cur()->eng;
@@ -336,6 +339,16 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     (void)d;
     if (!strcmp(cmd, "mark")) {
         host_mark = host_clip_hash();
+        return 1;
+    }
+    if (!strcmp(cmd, "dumpclip")) {             /* dumpclip: the current clip's notes (pos dur note vel layer), to the log */
+        const dk_clip_t *cl = &dk_song.clip[cur_clip()];
+        int i;
+        printf("clip %d: n %d len %d\n", cur_clip(), cl->n, clip_len(cur_clip()));
+        for (i = 0; i < cl->n; i++) {
+            const dk_ev_t *e = &dk_ev[cl->at + i];
+            printf("  %5d %5d %3d %3d %3d%s\n", e->pos, e->dur, e->note, e->vel, e->layer, (e->fl & EV_MOTION) ? " M" : "");
+        }
         return 1;
     }
     if (!strcmp(cmd, "budget")) {               /* budget N: the voice budget held at N (0: the load moves it again) */
@@ -494,7 +507,7 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             if (dk_song.lmute[i])
                 host_oldck |= 64;
         for (i = 0; i < DK_NTRACK; i++)
-            if (dk_song.trk[i].seq != SQ_LIVE && sv[i] == SQ_LIVE)
+            if (dk_song.trk[i].seq != SQ_STEP && (sv[i] == SQ_LIVE || sv[i] == SQ_STEP))   /* (LIVE loads as SEQ now) */
                 host_oldck |= 128;
         return 1;
     }

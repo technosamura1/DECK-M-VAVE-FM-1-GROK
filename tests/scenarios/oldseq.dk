@@ -1,4 +1,4 @@
-# the old sequencers fold away on load: TOMBOLA (7, the reserved value now), ENDLESS (2) and HOLD (6) become LIVE (1)
+# the old sequencers fold away on load: LIVE (1), DREAM (4), FINGER (5), HOLD (6), TOMBOLA (7) become SEQ (0); ENDLESS (2) stays
 wait 300
 tap SAVE
 wait 100
@@ -10,13 +10,14 @@ tapkey b0
 release HOME
 wait 50
 reseq 1 7
-expect seq 1
-reseq 1 2
-expect seq 1
+expect seq 0
+reseq 1 1
+expect seq 0
 reseq 1 6
-expect seq 1
-# the sequencers in use stay: DREAM (4) and FINGER (5)
+expect seq 0
 reseq 1 4
-expect seq 4
+expect seq 0
 reseq 1 5
-expect seq 5
+expect seq 0
+reseq 1 2
+expect seq 2

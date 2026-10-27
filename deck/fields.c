@@ -10,7 +10,7 @@ enum {
     /* SOUND */ F_P0, F_P1, F_P2, F_P3, F_P4, F_P5, F_ATT, F_DEC, F_REL, F_FXTYPE, F_FXAMT, F_FXA, F_FXB, F_MODTYPE, F_MODDEPTH, F_MODRATE,
     F_MODTGT, F_MODSLOT,
     /* SEQ */ F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE, F_CURSOR, F_SLEN, F_CLIPLEN, F_QNT, F_TSWING,
-    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_ENERGY, F_STYLE, F_VAR, F_FLATCH, F_FBANK,
+    F_ARPMODE, F_ARPDIV, F_ARPOCT, F_ARPLATCH, F_ARPON, F_ARPRHY, F_ARPGATE, F_ARPSRC, F_EDIR, F_STYLE, F_EGATE, F_FLATCH, F_ERATE,
     F_SEQTYPE, F_OCT, F_DRIFT, F_MIDICH, F_ROLE,
     /* MIX */ F_VOL, F_PAN, F_REV, F_ECHO, F_SIDECHAIN, F_SPACE, F_DUST, F_SLEEP,
     /* ROAD */ F_ROADCUR, F_ROADPART, F_ROADREPS, F_GPART, F_GLABEL, F_GBARS, F_PLAYMODE,
@@ -27,17 +27,21 @@ enum {
     F_N
 };
 
-static const char *const SEQ_NAME[SQ_N] = {"STEP", "LIVE", "ENDLESS", "ARP", "DREAM", "FINGER", "HOLD", "-"};
-/* the sequencers offered (ARP is a layer over them now; ENDLESS and HOLD folded into LIVE and the ARP's LATCH) */
-#define NSEQ 4
-static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_LIVE, SQ_DRIVE, SQ_FINGER};
+static const char *const SEQ_NAME[SQ_N] = {"SEQ", "SEQ", "ENDLESS", "ARP", "SEQ", "SEQ", "SEQ", "-"};
+/* the sequencers offered: SEQ (a clip, as a DAW's: REC into it, the step editor, the drum grid) and ENDLESS (OP-1's);
+ * ARP is a layer over them. LIVE, DREAM, FINGER, HOLD and TOMBOLA are gone (an old project's track loads as SEQ) */
+#define NSEQ 2
+static const uint8_t SQ_LIST[NSEQ] = {SQ_STEP, SQ_ENDLESS};
+static const char *const EDIR_NAME[4] = {"FORWARD", "BACKWARD", "PINGPONG", "RANDOM"};
+static const char *const EGATE_NAME[4] = {"NORMAL", "SHORT", "FULL", "TIE"};
+static const char *const ERATE_NAME[6] = {"1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32"};
 static int seq_index(int sq)
 {
     int i;
     for (i = 0; i < NSEQ; i++)
         if (SQ_LIST[i] == sq)
             return i;
-    return 1;
+    return 0;
 }
 static const char *const MOD_NAME[MOD_N] = {"OFF", "SWING", "DICE", "PEDAL", "FOLLOW", "TREMOLO"};
 static const char *const ARP_NAME[6] = {"UP", "DOWN", "UPDN", "RAND", "ORDER", "CHORD"};
@@ -508,7 +512,9 @@ static void field_range(int f, int *lo, int *hi)
     case F_ARPSRC: *hi = 1; break;
     case F_ARPON: *hi = 1; break;
     case F_ARPOCT: *lo = 1; *hi = 3; break;
-    case F_FBANK: *hi = DK_NFBANK - 1; break;
+    case F_ERATE: *hi = 5; break;
+    case F_EDIR:
+    case F_EGATE: *hi = 3; break;
     case F_ARPLATCH:
     case F_FLATCH:
     case F_LEAD:
@@ -669,10 +675,9 @@ static int field_get_raw(int f)
     case F_ARPOCT: return k->arp[2] ? k->arp[2] : 1;
     case F_ARPLATCH:
     case F_FLATCH: return k->arp[3] ? 1 : 0;
-    case F_FBANK: return dk_fb_bank(dk_song.cur_track);
-    case F_ENERGY: return k->drv[0];
-    case F_STYLE: return k->drv[1];
-    case F_VAR: return k->drv[2];
+    case F_EDIR: return k->drv[0] & 3;
+    case F_EGATE: return k->drv[1] & 3;
+    case F_ERATE: return k->drv[2] % 6;
     case F_SEQTYPE: return seq_index(k->seq);
     case F_OCT: return k->oct;
     case F_DRIFT: return k->drift;
@@ -840,15 +845,17 @@ static void field_set(int f, int v)
         if (!v)
             dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
         break;
-    case F_FBANK:
-        dk_song.fbank[dk_song.cur_track] = (uint8_t)v;
-        say(dk_fb_bankname(v), dk_fb_banksub(v));
-        break;
-    case F_ENERGY: k->drv[0] = (uint8_t)v; break;
-    case F_STYLE: k->drv[1] = (uint8_t)v; break;
-    case F_VAR: k->drv[2] = (uint8_t)v; break;
+    case F_EDIR: k->drv[0] = (uint8_t)v; break;
+    case F_EGATE: k->drv[1] = (uint8_t)v; break;
+    case F_ERATE: k->drv[2] = (uint8_t)v; break;
     case F_SEQTYPE:
+        if (k->seq != SQ_LIST[v % NSEQ] && SQ_LIST[v % NSEQ] == SQ_ENDLESS) {   /* ENDLESS fresh: forward, normal, 1/16 */
+            k->drv[0] = 0;
+            k->drv[1] = 0;
+            k->drv[2] = 3;
+        }
         k->seq = SQ_LIST[v % NSEQ];
+        dk_cmd(C_ENDLTR, dk_song.cur_track, 0, 0);
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
         dk_cmd(C_HOLDCLR, dk_song.cur_track, 0, 0);
         break;
@@ -1016,10 +1023,10 @@ static const char *field_label(int f)
     case F_ARPOCT: return "OCTAVES";
     case F_ARPLATCH:
     case F_FLATCH: return "LATCH";
-    case F_FBANK: return "BANK";
-    case F_ENERGY: return "ENERGY";
+    case F_ERATE: return "RATE";
+    case F_EDIR: return "DIRECTION";
     case F_STYLE: return "STYLE";
-    case F_VAR: return "VARIATION";
+    case F_EGATE: return "GATE";
     case F_SEQTYPE: return "SEQUENCER";
     case F_OCT: return "OCTAVE";
     case F_DRIFT: return "DRIFT";
@@ -1209,7 +1216,9 @@ static void field_text(int f, char *b)
     case F_SONGSTYLE: cpy(b, TAPE.style_name[v % TAPE.nstyle]); break;
     case F_SEQTYPE: cpy(b, SEQ_NAME[SQ_LIST[v % NSEQ]]); break;
     case F_ROLE: cpy(b, ROLE_NAME[v % R_N]); break;
-    case F_FBANK: cpy(b, dk_fb_bankname(v)); break;
+    case F_ERATE: cpy(b, ERATE_NAME[v % 6]); break;
+    case F_EDIR: cpy(b, EDIR_NAME[v & 3]); break;
+    case F_EGATE: cpy(b, EGATE_NAME[v & 3]); break;
     case F_OCT:
     case F_KOCT:
         if (v > 0)
@@ -1468,7 +1477,9 @@ static void field_big(int f, char *num, const char *unit_out[1])
         break;
     }
     case F_FXTYPE:
-    case F_FBANK:
+    case F_ERATE:
+    case F_EDIR:
+    case F_EGATE:
     case F_MODTYPE:
     case F_MODTGT:
         field_text(f, num);

@@ -66,9 +66,6 @@ static const char *const FM_SRC[16][6] = {
     {"DENSE", "1.3.5.8.5.3.1.3.", "2.2.2.2.2.2.2.2"}, {"FILL UP", "............1235", ""},
     {"FILL DOWN", "............8531", ""},        {"HOLD", "1...............", "g"},
 };
-#include "finger_banks.c"
-
-#include "dream.c"
 
 /* -------------------------------------------------------------------- presets --- */
 /* name, engine, its parameters, ENV, the effect (kind, amount, a, b), reverb, echo, MACRO's targets and amounts, trim */
@@ -533,6 +530,8 @@ static const dk_engine_t *const ENGINES[12] = {&ENG_FELT, &ENG_TINE, &ENG_AIRPAD
                                                &ENG_WORLD, &ENG_KALIMBA, &ENG_WINDS, &ENG_SYNTH, &ENG_PLUCK, &ENG_LEAD};
 
 /* ---------------------------------------------------------------- the harmony --- */
+/* the song's styles: its chords and how long each (once also DREAM's, the generator, now gone) */
+enum { ST_C418, ST_LOFI, ST_AMBIENT, ST_CAMPFIRE, NSTYLE };
 static const char *const STYLE_NAME[NSTYLE] = {"C418", "LOFI", "AMBIENT", "CAMPFIRE"};
 static const uint8_t STYLE_CHORD[NSTYLE] = {CH_MAJ7, CH_9, CH_ADD9, CH_TRIAD};
 static const uint8_t STYLE_BARS[NSTYLE] = {2, 1, 2, 1};
@@ -544,9 +543,9 @@ static const dk_borrow_t BORROW_MAJ[4] = {
 static const dk_borrow_t BORROW_MIN[4] = {
     {5, {0, 4, 7, 14, 99}}, {8, {0, 4, 7, 14, 99}}, {3, {0, 4, 7, 11, 99}}, {7, {0, 3, 7, 10, 14, 99}}};
 
-static const char *const PERFORM[11] = {"TAPESTOP", "REWIND", "VINYL STOP", "LOW PASS", "RAIN UP", "DREAM",
+static const char *const PERFORM[11] = {"TAPESTOP", "REWIND", "VINYL STOP", "LOW PASS", "RAIN UP", "STUTTER",
                                         "HALF TIME", "ECHO THROW", "MUTE DRUMS", "SLEEP", "REVERSE"};
-static const uint8_t PERFORM_ACT[11] = {PF_TAPESTOP, PF_REWIND, PF_VINYLSTOP, PF_LOWPASS, PF_RAINUP, PF_DREAM,
+static const uint8_t PERFORM_ACT[11] = {PF_TAPESTOP, PF_REWIND, PF_VINYLSTOP, PF_LOWPASS, PF_RAINUP, PF_STUTTER,
                                         PF_HALFTIME, PF_ECHOTHROW, PF_MUTEDRUMS, PF_SLEEP, PF_REVERSE};
 
 /* the biomes (the garden's scenes): DAWN BLOSSOM RAIN EMBER SNOW LAGOON NIGHT AURORA DUSK */
@@ -566,7 +565,7 @@ static const dk_mood_t MOODS[8] = {
 
 /* the tracks by default: PIANO KEYS PAD BASS DRUMS NATURE (the piano first: it is played the most) */
 static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 5, 11}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 0},
-                     DEF_SEQ[DK_NTRACK] = {SQ_LIVE, SQ_LIVE, SQ_LIVE, SQ_STEP, SQ_FINGER, SQ_LIVE},
+                     DEF_SEQ[DK_NTRACK] = {SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP},
                      DEF_ROLE[DK_NTRACK] = {R_KEYS, R_ARP, R_PAD, R_BASS, R_DRUM, R_LEAD};
 /* the KEYS track's twelve: electric pianos, bells, kalimbas (HOME + white 1-12, the PRESET knob) */
 static const uint8_t KEYS_SET[DK_NFACT][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9},  {3, 0}, {3, 1},
@@ -588,8 +587,8 @@ static void tape_init(void)
 }
 
 const dk_tape_t TAPE = {
-    "OVERWORLD", tape_init, ENGINES, 12, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
-    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FBANKS, PERFORM, PERFORM_ACT, MOODS, 8,
+    "OVERWORLD", tape_init, ENGINES, 12, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, 0, PROGS, 5, STYLE_CHORD,
+    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, 0, PERFORM, PERFORM_ACT, MOODS, 8,
     BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
     ATMO, 6, PRESETS2, PCOUNT, BLOCK_NAME,
 };

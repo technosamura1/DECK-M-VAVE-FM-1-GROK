@@ -1,0 +1,150 @@
+# the reported case (op1-core): four tracks recorded with chords (a device-like low voice budget), the song playing;
+# then the 5th (DRUMS) and the 6th (LEAD) play under the hand and the 6th records. The drums were FINGER once: a key
+# started a pattern on the next step, the hand heard nothing and REC wrote one stray note
+budget 50
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+tap HOME
+wait 200
+qnt 0
+press HOME
+tapkey b0
+release HOME
+wait 100
+tap REC
+wait 3500
+key w0 down 100
+key w2 down 100
+key w4 down 100
+key w6 down 100
+wait 3000
+key w0 up
+key w2 up
+key w4 up
+key w6 up
+wait 1000
+key w1 down 100
+key w3 down 100
+key w5 down 100
+wait 3000
+key w1 up
+key w3 up
+key w5 up
+wait 6000
+tap REC
+wait 500
+press HOME
+tapkey b1
+release HOME
+wait 100
+tap REC
+wait 3500
+key w0 down 100
+key w2 down 100
+key w4 down 100
+key w6 down 100
+wait 3000
+key w0 up
+key w2 up
+key w4 up
+key w6 up
+wait 1000
+key w1 down 100
+key w3 down 100
+key w5 down 100
+wait 3000
+key w1 up
+key w3 up
+key w5 up
+wait 6000
+tap REC
+wait 500
+press HOME
+tapkey b2
+release HOME
+wait 100
+tap REC
+wait 3500
+key w0 down 100
+key w2 down 100
+key w4 down 100
+key w6 down 100
+wait 3000
+key w0 up
+key w2 up
+key w4 up
+key w6 up
+wait 1000
+key w1 down 100
+key w3 down 100
+key w5 down 100
+wait 3000
+key w1 up
+key w3 up
+key w5 up
+wait 6000
+tap REC
+wait 500
+press HOME
+tapkey b3
+release HOME
+wait 100
+tap REC
+wait 3500
+key w0 down 100
+key w2 down 100
+key w4 down 100
+key w6 down 100
+wait 3000
+key w0 up
+key w2 up
+key w4 up
+key w6 up
+wait 1000
+key w1 down 100
+key w3 down 100
+key w5 down 100
+wait 3000
+key w1 up
+key w3 up
+key w5 up
+wait 6000
+tap REC
+wait 500
+expect playing 1
+wait 2000
+expect voices >0
+press HOME
+tapkey b4
+release HOME
+wait 100
+key w0 down 110
+wait 200
+expect tvoices5 >0
+expect tlevel5 >0
+key w0 up
+wait 300
+press HOME
+tapkey b5
+release HOME
+wait 100
+key w0 down 110
+key w4 down 110
+wait 300
+expect tvoices6 >0
+expect tlevel6 >0
+key w0 up
+key w4 up
+wait 300
+tap REC
+wait 4000
+key w2 down 100
+wait 400
+expect tvoices6 >0
+key w2 up
+wait 6000
+tap REC
+wait 500
+expect events >0

@@ -2,7 +2,7 @@
  * Copyright (C) 2026 DECK contributors */
 /* The sequencer, part of the core's unit (core.c): the clock (free, and the transport's), the parts and the road,
  * the clips' playback with the road's tricks, recording (LIVE, the generators', BAKE), the count-in and the
- * metronome, the generators (ARP, FINGER, DRIVE), the harmony, the modulators, the performance
+ * metronome, the generators (ARP, ENDLESS), the harmony, the modulators, the performance
  * effects, STEMS, MIDI clock. Everything here runs in the render, a tick at a time. */
 
 static uint32_t gt;                            /* the grid's clock: the transport's ticks, or the free clock */
@@ -38,8 +38,6 @@ uint8_t dk_arp_step[DK_NTRACK];            /* (the pattern's step: it starts fro
 #define arp_step dk_arp_step
 static uint8_t arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
 volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
-static uint16_t finger_held[DK_NTRACK];        /* FINGER: the patterns held (a bit each) */
-static uint8_t finger_var[DK_NTRACK];          /* its variations: 1 HALF 2 DOUBLE 4 ACCENT 8 GHOST 16 SHIFT- 32 SHIFT+ */
 static uint8_t perf_half, perf_rev, perf_stutter, stems_pass, stems_gap;
 static uint16_t stutter_at;
 static float lp_target = 1.0f;
@@ -415,8 +413,6 @@ void dk_emit(int t, int note, int vel, int dur, int delay)
 {
     if ((unsigned)t >= DK_NTRACK || note < 0 || note > 127)
         return;
-    if (dream_off && dk_song.trk[t].seq == SQ_DRIVE)
-        return;
     note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)dur * tick_len), delay, 2);
     if (rec_track_of(t))
         rec_done(t, note, vel, dur);
@@ -468,10 +464,6 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
             note -= 12;
     }
     delay = swing_delay(t, ct_pos);
-    if (dk_song.trk[t].seq == SQ_LIVE) {
-        delay += jitter() / 2;
-        vel = fm_clampf(vel + (dk_frand() - 0.5f) * 0.12f * (float)TAPE.human * 0.01f, 0.05f, 1.0f);
-    }
     r = ((e->fl & EV_RATCH) >> 2) + 1;
     if (r > 1)
         dur /= r;
@@ -596,111 +588,75 @@ static void clip_tick(int t, uint32_t *harm_pcs)
     }
 }
 
-/* ----------------------------------------------------------------- FINGER --- */
-/* the banks (the tape's text patterns) decoded a step at a time: no table in RAM */
-int dk_fch(const char *s, int step)
+/* ---------------------------------------------------------------- ENDLESS --- */
+/* ENDLESS (as OP-1's): its clip a row of steps, a sixteenth each in the clip (a step's notes at step * DK_T16, a tie
+ * longer), played at its own rate - not the part's bars: it goes round by itself - FORWARD, BACKWARD, PINGPONG or
+ * RANDOM, each step as long as the GATE says. A key played on it (not entering) transposes it: the first step's
+ * lowest note goes to the key (dk_endl_tr, till the next key or a stop) */
+volatile uint8_t dk_endl_step[DK_NTRACK];
+volatile int8_t dk_endl_tr[DK_NTRACK];
+static const uint8_t ERATE[6] = {96, 48, 32, 24, 16, 12};
+static void endless_tick(int t)
 {
-    int i;
-    if (!s)
-        return '.';
-    for (i = 0; i < step; i++)
-        if (!s[i])
-            return '.';
-    return s[step] ? s[step] : '.';
+    static const float GATE[4] = {0.8f, 0.35f, 1.0f, 1.08f};
+    const dk_track_t *k = &dk_song.trk[t];
+    const dk_clip_t *c = CLIP(cur_part, t);
+    int n = c->len / DK_T16, dv = ERATE[k->drv[2] % 6], dir = k->drv[0] & 3, i, step, kk;
+    float g = GATE[k->drv[1] & 3];
+    if (n <= 0 || !c->n || dk_ticks % (uint32_t)dv)
+        return;
+    kk = (int)(dk_ticks / (uint32_t)dv);
+    switch (dir) {
+    case 1: step = n - 1 - kk % n; break;
+    case 2: {
+        int per = n > 1 ? 2 * n - 2 : 1, x = kk % per;
+        step = x < n ? x : per - x;
+        break;
+    }
+    case 3: step = (int)(((uint32_t)kk * 2654435761u >> 13) % (uint32_t)n); break;
+    default: step = kk % n; break;
+    }
+    dk_endl_step[t] = (uint8_t)step;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        int steps, note;
+        if ((e->fl & EV_MOTION) || e->pos != step * DK_T16)
+            continue;
+        steps = (e->dur + 2 + DK_T16 - 1) / DK_T16;   /* a tie: more steps long */
+        note = e->note + ((dk_engine(t)->flags & EF_DRUM) ? 0 : dk_endl_tr[t]);
+        if (note < 0 || note > 127)
+            continue;
+        note_play(t, note, (float)e->vel * (1.0f / 127.0f), (int32_t)((float)(steps * dv) * g * tick_len), 0, 1);
+    }
 }
-const char *dk_fb_bankname(int bank) { return TAPE.fbank[bank >= 0 && bank < DK_NFBANK ? bank : 0].name; }
-const char *dk_fb_banksub(int bank) { return TAPE.fbank[bank >= 0 && bank < DK_NFBANK ? bank : 0].sub; }
-int dk_fb_bank(int t) { return dk_song.fbank[t] < DK_NFBANK ? dk_song.fbank[t] : 0; }
-/* the track's set: 0 drums, 1 keys/lead (everything melodic), 2 bass, 3 pad */
-int dk_fb_set(int t)
+/* the lowest note of an ENDLESS clip's first step (the key a transposition is measured from), -1 none */
+int dk_endl_root(int t)
 {
-    const dk_engine_t *e = dk_engine(t);
-    int r = dk_song.trk[t].role;
-    return (e->flags & EF_DRUM) ? 0 : r == R_BASS ? 2 : r == R_PAD ? 3 : 1;
-}
-static const char *const *fb_row(int t, int p)
-{
-    const dk_fbank_t *b = &TAPE.fbank[dk_fb_bank(t)];
-    int s = dk_fb_set(t);
-    p &= 15;
-    return s == 0 ? b->drum[p] : s == 1 ? b->mel[p] : s == 2 ? b->bass[p] : b->pad[p];
-}
-const char *dk_fb_name(int t, int p) { return fb_row(t, p)[0]; }
-/* a drum pattern: the velocity 0..9 of a lane at a step */
-int dk_fb_drum(int t, int p, int lane, int step)
-{
-    int c = dk_fch(fb_row(t, p)[1 + (lane & 7)], step);
-    return c >= '1' && c <= '9' ? c - '0' : 0;
-}
-static int fb_deg(int c) { return c >= '1' && c <= '9' ? c - '0' : c >= 'a' && c <= 'c' ? c - 'a' + 10 : 0; }
-/* a melodic pattern's step: the degree 1..12 (0 a rest); its length in sixteenths, octave shift (-2..2), velocity
- * (0 the default) and the second voice's degree (0 none) through the pointers */
-int dk_fb_mel(int t, int p, int step, int *len, int *oct, int *vel, int *deg2)
-{
-    const char *const *r = fb_row(t, p);
-    int d = fb_deg(dk_fch(r[1], step)), l = dk_fch(r[2], step), o = dk_fch(r[3], step), v = dk_fch(r[4], step);
-    if (len)
-        *len = l >= '1' && l <= '9' ? l - '0' : l >= 'a' && l <= 'f' ? l - 'a' + 10 : l == 'g' ? 16 : 1;
-    if (oct)
-        *oct = o == 'd' ? -1 : o == 'D' ? -2 : o == 'u' ? 1 : o == 'U' ? 2 : 0;
-    if (vel)
-        *vel = v >= '1' && v <= '9' ? 20 + 11 * (v - '0') : 0;
-    if (deg2)
-        *deg2 = fb_deg(dk_fch(r[5], step));
-    return d;
+    const dk_clip_t *c = CLIP(dk_song.cur_part, t);
+    int i, lo = -1;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && e->pos == 0 && (lo < 0 || e->note < lo))
+            lo = e->note;
+    }
+    return lo;
 }
 
-static void finger_tick(int t, uint32_t pats, uint8_t var, int is_fill)
+/* FILL (GLOBAL held) on a drum track: a bar that builds - the snare in sixteenths, the toms coming down, louder to its end */
+static void fill_tick(int t)
 {
     const dk_engine_t *e = dk_engine(t);
-    uint32_t g = gt + (var & 16 ? DK_T16 : 0) - (var & 32 ? DK_T16 : 0) + 100000u * DK_T16;
-    int unit = var & 1 ? 2 * DK_T16 : var & 2 ? DK_T16 / 2 : DK_T16, step, p, lane;
-    if (g % (uint32_t)unit)
+    int step, l, n = e->nlanes;
+    float v;
+    if (gt % DK_T16 || n < 2)
         return;
-    step = (int)((g / (uint32_t)unit) % 16u);
-    for (p = 0; p < 16; p++) {
-        if (!(pats >> p & 1u))
-            continue;
-        if (e->flags & EF_DRUM) {
-            for (lane = 0; lane < 8 && lane < e->nlanes; lane++) {
-                int v = dk_fb_drum(t, p, lane, step);
-                float vel;
-                if (!v)
-                    continue;
-                vel = (float)v * (1.0f / 9.0f);
-                if ((var & 4) && step % 4 == 0)
-                    vel = fm_minf(1.0f, vel * 1.3f);
-                if (var & 8)
-                    vel *= 0.55f;
-                note_play(t, e->lane_note[lane], vel * (0.92f + 0.08f * dk_frand()), (int32_t)((float)DK_T16 * tick_len),
-                          jitter() / 3 + swing_delay(t, step * DK_T16), is_fill ? 1 : 2);
-                if (rec_track_of(t))
-                    rec_done(t, e->lane_note[lane], (int)(vel * 127.0f), DK_T16);
-            }
-        } else {
-            int len, oct, pv, d2, v = dk_fb_mel(t, p, step, &len, &oct, &pv, &d2), voice;
-            static const uint8_t BASE[R_N] = {36, 36, 60, 64, 55, 72, 79, 60};
-            if (!v)
-                continue;
-            if (dk_song.trk[t].role == R_PAD && len < 4)
-                len = 4;                         /* a pad swells slowly: a 16th would never be heard */
-            for (voice = 0; voice < 2; voice++) {
-                int base = BASE[dk_song.trk[t].role % R_N] + 12 * dk_song.trk[t].oct, tone, note, vel;
-                int dg = voice ? d2 : v;
-                if (!dg)
-                    continue;
-                tone = (dg - 1) % 4;
-                note = dk_nearest(base + 12 * ((dg - 1) / 4), harm.pcs[tone < harm.n ? tone : 0], base - 6, base + 30) +
-                       12 * oct;
-                note = note < 0 ? note + 12 : note > 127 ? note - 12 : note;
-                vel = (var & 8) ? 50 : (var & 4) && step % 4 == 0 ? 110 : pv ? pv : 84;
-                note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)(len * unit) * tick_len * 0.9f),
-                          jitter() + (int32_t)(0.012f * DK_SR) + swing_delay(t, step * DK_T16), 2);
-                if (rec_track_of(t))
-                    rec_done(t, note, vel, len * unit);
-            }
-        }
-    }
+    step = (int)((gt / DK_T16) % 16u);
+    v = 0.45f + 0.5f * (float)step / 15.0f;
+    if (step % 4 == 0)
+        note_play(t, e->lane_note[0], v, (int32_t)((float)DK_T16 * tick_len), 0, 1);
+    l = step < 8 || n < 5 ? 1 : 4 + (step / 2) % (n - 4 > 0 ? n - 4 : 1);   /* the snare, then what follows it in the kit */
+    note_play(t, e->lane_note[l % n], v * (step % 2 ? 0.8f : 1.0f), (int32_t)((float)DK_T16 * tick_len),
+              jitter() / 3 + swing_delay(t, step * DK_T16), 1);
 }
 
 /* -------------------------------------------------------------------- ARP --- */
@@ -1012,25 +968,6 @@ static void metro_tick(void)
     }
 }
 
-static void drive_tick(int t)
-{
-    dk_drive_t d;
-    const dk_track_t *k = &dk_song.trk[t];
-    int plen = part_len_of(cur_part), bar = (int)(bar_n % 8u);
-    d.trk = (uint8_t)t;
-    d.role = k->role;
-    d.style = k->drv[1];
-    d.energy = k->drv[0];
-    d.var = k->drv[2];
-    d.tick = dk_ticks;
-    d.bar_tick = (uint32_t)(part_tick % DK_TPB);
-    d.fill = (uint8_t)(dk_fill || (bar % 4 == 3 && (k->drv[2] > 30 || bar == 7)));
-    d.breath = (uint8_t)(TAPE.style_breath && TAPE.style_breath[dk_song.style % TAPE.nstyle] && bar == 7);
-    d.part_end = (uint8_t)(part_tick >= plen - DK_TPB && (dk_song.play_mode ? block_last : queued != 0xFF));
-    if (TAPE.drive)
-        TAPE.drive(&d, &harm);
-}
-
 static void road_next(void)
 {
     const dk_block_t *b = &dk_song.road[dk_road_i < dk_song.nroad ? dk_road_i : 0];
@@ -1082,8 +1019,6 @@ static void seq_tick(void)
             const dk_track_t *k = &dk_song.trk[t];
             if (dk_arp_on(k))
                 arp_tick(t);
-            else if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
-                finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
         }
         mods_tick();
         return;
@@ -1116,17 +1051,15 @@ static void seq_tick(void)
         const dk_engine_t *e = dk_engine(t);
         int fill = dk_fill && (e->flags & EF_DRUM);
         if (fill)
-            finger_tick(t, 1u << (13 + (bar_n % 3u)), 0, 1);
-        else if (k->seq == SQ_DRIVE) {
+            fill_tick(t);
+        else if (k->seq == SQ_ENDLESS) {
             if (!(drop_mask >> t & 1u))
-                drive_tick(t);
+                endless_tick(t);
         } else
             clip_tick(t, t == dk_song.harm_track ? &hp : 0);
         auto_tick(t);
         if (dk_arp_on(k))
             arp_tick(t);
-        if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
-            finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
     }
     if (auto_dirty) {
         auto_dirty = 0;
@@ -1318,20 +1251,8 @@ static void drain(void)
                 vc[i].on = 0;
             break;
         }
-        case C_FINGER:                         /* a pattern's key: b 1 down, 0 up, 2 latch toggled */
-            if (b == 2)
-                dk_finger_latch[a % DK_NTRACK] ^= 1u << (c.d & 15);
-            else if (b)
-                finger_held[a % DK_NTRACK] |= (uint16_t)(1u << (c.d & 15));
-            else
-                finger_held[a % DK_NTRACK] &= (uint16_t)~(1u << (c.d & 15));
-            dk_finger_on[a % DK_NTRACK] = (uint8_t)(finger_held[a % DK_NTRACK] ? 1 : 0);
-            break;
-        case C_FVAR:
-            if (b)
-                finger_var[a % DK_NTRACK] |= (uint8_t)(1u << (c.d & 7));
-            else
-                finger_var[a % DK_NTRACK] &= (uint8_t)~(1u << (c.d & 7));
+        case C_ENDLTR:                         /* ENDLESS: the transposition (semitones) of track a */
+            dk_endl_tr[a % DK_NTRACK] = (int8_t)(b < -48 ? -48 : b > 48 ? 48 : b);
             break;
         case C_PERFORM: {
             int on = b != 0;
@@ -1342,10 +1263,6 @@ static void drain(void)
             case PF_LOWPASS: lp_target = on ? dk_lpk(420.0f) : 1.0f; break;
             case PF_FILTERUP: lp_target = on ? dk_lpk(1500.0f) : 1.0f; break;
             case PF_RAINUP: perf_rain = (uint8_t)on; break;
-            case PF_DREAM:
-                if (on)
-                    dream_off ^= 1u;
-                break;
             case PF_HALFTIME: perf_half = (uint8_t)on; break;
             case PF_ECHOTHROW: perf_echo = (uint8_t)on; break;
             case PF_MUTEDRUMS: perf_mute_drums = (uint8_t)on; break;

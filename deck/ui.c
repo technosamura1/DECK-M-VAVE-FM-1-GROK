@@ -44,6 +44,8 @@ static struct {
     uint32_t ed_t;
     uint8_t arm_trk;                     /* the tracks armed for recording (bit t; MIX / TRACKS: black 8 arms the selected one) */
     uint8_t armed;                       /* REC ARM: REC pressed, the tape waits for PLAY (or a note on ON NOTE) */
+    uint8_t endl_on;                     /* ENDLESS: the steps being played in (REC on, REC off) */
+    uint32_t endl_t;                     /* the last step's moment (keys within 60 ms: one chord, one step) */
 } ui;
 
 #define AUTOSAVE_MS 300000u                /* the autosave: no more often than this (5 min; the first one at once) */
@@ -155,9 +157,30 @@ static void page_go(int p)
     ui.garage = 0;
 }
 
+/* ENDLESS entering: a rest; or the last step's notes a step longer */
+static void endl_rest_tie(int tie)
+{
+    int clip = cur_clip(), steps = dk_song.clip[clip].len / DK_T16, i;
+    const dk_clip_t *c = &dk_song.clip[clip];
+    if (steps >= 128)
+        return;
+    undo_push(clip);
+    dk_lock();
+    if (tie && steps > 0)                     /* the notes still sounding at the last step: on through the next */
+        for (i = 0; i < c->n; i++) {
+            dk_ev_t *e = &dk_ev[c->at + i];
+            if (!(e->fl & EV_MOTION) && e->pos + e->dur + 2 >= steps * DK_T16)
+                e->dur = (uint16_t)(e->dur + DK_T16);
+        }
+    dk_song.clip[clip].len = (uint16_t)((steps + 1) * DK_T16);
+    dk_unlock();
+    ui.endl_t = 0;
+    say("ENDLESS", tie ? "TIE" : "REST");
+}
 static void track_select(int t)
 {
     keys_all_up();
+    ui.endl_on = 0;
     t %= DK_NTRACK;
     dk_song.cur_track = (uint8_t)t;
     ui_step_ev = -1;
@@ -823,6 +846,28 @@ static void action(int a, int b)
         break;
     }
     case A_REC:
+        if (cur()->seq == SQ_ENDLESS && !dk_recording && !dk_counting && !ui.armed) {   /* ENDLESS: the steps played in */
+            int clip = cur_clip();
+            ui.endl_on ^= 1u;
+            if (ui.endl_on) {
+                undo_push(clip);
+                dk_lock();
+                clip_clear(clip);
+                dk_song.clip[clip].len = 0;
+                dk_unlock();
+                dk_cmd(C_ENDLTR, dk_song.cur_track, 0, 0);
+                ui.endl_t = 0;
+                if (ui.page != PG_SEQ)
+                    page_go(PG_SEQ);
+                say("ENDLESS", "PLAY THE STEPS");
+            } else {
+                char st[16];
+                cpy(itoa_b(dk_song.clip[clip].len / DK_T16, st), " STEPS");
+                say("ENDLESS", st);
+                mark_dirty();
+            }
+            break;
+        }
         if (ui.page == PG_ROAD && !dk_song.play_mode) {   /* the road, recorded from the parts you play */
             ui.road_rec ^= 1u;
             if (ui.road_rec) {
@@ -892,21 +937,7 @@ static void action(int a, int b)
         if (b)
             say("FILL", "");
         break;
-    case A_BAKE:
-        if (cur()->seq == SQ_DRIVE) {
-            int bars = dk_song.part[dk_song.cur_part].bars > 4 ? 4 : dk_song.part[dk_song.cur_part].bars;
-            undo_push(cur_clip());
-            dk_lock();
-            clip_clear(cur_clip());
-            dk_song.clip[cur_clip()].len = (uint16_t)(bars * DK_TPB);
-            dk_unlock();
-            rec_reset();
-            dk_cmd(C_REC, 1, 0, dk_song.cur_track | (bars ? bars : 1) << 8 | 0xFF << 16);
-            ui.baking = 1;
-            say("BAKE", "DREAM TO STEP");
-        } else
-            say("BAKE", "ONLY DREAM");
-        break;
+    case A_BAKE: break;                  /* (DREAM to STEP: DREAM is gone) */
     case A_UNDO:
     case A_REDO: {
         int what;
@@ -945,6 +976,10 @@ static void action(int a, int b)
     case A_OCT_UP: {
         int o = cur()->oct + (a == A_OCT_UP ? 1 : -1);
         char s[4];
+        if (ui.endl_on && cur()->seq == SQ_ENDLESS) {   /* entering ENDLESS: OCT- a rest, OCT+ the last step tied on */
+            endl_rest_tie(a == A_OCT_UP);
+            break;
+        }
         if (o < -3 || o > 3)
             break;
         keys_all_up();
@@ -972,12 +1007,7 @@ static void notes_show(int k)
     ui.notes[0] = 0;
     if (kh[k].trk < 0)
         return;
-    if (kh[k].kind == 2 || kh[k].kind == 3) {
-        if (kh[k].kind == 2)
-            cpy(p, dk_fb_name(kh[k].trk, kh[k].notes[0] & 15));
-        else
-            cpy(p, "VARIATION");
-    } else if (kh[k].kind == 1) {          /* PERFORM: the effect's name, up top for as long as it is held */
+    if (kh[k].kind == 1) {          /* PERFORM: the effect's name, up top for as long as it is held */
         int j;
         cpy(p, kh[k].notes[0] == 0xFF ? "FILL" : "PERFORM");
         for (j = 0; TAPE.perform_act && j < 11; j++)
@@ -1181,6 +1211,55 @@ static void key_down(int k, int vel)
         }
         if (b == DK_NTRACK + 1) {
             rec_arm_toggle(dk_song.cur_track);
+            return;
+        }
+    }
+    if (trk->seq == SQ_ENDLESS && ui.endl_on) {   /* ENDLESS: each key a step (a key still held, or at once: one chord) */
+        int clip = cur_clip(), nt[10], n, i, steps = dk_song.clip[clip].len / DK_T16, same;
+        uint32_t now = plat_ms();
+        keys_down(k, vel);
+        notes_show(k);
+        n = (e->flags & EF_DRUM) ? (kh[k].n ? 1 : 0) : keys_notes_of(k, nt);
+        if (e->flags & EF_DRUM)
+            nt[0] = kh[k].notes[0];
+        same = steps > 0 && (ui.keys || (ui.endl_t && now - ui.endl_t < 60u));
+        if (!n || (!same && steps >= 128))
+            return;
+        if (!same)
+            undo_push(clip);
+        dk_lock();
+        for (i = 0; i < n; i++) {
+            dk_ev_t ev;
+            ev.pos = (uint16_t)((same ? steps - 1 : steps) * DK_T16);
+            ev.dur = DK_T16 - 2;
+            ev.note = (uint8_t)nt[i];
+            ev.vel = (uint8_t)vel;
+            ev.fl = 0;
+            ev.layer = 1;
+            if (clip_find(clip, ev.pos, ev.note, 0) < 0)
+                dk_song_insert(clip, &ev);
+        }
+        if (!same)
+            dk_song.clip[clip].len = (uint16_t)((steps + 1) * DK_T16);
+        dk_unlock();
+        ui.endl_t = now;
+        mark_dirty();
+        return;
+    }
+    if (trk->seq == SQ_ENDLESS && !(e->flags & EF_DRUM) && dk_song.clip[cur_clip()].n &&
+        (ui.page == PG_PLAY || ui.page == PG_SEQ || ui.page == PG_REC || ui.page == PG_KEYS) && (w >= 0 || !dk_song.layout)) {
+        int root = dk_endl_root(dk_song.cur_track), to = key_note_of(k, dk_song.cur_track);   /* a key: the steps moved to it */
+        if (root >= 0 && to >= 0) {
+            char st[8];
+            int tr = to - root;
+            while (tr > 24)
+                tr -= 12;
+            while (tr < -24)
+                tr += 12;
+            dk_cmd(C_ENDLTR, dk_song.cur_track, tr, 0);
+            st[0] = tr < 0 ? '-' : '+';
+            itoa_b(tr < 0 ? -tr : tr, st + 1);
+            say("TRANSPOSE", st);
             return;
         }
     }
@@ -1715,13 +1794,6 @@ static void lights(void)
         }
         if (dk_playing && run >= 0 && run < 16)
             dimk |= 1u << WHITE_K[run];
-    } else if (trk->seq == SQ_FINGER) {
-        for (k = 0; k < 16; k++)
-            if (dk_finger_latch[dk_song.cur_track] >> k & 1u)
-                keys |= 1u << WHITE_K[k];
-        dimk = 0xFFFFu & 0;
-        for (k = 0; k < 16; k++)
-            dimk |= 1u << WHITE_K[k];
     } else {                             /* the scale's notes glow, the root brighter, the beat on the root */
         int root = dk_song.root % 12;
         uint32_t pool = DK_MODE_POOL[dk_song.mode % DK_NMODES] | 1u;

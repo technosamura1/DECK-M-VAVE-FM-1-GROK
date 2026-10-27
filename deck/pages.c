@@ -282,16 +282,12 @@ static int page_field(int i, int home)
             if (drum) {
                 static const uint8_t F[5] = {F_LANE, F_SVEL, F_SPROB, F_SRATCH, F_STEPPAGE};
                 return F[i];
-            } else {
-                static const uint8_t F[5] = {F_SHIFT, F_SLEN, F_SVEL, F_SPROB, F_SRATCH};
+            } else {                         /* a melody: the clip a step on, a scale step up, a new note's length, its force */
+                static const uint8_t F[5] = {F_SHIFT, F_MOVE, F_SLEN, F_SVEL, F_SPROB};
                 return F[i];
             }
-        case SQ_DRIVE: {
-            static const uint8_t F[5] = {F_ENERGY, F_STYLE, F_VAR, F_VOL, F_NONE};
-            return F[i];
-        }
-        case SQ_FINGER: {
-            static const uint8_t F[5] = {F_FBANK, F_FLATCH, F_VOL, F_REV, F_ECHO};
+        case SQ_ENDLESS: {                   /* how fast a step, which way, how long a note; the track's level */
+            static const uint8_t F[5] = {F_ERATE, F_EDIR, F_EGATE, F_VOL, F_NONE};
             return F[i];
         }
         default: {
@@ -338,10 +334,8 @@ static const char *hint(void)
             return "K2 NOTE +/-  K3 TIE/CUT  K4 PITCH";
         if (k->seq == SQ_STEP)
             return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "SEQ AGAIN x2 = STEP EDIT";
-        if (k->seq == SQ_FINGER)
-            return "K1 BANK  WHITE PLAY  BLACK VARY";
-        if (k->seq == SQ_DRIVE)
-            return "PLAY = IT PLAYS  HOME+SEQ = TO STEP";
+        if (k->seq == SQ_ENDLESS)
+            return ui.endl_on ? "OCT- REST  OCT+ TIE  REC = DONE" : "REC = PLAY IN STEPS  KEY = TRANSPOSE";
         return "HOME x2, EDIT = COOK RANDOM QUANTIZE";
     case PG_SOUND:
         if (plat_ms() / 3000u % 3u == 1u)
@@ -1041,6 +1035,81 @@ static int seq_edit_row(void)            /* SEQ's third row on one: the step edi
     return ui.page == PG_SEQ && seq_editable() && ui.row[PG_SEQ] % 3 == 2;
 }
 
+/* ENDLESS as on OP-1: its rate up left, how many steps big (orange), the way it goes as an arrow, the steps under it
+ * (a note's step lit, a tie a line on, the one playing bright); entering: REC blinking; transposed: by how much */
+static void draw_endless(const dk_clip_t *c)
+{
+    static const char *const RATEN[6] = {"1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32"};
+    static const char *const DIRN[4] = {"FORWARD", "BACKWARD", "PINGPONG", "RANDOM"};
+    const uint16_t OR = RGB(246, 120, 64);
+    const dk_track_t *k = cur();
+    int t = dk_song.cur_track % DK_NTRACK, n = c->len / DK_T16, dir = k->drv[0] & 3, i, nw, x, y = WY + 16, ax, ay,
+        cs = dk_endl_step[t], tr = dk_endl_tr[t];
+    char s[8];
+    uint32_t now = plat_ms();
+    text_box(WX + 6, WY + 3, 60, 0, &FONT_T, &FONT_T, RATEN[k->drv[2] % 6], W_GRAY);
+    if (ui.endl_on) {                         /* entering: REC */
+        if ((now / 400u) & 1u)
+            disc(WX + WW - 52, WY + 8, 3, TH_REC);
+        text_box(WX + WW - 46, WY + 3, 42, 2, &FONT_T, &FONT_T, "ENTER", TH_REC);
+    } else
+        text_box(WX + WW - 86, WY + 3, 82, 2, &FONT_T, &FONT_T, DIRN[dir], W_GRAY);
+    if (tr && !ui.endl_on) {                  /* transposed by a key */
+        s[0] = tr > 0 ? '+' : '-';
+        itoa_b(tr > 0 ? tr : -tr, s + 1);
+        text_box(WX + 6, WY + 16, 40, 0, &FONT_T, &FONT_T, s, TH_ENC[2]);
+    }
+    itoa_b(n, s);
+    nw = text2x_w(s);
+    x = WX + (WW - nw - 34) / 2;
+    text2x(x, y, s, n ? OR : W_LINE);
+    ax = x + nw + 10;                        /* the arrow: the way it goes */
+    ay = y + 30;
+    if (dir == 3)
+        text_box(ax, ay - 16, 24, 0, &FONT_L, &FONT_B, "?", OR);
+    else {
+        int kk;
+        for (kk = 0; kk < 2; kk++) {
+            hline(ax, ay + kk, 22, OR);
+            if (dir != 1) {                  /* a head to the right */
+                cv_line(ax + 22, ay + kk, ax + 15, ay - 7 + kk, OR);
+                cv_line(ax + 22, ay + kk, ax + 15, ay + 7 + kk, OR);
+            }
+            if (dir != 0) {                  /* to the left */
+                cv_line(ax, ay + kk, ax + 7, ay - 7 + kk, OR);
+                cv_line(ax, ay + kk, ax + 7, ay + 7 + kk, OR);
+            }
+        }
+    }
+    if (!n) {
+        text_box(WX, WY + WH - 18, WW, 1, &FONT_T, &FONT_XS, ui.endl_on ? "PLAY THE STEPS" : "REC TO PLAY IN STEPS", W_GRAY);
+        return;
+    }
+    {                                        /* the steps */
+        int x0 = WX + 6, w = WW - 12, sy = WY + WH - 14;
+        for (i = 0; i < n; i++) {
+            int a = x0 + i * w / n, b = x0 + (i + 1) * w / n - 1, j, on = 0, tied = 0;
+            for (j = 0; j < c->n; j++) {
+                const dk_ev_t *e = &dk_ev[c->at + j];
+                if (e->fl & EV_MOTION)
+                    continue;
+                if (e->pos == i * DK_T16)
+                    on = 1;
+                else if (e->pos < i * DK_T16 && e->pos + e->dur + 2 > i * DK_T16)
+                    tied = 1;
+            }
+            if (b <= a)
+                b = a + 1;
+            if (on)
+                cv_rect(a, sy, b - a, 8, dk_playing && i == cs ? OR : TH_TEXT);
+            else if (tied)
+                cv_rect(a, sy + 3, b - a + 1, 2, dk_playing && i == cs ? OR : W_GRAY);
+            else
+                cv_rect(a, sy + 6, b - a, 2, W_LINE);   /* a rest */
+        }
+    }
+}
+
 static void draw_seq(void)
 {
     const dk_track_t *k = cur();
@@ -1057,7 +1126,7 @@ static void draw_seq(void)
         return;
     }
     r[0] = 0;
-    if (seq_edit_row() || (!drum && k->seq == SQ_STEP)) {   /* the step editor: which bar */
+    if (seq_edit_row()) {                /* the step editor: which bar */
         x = (int)(itoa_b(ui_cursor / 16 + 1, cpy(r, "BAR ")) - r);
         r[x] = '/';
         itoa_b(len / DK_TPB, r + x + 1);
@@ -1133,10 +1202,18 @@ static void draw_seq(void)
             }
             if (dk_playing && ph >= 0 && ph < 16)
                 vline(WX + 33 + ph * 12 + ph / 4 * 2, WY + 1, WH - 2, TH_TEXT);
-        } else                               /* melodic: the step editor's grid */
-            draw_step_grid(c, len);
+        } else {                             /* melodic: the clip as a DAW's roll (the step editor is its third row) */
+            roll(c, WX + 4, WY + 4, WW - 8, WH - 14, len, TH_TRACK[dk_song.cur_track], 1);
+            hline(WX + 4, WY + WH - 6, WW - 8, W_LINE);
+            for (i = 0; i <= len / DK_TPB; i++)
+                vline(WX + 4 + i * DK_TPB * (WW - 8) / (len ? len : 1), WY + WH - 9, 5, W_GRAY);
+            if (dk_playing)
+                vline(WX + 4 + (int)(dk_part_tick % (uint16_t)len) * (WW - 8) / len, WY + 1, WH - 2, TH_TEXT);
+            if (!c->n)
+                text_box(WX, WY + 34, WW, 1, &FONT_XS, &FONT_T, "REC TO RECORD", W_GRAY);
+        }
         break;
-    case SQ_LIVE:
+    case SQ_LIVE:                        /* (an old project's LIVE: the same as SEQ) */
         roll(c, WX + 4, WY + 4, WW - 8, WH - 14, len, TH_TRACK[dk_song.cur_track], 1);
         hline(WX + 4, WY + WH - 6, WW - 8, W_LINE);
         for (i = 0; i <= len / DK_TPB; i++)
@@ -1146,51 +1223,9 @@ static void draw_seq(void)
         if (!c->n)
             text_box(WX, WY + 34, WW, 1, &FONT_XS, &FONT_T, "REC TO RECORD", W_GRAY);
         break;
-    case SQ_DRIVE: {
-        text_box(WX, WY + 4, WW, 1, &FONT_B, &FONT_XS, TAPE.style_name[k->drv[1] % TAPE.nstyle], TH_TEXT);
-        if (dk_dream_off())                  /* why it is quiet, said */
-            text_box(WX, WY + 26, WW, 1, &FONT_T, &FONT_T, "PAUSED: PERFORM KEY 6", TH_REC);
-        else if (!dk_playing)
-            text_box(WX, WY + 26, WW, 1, &FONT_T, &FONT_T, "PRESS PLAY: IT PLAYS BY ITSELF", TH_ENC[1]);
-        for (i = 0; i < 24; i++) {           /* how busy: bars of the energy, wandering with VARIATION */
-            uint32_t hh = (uint32_t)i * 2654435761u + (dk_ticks / DK_TPB) * 40503u;
-            int h = 3 + (int)((float)k->drv[0] * 0.38f * (0.4f + 0.6f * (float)((hh >> 24) & 255u) / 255.0f * (0.3f + (float)k->drv[2] * 0.007f)));
-            if (h > 52)
-                h = 52;
-            cv_rect(WX + 6 + i * 9, WY + WH - 4 - h, 5, h, i % 4 == 0 ? TH_ENC[0] : dimc(TH_ENC[0], 9));
-        }
+    case SQ_ENDLESS:
+        draw_endless(c);
         break;
-    }
-    case SQ_FINGER: {
-        for (i = 0; i < 16; i++) {           /* the sixteen patterns: held or latched, lit */
-            int cx = WX + 3 + (i % 4) * 56, cy = WY + 3 + (i / 4) * 24, on = (dk_finger_latch[dk_song.cur_track] >> i & 1u) != 0;
-            uint16_t dc = on ? TH_TEXT : dimc(TH_TEXT, 11);
-            int st, l, t = dk_song.cur_track;
-            if (on)
-                cv_rect(cx, cy, 52, 22, dimc(TH_ENC[0], 4));
-            hline(cx, cy + 22, 52, on ? TH_ENC[0] : W_LINE);
-            for (st = 0; st < 16; st++) {    /* the pattern itself, small: hits per lane, or a melody's contour */
-                int xx = cx + 2 + st * 3;
-                if (drum) {
-                    for (l = 0; l < 4; l++) {        /* KICK, SNARE, HATS, the rest */
-                        int v = l < 2 ? dk_fb_drum(t, i, l, st)
-                                      : l == 2 ? dk_fb_drum(t, i, 4, st) | dk_fb_drum(t, i, 5, st)
-                                               : dk_fb_drum(t, i, 2, st) | dk_fb_drum(t, i, 3, st) | dk_fb_drum(t, i, 6, st) | dk_fb_drum(t, i, 7, st);
-                        if (v)
-                            cv_rect(xx, cy + 3 + l * 5, 2, 4, v > 6 ? dc : dimc(dc, 8));
-                    }
-                } else {
-                    int ln, oc, d = dk_fb_mel(t, i, st, &ln, &oc, 0, 0);
-                    if (d) {
-                        int y = cy + 19 - (d - 1) * 3 / 2 - oc * 3;
-                        y = y < cy + 2 ? cy + 2 : y > cy + 19 ? cy + 19 : y;
-                        cv_rect(xx, y, ln * 3 - 1 > 49 - st * 3 ? 49 - st * 3 : ln * 3 - 1, 2, dc);
-                    }
-                }
-            }
-        }
-        break;
-    }
     default:
         (void)now;
         (void)s;

@@ -179,12 +179,12 @@ int project_load(int slot)
         dk_song.part[i].mute &= DK_PMUTE_ALL;
     dk_pm_x = 0;
     song_track_order();
-    for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS, HOLD and TOMBOLA too */
+    for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer; LIVE, DREAM, FINGER, HOLD, TOMBOLA are SEQ now */
         dk_track_t *k = &dk_song.trk[i];
         if (k->seq == SQ_ARP)
             k->arp_opt |= ARPO_ON;
-        if (k->seq == SQ_ARP || k->seq == SQ_ENDLESS || k->seq == SQ_HOLD || k->seq >= SQ_RSV7)   /* (SQ_RSV7: TOMBOLA once) */
-            k->seq = SQ_LIVE;
+        if (k->seq != SQ_STEP && k->seq != SQ_ENDLESS)
+            k->seq = SQ_STEP;
     }
     dk_unlock();
     return 0;
