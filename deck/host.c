@@ -137,6 +137,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "same")) g = host_clip_hash() == host_mark;
     else if (!strncmp(what, "events", 6) && what[6] && what[7]) g = host_events(what[6] - 'A', what[7] - '1');
     else if (!strcmp(what, "nroad")) g = dk_song.nroad;
+    else if (!strncmp(what, "road", 4) && what[4] >= '0' && what[4] <= '9') g = dk_song.road[atoi(what + 4) % DK_NROAD].part;   /* block N's part */
     else if (!strcmp(what, "pass")) g = dk_pass;
     else if (!strcmp(what, "lat")) g = dk_rec_lat;
     else if (!strcmp(what, "evpos")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].pos : -1;   /* the clip's first event */

@@ -295,14 +295,17 @@ static void rec_pre_flush(void)                /* the take begins: the early not
         pre_vel[n] = 0;
     }
 }
-static void rec_open(int t, int note, int vel)
+static int strum_ticks(int delay)              /* a strummed note's delay (samples) in ticks: kept in the take */
 {
-    const dk_track_t *k = &dk_song.trk[t];
-    int clip = cur_part * DK_NTRACK + t;
+    return tick_len > 0.0f && delay > 0 ? (int)((float)delay / tick_len + 0.5f) : 0;
+}
+static void rec_open(int t, int note, int vel, int delay)
+{
     if (open_pos[note] >= 0)
         rec_push(cur_part * DK_NTRACK + open_trk[note], 0, open_pos[note], DK_T16, note,
                  open_vel[note], 0);
-    open_pos[note] = (int16_t)rec_pos(t);
+    open_pos[note] = (int16_t)((rec_pos(t) + strum_ticks(delay)) % clip_len_of(cur_part, t));   /* the grid's place,
+                                                 * then the strum's offset after it (STRUM survives QUANT) */
     open_nc[note] = rec_nocomp;
     open_vel[note] = (uint8_t)vel;
     open_trk[note] = (uint8_t)t;
@@ -920,7 +923,7 @@ static void live_note(int t, int note, int vel, int delay)
         }
         voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0, 0);
         if (rec_track_of(t))
-            rec_open(t, note, vel);
+            rec_open(t, note, vel, delay);
         else if (rec_pre_track(t)) {           /* a touch early: kept for the take's first beat */
             pre_vel[note] = (uint8_t)vel;
             pre_trk[note] = (uint8_t)t;

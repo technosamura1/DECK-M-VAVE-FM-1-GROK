@@ -1321,7 +1321,7 @@ static void draw_road(void)
         pos = cur_b < dk_song.nroad ? start[cur_b] + (int)(prog * (float)(start[cur_b + 1] - start[cur_b])) : total;
         wound = total ? (float)pos / (float)total : 0.0f;
         cpy(itoa_b(dk_song.nroad, r), dk_song.nroad == 1 ? " BLOCK" : " BLOCKS");
-        module(ui.road_rec ? "REC" : dk_song.play_mode ? "SONG" : "PART", r);
+        module(dk_song.play_mode ? "SONG" : "PART", r);
         reel(WX + 20, WY + 18, 1.0f - wound, phase);    /* the reels, the tape between them */
         reel(WX + WW - 20, WY + 18, wound, phase);
         hline(WX + 20, WY + 3, WW - 40, CS_TAPE);
@@ -2042,6 +2042,110 @@ static void garden_overlay(int32_t y0, int32_t h)
     cv_oy = 0;
 }
 
+/* the tape, HOME held alone (0.4 s): the harmony of the track you record, bar by bar */
+static int harm_shown(void)
+{
+    return ui.page == PG_REC && held(B_HOME) && !ui.keys && plat_ms() - ui.down_t[B_HOME] >= 400u;
+}
+/* the harmony of a clip: the notes sounding at a tick (their names, or the chord's) */
+static int clip_notes_at(int clip, int tick, int *out)
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, n = 0;
+    for (i = 0; i < c->n && n < 8; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && e->pos <= tick && e->pos + e->dur > tick)
+            out[n++] = e->note;
+    }
+    return n;
+}
+static void notes_name(const int *nt, int n, char *b)   /* three and more: the chord; fewer: the notes */
+{
+    int i;
+    b[0] = 0;
+    if (n >= 3) {
+        dk_chord_name(nt, n, b);
+        return;
+    }
+    for (i = 0; i < n; i++) {
+        char *p = b;
+        while (*p)
+            p++;
+        if (i)
+            *p++ = ' ';
+        cpy(p, DK_NOTE_NAME[nt[i] % 12]);
+    }
+}
+static void bar_harmony(int clip, int b0, char *b)      /* a bar's: its fullest moment (a chord, else its notes) */
+{
+    const dk_clip_t *c = &dk_song.clip[clip];
+    int i, best = -1, bn = 0, nt[8], n, pcs = 0, k = 0, mel[4];
+    for (i = 0; i < c->n; i++) {             /* the onset with the most notes sounding */
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if ((e->fl & EV_MOTION) || e->pos < b0 || e->pos >= b0 + DK_TPB)
+            continue;
+        n = clip_notes_at(clip, e->pos, nt);
+        if (n > bn)
+            bn = n, best = e->pos;
+    }
+    if (best < 0) {
+        n = clip_notes_at(clip, b0, nt);     /* nothing begins here: what still sounds */
+        if (!n) {
+            cpy(b, "-");
+            return;
+        }
+        notes_name(nt, n, b);
+        return;
+    }
+    if (bn >= 3) {
+        n = clip_notes_at(clip, best, nt);
+        notes_name(nt, n, b);
+        return;
+    }
+    for (i = 0; i < c->n && k < 3; i++) {    /* a line: its first notes, each once */
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if ((e->fl & EV_MOTION) || e->pos < b0 || e->pos >= b0 + DK_TPB || (pcs >> (e->note % 12) & 1))
+            continue;
+        pcs |= 1 << (e->note % 12);
+        mel[k++] = e->note;
+    }
+    notes_name(mel, k, b);
+}
+/* the tape, HOME held: the recording track's harmony in this part, bar by bar (what you came up with) */
+static void draw_harmony(void)
+{
+    int p = dk_cur_part & 7, t = dk_rec_trk % DK_NTRACK, clip = p * DK_NTRACK + t, bars = clip_len(clip) / DK_TPB, i,
+        x = 8, y = 40, w = 224, rows, h;
+    char s[24];
+    if (!harm_shown())
+        return;
+    if (bars > 16)
+        bars = 16;
+    rows = (bars + 3) / 4;
+    h = 34 + rows * 24 + 6;
+    cv_rect(x, y, w, h, TH_BG);
+    hline(x, y, w, TH_ENC[1]);
+    hline(x, y + h - 1, w, TH_ENC[1]);
+    vline(x, y, h, TH_ENC[1]);
+    vline(x + w - 1, y, h, TH_ENC[1]);
+    {
+        char *q = cpy(s, track_label(t));
+        q = cpy(q, "  PART ");
+        *q++ = (char)('A' + p);
+        *q = 0;
+    }
+    text_box(x + 8, y + 7, w - 16, 0, &FONT_S, &FONT_T, s, TH_TEXT);
+    for (i = 0; i < bars; i++) {             /* four bars a row: its number, its chord */
+        int cx = x + 6 + (i % 4) * 54, cy = y + 32 + (i / 4) * 24,
+            now = dk_playing && (int)(dk_part_tick / DK_TPB) == i;
+        char nb[4];
+        bar_harmony(clip, i * DK_TPB, s);
+        itoa_b(i + 1, nb);
+        text_box(cx, cy + 4, 12, 0, &FONT_XS, &FONT_XS, nb, now ? TH_ENC[0] : TH_GRAY);
+        text_box(cx + 12, cy, 40, 0, &FONT_T, &FONT_XS, s, now ? TH_ENC[0] : TH_TEXT);
+    }
+}
+
 static void draw_page_band(int band)
 {
     band_begin(band * BAND_H, BAND_H);
@@ -2050,6 +2154,7 @@ static void draw_page_band(int band)
     draw_footer(186);
     draw_toast();
     draw_trackbar();
+    draw_harmony();
     band_end();
 }
 

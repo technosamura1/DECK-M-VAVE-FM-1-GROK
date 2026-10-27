@@ -44,6 +44,7 @@ static struct {
     uint32_t ed_t;
     uint8_t arm_trk;                     /* the tracks armed for recording (bit t; MIX / TRACKS: black 8 arms the selected one) */
     uint8_t armed;                       /* REC ARM: REC pressed, the tape waits for PLAY (or a note on ON NOTE) */
+    uint8_t rec_parts[8], rec_np;        /* the looper: the parts a take went into (their blocks come after it) */
     uint8_t endl_on;                     /* ENDLESS: the steps being played in (REC on, REC off) */
     uint32_t endl_t;                     /* the last step's moment (keys within 60 ms: one chord, one step) */
 } ui;
@@ -620,6 +621,40 @@ static void road_insert(int part, int dup)
     ui_road_cur = (uint8_t)at;
     mark_dirty();
 }
+static int road_has(int p)              /* a block on the road plays part p */
+{
+    int i;
+    for (i = 0; i < dk_song.nroad; i++)
+        if (dk_song.road[i].part == p)
+            return 1;
+    return 0;
+}
+static void road_append(int p)          /* a block at the road's end (the order you make them in) */
+{
+    if (dk_song.nroad >= DK_NROAD)
+        return;
+    undo_push_road();
+    dk_song.road[dk_song.nroad].part = (uint8_t)p;
+    dk_song.road[dk_song.nroad].reps = 1;
+    dk_song.road[dk_song.nroad].tricks = 0;
+    dk_song.road[dk_song.nroad].drop = 0;
+    ui_road_cur = dk_song.nroad;
+    dk_song.nroad++;
+    mark_dirty();
+}
+static void road_move(int d)             /* HOME + K1 on ROAD: the block a place left or right */
+{
+    int to = ui_road_cur + d;
+    dk_block_t b;
+    if (!dk_song.nroad || to < 0 || to >= dk_song.nroad)
+        return;
+    undo_push_road();
+    b = dk_song.road[to];
+    dk_song.road[to] = dk_song.road[ui_road_cur];
+    dk_song.road[ui_road_cur] = b;
+    ui_road_cur = (uint8_t)to;
+    mark_dirty();
+}
 static void road_delete(int keep)
 {
     int i;
@@ -868,19 +903,8 @@ static void action(int a, int b)
             }
             break;
         }
-        if (ui.page == PG_ROAD && !dk_song.play_mode) {   /* the road, recorded from the parts you play */
-            ui.road_rec ^= 1u;
-            if (ui.road_rec) {
-                undo_push_road();
-                dk_song.nroad = 0;
-                ui.road_part = dk_cur_part;
-                ui.road_loops = 0;
-                ui.road_last_tick = dk_part_tick;
-                if (!dk_playing)
-                    dk_cmd(C_PLAY, 1, 0, 0);
-            }
-            say("ROAD", ui.road_rec ? "REC" : "DONE");
-        } else if (dk_recording || dk_counting)
+        if (dk_recording || dk_counting)       /* (on ROAD too: a take into the part; its block on the road comes
+                                                 * by itself when the take ends, see rec_parts) */
             rec_stop_ui();
         else if (ui.armed) {                 /* armed: REC again lets it go */
             ui.armed = 0;
@@ -1270,9 +1294,11 @@ static void key_down(int k, int vel)
                 garage_dup(w);
             break;
         }
-        if (w >= 0 && w < 8) {
-            road_insert(w, 0);
-            say("ROAD", "BLOCK ADDED");
+        if (w >= 0 && w < 8) {           /* a block at the end: the road in the order you build it */
+            char st[8] = "PART A";
+            road_append(w);
+            st[5] = (char)('A' + w);
+            say("BLOCK ADDED", st);
             return;
         }
         if (w == 8) {                    /* COPY (white 9): the block on the cursor into the clipboard, kept; PASTE (black 11) puts it in */
@@ -1587,6 +1613,11 @@ static void turn(int i, int e)
     f = page_field(i, held(B_HOME));
     if (held(B_HOME))
         ui.used[B_HOME] = 1;
+    if (f == F_ROADCUR && held(B_HOME) && ui.page == PG_ROAD && !ui.garage) {   /* ROAD: HOME + K1 moves the block */
+        road_move(e > 0 ? 1 : -1);
+        say("BLOCK", e > 0 ? "MOVED RIGHT" : "MOVED LEFT");
+        return;
+    }
     if (f == F_NONE)
         return;
     field_range(f, &lo, &hi);
@@ -2000,26 +2031,33 @@ static void housekeeping(uint32_t now)
         say("BAKED", "NOW STEP");
         mark_dirty();
     }
+    /* the looper: the parts recorded into, in that order; when the take ends each one with notes and no block yet
+     * becomes a block at the road's end (the road builds itself; on ROAD the blocks are moved, copied, deleted) */
+    if (dk_recording) {
+        int p = dk_cur_part & 7, i, have = 0;
+        for (i = 0; i < ui.rec_np; i++)
+            have |= ui.rec_parts[i] == p;
+        if (!have && ui.rec_np < 8)
+            ui.rec_parts[ui.rec_np++] = (uint8_t)p;
+    } else if (ui.rec_np && !dk_counting) {
+        int i, added = -1;
+        rec_flush();
+        for (i = 0; i < ui.rec_np; i++) {
+            int p = ui.rec_parts[i];
+            if (!part_empty(p) && !road_has(p) && dk_song.nroad < DK_NROAD) {
+                road_append(p);
+                added = p;
+            }
+        }
+        ui.rec_np = 0;
+        if (added >= 0) {
+            char st[16] = "PART A";
+            st[5] = (char)('A' + added);
+            say("NEW BLOCK", st);
+        }
+    }
     /* the tape page goes back a bar after the recording */
     ui.rec_end = 0;                      /* (the tape page stays after a take: its settings to look at) */
-    /* the road recorded live: each part's loops become a block when the next one starts */
-    if (ui.road_rec && dk_playing) {
-        if (dk_part_tick < ui.road_last_tick && dk_cur_part == ui.road_part)
-            ui.road_loops++;
-        if (dk_cur_part != ui.road_part) {
-            if (dk_song.nroad < DK_NROAD) {
-                dk_song.road[dk_song.nroad].part = ui.road_part;
-                dk_song.road[dk_song.nroad].reps = (uint8_t)(ui.road_loops + 1 > 8 ? 8 : ui.road_loops + 1);
-                dk_song.road[dk_song.nroad].tricks = 0;
-                dk_song.road[dk_song.nroad].drop = 0;
-                dk_song.nroad++;
-            }
-            ui.road_part = dk_cur_part;
-            ui.road_loops = 0;
-            mark_dirty();
-        }
-        ui.road_last_tick = dk_part_tick;
-    }
     /* the export: a few frames a UI frame */
     if (ui.export_on) {
         int i;
