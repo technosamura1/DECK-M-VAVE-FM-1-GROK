@@ -1060,7 +1060,12 @@ static void action(int a, int b)
         }
         page_go(PG_ROAD);
         break;
-    case A_PAGE_MIX: page_go(PG_MIX); break;
+    case A_PAGE_MIX:                     /* (the panel's EDIT): MIX; on TRACKS the EDIT list, as its name says */
+        if (ui.page != PG_TRACKS) {
+            page_go(PG_MIX);
+            break;
+        }
+        /* fall through */
     case A_PAGE_KEYS:
         if (ui.page == PG_TRACKS) {          /* TRACKS: EDIT opens the EDIT list of the selected track's clip (again: the rows; from LAYERS: back) */
             ui.lay = (uint8_t)(ui.lay == 0 ? 1 : ui.lay == 2 ? 1 : 0);

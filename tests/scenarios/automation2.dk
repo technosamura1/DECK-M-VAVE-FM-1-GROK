@@ -56,6 +56,8 @@ release ARP
 wait 300
 expect autos >=3
 # MIX: REC held and the volume knob
+page 0
+wait 50
 tap EDIT
 wait 100
 expect page 3

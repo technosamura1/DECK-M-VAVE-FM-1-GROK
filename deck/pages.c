@@ -355,12 +355,12 @@ static const char *hint(void)
             return "W GROOVE  B1-10 FILL  B11 DICE";
         if (k->seq == SQ_ENDLESS)
             return ui.endl_on ? "OCT- REST  OCT+ TIE  REC = DONE" : "REC = PLAY IN STEPS  KEY = TRANSPOSE";
-        return "HOME x2, LFO = COOK RANDOM QUANTIZE";
+        return "HOME x2, EDIT = COOK RANDOM QUANTIZE";
     case PG_SOUND:
         if (plat_ms() / 3000u % 3u == 1u)
             return "HOLD REC + KNOB = AUTOMATION";
         if (plat_ms() / 3000u % 3u == 2u && auto_count(cur_clip(), 0))
-            return "HOME x2, LFO = ERASE AUTOMATION";
+            return "HOME x2, EDIT = ERASE AUTOMATION";
         return "FX = ROW  HOLD FX+WHITE 1-4 = BYPASS";
     case PG_MIX: return "WHITE TRACK  BLACK MUTE  B7 SOLO  B8 ARM";
     case PG_ROAD:
@@ -379,7 +379,7 @@ static const char *hint(void)
     case PG_TRACKS:
         if (ui.lay)
             return "HOLD LFO = UNDO  HOME = BACK";
-        return "LFO = EDIT LIST  K3 MODE  HOME = BACK";
+        return "EDIT = EDIT LIST  K3 MODE  HOME = BACK";
     case PG_ARP: return "K4 ON/OFF  ARP=ROW  HOME+ARP=OFF";
     default: return "";
     }
@@ -1982,7 +1982,7 @@ static void draw_layers(void)
             vline(tx + (int)(dk_part_tick % (uint16_t)clen) * (tw - 2) / clen, ry, 23, TH_TEXT);
     }
     text_box(4, 183, 232, 0, &FONT_T, &FONT_T, "W1 MUTE  W2 SOLO  W3 DELETE  W4 MERGE", TH_GRAY);
-    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = LAYER  LFO = BACK", dimc(TH_GRAY, 8));
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = LAYER  EDIT = BACK", dimc(TH_GRAY, 8));
 }
 /* THE EDIT LIST (TRACKS: EDIT): the selected track's clip; one item per white key, two columns. An erase asked once is red. */
 #define ED_N 14
@@ -2007,7 +2007,7 @@ static void draw_edit(void)
         text_box(x + 24, y + 3, 90, 0, &FONT_T, &FONT_T, ED_NAME[i], on ? TH_REC : TH_TEXT);
     }
     text_box(4, 183, 232, 0, &FONT_T, &FONT_T, ask >= 0 ? "AGAIN = ERASE  (3 S)" : "W1-14 = ITEM  ERASE: PRESS TWICE", ask >= 0 ? TH_REC : TH_GRAY);
-    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = TRACK  LFO = BACK", dimc(TH_GRAY, 8));
+    text_box(4, 195, 232, 0, &FONT_T, &FONT_T, "SEL = TRACK  EDIT = BACK", dimc(TH_GRAY, 8));
 }
 static int trk_rec(int t) { return (dk_recording || dk_counting) && (dk_rec_mask >> t & 1u); }
 static void draw_tracks(void)

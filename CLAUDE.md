@@ -830,3 +830,5 @@ SELECT во время записи добавлял дорожку в маск�
 - **Имена**: движки FELT→PIANO, TINE→KEYS, AIRPAD→PAD, SOFTBASS→BASS, DUSTKIT→DRUMKIT (остальные как были); роль барабанов — DRUMKIT. Инструменты
   в tools/*.py переименованы так же (WAV лежат в `out/sounds/<имя движка>`).
 - **Голосов 32** (`DK_NVOICE`; пул 298840 из 344064, RAM 38080). Сколько звучит на самом деле, решает бюджет CPU (`dk_budget`), не пул.
+- **TRACKS + панельная EDIT** (2026-10-28): на TRACKS кнопка EDIT (внутри `A_PAGE_MIX`) открывает и закрывает EDIT-список, как и LFO; на других страницах EDIT — MIX.
+  Подсказки «EDIT = EDIT LIST / EDIT = BACK». Тест `trackedit.dk`.

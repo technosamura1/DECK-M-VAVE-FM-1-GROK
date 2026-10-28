@@ -1,0 +1,20 @@
+# TRACKS (HOME twice): the panel's EDIT opens the track's EDIT list, again closes it; elsewhere EDIT is MIX
+wait 300
+tap HOME
+wait 100
+expect page 11
+tap EDIT
+wait 100
+expect page 11
+expect layview 1
+shot trackedit.png
+tap EDIT
+wait 100
+expect layview 0
+expect page 11
+tap HOME
+wait 100
+expect page 0
+tap EDIT
+wait 100
+expect page 3
