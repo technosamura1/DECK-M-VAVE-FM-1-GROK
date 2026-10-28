@@ -230,8 +230,8 @@ static int page_field(int i, int home)
         static const uint8_t F[5] = {F_MACRO, F_REV, F_ECHO, F_VOL, F_NONE};   /* (MOOD gone: the sound stays clean) */
         return F[i];
     }
-    case PG_TRACKS: {                        /* the selected track's level and pan */
-        static const uint8_t F[5] = {F_VOL, F_PAN, F_RECMODE, F_NONE, F_NONE};
+    case PG_TRACKS: {                        /* K1 the level, K2 the part of the road, K3 how a take records */
+        static const uint8_t F[5] = {F_VOL, F_TRPART, F_RECMODE, F_NONE, F_NONE};
         return F[i];
     }
     case PG_ARP: {                           /* the arpeggiator's own page */
@@ -379,7 +379,7 @@ static const char *hint(void)
     case PG_TRACKS:
         if (ui.lay)
             return "HOLD EDIT = UNDO  HOME = BACK";
-        return "EDIT = EDIT LIST  K3 MODE  HOME = BACK";
+        return "K2 PART  EDIT = LIST  HOME = BACK";
     case PG_ARP: return "K4 ON/OFF  ARP=ROW  HOME+ARP=OFF";
     default: return "";
     }

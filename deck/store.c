@@ -231,6 +231,10 @@ int project_load(int slot)
             }
         }
     }
+    if (dk_song.pinst_init)
+        part_inst_boot();                    /* the tracks already are this part's instruments */
+    else
+        part_inst_capture(dk_song.cur_part); /* an older project: every part starts as the tracks are */
     dk_unlock();
     return 0;
 empty:
@@ -309,6 +313,9 @@ int project_save(int slot)
     const phead_t *old = head_of(slot);
     if (dk_playing || dk_recording || (unsigned)slot >= DK_NPROJ)
         return -1;
+    dk_lock();
+    part_inst_flush();                       /* the knobs turned since this part was entered */
+    dk_unlock();
     h.magic = PROJ_HEAD_MAGIC;
     h.format = DK_FORMAT;
     h.nsong = sizeof dk_song;

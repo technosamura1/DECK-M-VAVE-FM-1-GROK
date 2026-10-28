@@ -179,6 +179,13 @@ typedef struct {
     uint8_t mute, rsv;                  /* mute: the tracks silent in THIS part (bit t = track t; 0 = all play). Older projects: 0 */
 } dk_part_t;
 #define DK_PMUTE_ALL 0x3Fu              /* (DK_NTRACK bits) */
+/* a part's instruments: what that part's tracks sound like. The mixer (vol, pan), the sequencer and the ARP stay the track's */
+typedef struct {
+    uint8_t eng, preset, fx;
+    int8_t p[DK_NP];
+    int8_t env[3];
+    int8_t macro, fxamt, fxa, fxb;
+} dk_pinst_t;
 
 #define DK_MAGIC 0x4B434544u            /* "DECK" */
 #define DK_FORMAT 1u
@@ -206,6 +213,9 @@ typedef struct {
     uint8_t fbank[DK_NTRACK];           /* FINGER: each track's pattern bank (0 LOFI .. DK_NFBANK-1); old projects: 0 */
     dk_snd_t snd[DK_NTRACK][DK_NSND];   /* the frozen sounds of each track (events' layer bits 5..7 point here) */
     uint32_t lmute[DK_NCLIP];           /* LAYERS: per clip, the takes muted (bit = take 0..31; playback skips them). Older projects: 0 */
+    /* each part keeps its own instruments (engine, preset, knobs). Older projects: 0, filled from the tracks on first use */
+    uint8_t pinst_init;
+    dk_pinst_t pinst[DK_NPART][DK_NTRACK];
 } dk_song_t;
 #define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
 

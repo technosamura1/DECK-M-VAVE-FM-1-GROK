@@ -1207,6 +1207,8 @@ static void motion_reset(void)
 /* --------------------------------------------------------------- transport --- */
 /* (rec_loop: a take asked for - see rec_stop) */
 static int song_on(void) { return dk_song.play_mode && dk_song.nroad && !rec_loop; }
+/* the part that is about to play: its instruments (song.c) */
+void part_inst_sync(int p);
 static void block_enter(void)
 {
     const dk_block_t *b;
@@ -1224,6 +1226,7 @@ static void block_enter(void)
     dk_cur_part = cur_part;
     dk_part_len = (uint16_t)part_len_of(cur_part);
     stop_to = 1.0f;
+    part_inst_sync(cur_part);            /* the block's part brings its own instruments */
 }
 static uint8_t road_from;                  /* SONG: the block PLAY starts from (the one chosen on ROAD) */
 static void play_start(void)
@@ -1692,10 +1695,18 @@ static void drain(void)
                     dk_cur_part = cur_part;
                     dk_part_len = (uint16_t)len;
                     rec_split_open();
+                    part_inst_sync(cur_part);    /* the take went on into this part: its instruments too */
                 } else {
                     if (dk_playing)
                         part_tick = 0;
                     block_enter();
+                    if (!dk_playing) {           /* a song's road must not pull the part back: this is the one being edited */
+                        cur_part = (uint8_t)a;
+                        dk_song.cur_part = (uint8_t)a;
+                        dk_cur_part = cur_part;
+                        dk_part_len = (uint16_t)part_len_of(cur_part);
+                        part_inst_sync(cur_part);
+                    }
                 }
             } else {
                 queued = (uint8_t)a;

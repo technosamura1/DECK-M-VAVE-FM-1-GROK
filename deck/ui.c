@@ -1413,9 +1413,19 @@ static void edit_list_do(int w)
         }
         return;
     }
-    for (p = 0; p < DK_NPART; p++)       /* the erases: is there anything to go? */
-        any |= w == 13 ? dk_song.clip[p * DK_NTRACK + t].n != 0 : p == dk_song.cur_part % DK_NPART &&
-               (w == 11 ? dk_song.clip[c].n - auto_count(c, 0) > 0 : auto_count(c, 0) > 0);
+    if (w == 13) {
+        int t2;
+        p = dk_song.cur_part % DK_NPART;
+        for (t2 = 0; t2 < DK_NTRACK; t2++)
+            if (dk_song.clip[p * DK_NTRACK + t2].n ||
+                dk_song.trk[t2].eng != TAPE.def_eng[t2] || dk_song.trk[t2].preset != TAPE.def_preset[t2])
+                any = 1;
+    } else {
+        c = cur_clip();
+        for (p = 0; p < DK_NPART; p++)
+            any |= p == dk_song.cur_part % DK_NPART &&
+                   (w == 11 ? dk_song.clip[c].n - auto_count(c, 0) > 0 : auto_count(c, 0) > 0);
+    }
     if (!any) {
         say(w == 12 ? "NO AUTOMATION" : "NOTHING TO ERASE", track_label(t));
         ui.ed_ask = 0;
@@ -1424,7 +1434,7 @@ static void edit_list_do(int w)
     if (ui.ed_ask != w + 1 || now - ui.ed_t >= 3000u) {   /* the first press asks */
         ui.ed_ask = (uint8_t)(w + 1);
         ui.ed_t = now;
-        say(w == 11 ? "ERASE NOTES" : w == 12 ? "ERASE AUTOMATION" : "ERASE ALL PARTS", "AGAIN = ERASE");
+        say(w == 11 ? "ERASE NOTES" : w == 12 ? "ERASE AUTOMATION" : "ERASE PART", "AGAIN = ERASE");
         return;
     }
     ui.ed_ask = 0;
@@ -1432,22 +1442,38 @@ static void edit_list_do(int w)
         auto_erase();
         return;
     }
+    if (w == 13) {                       /* this part only: every track's notes, and its instruments back to the tape */
+        int t2;
+        p = dk_song.cur_part % DK_NPART;
+        undo_group(1);
+        for (t2 = 0; t2 < DK_NTRACK; t2++) {
+            int cl = p * DK_NTRACK + t2;
+            if (!dk_song.clip[cl].n)
+                continue;
+            undo_push(cl);
+            dk_lock();
+            clip_clear_all(cl);
+            dk_unlock();
+        }
+        undo_group(0);
+        part_inst_reset(p);
+        mark_dirty();
+        say("PART CLEARED", "OTHERS KEPT");
+        return;
+    }
     undo_group(1);
     for (p = 0; p < DK_NPART; p++) {
         int cl = p * DK_NTRACK + t;
-        if ((w == 11 && p != dk_song.cur_part % DK_NPART) || !dk_song.clip[cl].n)
+        if (p != dk_song.cur_part % DK_NPART || !dk_song.clip[cl].n)
             continue;
         undo_push(cl);
         dk_lock();
-        if (w == 11)
-            clip_clear(cl);
-        else
-            clip_clear_all(cl);
+        clip_clear(cl);
         dk_unlock();
     }
     undo_group(0);
     mark_dirty();
-    say(w == 11 ? "NOTES ERASED" : "ALL ERASED", "UNDO: HOLD EDIT");
+    say("NOTES ERASED", "UNDO: HOLD EDIT");
 }
 
 static void key_down(int k, int vel)
@@ -1511,6 +1537,29 @@ static void key_down(int k, int vel)
             dk_metro.mode = 2;           /* ALWAYS: it clicks, transport or not */
             settings_save_later();
         }
+        return;
+    }
+    if (ui.page == PG_TRACKS && held(B_EDIT) && w == 13) {   /* EDIT held + W14: the whole road (twice) */
+        static uint32_t wipe_t;
+        uint32_t now = plat_ms();
+        ui.used[B_EDIT] = 1;
+        if (dk_playing || dk_recording || dk_counting) {
+            wipe_t = 0;
+            say("CLEAR ROAD", "STOP FIRST");
+            return;
+        }
+        if (!wipe_t || now - wipe_t >= 3000u) {
+            wipe_t = now;
+            say("CLEAR ROAD", "EDIT+W14 AGAIN");
+            return;
+        }
+        wipe_t = 0;
+        song_wipe();
+        dk_cmd(C_PART, 0, 0, 0);
+        ui.lay = 0;
+        ui.ed_ask = 0;
+        mark_dirty();
+        say("ROAD CLEARED", "");
         return;
     }
     if (ui.page == PG_SOUNDS && pb_key(w, b))   /* SOUNDS: the keys choose, the choice is heard */

@@ -834,6 +834,92 @@ void rec_reset(void)
 }
 
 /* ------------------------------------------------------------------ parts --- */
+static uint8_t part_live = 0xFF;         /* which part's instruments are in dk_song.trk (0xFF: not bound yet) */
+static void pinst_save(int p)
+{
+    int t;
+    p &= 7;
+    for (t = 0; t < DK_NTRACK; t++) {
+        const dk_track_t *k = &dk_song.trk[t];
+        dk_pinst_t *d = &dk_song.pinst[p][t];
+        int i;
+        d->eng = k->eng;
+        d->preset = k->preset;
+        d->fx = k->fx;
+        for (i = 0; i < DK_NP; i++)
+            d->p[i] = k->p[i];
+        for (i = 0; i < 3; i++)
+            d->env[i] = k->env[i];
+        d->macro = k->macro;
+        d->fxamt = k->fxamt;
+        d->fxa = k->fxa;
+        d->fxb = k->fxb;
+    }
+}
+static void pinst_load(int p)
+{
+    int t;
+    p &= 7;
+    for (t = 0; t < DK_NTRACK; t++) {
+        dk_track_t *k = &dk_song.trk[t];
+        const dk_pinst_t *d = &dk_song.pinst[p][t];
+        int i;
+        k->eng = d->eng;
+        k->preset = d->preset;
+        k->fx = d->fx;
+        for (i = 0; i < DK_NP; i++)
+            k->p[i] = d->p[i];
+        for (i = 0; i < 3; i++)
+            k->env[i] = d->env[i];
+        k->macro = d->macro;
+        k->fxamt = d->fxamt;
+        k->fxa = d->fxa;
+        k->fxb = d->fxb;
+    }
+}
+/* the part that is about to sound: keep the one we leave, bring this one's instruments */
+void part_inst_sync(int p)
+{
+    int i;
+    p &= 7;
+    if (!dk_song.pinst_init) {
+        for (i = 0; i < DK_NPART; i++)
+            pinst_save(i);               /* every part starts as the tracks are now */
+        dk_song.pinst_init = 1;
+        part_live = (uint8_t)p;
+        return;
+    }
+    if (part_live == 0xFF)
+        part_live = (uint8_t)(dk_song.cur_part & 7);
+    if (part_live == (uint8_t)p)
+        return;
+    pinst_save(part_live);
+    pinst_load(p);
+    part_live = (uint8_t)p;
+}
+/* the tracks as they are now: every part starts from them (then each one keeps its own) */
+void part_inst_capture(int p)
+{
+    int i;
+    p &= 7;
+    for (i = 0; i < DK_NPART; i++)
+        pinst_save(i);
+    dk_song.pinst_init = 1;
+    part_live = (uint8_t)p;
+}
+/* what the tracks are playing, written into the part they belong to (a save must not keep a stale slot) */
+void part_inst_flush(void)
+{
+    if (!dk_song.pinst_init)
+        return;
+    if (part_live == 0xFF)
+        part_live = (uint8_t)(dk_song.cur_part & 7);
+    pinst_save(part_live);
+}
+void part_inst_boot(void)
+{
+    part_live = dk_song.pinst_init ? (uint8_t)(dk_song.cur_part & 7) : 0xFF;
+}
 int part_has_events(int p)
 {
     int t;
@@ -890,6 +976,13 @@ int part_copy_x(int from, int to, int wipe)
     }
     dk_song.part[to].bars = dk_song.part[from].bars;
     dk_song.part[to].mute = dk_song.part[from].mute;
+    if (dk_song.pinst_init && part_live == (uint8_t)from)
+        pinst_save(from);                /* the knobs turned since we arrived are still only in the tracks */
+    part_inst_sync(from);
+    for (t = 0; t < DK_NTRACK; t++)
+        dk_song.pinst[to][t] = dk_song.pinst[from][t];
+    if (part_live == (uint8_t)to)
+        pinst_load(to);
     song_edits++;
     pc_edits = song_edits;
     dk_unlock();
@@ -1383,6 +1476,8 @@ void dk_song_clear(void)
     dk_song.sidechain = 15;
     dk_song.space = 1;
     dk_song.cur_track = 2;
+    dk_song.pinst_init = 0;
+    part_live = 0xFF;
     for (i = 0; i < DK_NPART; i++) {
         dk_song.part[i].bars = 4;
         dk_song.part[i].label = (uint8_t)(i % 8);
@@ -1391,6 +1486,7 @@ void dk_song_clear(void)
         track_defaults(t);
     reindex();
     song_edits++;
+    part_inst_capture(0);                /* the tape's instruments: every part starts here */
 }
 
 /* CLEAR ALL: the whole composition erased: every clip (8 parts x 6 tracks), the road, the frozen sounds, the parts' bars (4),
@@ -1435,6 +1531,34 @@ void song_clear_all(void)
     rn = 0;
     pc_part = 0xFF;
     song_edits++;
+    dk_unlock();
+}
+
+/* this part's instruments back to the tape's defaults (the other parts keep theirs); the sequencer and the mixer stay */
+void part_inst_reset(int p)
+{
+    int t;
+    p &= 7;
+    dk_lock();
+    part_inst_sync(p);
+    for (t = 0; t < DK_NTRACK; t++) {
+        int seq = dk_song.trk[t].seq, role = dk_song.trk[t].role;
+        dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
+    }
+    pinst_save(p);
+    dk_unlock();
+}
+
+/* CLEAR ROAD: every part's notes, the road, and every part's instruments back to the tape. Stopped only */
+void song_wipe(void)
+{
+    int t;
+    song_clear_all();
+    dk_lock();
+    for (t = 0; t < DK_NTRACK; t++)
+        track_defaults(t);
+    part_inst_capture(0);
+    dk_song.cur_part = 0;
     dk_unlock();
 }
 

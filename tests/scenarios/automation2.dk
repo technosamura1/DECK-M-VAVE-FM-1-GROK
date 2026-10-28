@@ -36,7 +36,7 @@ release LFO
 wait 100
 expect events >0
 expect same 1
-# ERASE ALL PARTS (white 14, twice): the track in every part, the automation too
+# ERASE ALL (white 14, twice): this part, the notes and the automation; the other parts stay
 tapkey w13
 tapkey w13
 wait 100

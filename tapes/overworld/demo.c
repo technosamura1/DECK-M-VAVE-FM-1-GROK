@@ -282,4 +282,8 @@ static void tape_demo(void)
     melody_put(P_OUTRO, DT_PIANO, 0, M_OUTRO, 9, 0);
     dn(P_OUTRO, DT_BASS, 0, 0, 36, 15, 60);
     dn(P_OUTRO, DT_BASS, 6, 0, 36, 15, 50);
+    {                                        /* every part starts with these instruments; a later edit stays in its part */
+        extern void part_inst_capture(int p);
+        part_inst_capture(0);
+    }
 }

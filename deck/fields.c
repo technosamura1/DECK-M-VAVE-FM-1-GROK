@@ -27,6 +27,7 @@ enum {
     /* SOUNDS (HOME + PRESET): the instrument, the block, the preset in it */ F_PBENG, F_PBBLK, F_PBPRE,
     /* GROOVE: AUTO FILL, MUTATE, FOLLOW (the track's drv[0..2]) */ F_GRFILL, F_GRMUT, F_GRFOL,
     /* the tape: the part the take goes into */ F_RECPART,
+    /* TRACKS K2: the part being edited (no copy) */ F_TRPART,
     F_N
 };
 /* (the SOUNDS page's: ui.c) */
@@ -576,6 +577,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_CLIPLEN: *lo = 1; *hi = 16; break;
     case F_RECBARS: *hi = 16; break;
     case F_RECPART: *lo = -1; *hi = 8; break;   /* (one past each end: the turn says which way) */
+    case F_TRPART: *hi = 7; break;
     case F_ARPMODE: *hi = 5; break;
     case F_ARPDIV: *hi = DK_ARP_NDIV - 1; break;
     case F_ARPRHY: *hi = ARPR_N - 1; break;
@@ -735,6 +737,7 @@ static int field_get_raw(int f)
     case F_MOVE: return se_moved;
     case F_CLIPLEN: return clip_len(cur_clip()) / DK_TPB;
     case F_RECPART: return (dk_playing ? (dk_next_part != 0xFF ? dk_next_part : dk_cur_part) : dk_song.cur_part) & 7;
+    case F_TRPART: return (dk_playing ? (dk_next_part != 0xFF ? dk_next_part : dk_cur_part) : dk_song.cur_part) & 7;
     case F_RECBARS: return ui_auto_on || (ui_rec_auto && part_empty(dk_song.cur_part)) ? 0 : dk_song.part[dk_song.cur_part & 7].bars;
     case F_QNT: return k->qnt;
     case F_TSWING: return k->swing;
@@ -836,6 +839,26 @@ static void say(const char *a, const char *b);
 static void mark_dirty(void);
 
 static char *cpy(char *d, const char *s);
+/* TRACKS K2: another part of the road. Stopped: there at once. Playing a part: at the bar's end.
+ * Never a copy (that is the tape's PART knob). A song follows its road, so the knob does not move it. */
+static void tracks_part(int p)
+{
+    char s[2];
+    p &= 7;
+    if (dk_playing && dk_song.play_mode && dk_song.nroad) {
+        say("SONG", "PARTS FOLLOW ROAD");
+        return;
+    }
+    if ((dk_playing ? (dk_next_part != 0xFF ? dk_next_part : dk_cur_part) : dk_song.cur_part) == p)
+        return;
+    dk_cmd(C_PART, p, 0, 0);
+    if (!dk_playing)
+        dk_song.cur_part = (uint8_t)p;
+    s[0] = (char)('A' + p);
+    s[1] = 0;
+    say("PART", dk_playing ? "NEXT BAR" : s);
+    mark_dirty();
+}
 
 static void field_set(int f, int v)
 {
@@ -904,6 +927,7 @@ static void field_set(int f, int v)
         ui_rec_auto = 0;
         break;
     case F_RECPART: rec_part_turn(v); break;
+    case F_TRPART: tracks_part(v); return;
     case F_RECBARS:
         ui_rec_auto = (uint8_t)(v == 0);
         if (v)
@@ -1122,6 +1146,7 @@ static const char *field_label(int f)
     case F_CLIPLEN: return "BARS";
     case F_RECBARS: return "BARS";
     case F_RECPART: return "PART";
+    case F_TRPART: return "PART";
     case F_QNT: return "QUANT";
     case F_TSWING: return "SWING";
     case F_ARPMODE: return "MODE";
@@ -1354,7 +1379,8 @@ static void field_text(int f, char *b)
     case F_SPACE: cpy(b, SPACE_NAME[v & 3]); break;
     case F_ROADCUR: itoa_b(v + 1, b); break;
     case F_ROADPART:
-    case F_GPART: b[0] = (char)('A' + v); b[1] = 0; break;
+    case F_GPART:
+    case F_TRPART: b[0] = (char)('A' + (v & 7)); b[1] = 0; break;
     case F_ROADREPS: b[0] = 'X'; itoa_b(v, b + 1); break;
     case F_GLABEL: cpy(b, LABEL_NAME[v & 7]); break;
     case F_PLAYMODE: cpy(b, PMODE_NAME[v & 1]); break;
