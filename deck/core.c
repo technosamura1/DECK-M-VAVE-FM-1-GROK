@@ -214,28 +214,33 @@ int dk_param_value(int t, int target) { return param_value(t, target, 1); }
 int dk_param_static(int t, int target) { return param_value(t, target, 0); }
 
 static uint8_t params_half;
+static void params_track(int t)
+{
+    const dk_engine_t *e = dk_engine(t);
+    int i;
+    for (i = 0; i < DK_NP; i++)
+        tp[t][i] = i < e->nparams ? (float)dk_param_value(t, T_P0 + i) : 0.0f;
+    tp[t][PX_ATT] = (float)dk_param_value(t, T_ATT);
+    tp[t][PX_DEC] = (float)dk_param_value(t, T_DEC);
+    tp[t][PX_REL] = (float)dk_param_value(t, T_REL);
+    tp[t][PX_DRIFT] = (float)dk_song.trk[t].drift;
+    t_fxamt[t] = (float)dk_param_value(t, T_FXAMT) * 0.01f;
+    t_fxa[t] = (float)dk_param_value(t, T_FXA) * 0.01f;
+    t_fxb[t] = (float)dk_param_value(t, T_FXB) * 0.01f;
+    t_rev[t] = (float)dk_param_value(t, T_REV) * 0.01f;
+    t_echo[t] = (float)dk_param_value(t, T_ECHO) * 0.01f;
+    t_vol[t] = (float)dk_param_value(t, T_VOL) * 0.01f;
+    t_pan[t] = (float)dk_param_value(t, T_PAN) * 0.02f;
+    t_swing[t] = (float)dk_param_value(t, T_SWING) * 0.01f;
+}
 static void params_update_some(int all)
 {
-    int t, i;
+    int t;
     params_half ^= 1u;
     for (t = 0; t < DK_NTRACK; t++) {
         if (!all && (t & 1) != params_half)    /* half the tracks a render (each one every 11.6 ms) */
             continue;
-        const dk_engine_t *e = dk_engine(t);
-        for (i = 0; i < DK_NP; i++)
-            tp[t][i] = i < e->nparams ? (float)dk_param_value(t, T_P0 + i) : 0.0f;
-        tp[t][PX_ATT] = (float)dk_param_value(t, T_ATT);
-        tp[t][PX_DEC] = (float)dk_param_value(t, T_DEC);
-        tp[t][PX_REL] = (float)dk_param_value(t, T_REL);
-        tp[t][PX_DRIFT] = (float)dk_song.trk[t].drift;
-        t_fxamt[t] = (float)dk_param_value(t, T_FXAMT) * 0.01f;
-        t_fxa[t] = (float)dk_param_value(t, T_FXA) * 0.01f;
-        t_fxb[t] = (float)dk_param_value(t, T_FXB) * 0.01f;
-        t_rev[t] = (float)dk_param_value(t, T_REV) * 0.01f;
-        t_echo[t] = (float)dk_param_value(t, T_ECHO) * 0.01f;
-        t_vol[t] = (float)dk_param_value(t, T_VOL) * 0.01f;
-        t_pan[t] = (float)dk_param_value(t, T_PAN) * 0.02f;
-        t_swing[t] = (float)dk_param_value(t, T_SWING) * 0.01f;
+        params_track(t);
     }
 }
 static void params_update(void) { params_update_some(1); }
@@ -593,6 +598,10 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
         snd = 0;
     if (note < 0 || note > 127 || vel <= 0.0f)
         return 0;
+    if (!fs)
+        params_track(t);                       /* the note hears this preset. tp[] is refreshed later, and only half
+                                                * the tracks a block: a KEYS engine swap otherwise plays one note on
+                                                * the previous engine's numbers (GLASS's OCTAVE was TINE's BARK) */
     if ((e->flags & EF_DRUM) && (note == 42 || note == 44 || note == 46))   /* the hats choke each other */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t && (vc[i].note == 42 || vc[i].note == 44 || vc[i].note == 46))

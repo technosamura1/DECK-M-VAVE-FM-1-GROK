@@ -1159,6 +1159,56 @@ static int fxlong_test(void)
     return bad;
 }
 
+/* KEYS presets change the engine (TINE, then GLASS). The first note of a switch used to start
+ * before tp[] caught up, so GLASS read TINE's BARK (p[3], ~45) as OCTAVE and the phase ran away. */
+static int keys_switch(void)
+{
+    static const int SET[12][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9}, {3, 0}, {3, 1},
+                                    {3, 3}, {3, 4}, {7, 0}, {7, 1}, {7, 7}, {7, 9}};
+    int i, bad = 0;
+    for (i = 0; i < 12; i++) {
+        int32_t blk[512];
+        int n, rails = 0;
+        long pk = 0;
+        fresh();
+        dk_lock();
+        dk_song.dust = 0;
+        dk_song.tempo = 100;
+        dk_track_setup(1, 1, 3, SQ_LIVE, R_ARP);   /* VELVET: BARK 70, the value GLASS must not hear */
+        dk_song.trk[1].rev = 70;
+        dk_unlock();
+        note(1, 60, 100);
+        run(0.06);
+        note(1, 60, 0);
+        run(0.02);
+        dk_lock();
+        dk_song.trk[1].eng = (uint8_t)SET[i][0];
+        track_preset(1, SET[i][1]);
+        dk_unlock();
+        note(1, 60, 110);
+        for (n = 0; n < 8; n++) {              /* ~46 ms: the note, before a later params refresh could save it */
+            int k;
+            dk_render(blk, 256, 4096u);
+            for (k = 0; k < 512; k++) {
+                long a;
+                if (blk[k] == (int32_t)0x80000000)
+                    a = 2147483648L;
+                else
+                    a = blk[k] < 0 ? -(long)blk[k] : (long)blk[k];
+                if (a > pk)
+                    pk = a;
+                if (a > 6000000L)
+                    rails++;
+            }
+        }
+        printf("keys slot %2d eng %d peak %ld rails %d\n", i, SET[i][0], pk, rails);
+        if (rails > 20 || pk > 6000000L)
+            bad++;
+    }
+    printf("keys_switch bad %d\n", bad);
+    return bad ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "sounds";
@@ -1203,6 +1253,8 @@ int main(int argc, char **argv)
         balance();
     else if (!strcmp(m, "atmo"))
         atmo_demo(argc > 2 ? argv[2] : "out/atmo.wav");
+    else if (!strcmp(m, "keys_switch"))
+        return keys_switch();
     else if (!strcmp(m, "bypass"))
         return bypass_test();
     else if (!strcmp(m, "automation"))

@@ -192,7 +192,19 @@ static void bell_on(float *st, int note, float vel, const float *p, int retrig)
     float tone = p[2] * 0.01f, f, kt, dsc = fm_exp2f((p[1] - 50.0f) * (1.0f / 40.0f)) * env_dec(p);
     (void)retrig;
     t = t < 0 ? 0 : t > 4 ? 4 : t;
-    note += 12 * (int)p[3];
+    {                                          /* OCTAVE is 0..2. A KEYS preset change can still hand this a TINE BARK
+                                                * (0..100) for one note: +840 semitones, the phase runs away, the plate farts */
+        int oct = (int)p[3];
+        if (oct < 0)
+            oct = 0;
+        else if (oct > 2)
+            oct = 2;
+        note += 12 * oct;
+        if (note < 0)
+            note = 0;
+        else if (note > 127)
+            note = 127;
+    }
     f = dk_mtof((float)note) * drift_of(p);
     kt = fm_clampf((float)(note - 48) * (1.0f / 48.0f), -0.5f, 1.0f);
     v->kind = (float)t;
