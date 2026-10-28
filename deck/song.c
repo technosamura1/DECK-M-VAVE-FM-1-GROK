@@ -1549,6 +1549,22 @@ void part_inst_reset(int p)
     dk_unlock();
 }
 
+/* one track of this part, back to the tape; the part's other tracks and the other parts stay */
+void part_inst_reset_track(int p, int t)
+{
+    int seq, role;
+    p &= 7;
+    if (t < 0 || t >= DK_NTRACK)
+        return;
+    dk_lock();
+    part_inst_sync(p);
+    seq = dk_song.trk[t].seq;
+    role = dk_song.trk[t].role;
+    dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
+    pinst_save(p);
+    dk_unlock();
+}
+
 /* CLEAR ROAD: every part's notes, the road, and every part's instruments back to the tape. Stopped only */
 void song_wipe(void)
 {

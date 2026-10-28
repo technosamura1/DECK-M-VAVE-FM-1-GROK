@@ -66,6 +66,7 @@ void part_inst_capture(int p);          /* the tracks' instruments, copied into 
 void part_inst_flush(void);             /* the live part's instruments back into its slot (before a save) */
 void part_inst_boot(void);              /* after a project loads */
 void part_inst_reset(int p);            /* this part's instruments back to the tape's; the others stay */
+void part_inst_reset_track(int p, int t); /* one track of this part; the other tracks and parts stay */
 int part_has_events(int p);              /* 1: any of the part's six clips has an event */
 /* NEW PART = COPY: the part `from` copied into the empty part `to` (all six clips with their events, takes and frozen-sound ids,
  * lengths, the part's bars and track mutes), one undo step. 1 copied; 0 nothing done (same part, `to` not empty, `from` empty);

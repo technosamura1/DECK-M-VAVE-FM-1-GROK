@@ -37,13 +37,13 @@ wait 800
 release LFO
 wait 50
 expect same 1
-# this part, every track: notes go; the other parts stay. one undo step
+# this track, this part: notes go; the other parts stay. one undo step
 tapkey w13
 wait 100
 said AGAIN = ERASE
 tapkey w13
 wait 100
-said PART CLEARED
+said TRACK CLEARED
 expect events 0
 expect eventsB1 >0
 expect eventsC1 >0

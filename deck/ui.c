@@ -1413,13 +1413,10 @@ static void edit_list_do(int w)
         }
         return;
     }
-    if (w == 13) {
-        int t2;
-        p = dk_song.cur_part % DK_NPART;
-        for (t2 = 0; t2 < DK_NTRACK; t2++)
-            if (dk_song.clip[p * DK_NTRACK + t2].n ||
-                dk_song.trk[t2].eng != TAPE.def_eng[t2] || dk_song.trk[t2].preset != TAPE.def_preset[t2])
-                any = 1;
+    if (w == 13) {                       /* the selected track, this part only */
+        int cl = (dk_song.cur_part % DK_NPART) * DK_NTRACK + t;
+        any = dk_song.clip[cl].n != 0 || dk_song.trk[t].eng != TAPE.def_eng[t] ||
+              dk_song.trk[t].preset != TAPE.def_preset[t];
     } else {
         c = cur_clip();
         for (p = 0; p < DK_NPART; p++)
@@ -1434,7 +1431,7 @@ static void edit_list_do(int w)
     if (ui.ed_ask != w + 1 || now - ui.ed_t >= 3000u) {   /* the first press asks */
         ui.ed_ask = (uint8_t)(w + 1);
         ui.ed_t = now;
-        say(w == 11 ? "ERASE NOTES" : w == 12 ? "ERASE AUTOMATION" : "ERASE PART", "AGAIN = ERASE");
+        say(w == 11 ? "ERASE NOTES" : w == 12 ? "ERASE AUTOMATION" : "ERASE TRACK", "AGAIN = ERASE");
         return;
     }
     ui.ed_ask = 0;
@@ -1442,23 +1439,20 @@ static void edit_list_do(int w)
         auto_erase();
         return;
     }
-    if (w == 13) {                       /* this part only: every track's notes, and its instruments back to the tape */
-        int t2;
+    if (w == 13) {                       /* this track, this part: its notes and its instrument. The rest stays */
+        int cl = (dk_song.cur_part % DK_NPART) * DK_NTRACK + t;
         p = dk_song.cur_part % DK_NPART;
-        undo_group(1);
-        for (t2 = 0; t2 < DK_NTRACK; t2++) {
-            int cl = p * DK_NTRACK + t2;
-            if (!dk_song.clip[cl].n)
-                continue;
+        if (dk_song.clip[cl].n) {
+            undo_group(1);
             undo_push(cl);
             dk_lock();
             clip_clear_all(cl);
             dk_unlock();
+            undo_group(0);
         }
-        undo_group(0);
-        part_inst_reset(p);
+        part_inst_reset_track(p, t);
         mark_dirty();
-        say("PART CLEARED", "OTHERS KEPT");
+        say("TRACK CLEARED", "OTHER PARTS KEPT");
         return;
     }
     undo_group(1);
@@ -1539,21 +1533,24 @@ static void key_down(int k, int vel)
         }
         return;
     }
-    if (ui.page == PG_TRACKS && held(B_EDIT) && w == 13) {   /* EDIT held + W14: the whole road (twice) */
+    if (ui.page == PG_TRACKS && w == 13 && (held(B_EDIT) || held(B_LFO))) {
+        /* either EDIT: the panel's EDIT (opens the list on TRACKS) or the deck's EDIT. Twice: the whole road */
         static uint32_t wipe_t;
         uint32_t now = plat_ms();
-        ui.used[B_EDIT] = 1;
-        if (dk_playing || dk_recording || dk_counting) {
-            wipe_t = 0;
-            say("CLEAR ROAD", "STOP FIRST");
-            return;
-        }
+        if (held(B_EDIT))
+            ui.used[B_EDIT] = 1;
+        if (held(B_LFO))
+            ui.used[B_LFO] = 1;
         if (!wipe_t || now - wipe_t >= 3000u) {
             wipe_t = now;
             say("CLEAR ROAD", "EDIT+W14 AGAIN");
             return;
         }
         wipe_t = 0;
+        if (dk_playing || dk_counting)
+            dk_cmd(C_PLAY, 0, 0, 0);
+        if (dk_recording || dk_counting)
+            dk_cmd(C_REC, 0, 0, 0);
         song_wipe();
         dk_cmd(C_PART, 0, 0, 0);
         ui.lay = 0;

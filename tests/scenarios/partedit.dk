@@ -39,28 +39,38 @@ wait 50
 said AGAIN = ERASE
 tapkey w13
 wait 100
-said PART CLEARED
+said TRACK CLEARED
 expect events 0
 expect eventsC1 0
+expect eventsC3 >0
 expect eventsA1 >0
 expect eventsB1 >0
 expect preset 0
+tap LFO
+wait 40
+tapkey w1
+wait 40
+expect track 1
+expect eng 3
+tapkey w0
+wait 40
+expect track 0
 turn K2 -2
 wait 100
 expect part 0
 expect preset 4
 expect eventsA1 >0
-# the whole road
-press LFO
+# the whole road: the panel's EDIT (the button that opens this list) held + W14, twice
+press EDIT
 tapkey w13
-release LFO
+release EDIT
 wait 50
 said EDIT+W14 AGAIN
 expect eventsA1 >0
 expect nroad >0
-press LFO
+press EDIT
 tapkey w13
-release LFO
+release EDIT
 wait 100
 said ROAD CLEARED
 expect nev 0
