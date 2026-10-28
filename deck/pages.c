@@ -352,7 +352,7 @@ static const char *hint(void)
         if (k->seq == SQ_STEP)
             return cur_eng()->flags & EF_DRUM ? "WHITE STEPS  BLACK LANES  SEQ ROW" : "SEQ AGAIN x2 = STEP EDIT";
         if (k->seq == SQ_GROOVE)
-            return "W GROOVE  B1-10 FILL  B11 DICE";
+            return "SAME KEY STOPS  HOLD SEQ = FILL";
         if (k->seq == SQ_ENDLESS)
             return ui.endl_on ? "OCT- REST  OCT+ TIE  REC = DONE" : "REC = PLAY IN STEPS  KEY = TRANSPOSE";
         return "HOME x2, EDIT = COOK RANDOM QUANTIZE";
@@ -367,7 +367,7 @@ static const char *hint(void)
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "W1-8 ADD  W9 COPY  BLACK TRICKS  REC = LIVE";
     case PG_KEYS: return "LFO = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
-    case PG_GLOB: return ui.row[PG_GLOB] % 7 >= 5 ? "ATMO  GLO = NEXT ROW" : "GLO = NEXT ROW  HOLD GLO = FILL";
+    case PG_GLOB: return ui.row[PG_GLOB] % 7 >= 5 ? "ATMO  GLO = NEXT ROW" : "HOLD GLO + W1 = TAP TEMPO";
     case PG_ATMO: return "SEL = NEXT ROW  REC = ARM";
     case PG_SOUNDS: return "W PRESET  B BLOCK  OCT INSTR";
     case PG_REC:
@@ -500,7 +500,7 @@ static const char *hold_hint(uint32_t now)
     static const char *const H[NB] = {
         "FX: SOUND  +W1-4 BYPASS", "SEL: REC SETUP  AGAIN = ROW",
         "ENV: ROAD  REC ON: NEXT PART", "EDIT: MIX  HOLD = UNDO",
-        "LFO: KEYS  HOLD = UNDO", "GLO: GLOBAL  HOLD = FILL",
+        "LFO: KEYS  HOLD = UNDO", "GLO: GLOBAL  HOLD + W1 TEMPO",
         0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
         "ARP: PAGE  K4 ON/OFF  +WHITE PART", 0,
         "PLAY/STOP  HOLD PART/SONG", "REC +OCT UNDO  +W1-6 LAYER",
@@ -1722,8 +1722,9 @@ static void draw_global(void)
         cpy(p, "%");
     }
     module("GLOBAL", s);
-    if (dk_playing) {
-        float b = (float)(dk_ticks % (2u * DK_PPQ)) / (float)DK_PPQ;   /* there and back, two beats */
+    if (dk_playing || dk_metro.mode == 2) {
+        uint32_t ticks = dk_playing ? dk_ticks : dk_clock;
+        float b = (float)(ticks % (2u * DK_PPQ)) / (float)DK_PPQ;   /* there and back, two beats */
         a = 0.45f * fm_cosf(3.1415927f * b);
     }
     for (i = 0; i < 68; i++) {               /* the body: a tall trapezoid */

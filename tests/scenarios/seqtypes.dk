@@ -113,15 +113,13 @@ expect endlsteps 6
 wait 1000
 tap PLAY
 wait 300
-# FILL held while playing
+# FILL is no longer GLO: holding it does not start a fill
 tap PLAY
 wait 500
 press GLO
 wait 450
-expect fill 1
-release GLO
-wait 100
 expect fill 0
+release GLO
 tap PLAY
 wait 200
 expect textfit 0

@@ -1033,6 +1033,10 @@ static void clip_edit_key(int k)
     say(s, "BAR PASTED");
 }
 
+static int drum_groove(void)
+{
+    return (cur_eng()->flags & EF_DRUM) && cur()->seq == SQ_GROOVE;
+}
 static void action(int a, int b)
 {
     switch (a) {
@@ -1149,6 +1153,10 @@ static void action(int a, int b)
             say("TAP", "");
         break;
     }
+    case A_TAP_ARM:                      /* GLO held: the metronome is waiting for W1 */
+        if (!(ui.combo >> B_GLO & 1u))
+            say("TEMPO", "TAP W1");
+        break;
     case A_REC:
         if (cur()->seq == SQ_ENDLESS && !dk_recording && !dk_counting && !ui.armed) {   /* ENDLESS: the steps played in */
             int clip = cur_clip();
@@ -1225,7 +1233,9 @@ static void action(int a, int b)
             say(s, LABEL_NAME[dk_song.part[p].label & 7]);
         break;
     }
-    case A_FILL:
+    case A_FILL:                         /* SEQ held, and only a drum track in GROOVE */
+        if (b && !drum_groove())
+            break;
         dk_cmd(C_FILL, b, 0, 0);
         if (b)
             say("FILL", "");
@@ -1494,14 +1504,29 @@ static void key_down(int k, int vel)
             say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
+    if (held(B_GLO) && w == 0) {        /* GLO held + the first white key: tap the tempo into the metronome */
+        ui.used[B_GLO] = 1;
+        action(A_TAP_TEMPO, 1);
+        if (ui.tap_n >= 3 && dk_metro.mode != 2) {
+            dk_metro.mode = 2;           /* ALWAYS: it clicks, transport or not */
+            settings_save_later();
+        }
+        return;
+    }
     if (ui.page == PG_SOUNDS && pb_key(w, b))   /* SOUNDS: the keys choose, the choice is heard */
         return;
     if (trk->seq == SQ_GROOVE && (e->flags & EF_DRUM) && TAPE.groove && ui.page != PG_MIX && ui.page != PG_TRACKS &&
         ui.page != PG_PROJECT && ui.page != PG_ROAD) {   /* GROOVE: white 1-15 the grooves, 16 the end, black the fills */
         int t = dk_song.cur_track;
         if (w >= 0 && w < TAPE.ngroove) {
-            dk_cmd(C_GROOVE, t, 0, w + 1);
-            say(TAPE.groove[w].name, dk_gr_cur[t] || dk_playing ? "NEXT BAR" : "");
+            int g = w + 1;
+            if (g == dk_gr_cur[t] || g == (int)dk_gr_next[t]) {   /* the same key again: the groove ends */
+                dk_cmd(C_GROOVE, t, 2, 0);
+                say(TAPE.groove[w].name, "STOP");
+            } else {
+                dk_cmd(C_GROOVE, t, 0, g);
+                say(TAPE.groove[w].name, dk_gr_cur[t] || dk_playing ? "NEXT BAR" : "");
+            }
         } else if (w >= 0) {
             dk_cmd(C_GROOVE, t, 0, 0);
             say("END", "NEXT BAR");
@@ -1517,7 +1542,7 @@ static void key_down(int k, int vel)
                 say("DICE", "PLAY A GROOVE FIRST");
             else {
                 dk_cmd(C_GROOVE, t, 3, 0);
-                say("DICE", "WHITE AGAIN = BACK");
+                say("DICE", "SAME KEY = STOP");
             }
         }
         return;
@@ -2183,7 +2208,7 @@ static void lights(void)
     if (dk_playing)
         b |= LED_PLAY_GREEN;
     if (dk_fill)
-        b |= 1u << B_GLO;
+        b |= 1u << B_SEQ;
     if (dk_arp_on(trk))                  /* the ARP on this track: its button lit */
         b |= 1u << B_ARP;
     if (trk->oct > 0)                    /* the octave away from home: its button lit */
@@ -2246,7 +2271,7 @@ static void combo_used(void)
     for (b = 0; b < NB; b++)
         if (held(b)) {
             ui.combo |= (uint16_t)(1u << b);
-            if (b != B_GLO)              /* (GLO's FILL may still start: keys played over a fill are no combo of it) */
+            if (b != B_GLO)              /* (GLO held + W1 is tap tempo: the arm at 250 ms still runs) */
                 ui.used[b] = 1;
         }
 }
@@ -2274,6 +2299,7 @@ static void input(void)
 static void input_do(void)
 {
     static uint32_t last_in;
+    static uint8_t seq_fill;
     uint32_t keys, btn = btn_swap(plat_buttons()), k, now = plat_ms();
     int32_t e;
     if (last_in && now - last_in > dg_kgap)
@@ -2322,6 +2348,8 @@ static void input_do(void)
             ui.used[k] = 0;
             ui.combo &= (uint16_t)~(1u << k);
             ui.held_done[k] = 0;
+            if (k == B_SEQ)
+                seq_fill = 0;
             ui.btn |= bit;
             if ((k == B_OCTDN || k == B_OCTUP) && (btn >> B_REC & 1u)) {   /* REC + OCT-: the last take undone; OCT+: back */
                 ui.used[B_REC] = 1;
@@ -2340,6 +2368,10 @@ static void input_do(void)
         } else if (k == B_REC && (btn & bit) && !ui.used[k] && now - ui.down_t[k] >= HOLD_ERASE_MS && !held(B_HOME)) {
             ui.used[k] = 1;              /* REC held, no knob turned: the take just recorded goes (one undo step); it records on if it was */
             take_erase_ui();
+        } else if ((btn & bit) && k == B_SEQ && !seq_fill && drum_groove() &&
+                   now - ui.down_t[k] >= 250u) {                 /* drums in GROOVE: hold SEQ = FILL */
+            seq_fill = 1;
+            action(A_FILL, 1);
         } else if ((btn & bit) && !ui.used[k] && m->hold_ms && m->hold_ms != HOLD_MOD) {   /* held */
             if (now - ui.down_t[k] >= m->hold_ms) {
                 ui.used[k] = 1;
@@ -2347,7 +2379,10 @@ static void input_do(void)
             }
         } else if (!(btn & bit) && (ui.btn & bit)) {             /* up */
             ui.btn &= ~bit;
-            if (m->tap == A_FILL)
+            if (k == B_SEQ && seq_fill) {    /* the FILL ends with SEQ */
+                seq_fill = 0;
+                action(A_FILL, 0);
+            } else if (m->tap == A_FILL)
                 action(A_FILL, 0);
             else if (m->hold == A_FILL && ui.used[k])   /* GLO held: the FILL ends with it */
                 action(A_FILL, 0);

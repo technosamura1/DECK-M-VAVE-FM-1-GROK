@@ -1,0 +1,80 @@
+# GROOVE: the same white key starts a groove and stops it. SEQ held (drums, GROOVE) is the building FILL.
+# GLO held + W1 taps a tempo into the metronome. GLO itself no longer fills.
+wait 300
+tap HOME
+wait 100
+tapkey w5
+wait 100
+tap HOME
+wait 100
+expect track 5
+seqtype 2
+wait 80
+expect seq 7
+# stopped: white 4 starts at once, the same key stops it
+tapkey w3
+wait 80
+expect grcur 4
+tapkey w3
+wait 80
+expect grcur 0
+# a different key starts another
+tapkey w6
+wait 80
+expect grcur 7
+tapkey w6
+wait 80
+expect grcur 0
+# SEQ held: FILL. white and black keys still take (a groove under the fill)
+tapkey w3
+wait 80
+expect grcur 4
+press SEQ
+wait 400
+expect fill 1
+tapkey w6
+wait 40
+tapkey b1
+wait 40
+release SEQ
+wait 80
+expect fill 0
+# not drums: SEQ held does not fill (HOME from SEQ is PLAY, again is TRACKS)
+tap HOME
+wait 60
+tap HOME
+wait 60
+tapkey w0
+wait 60
+expect track 0
+press SEQ
+wait 400
+expect fill 0
+release SEQ
+wait 50
+# back to the drums, GLO held is not a fill
+tap HOME
+wait 60
+tap HOME
+wait 60
+tapkey w5
+wait 60
+tap HOME
+wait 50
+expect track 5
+press GLO
+wait 400
+expect fill 0
+# three taps on W1, about half a second apart: the metronome takes the tempo and clicks
+tapkey w0
+wait 420
+tapkey w0
+wait 420
+tapkey w0
+wait 200
+release GLO
+wait 1500
+expect metro 2
+expect tempo >100
+expect tempo <160
+expect clicks >2

@@ -85,13 +85,17 @@ tapkey w4
 wait 100
 expect grcur 5
 expect grmod 0
-# DICE (black 11): the same drums, other hits; its white again: the written one back (on the next bar)
+# DICE (black 11): the same drums, other hits. The same white key stops the groove; press it again for the written one
 tapkey b10
 wait 60
 expect grmod 1
 shot groove_dice.png
 tapkey w4
-wait 3300
+wait 80
+expect grcur 0
+tapkey w4
+wait 80
+expect grcur 5
 expect grmod 0
 # AUTO FILL every 4 bars: a fill comes by itself (back on SEQ: the recording left the tape on screen)
 tap SEQ

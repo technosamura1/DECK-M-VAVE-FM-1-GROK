@@ -853,7 +853,7 @@ static void field_set(int f, int v)
     case F_GRFILL:
     case F_GRMUT:
     case F_GRFOL: k->drv[f - F_GRFILL] = (uint8_t)v; break;
-    case F_TEMPO: dk_song.tempo = (uint8_t)v; break;
+    case F_TEMPO: dk_song.tempo = (uint8_t)v; dk_cmd(C_RETUNE, 0, 0, 0); break;
     case F_MACRO: k->macro = (int8_t)v; break;
     case F_MOOD:
         song_mood(v);

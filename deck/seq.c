@@ -1398,6 +1398,20 @@ static void metro_tick(void)
         }
     }
 }
+/* METRO ALWAYS, transport stopped: the same click, on the free clock */
+static void metro_free(void)
+{
+    static const uint8_t DV[3] = {DK_PPQ, DK_PPQ / 2, DK_PPQ / 4};
+    int dv = DV[dk_metro.div % 3];
+    if (gt % (uint32_t)dv)
+        return;
+    if (gt % DK_PPQ == 0)
+        metro_click(gt % DK_TPB == 0);
+    else {
+        metro_click(0);
+        clk.env *= 0.4f;
+    }
+}
 
 static void road_next(void)
 {
@@ -1448,11 +1462,16 @@ static void seq_tick(void)
     if (!dk_playing) {                         /* stopped: the hands' generators still run, on the free clock */
         for (t = 0; t < DK_NTRACK; t++) {
             const dk_track_t *k = &dk_song.trk[t];
+            const dk_engine_t *e = dk_engine(t);
             if (dk_arp_on(k))
                 arp_tick(t);
-            if (k->seq == SQ_GROOVE)
+            if (dk_fill && (e->flags & EF_DRUM))   /* FILL held: the building bar, instead of the groove */
+                fill_tick(t);
+            else if (k->seq == SQ_GROOVE)
                 groove_tick(t);
         }
+        if (dk_metro.mode == 2)            /* METRO ALWAYS clicks with the transport stopped too */
+            metro_free();
         mods_tick();
         return;
     }

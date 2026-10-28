@@ -1,5 +1,6 @@
 # a hold past the hint (0.45 s: the hint, or HOME's load box, is up) is a look: letting go does not do the button's tap.
-# A short press still does. Holds with an action of their own keep it (EDIT undo, GLO fill, ENV garage)
+# A short press still does. Holds with an action of their own keep it (EDIT undo, ENV garage).
+# GLO held is tap-tempo arm, not a page change and not FILL.
 wait 300
 tap FX
 wait 3500
@@ -84,7 +85,7 @@ expect page 0
 tap FX
 press GLO
 wait 400
-expect fill 1
+expect fill 0
 release GLO
 wait 100
 expect page 2
