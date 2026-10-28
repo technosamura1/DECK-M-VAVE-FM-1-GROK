@@ -116,4 +116,5 @@ uint32_t dk_cpu_cost(void);
 /* the CPU's load (the render's %, the device's measure) to the voices' budget: it sheds sooner when the render runs
  * long, and gives back slowly */
 void dk_set_load(int pct);
+void dk_load_force(int pct);                 /* -1 follows the device again; else a held CPU % (tests) */
 int dk_get_budget(void);                             /* the render's cost, microseconds a block (host) */

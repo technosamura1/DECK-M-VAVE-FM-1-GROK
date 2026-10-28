@@ -387,28 +387,50 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
  * OVERWORLD's busiest moment cost: over it, the quietest tails go first (faded), then a quiet held voice; never a
  * loud note */
 /* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
-/* (the device measured: 11 voices, the effects and the reverb in 2.8 of 5.8 ms; a held piano chord and a keys chord on top -
- * 8 voices of 13 - did not fit the old 100: the piano gave way to the hand. Now it starts higher and climbs while the load
- * is under 55 %, falls fast over 68 %) */
+/* (11 voices plus the effects were 2.8 of 5.8 ms, ~48 %. The cost sum does not count the reverb and the inserts, so a
+ * full song can sit "under budget" while the device is already at 90 %: the lead's first notes then crackle. The
+ * measured % is what cuts the tails. It starts at 140 so a piano chord and a keys chord still fit, and falls fast
+ * once the render is past 64 %.) */
 #define DK_BUDGET_MAX 200
 #define DK_BUDGET_MIN 50
 static volatile int dk_budget = 140;
 static volatile int dk_budget_hold;      /* (the host's scenarios: a device that holds its budget low, as a CPU load of 45-62% does) */
+static volatile int dk_load_pct;         /* the device's last measure, 0..100 (the host can hold one) */
+static volatile int dk_load_hold;
 void dk_budget_force(int b)
 {
     dk_budget_hold = b;
     if (b)
         dk_budget = b;
 }
+void dk_load_force(int pct)              /* -1: the device's measure again; else hold this % (a test of the 90 % crackle) */
+{
+    if (pct < 0) {
+        dk_load_hold = 0;
+        return;
+    }
+    dk_load_pct = pct > 100 ? 100 : pct;
+    dk_load_hold = 1;
+}
 void dk_set_load(int pct)
 {
     int b = dk_budget;
+    if (pct < 0)
+        pct = 0;
+    if (pct > 100)
+        pct = 100;
+    if (!dk_load_hold)
+        dk_load_pct = pct;
     if (dk_budget_hold)
         return;
-    if (pct > 68)
-        b -= pct > 80 ? 14 : 6;
-    else if (pct < 55)
-        b += 3;
+    if (pct >= 85)
+        b -= 30;                         /* already crackling: down at once, not 14 a frame */
+    else if (pct >= 74)
+        b -= 16;
+    else if (pct >= 64)
+        b -= 8;
+    else if (pct < 48)
+        b += 2;
     dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
 }
 int dk_get_budget(void) { return dk_budget; }
@@ -420,19 +442,26 @@ int dk_get_budget(void) { return dk_budget; }
  * always has a voice. A voice the hand holds is never taken by the sequencer. */
 static void budget_make_room(int want, int live)
 {
+    int hot = shed || dk_load_pct >= 72;     /* the cost sum misses the reverb: a hot device sheds before the new note */
+    int melt = shed || dk_load_pct >= 84;    /* already crackling: a fade copy still renders, so the voice just goes */
     int guard = DK_NVOICE;
     while (guard--) {
-        int i, total = want, best = -1, most = 0, cnt[DK_NTRACK];
+        int i, total = want, best = -1, most = 0, cnt[DK_NTRACK], nv = 0;
         float lo = 1e9f;
         for (i = 0; i < DK_NTRACK; i++)
             cnt[i] = 0;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on) {
                 total += TAPE.eng[vc[i].eng]->cost;
+                nv++;
                 if (vc[i].trk < DK_NTRACK)
                     cnt[vc[i].trk]++;
             }
-        if (total <= dk_budget)
+        if (!hot && total <= dk_budget)
+            return;
+        if (hot && !melt && total <= dk_budget && nv <= 14)
+            return;
+        if (melt && total <= dk_budget && nv <= 12)
             return;
         for (i = 0; i < DK_NVOICE; i++)          /* 1: a tail (let go) - the quietest */
             if (vc[i].on && !vc[i].held) {
@@ -447,7 +476,7 @@ static void budget_make_room(int want, int live)
             /* (the quiet ones; for a live note any; any too when the device runs over (its budget lowered by the load):
              * the sequencer's oldest loud notes give way rather than the render running past its block - a crackle, or
              * the 5th track's notes lost in it) */
-            int any = live || (!dk_budget_hold && dk_budget < 100) || (dk_budget_hold && dk_budget < 60);
+            int any = live || melt || (!dk_budget_hold && dk_budget < 100) || (dk_budget_hold && dk_budget < 60);
             for (pass = 0; pass < 1 + any && best < 0; pass++) {
                 most = 0;
                 lo = 1e9f;
@@ -467,18 +496,25 @@ static void budget_make_room(int want, int live)
             return;
         if (vc[best].held)
             midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
-        voice_fade(&vc[best]);
-        vc[best].on = 0;
+        if (melt)
+            vc[best].on = 0;
+        else {
+            voice_fade(&vc[best]);
+            vc[best].on = 0;
+        }
     }
 }
 
 /* between notes the tails stay on and over the budget, so the next instrument has no room. once a chunk, if the
  * mix is heavy, the quietest tails (already let go) fade out: at most NFADE of them. a sparse song is left alone
  * (six felt voices sit under the line). a loud tail stays unless the mix is actually over the budget, or the pool
- * is nearly full. */
+ * is nearly full.
+ * when the DEVICE is hot (the measure, or a block that already ran past 90 %), the cost sum is not trusted: tails
+ * go now, and if it is already crackling a few of the sequencer's older notes go too. the hand's notes stay. */
 static void tails_trim(void)
 {
-    int guard = NFADE;
+    int hot = shed || dk_load_pct >= 72, melt = shed || dk_load_pct >= 84;
+    int guard = melt ? 8 : hot ? 6 : NFADE;
     while (guard--) {
         int i, total = 0, nv = 0, best = -1;
         float lo = 1e9f;
@@ -487,12 +523,16 @@ static void tails_trim(void)
                 total += TAPE.eng[vc[i].eng]->cost;
                 nv++;
             }
-        if (total <= dk_budget - 14 && nv <= 18)
+        if (!hot && total <= dk_budget - 14 && nv <= 18)
             return;
+        if (hot && !melt && total <= dk_budget - 28 && nv <= 12)
+            return;
+        if (melt && nv <= 12)
+            break;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && !vc[i].held) {
                 float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
-                if (l > 0.5f && total <= dk_budget && nv <= 20)
+                if (!hot && l > 0.5f && total <= dk_budget && nv <= 20)
                     continue;
                 if (l < lo) {
                     lo = l;
@@ -500,8 +540,42 @@ static void tails_trim(void)
                 }
             }
         if (best < 0)
+            break;
+        if (melt || lo < 0.12f)              /* a tail, and the render is already late: do not keep a copy that still renders */
+            vc[best].on = 0;
+        else {
+            voice_fade(&vc[best]);
+            vc[best].on = 0;
+        }
+    }
+    if (!melt)
+        return;
+    guard = 4;                               /* still packed: the sequencer's older notes, never the hand's */
+    while (guard--) {
+        int i, best = -1, nv = 0;
+        uint32_t top = 0;
+        for (i = 0; i < DK_NVOICE; i++)
+            nv += vc[i].on;
+        if (nv <= 12)
             return;
-        voice_fade(&vc[best]);
+        for (i = 0; i < DK_NVOICE; i++) {
+            uint32_t age, score;
+            float l;
+            if (!vc[i].on || !vc[i].held || !vc[i].src)
+                continue;
+            age = age_ctr - vc[i].age;
+            if ((int32_t)age < (int32_t)(DK_SR / 10))
+                continue;                    /* a note just begun, left alone (its attack is the quietest) */
+            l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+            score = age + (l < 0.25f ? 0x20000000u : 0u);
+            if (best < 0 || score >= top) {
+                top = score;
+                best = i;
+            }
+        }
+        if (best < 0)
+            return;
+        midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
         vc[best].on = 0;
     }
 }
@@ -1260,7 +1334,12 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     shed = 0;
 }
 
-void dk_shed(void) { shed = 1; }
+void dk_shed(void)
+{
+    shed = 1;                                /* the block just rendered past 90 %: the next one drops tails first */
+    if (!dk_budget_hold && dk_budget > 120)
+        dk_budget = dk_budget - 40 < 120 ? 120 : dk_budget - 40;
+}
 
 void dk_init(void)
 {

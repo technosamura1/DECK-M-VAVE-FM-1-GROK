@@ -376,6 +376,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_budget_force(atoi(a));
         return 1;
     }
+    if (!strcmp(cmd, "load")) {                 /* load N: pretend the device measured this CPU % (-1: stop pretending) */
+        dk_load_force(atoi(a));
+        return 1;
+    }
     if (!strcmp(cmd, "qnt")) {                  /* qnt N: the track's QUANT (the latency scenario wants none) */
         cur()->qnt = (uint8_t)atoi(a);
         return 1;
