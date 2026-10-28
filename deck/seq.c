@@ -37,7 +37,7 @@ static int32_t pre_at[128];                    /* count_left when pressed */
 #define PRE_WIN DK_PPQ
 uint8_t dk_arp_step[DK_NTRACK];            /* (the pattern's step: it starts from 1 again with every new hand) */
 #define arp_step dk_arp_step
-static uint8_t arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
+static uint8_t arp_order[DK_NTRACK][8], arp_cnt[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
 volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
 static uint8_t perf_half, perf_rev, perf_stutter, stems_pass, stems_gap;
 static uint16_t stutter_at;
@@ -1100,6 +1100,53 @@ static void arp_publish(int t)
         dk_held[t][i] = arp_order[t][i];
     dk_held_n[t] = arp_n[t];
 }
+/* one pitch, however many keys hold it: letting the old chord go must not take a note the new chord still holds
+ * (that left only the low one and the high one). a full pattern drops the oldest pitch the new chord does not use */
+static void arp_drop_at(int t, int drop)
+{
+    int i;
+    for (i = drop + 1; i < arp_n[t]; i++) {
+        arp_order[t][i - 1] = arp_order[t][i];
+        arp_cnt[t][i - 1] = arp_cnt[t][i];
+    }
+    arp_n[t]--;
+}
+static void arp_add(int t, int note)
+{
+    int i;
+    note &= 127;
+    for (i = 0; i < arp_n[t]; i++)
+        if (arp_order[t][i] == (uint8_t)note) {
+            if (arp_cnt[t][i] < 255)
+                arp_cnt[t][i]++;
+            return;
+        }
+    if (arp_n[t] >= 8) {
+        int drop = 0;
+        for (i = 0; i < arp_n[t]; i++)
+            if (arp_cnt[t][i] <= 1) {
+                drop = i;
+                break;
+            }
+        arp_drop_at(t, drop);
+    }
+    arp_order[t][arp_n[t]] = (uint8_t)note;
+    arp_cnt[t][arp_n[t]] = 1;
+    arp_n[t]++;
+}
+static void arp_sub(int t, int note)
+{
+    int i;
+    for (i = 0; i < arp_n[t]; i++)
+        if (arp_order[t][i] == (uint8_t)note) {
+            if (arp_cnt[t][i] > 1) {
+                arp_cnt[t][i]--;
+                return;
+            }
+            arp_drop_at(t, i);
+            return;
+        }
+}
 
 /* ------------------------------------------------------------- modulators --- */
 static void mods_tick(void)
@@ -1276,15 +1323,13 @@ static void live_note(int t, int note, int vel, int delay)
             }
         }
         if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {   /* ARP over the sequencer: the keys feed it */
-            if (!arp_keys[t])                  /* a new hand from silence: the pattern starts again from its first step */
+            if (!arp_keys[t]) {                /* a new hand from silence: the pattern starts again from its first step.
+                                                * latched notes are replaced (the same key stops them before it gets here) */
                 arp_step[t] = 0;
-            if (!arp_keys[t] && !k->arp[3])
                 arp_n[t] = 0;
-            if (k->arp[3] && !arp_keys[t])     /* latched: a new hand replaces the old */
-                arp_n[t] = 0;
+            }
             arp_keys[t]++;
-            if (arp_n[t] < 8)
-                arp_order[t][arp_n[t]++] = (uint8_t)note;
+            arp_add(t, note);
             arp_publish(t);
             return;
         }
@@ -1309,13 +1354,8 @@ static void live_note(int t, int note, int vel, int delay)
         if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {
             if (arp_keys[t])
                 arp_keys[t]--;
-            if (!k->arp[3]) {
-                int i, j = 0;
-                for (i = 0; i < arp_n[t]; i++)
-                    if (arp_order[t][i] != note)
-                        arp_order[t][j++] = arp_order[t][i];
-                arp_n[t] = (uint8_t)j;
-            }
+            if (!k->arp[3])                    /* latched: the notes stay until the same key (or a new hand) */
+                arp_sub(t, note);
             arp_publish(t);
             return;
         }

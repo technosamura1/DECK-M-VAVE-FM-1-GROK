@@ -1212,7 +1212,7 @@ static void draw_seq(void)
     char s[24], r[24];
     int view = ui.page == PG_ARP ? SQ_ARP : k->seq, drum = (e->flags & EF_DRUM) != 0;
     if (view == SQ_ARP) {
-        cpy(cpy(r, k->arp[3] ? "LATCH  " : ""), dk_arp_on(k) ? "" : "OFF");
+        cpy(r, !dk_arp_on(k) ? "OFF" : k->arp[3] ? "KEY STOPS" : "");
         module("ARP", r);
         draw_arp_view(k);
         return;

@@ -155,6 +155,36 @@ static int chord_build(int d, int base, int *out)
     return n;
 }
 
+static uint32_t latch_mask[DK_NTRACK];   /* keys that built the latched arp: the same key again stops it */
+void keys_latch_forget(int t)
+{
+    if ((unsigned)t < DK_NTRACK)
+        latch_mask[t] = 0;
+}
+/* 1: this press stopped the latch (the notes are not played). a key still held is part of the same hand */
+static int latch_stop(int key, int t)
+{
+    const dk_track_t *tr;
+    int i, held = 0;
+    if ((unsigned)t >= DK_NTRACK || key < 0 || key >= NKEYS)
+        return 0;
+    tr = &dk_song.trk[t];
+    if (!dk_arp_on(tr) || !tr->arp[3] || (TAPE.eng[tr->eng % TAPE.neng]->flags & EF_DRUM)) {
+        latch_mask[t] = 0;
+        return 0;
+    }
+    for (i = 0; i < NKEYS; i++)
+        if (i != key && kh[i].trk == (int8_t)t && kh[i].kind == 0 && kh[i].n)
+            held = 1;
+    if (!held && (latch_mask[t] & (1u << key))) {
+        latch_mask[t] = 0;
+        dk_cmd(C_ARPCLR, t, 0, 0);
+        return 1;
+    }
+    latch_mask[t] = held ? latch_mask[t] | (1u << key) : (1u << key);
+    return 0;
+}
+
 static void notes_post(int k, int t, const int *nt, int n, int vel, int strum)
 {
     int i, one[1];
@@ -168,6 +198,8 @@ static void notes_post(int k, int t, const int *nt, int n, int vel, int strum)
         n = 1;
         strum = 0;
     }
+    if (latch_stop(k, t))
+        return;
     kh[k].trk = (int8_t)t;
     kh[k].kind = 0;
     kh[k].n = 0;

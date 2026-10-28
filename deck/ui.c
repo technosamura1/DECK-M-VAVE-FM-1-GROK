@@ -1211,6 +1211,7 @@ static void action(int a, int b)
         dk_track_t *k = cur();
         keys_all_up();
         k->arp_opt &= (uint8_t)~ARPO_ON;
+        keys_latch_forget(dk_song.cur_track);
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
         mark_dirty();
         say("ARP", "OFF");

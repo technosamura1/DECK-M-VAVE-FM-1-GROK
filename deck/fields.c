@@ -920,13 +920,16 @@ static void field_set(int f, int v)
         if ((v != 0) != dk_arp_on(k))
             keys_all_up();               /* (the keys down change hands: no note stays sounding) */
         k->arp_opt = (uint8_t)(v ? k->arp_opt | ARPO_ON : k->arp_opt & ~ARPO_ON);
-        if (!v)
+        if (!v) {
+            keys_latch_forget(dk_song.cur_track);
             dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
+        }
         break;
     case F_ARPOCT: k->arp[2] = (uint8_t)v; break;
     case F_ARPLATCH:
     case F_FLATCH:
         k->arp[3] = (uint8_t)v;
+        keys_latch_forget(dk_song.cur_track);   /* a fresh latch: the next key starts it, the same key later stops it */
         if (!v)
             dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
         break;
@@ -955,6 +958,7 @@ static void field_set(int f, int v)
             dk_cmd(C_GROOVE, dk_song.cur_track, 2, 0);   /* (the drummer stops) */
         k->seq = SQ_LIST[v % NSEQ];
         dk_cmd(C_ENDLTR, dk_song.cur_track, 0, 0);
+        keys_latch_forget(dk_song.cur_track);
         dk_cmd(C_ARPCLR, dk_song.cur_track, 0, 0);
         dk_cmd(C_HOLDCLR, dk_song.cur_track, 0, 0);
         break;

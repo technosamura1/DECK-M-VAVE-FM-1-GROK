@@ -210,6 +210,7 @@ int app_expect(const char *what, int *got)
     else if (!strncmp(what, "tswing", 6)) g = dk_song.trk[atoi(what + 6) % DK_NTRACK].swing;
     else if (!strcmp(what, "fill")) g = dk_fill;
     else if (!strcmp(what, "arpstep")) g = dk_arp_step[dk_song.cur_track];   /* the ARP pattern's step on this track */
+    else if (!strcmp(what, "heldn")) g = dk_held_n[dk_song.cur_track];       /* notes the ARP is holding (a chord, or the latch) */
     else if (!strcmp(what, "garage")) g = ui.garage;                /* the garage open (hold ENV) */
     else if (!strcmp(what, "perform")) g = dk_perform;
     else if (!strcmp(what, "harmroot")) g = dk_harm_pcs[0];
@@ -378,6 +379,14 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "load")) {                 /* load N: pretend the device measured this CPU % (-1: stop pretending) */
         dk_load_force(atoi(a));
+        return 1;
+    }
+    if (!strcmp(cmd, "held")) {                 /* held: the ARP's notes on this track (the chord it is actually playing) */
+        int t = dk_song.cur_track, i;
+        printf("held n=%d", dk_held_n[t]);
+        for (i = 0; i < dk_held_n[t] && i < 8; i++)
+            printf(" %d", dk_held[t][i]);
+        printf("\n");
         return 1;
     }
     if (!strcmp(cmd, "qnt")) {                  /* qnt N: the track's QUANT (the latency scenario wants none) */
