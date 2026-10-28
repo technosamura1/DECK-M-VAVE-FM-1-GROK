@@ -80,4 +80,42 @@ expect eventsB1 0
 expect eventsC1 0
 expect part 0
 expect preset 0
+# hold EDIT: the whole road comes back (notes, parts, instruments)
+press EDIT
+wait 800
+release EDIT
+wait 200
+said ROAD
+expect nev >0
+expect nroad >0
+expect eventsA1 >0
+expect eventsB1 >0
+expect eventsC3 >0
+expect part 0
+expect preset 4
+tapkey w1
+wait 40
+expect track 1
+expect eng 3
+tapkey w0
+wait 40
+expect preset 4
+# HOME + EDIT: redo the wipe. EDIT again: it is back
+press HOME
+tap EDIT
+release HOME
+wait 150
+said REDO
+expect nev 0
+expect nroad 0
+expect preset 0
+press EDIT
+wait 800
+release EDIT
+wait 200
+said ROAD
+expect nev >0
+expect nroad >0
+expect eventsA1 >0
+expect preset 4
 expect textfit 0

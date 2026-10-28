@@ -60,7 +60,7 @@ int song_undo(int *what);
 int song_redo(int *what);
 int rec_flush(void);
 void song_clear_all(void);               /* CLEAR ALL: every clip, the road, the frozen sounds, the parts' bars; undo forgotten; the sounds kept */
-void song_wipe(void);                    /* every part, the road, and the instruments back to the tape */
+void song_wipe(void);                    /* every part, the road, and the instruments back to the tape; UNDO brings them back */
 void part_inst_sync(int p);             /* this part's instruments into the tracks (the one we leave is kept) */
 void part_inst_capture(int p);          /* the tracks' instruments, copied into every part (a new song, a demo, an old project) */
 void part_inst_flush(void);             /* the live part's instruments back into its slot (before a save) */

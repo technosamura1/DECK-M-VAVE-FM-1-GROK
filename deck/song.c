@@ -27,9 +27,20 @@ static snap_t usnap[NSNAP], rsnap[8];
 static int un, rn;                       /* entries */
 uint32_t song_edits;                     /* changes (autosave, the screen) */
 /* SNAPSHOT: one part (its six clips, bars, mutes) kept in memory to come back to after an experiment (one slot; gone with
- * the song). Its notes keep their frozen sounds alive like the undo's do (snd_in_use) */
+ * the song). Its notes keep their frozen sounds alive like the undo's do (snd_in_use). CLEAR ROAD's one undo step uses
+ * the same bytes for the whole song (a second event array does not fit the pool): the events go in ubuf+rbuf, 1536 of
+ * them. CLEAR ALL never arms that step. */
 #define SNAP_EV 768
-static dk_ev_t sbuf[SNAP_EV] DK_POOL;
+static union {
+    dk_song_t song;
+    dk_ev_t ev[SNAP_EV];
+} snapb DK_POOL;
+#define sbuf snapb.ev
+static uint8_t wundo, wredo, wlive, wbusy;   /* the wiped road can be undone / redone; the part that was live; a wipe is running */
+static uint16_t wnev;
+static uint32_t wedit;
+static void wipe_apply(void);
+static int wipe_restore(void);
 static struct {
     uint8_t ok, part, bars, mute;
     uint16_t n[DK_NTRACK], len[DK_NTRACK];
@@ -312,6 +323,9 @@ static int snap_take(snap_t *tab, int *cnt, int max, dk_ev_t *buf, int bufn, int
 {
     snap_t *s;
     int need = road == 1 ? ROAD_EV : road ? 0 : dk_song.clip[clip].n, used = 0, i;
+    if (wbusy)                           /* the wipe is using these buffers */
+        return -1;
+    wundo = wredo = 0;                   /* a normal step reuses them: the wiped road cannot come back after */
     if (*cnt > 0)
         used = tab[*cnt - 1].at + tab[*cnt - 1].n;
     while (*cnt > 0 && (*cnt >= max || used + need > bufn)) {   /* full: the oldest forgotten */
@@ -396,6 +410,11 @@ int song_undo(int *what)
 {
     snap_t s;
     uint8_t g;
+    if (wundo) {                         /* CLEAR ROAD: notes, every part, the road, the instruments */
+        dk_cmd(C_PART, wipe_restore(), 0, 0);   /* the sequencer on the part that was current */
+        *what = -1;
+        return 1;
+    }
     if (!un)
         return 0;
     do {                                 /* (a group: all of it) */
@@ -416,6 +435,20 @@ int song_redo(int *what)
     snap_t s;
     int keep;
     uint8_t g;
+    if (wredo) {
+        if (song_edits != wedit)         /* something changed since the undo: do not wipe over it */
+            wredo = 0;
+        else {
+            wbusy = 1;
+            wipe_apply();                /* the copy in the buffers stays, so UNDO can bring it back again */
+            wbusy = 0;
+            wundo = 1;
+            wredo = 0;
+            dk_cmd(C_PART, 0, 0, 0);
+            *what = -1;
+            return 1;
+        }
+    }
     if (!rn)
         return 0;
     do {
@@ -906,6 +939,7 @@ void part_inst_capture(int p)
         pinst_save(i);
     dk_song.pinst_init = 1;
     part_live = (uint8_t)p;
+    wundo = wredo = 0;                   /* a new song is not the wiped road (song_wipe arms the undo after this) */
 }
 /* what the tracks are playing, written into the part they belong to (a save must not keep a stale slot) */
 void part_inst_flush(void)
@@ -919,6 +953,7 @@ void part_inst_flush(void)
 void part_inst_boot(void)
 {
     part_live = dk_song.pinst_init ? (uint8_t)(dk_song.cur_part & 7) : 0xFF;
+    wundo = wredo = 0;                   /* a project just loaded */
 }
 int part_has_events(int p)
 {
@@ -999,6 +1034,7 @@ int snapshot_take(int part)
         n += dk_song.clip[part * DK_NTRACK + t].n;
     if (n > SNAP_EV)
         return 0;
+    wundo = wredo = 0;                   /* those bytes are the wiped song's until now */
     n = 0;
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_clip_t *c = &dk_song.clip[part * DK_NTRACK + t];
@@ -1529,6 +1565,8 @@ void song_clear_all(void)
     takes_forget();
     un = 0;
     rn = 0;
+    wundo = 0;
+    wredo = 0;                           /* CLEAR ALL forgets the road's undo too; song_wipe arms it again after */
     pc_part = 0xFF;
     song_edits++;
     dk_unlock();
@@ -1565,17 +1603,74 @@ void part_inst_reset_track(int p, int t)
     dk_unlock();
 }
 
-/* CLEAR ROAD: every part's notes, the road, and every part's instruments back to the tape. Stopped only */
-void song_wipe(void)
+/* the song and its events, into the snapshot buffers (0: more than 1536 events, undo cannot hold it) */
+static int wipe_capture(void)
+{
+    int n, i;
+    dk_lock();
+    part_inst_flush();
+    n = dk_song.nev;
+    if (n < 0)
+        n = 0;
+    if (n > 1024 + 512) {
+        dk_unlock();
+        return 0;
+    }
+    (void)sizeof(char[(sizeof(dk_song_t) <= sizeof snapb.ev) ? 1 : -1]);
+    snp.ok = 0;                          /* this buffer is the song now, not a part snapshot */
+    snapb.song = dk_song;
+    for (i = 0; i < n && i < 1024; i++)
+        ubuf[i] = dk_ev[i];
+    for (; i < n; i++)
+        rbuf[i - 1024] = dk_ev[i];
+    wnev = (uint16_t)n;
+    wlive = part_live;
+    dk_unlock();
+    return 1;
+}
+static int wipe_restore(void)            /* the part that was current */
+{
+    int i, n, part;
+    dk_lock();
+    dk_song = snapb.song;
+    n = wnev;
+    if (n > DK_NEV)
+        n = DK_NEV;
+    for (i = 0; i < n && i < 1024; i++)
+        dk_ev[i] = ubuf[i];
+    for (; i < n; i++)
+        dk_ev[i] = rbuf[i - 1024];
+    part_live = wlive;
+    song_edits++;
+    part = dk_song.cur_part & 7;
+    dk_unlock();
+    wundo = 0;
+    wredo = 1;
+    wedit = song_edits;
+    return part;
+}
+static void wipe_apply(void)
 {
     int t;
-    song_clear_all();
+    song_clear_all();                    /* clips, the road, the frozen sounds; undo flags off; the copy stays */
     dk_lock();
     for (t = 0; t < DK_NTRACK; t++)
         track_defaults(t);
     part_inst_capture(0);
     dk_song.cur_part = 0;
     dk_unlock();
+}
+/* CLEAR ROAD: every part's notes, the road, and every part's instruments back to the tape. UNDO brings it all back */
+void song_wipe(void)
+{
+    int ok;
+    rec_flush();                         /* notes still queued are part of what comes back */
+    ok = wipe_capture();
+    wbusy = 1;
+    wipe_apply();
+    wbusy = 0;
+    wundo = (uint8_t)ok;
+    wredo = 0;
 }
 
 /* the templates: empty parts with their labels and a road of them */
