@@ -1524,13 +1524,9 @@ static void key_down(int k, int vel)
             say(s, dk_playing ? "NEXT" : LABEL_NAME[dk_song.part[w].label & 7]);
         return;
     }
-    if (held(B_GLO) && w == 0) {        /* GLO held + the first white key: tap the tempo into the metronome */
+    if (held(B_GLO) && w == 0) {        /* GLO held + the first white key: tap the tempo. The click stays as it was */
         ui.used[B_GLO] = 1;
         action(A_TAP_TEMPO, 1);
-        if (ui.tap_n >= 3 && dk_metro.mode != 2) {
-            dk_metro.mode = 2;           /* ALWAYS: it clicks, transport or not */
-            settings_save_later();
-        }
         return;
     }
     if (ui.page == PG_TRACKS && w == 13 && (held(B_EDIT) || held(B_LFO))) {

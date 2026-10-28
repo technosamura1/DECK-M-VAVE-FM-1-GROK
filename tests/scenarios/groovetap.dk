@@ -65,7 +65,7 @@ expect track 5
 press GLO
 wait 400
 expect fill 0
-# three taps on W1, about half a second apart: the metronome takes the tempo and clicks
+# three taps on W1, about half a second apart: the tempo is set, the click stays off
 tapkey w0
 wait 420
 tapkey w0
@@ -74,7 +74,7 @@ tapkey w0
 wait 200
 release GLO
 wait 1500
-expect metro 2
+expect metro 0
 expect tempo >100
 expect tempo <160
-expect clicks >2
+expect clicks 0
