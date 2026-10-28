@@ -1383,7 +1383,7 @@ static void edit_list_do(int w)
             itoa_b(cooks, s + 5);
         }
         mark_dirty();
-        say(w == 6 ? s : NM[w - 3], "UNDO: HOLD LFO");
+        say(w == 6 ? s : NM[w - 3], "UNDO: HOLD EDIT");
         return;
     }
     if (w < 10) {                        /* COPY CLIP, PASTE CLIP */
@@ -1436,7 +1436,7 @@ static void edit_list_do(int w)
     }
     undo_group(0);
     mark_dirty();
-    say(w == 11 ? "NOTES ERASED" : "ALL ERASED", "UNDO: HOLD LFO");
+    say(w == 11 ? "NOTES ERASED" : "ALL ERASED", "UNDO: HOLD EDIT");
 }
 
 static void key_down(int k, int vel)
@@ -2236,7 +2236,7 @@ static void auto_erase(void)
     auto_clear(clip, 0);
     dk_unlock();
     mark_dirty();
-    say("AUTOMATION CLEARED", "UNDO: HOLD LFO");
+    say("AUTOMATION CLEARED", "UNDO: HOLD EDIT");
 }
 /* a key or a knob used while a button is held is a combo: that button's own tap (its page) and hold (UNDO, FILL...) no longer follow */
 static void combo_used(void)
@@ -2258,7 +2258,7 @@ static void take_erase_ui(void)
     n = take_erase_last();
     if (n) {
         mark_dirty();
-        say("TAKE ERASED", "UNDO: HOLD LFO");
+        say("TAKE ERASED", "UNDO: HOLD EDIT");
     } else
         say("NO TAKE", "RECORD FIRST");
 }

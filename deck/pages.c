@@ -365,7 +365,7 @@ static const char *hint(void)
     case PG_MIX: return "WHITE TRACK  BLACK MUTE  B7 SOLO  B8 ARM";
     case PG_ROAD:
         return ui.garage ? "W1-8 = COPY PART TO  HOLD ENV = BACK" : "W1-8 ADD  W9 COPY  BLACK TRICKS  REC = LIVE";
-    case PG_KEYS: return "LFO = NEXT ROW  HOLD LFO = UNDO";
+    case PG_KEYS: return "LFO = NEXT ROW  HOLD EDIT = UNDO";
     case PG_PROJECT: return "W1-4 OPEN  W5 NEW  B1 EXPORT B2 STEMS B3 SAVE B4 CLEAR ALL";
     case PG_GLOB: return ui.row[PG_GLOB] % 7 >= 5 ? "ATMO  GLO = NEXT ROW" : "GLO = NEXT ROW  HOLD GLO = FILL";
     case PG_ATMO: return "SEL = NEXT ROW  REC = ARM";
@@ -378,7 +378,7 @@ static const char *hint(void)
         return "K1 BARS  K2 PART  SEL = SETUP";
     case PG_TRACKS:
         if (ui.lay)
-            return "HOLD LFO = UNDO  HOME = BACK";
+            return "HOLD EDIT = UNDO  HOME = BACK";
         return "EDIT = EDIT LIST  K3 MODE  HOME = BACK";
     case PG_ARP: return "K4 ON/OFF  ARP=ROW  HOME+ARP=OFF";
     default: return "";
@@ -499,8 +499,8 @@ static const char *hold_hint(uint32_t now)
 {
     static const char *const H[NB] = {
         "FX: SOUND  +W1-4 BYPASS", "SEL: REC SETUP  AGAIN = ROW",
-        "ENV: ROAD  REC ON: NEXT PART", "EDIT: MIX  +SOUND KNOB = MOD 1",
-        "LFO: HOLD UNDO  HOME+ REDO", "GLO: GLOBAL  HOLD = FILL",
+        "ENV: ROAD  REC ON: NEXT PART", "EDIT: MIX  HOLD = UNDO",
+        "LFO: KEYS  HOLD = UNDO", "GLO: GLOBAL  HOLD = FILL",
         0, "SAVE: +W1 SNAPSHOT  +W2 RECALL",
         "ARP: PAGE  K4 ON/OFF  +WHITE PART", 0,
         "PLAY/STOP  HOLD PART/SONG", "REC +OCT UNDO  +W1-6 LAYER",

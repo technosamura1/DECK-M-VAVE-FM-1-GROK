@@ -18,3 +18,31 @@ expect page 0
 tap EDIT
 wait 100
 expect page 3
+# hold EDIT (0.7 s): UNDO - the list stays open; HOME + EDIT: REDO
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect page 11
+tapkey w0
+wait 100
+seed 0 1 4 0
+expect eventsA1 34
+tap EDIT
+wait 100
+expect layview 1
+tapkey w3
+wait 100
+expect eventsA1 68
+press EDIT
+wait 900
+release EDIT
+wait 100
+expect eventsA1 34
+expect layview 1
+expect page 11
+press HOME
+tap EDIT
+release HOME
+wait 100
+expect eventsA1 68

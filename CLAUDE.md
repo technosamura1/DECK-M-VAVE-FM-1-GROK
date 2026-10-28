@@ -832,3 +832,5 @@ SELECT во время записи добавлял дорожку в маск�
 - **Голосов 32** (`DK_NVOICE`; пул 298840 из 344064, RAM 38080). Сколько звучит на самом деле, решает бюджет CPU (`dk_budget`), не пул.
 - **TRACKS + панельная EDIT** (2026-10-28): на TRACKS кнопка EDIT (внутри `A_PAGE_MIX`) открывает и закрывает EDIT-список, как и LFO; на других страницах EDIT — MIX.
   Подсказки «EDIT = EDIT LIST / EDIT = BACK». Тест `trackedit.dk`.
+- **UNDO на панельной EDIT** (2026-10-28): удержать EDIT 0,7 с — UNDO, HOME + EDIT — REDO (внутри `B_LFO`: hold `A_UNDO`, home `A_REDO`; тап — на отпускании,
+  MIX / EDIT-список). Панельная LFO по-прежнему тоже отменяет. EDIT + ручка SOUND = MOD 1 осталось (поворот гасит удержание). Подсказки «HOLD EDIT = UNDO». `trackedit.dk`.
