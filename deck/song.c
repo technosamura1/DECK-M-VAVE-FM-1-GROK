@@ -9,6 +9,8 @@
 dk_user_t dk_user DK_POOL;                       /* the user's presets: 4 an engine */
 static dk_ev_t ubuf[1024] DK_POOL;       /* undo: snapshots back to back (entries below) */
 static dk_ev_t rbuf[512] DK_POOL;        /* redo */
+enum { UBUFN = (int)(sizeof(ubuf) / sizeof(ubuf[0])) };
+enum { RBUFN = (int)(sizeof(rbuf) / sizeof(rbuf[0])) };
 static dk_ev_t clipboard[384] DK_POOL;
 static int clip_n = -1, clipb_len;
 static uint8_t clip_src_t;               /* the track the clipboard came from (its frozen sounds are that track's) */
@@ -26,6 +28,8 @@ static uint8_t grp_now, grp_seq;
 static snap_t usnap[NSNAP], rsnap[8];
 static int un, rn;                       /* entries */
 uint32_t song_edits;                     /* changes (autosave, the screen) */
+uint32_t song_notes_lost;                 /* events refused because the pool was full */
+uint32_t song_notes_lost_at;              /* dk_ticks of the last one */
 /* SNAPSHOT: one part (its six clips, bars, mutes) kept in memory to come back to after an experiment (one slot; gone with
  * the song). Its notes keep their frozen sounds alive like the undo's do (snd_in_use). CLEAR ROAD's one undo step uses
  * the same bytes for the whole song (a second event array does not fit the pool): the events go in ubuf+rbuf, 1536 of
@@ -224,6 +228,10 @@ int auto_point(int clip, int target, int pos, int val, int from, int len)
 void auto_thin(int clip, int target, int from, int to, int tol)
 {
     enum { MAXP = 96 };
+    /* 768 bytes. the UI thread only, never re-entered, so a static in the pool
+     * is safe and the device's stack is not. */
+    static int s_stack[MAXP][2] DK_POOL;
+    int (*stack)[2] = s_stack;
     dk_clip_t *c = &dk_song.clip[clip];
     int idx[MAXP], np = 0, i, maxn, keepn;
     uint8_t keep[MAXP];
@@ -236,7 +244,7 @@ void auto_thin(int clip, int target, int from, int to, int tol)
         return;
     maxn = 24 * ((to - from) / DK_TPB + 1);
     for (;;) {
-        int stack[MAXP][2], sp = 0;
+        int sp = 0;
         for (i = 0; i < np; i++)
             keep[i] = 0;
         keep[0] = keep[np - 1] = 1;
@@ -384,7 +392,7 @@ static void snap_restore(const snap_t *s, const dk_ev_t *buf)
 }
 void undo_push(int clip)
 {
-    if (snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0) == 0)
+    if (snap_take(usnap, &un, NSNAP, ubuf, UBUFN, clip, 0) == 0)
         usnap[un - 1].grp = grp_now;
     rn = 0;
 }
@@ -399,11 +407,11 @@ void undo_group(int on)                  /* the pushes until undo_group(0) are o
 }
 void undo_push_part(int p)                /* a part's bars and track mutes */
 {
-    if (snap_take(usnap, &un, NSNAP, ubuf, 1024, p & 7, 2) == 0)
+    if (snap_take(usnap, &un, NSNAP, ubuf, UBUFN, p & 7, 2) == 0)
         usnap[un - 1].grp = grp_now;
     rn = 0;
 }
-void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, 1024, 0, 1), rn = 0; }
+void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, UBUFN, 0, 1), rn = 0; }
 int undo_count(void) { return un; }
 /* 1 = done; what: the clip (or -1 the road) */
 int song_undo(int *what)
@@ -421,7 +429,7 @@ int song_undo(int *what)
         s = usnap[un - 1];
         g = s.grp;
         dk_lock();
-        if (snap_take(rsnap, &rn, 8, rbuf, 512, s.clip, s.kind) == 0)
+        if (snap_take(rsnap, &rn, 8, rbuf, RBUFN, s.clip, s.kind) == 0)
             rsnap[rn - 1].grp = g;
         snap_restore(&s, ubuf);
         dk_unlock();
@@ -456,7 +464,7 @@ int song_redo(int *what)
         g = s.grp;
         dk_lock();
         keep = rn;
-        if (snap_take(usnap, &un, NSNAP, ubuf, 1024, s.clip, s.kind) == 0)
+        if (snap_take(usnap, &un, NSNAP, ubuf, UBUFN, s.clip, s.kind) == 0)
             usnap[un - 1].grp = g;
         rn = keep;
         snap_restore(&s, rbuf);
@@ -629,7 +637,6 @@ static int takes_waiting(void)
 }
 
 /* --------------------------------------------------------- the recording --- */
-static uint32_t rec_r;
 static uint8_t snp_pass[DK_NCLIP];       /* per clip: the pass whose undo snapshot is taken (0xFF none) */
 static uint8_t rep_pass[DK_NCLIP];       /* REPLACE, per clip: the pass the erase is in (0xFF none) */
 static uint8_t rep_started;               /* REPLACE: the first look is done (tracks armed later start from where they are) */
@@ -640,7 +647,7 @@ static void rec_snap(int clip, int pass)
 {
     if (snp_pass[clip] == pass)
         return;
-    snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0);
+    snap_take(usnap, &un, NSNAP, ubuf, UBUFN, clip, 0);
     rn = 0;
     snp_pass[clip] = (uint8_t)pass;
 }
@@ -736,7 +743,7 @@ static int mem_make_room(int pass)
             ;
         if (take >= cur && (dk_rec_mask >> (best % DK_NTRACK) & 1u) && best / DK_NTRACK == (dk_cur_part & 7))
             return 0;                              /* (the oldest is the one being recorded) */
-        snap_take(usnap, &un, NSNAP, ubuf, 1024, best, 0);
+        snap_take(usnap, &un, NSNAP, ubuf, UBUFN, best, 0);
         rn = 0;
         for (i = 0, w = 0; i < k->n; i++) {
             const dk_ev_t *e = &dk_ev[k->at + i];
@@ -766,9 +773,9 @@ static int rec_flush_do(int only_t)
         dk_unlock();
     }
     w = dk_recq_w;
-    if (w - rec_r > DK_RECQ)
-        rec_r = w - DK_RECQ;
-    if (rec_r == w) {
+    if (w - dk_rec_r > DK_RECQ)
+        dk_rec_r = w - DK_RECQ;
+    if (dk_rec_r == w) {
         if (!takes_waiting())
             return 0;
         dk_lock();
@@ -777,18 +784,18 @@ static int rec_flush_do(int only_t)
         return n;
     }
     dk_lock();
-    while (rec_r != w) {
+    while (dk_rec_r != w) {
         dk_recev_t r;
-        r.clip = dk_recq[rec_r % DK_RECQ].clip;
-        r.kind = dk_recq[rec_r % DK_RECQ].kind;
-        r.pass = dk_recq[rec_r % DK_RECQ].pass;
-        r.ev.pos = dk_recq[rec_r % DK_RECQ].ev.pos;
-        r.ev.dur = dk_recq[rec_r % DK_RECQ].ev.dur;
-        r.ev.note = dk_recq[rec_r % DK_RECQ].ev.note;
-        r.ev.vel = dk_recq[rec_r % DK_RECQ].ev.vel;
-        r.ev.fl = dk_recq[rec_r % DK_RECQ].ev.fl;
-        r.ev.layer = dk_recq[rec_r % DK_RECQ].ev.layer;
-        rec_r++;
+        r.clip = dk_recq[dk_rec_r % DK_RECQ].clip;
+        r.kind = dk_recq[dk_rec_r % DK_RECQ].kind;
+        r.pass = dk_recq[dk_rec_r % DK_RECQ].pass;
+        r.ev.pos = dk_recq[dk_rec_r % DK_RECQ].ev.pos;
+        r.ev.dur = dk_recq[dk_rec_r % DK_RECQ].ev.dur;
+        r.ev.note = dk_recq[dk_rec_r % DK_RECQ].ev.note;
+        r.ev.vel = dk_recq[dk_rec_r % DK_RECQ].ev.vel;
+        r.ev.fl = dk_recq[dk_rec_r % DK_RECQ].ev.fl;
+        r.ev.layer = dk_recq[dk_rec_r % DK_RECQ].ev.layer;
+        dk_rec_r++;
         if (r.clip >= DK_NCLIP)
             continue;
         rec_snap(r.clip, r.pass);
@@ -823,6 +830,8 @@ static int rec_flush_do(int only_t)
             while (dk_song.nev >= DK_NEV && tries-- > 0 && mem_make_room(pass))
                 ;
             if (dk_song.nev >= DK_NEV) {       /* nothing to drop: said, not silent */
+                song_notes_lost++;
+                song_notes_lost_at = dk_ticks;
                 song_mem_full = 1;
                 continue;
             }
@@ -857,7 +866,7 @@ void rec_reset(void)
             last_sess[c] = 0;
     }
     rep_started = 0;
-    rec_r = dk_recq_w;
+    dk_rec_r = dk_recq_w;
     for (c = 0; c < DK_NCLIP; c++) {
         snp_pass[c] = 0xFF;
         rep_pass[c] = 0xFF;
@@ -1612,17 +1621,17 @@ static int wipe_capture(void)
     n = dk_song.nev;
     if (n < 0)
         n = 0;
-    if (n > 1024 + 512) {
+    if (n > UBUFN + RBUFN) {
         dk_unlock();
         return 0;
     }
     (void)sizeof(char[(sizeof(dk_song_t) <= sizeof snapb.ev) ? 1 : -1]);
     snp.ok = 0;                          /* this buffer is the song now, not a part snapshot */
     snapb.song = dk_song;
-    for (i = 0; i < n && i < 1024; i++)
+    for (i = 0; i < n && i < UBUFN; i++)
         ubuf[i] = dk_ev[i];
-    for (; i < n; i++)
-        rbuf[i - 1024] = dk_ev[i];
+    for (; i < n && i < UBUFN + RBUFN; i++)
+        rbuf[i - UBUFN] = dk_ev[i];
     wnev = (uint16_t)n;
     wlive = part_live;
     dk_unlock();
@@ -1636,10 +1645,10 @@ static int wipe_restore(void)            /* the part that was current */
     n = wnev;
     if (n > DK_NEV)
         n = DK_NEV;
-    for (i = 0; i < n && i < 1024; i++)
+    for (i = 0; i < n && i < UBUFN; i++)
         dk_ev[i] = ubuf[i];
-    for (; i < n; i++)
-        dk_ev[i] = rbuf[i - 1024];
+    for (; i < n && i < UBUFN + RBUFN; i++)
+        dk_ev[i] = rbuf[i - UBUFN];
     part_live = wlive;
     song_edits++;
     part = dk_song.cur_part & 7;
@@ -1895,8 +1904,10 @@ int clip_quantize(int clip, int strength)
         if (e->fl & EV_MOTION)
             continue;
         np = p + (g - p) * strength / 100;
+        /* a note at the end of the clip used to wrap to 0 and sit on top of
+         * whatever already lived there. keep it on the last tick. */
         if (np >= len)
-            np = 0;
+            np = len > 0 ? len - 1 : 0;
         if (np < 0)
             np = 0;
         if (np != p)

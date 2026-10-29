@@ -219,9 +219,18 @@ static void rec_take_join(int t)
 static void rec_push(int clip, int kind, int pos, int dur, int note, int vel, int fl)
 {
     uint32_t w = dk_recq_w;
-    volatile dk_recev_t *r = &dk_recq[w % DK_RECQ];
+    volatile dk_recev_t *r;
     int tr = clip % DK_NTRACK;
     int take = dk_pass;
+    /* the UI publishes dk_rec_r. overwriting a slot it has not copied yet loses
+     * a note that was already played, and can tear the one it is reading. drop
+     * the new one instead: the hand still sounding is recorded on the next tick
+     * if the ring has drained. */
+    if (w - dk_rec_r >= DK_RECQ) {
+        dk_rec_dropped++;
+        return;
+    }
+    r = &dk_recq[w % DK_RECQ];
     if ((unsigned)tr < DK_NTRACK && dk_rec_take[tr])
         take = dk_rec_take[tr];
     take = take_clamp(take);

@@ -28,6 +28,7 @@ static struct {
     int8_t touched;
     uint32_t touch_until, frame, last_ms, change_t, edits_seen, rec_end, root_until;
     uint32_t tap_t[6];
+    uint32_t rec_drop;                   /* dk_rec_dropped last told on the screen */
     uint8_t tap_n, band, step_key, road_part, road_loops_part, export_on;
     int8_t step_held;                    /* SEQ: the step key held (for VEL/PROB, a p-lock), -1 none */
     uint16_t road_last_tick;
@@ -2600,16 +2601,37 @@ void ui_frame(void)
         song_layers_full = 0;
         say("LAYERS FULL", "7 SOUNDS ON THIS TRACK");
     }
-    if (song_mem_dropped || song_mem_full) {   /* the event pool filled up while recording (said at most every 2 s) */
+    if (song_mem_dropped || song_mem_full || dk_rec_dropped != ui.rec_drop) {   /* the pool or the record ring filled */
         static uint32_t mem_t;
+        uint32_t drops = dk_rec_dropped;
         if (now - mem_t > 2000u || !mem_t) {
             mem_t = now | 1u;
-            if (song_mem_full)
-                say("MEMORY FULL", "NOTES LOST");
+            if (song_mem_full) {
+                char line[24];
+                char *p = line;
+                unsigned n = song_notes_lost > 999u ? 999u : song_notes_lost;
+                const char *s = "LOST ";
+                char tmp[8];
+                int k = 0;
+                while (*s)
+                    *p++ = *s++;
+                if (!n)
+                    *p++ = '0';
+                while (n && k < 8) {
+                    tmp[k++] = (char)('0' + (int)(n % 10u));
+                    n /= 10u;
+                }
+                while (k)
+                    *p++ = tmp[--k];
+                *p = 0;
+                say("MEMORY FULL", line);
+            } else if (drops != ui.rec_drop)
+                say("REC FULL", "NOTE DROPPED");
             else
                 say("MEMORY FULL", "OLDEST TAKE ERASED");
+            ui.rec_drop = drops;
+            song_mem_dropped = song_mem_full = 0;
         }
-        song_mem_dropped = song_mem_full = 0;
     }
     if (dk_recording && ui.page != PG_REC && ui.page != PG_TRACKS && ui.page != PG_SOUNDS) {   /* the tape page whenever it records (or TRACKS) */
         ui.prev = ui.page;

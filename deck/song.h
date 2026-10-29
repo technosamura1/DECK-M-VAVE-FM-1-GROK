@@ -20,6 +20,8 @@ typedef struct {
 } dk_user_t;
 extern dk_user_t dk_user;
 extern uint32_t song_edits;
+extern uint32_t song_notes_lost;         /* events refused because the pool was full (the UI says the count) */
+extern uint32_t song_notes_lost_at;      /* dk_ticks of the last refused event */
 
 int clip_len(int clip);
 int clip_len_raw(int clip);
