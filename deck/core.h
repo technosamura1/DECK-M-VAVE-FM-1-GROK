@@ -31,6 +31,7 @@ typedef struct {
 #define DK_RECQ 128
 extern volatile dk_recev_t dk_recq[DK_RECQ];
 extern volatile uint32_t dk_recq_w;
+extern volatile uint32_t dk_rec_r;          /* the UI's read cursor: the render drops a note when the ring is full */
 
 /* the garden's ring: every note that sounds (note | track << 8 | vel << 16 | src << 24; src 0 you, 1 the clip,
  * 2 a generator) */
