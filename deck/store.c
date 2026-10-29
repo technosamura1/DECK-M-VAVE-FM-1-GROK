@@ -72,6 +72,19 @@ static void clips_repack(void)
     uint32_t cum = 0, tot = 0, i, j;
     for (i = 0; i < DK_NCLIP; i++)
         tot += dk_song.clip[i].n;
+    /* a permuted table is legal (that is why we repack). Overlap or a range past the pool is not. */
+    for (i = 0; i < DK_NCLIP; i++) {
+        uint32_t a = dk_song.clip[i].at, n = dk_song.clip[i].n;
+        if (!n)
+            continue;
+        if (a > tot || n > tot || a + n > tot)
+            return;
+        for (j = 0; j < i; j++) {
+            uint32_t b = dk_song.clip[j].at, m = dk_song.clip[j].n;
+            if (m && a < b + m && b < a + n)
+                return;
+        }
+    }
     if (tot != dk_song.nev || tot > DK_NEV)
         return;
     for (i = 0; i < DK_NCLIP; i++) {
@@ -302,7 +315,10 @@ static void hush_begin(void)
 }
 static void hush_end(void)
 {
-    if (hush_depth && !--hush_depth)
+    if (!hush_depth)
+        return;
+    --hush_depth;
+    if (!hush_depth)
         dk_hush = 0;
 }
 
