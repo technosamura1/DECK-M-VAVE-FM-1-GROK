@@ -446,15 +446,14 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
 /* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
 /* (11 voices plus the effects were 2.8 of 5.8 ms, ~48 %. The voice sum used to miss the plate and the
  * inserts, so a full song sat "under budget" while the device was already at 90 % and the lead crackled.
- * mix_overhead() adds that cost in engine-cost units (a voice is about 7..17): a quarter of it while
- * the tape is cool, so a piano chord and a keys chord still fit, and all of it once the load ramp is
- * full. The measured % still sheds, on a ramp from 60 % to 90 % that passes through the old cliffs
- * at 72 % and 84 % instead of jumping there.) */
-#define DK_BUDGET_MAX 200
-#define DK_BUDGET_MIN 50
-#define REVERB_COST 15                   /* the plate runs every block, sends or not */
-#define INSERT_COST 5                    /* one track insert that is actually on */
-static volatile int dk_budget = 140;
+ * mix_overhead() adds that cost in engine-cost units (a voice is about 7..17): an eighth of it while
+ * the tape is cool, so a lead and a pad still ring out, and all of it once the load ramp is full.
+ * Shedding starts at 75 % and is full at 95 %. A mono or legato tail (LEAD, BASS) is never the one cut.) */
+#define DK_BUDGET_MAX 250
+#define DK_BUDGET_MIN 60
+#define REVERB_COST 12                   /* the plate runs every block, sends or not */
+#define INSERT_COST 4                    /* one track insert that is actually on */
+static volatile int dk_budget = 180;
 static volatile int dk_budget_hold;      /* (the host's scenarios: a device that holds its budget low, as a CPU load of 45-62% does) */
 static volatile int dk_load_pct;         /* the device's last measure, 0..100 (the host can hold one) */
 static volatile int dk_load_hold;
@@ -484,24 +483,25 @@ void dk_set_load(int pct)
         dk_load_pct = pct;
     if (dk_budget_hold)
         return;
-    if (pct >= 85)
-        b -= 30;                         /* already crackling: down at once, not 14 a frame */
-    else if (pct >= 74)
-        b -= 16;
-    else if (pct >= 64)
-        b -= 8;
-    else if (pct < 48)
-        b += 2;
+    /* slower than the old cliffs (-8 from 64 %). a lead at 70 % used to lose its tail in a few blocks. */
+    if (pct >= 90)
+        b -= 20;                         /* critical: down fast */
+    else if (pct >= 80)
+        b -= 10;                         /* high: down moderate */
+    else if (pct >= 70)
+        b -= 4;                          /* medium: down slow */
+    else if (pct < 55)
+        b += 3;                          /* low: recover faster */
     dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
 }
 int dk_get_budget(void) { return dk_budget; }
-/* 0 under 60 % load, 1 at 90 % and above. dk_shed() is already in trouble: full ramp. */
+/* 0 under 75 % load, 1 at 95 % and above. dk_shed() is already in trouble: full ramp. */
 static float shed_factor(void)
 {
     float f;
     if (shed)
         return 1.0f;
-    f = ((float)dk_load_pct - 60.0f) / 30.0f;
+    f = ((float)dk_load_pct - 75.0f) / 20.0f;   /* 0 at 75 %, 1 at 95 % */
     if (f < 0.0f)
         return 0.0f;
     if (f > 1.0f)
@@ -517,9 +517,9 @@ static int mix_overhead(void)
         if (fx > 0 && nfx && fx < nfx && !(DK_BYP(t) & DK_BYP_FX))
             full += INSERT_COST;
     }
-    /* a quarter while the tape is cool (a piano chord and a keys chord still fit),
+    /* an eighth while the tape is cool (a lead's tail still fits),
      * the whole of it once the device is hot. the measured load remains the real shed. */
-    return full / 4 + (int)((float)(full - full / 4) * sf);
+    return full / 8 + (int)((float)(full - full / 8) * sf);
 }
 /* a voice younger than this (samples) is still in its attack: it is never the one given up (a chord's own first notes, the
  * note the hand has just played: the live note that "did not sound" was the quietest voice of all, at its start) */
@@ -556,7 +556,15 @@ static void budget_make_room(int want, int live)
             return;
         for (i = 0; i < DK_NVOICE; i++)          /* 1: a tail (let go) - the quietest */
             if (vc[i].on && !vc[i].held) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+                const dk_engine_t *ve = TAPE.eng[vc[i].eng];
+                float l = ve->level(vc[i].st);
+                /* a lead or a bass is one voice. its release is the note, not spare CPU. */
+                if (ve->flags & (EF_MONO | EF_LEGATO))
+                    continue;
+                /* 70 % and up, until melt: an audible tail stays. a cool device that is simply
+                 * over its voice budget still gives the quietest tail up (four pad chords). */
+                if (!melt && l > 0.1f && dk_load_pct >= 70)
+                    continue;
                 if (l < lo) {
                     lo = l;
                     best = i;
@@ -631,7 +639,15 @@ static void tails_trim(void)
             return;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && !vc[i].held) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+                const dk_engine_t *ve = TAPE.eng[vc[i].eng];
+                float l = ve->level(vc[i].st);
+                /* a lead or a bass is one voice. its release is the note, not spare CPU. */
+                if (ve->flags & (EF_MONO | EF_LEGATO))
+                    continue;
+                /* 70 % and up, until melt: an audible tail stays. below that, a mix that does
+                 * not fit the voice budget still sheds its quietest tail. */
+                if (!melt && l > 0.15f && dk_load_pct >= 70)
+                    continue;
                 if (!hot && l > 0.5f && total <= dk_budget && nv <= 20)
                     continue;
                 if (l < lo) {
