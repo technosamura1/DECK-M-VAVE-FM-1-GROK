@@ -1153,7 +1153,8 @@ static void render_tracks(uint32_t n)
                     if (v->held)
                         midi(0x80u | ch_of(t), v->note, 0);
                     v->on = 0;
-                } else if (shed && !v->held && ve->level(v->st) < 0.05f)
+                } else if (shed && !v->held && ve->level(v->st) < 0.05f &&
+                           !(ve->flags & (EF_MONO | EF_LEGATO)))
                     v->on = 0;
                 continue;
             }
@@ -1161,18 +1162,24 @@ static void render_tracks(uint32_t n)
                 if (v->held)
                     midi(0x80u | ch_of(t), v->note, 0);
                 v->on = 0;
-            } else if (shed && !v->held && ve->level(v->st) < 0.05f)
+            } else if (shed && !v->held && ve->level(v->st) < 0.05f &&
+                       !(ve->flags & (EF_MONO | EF_LEGATO)))
                 v->on = 0;
         }
         for (i = 0; i < NFADE; i++) {          /* the voices fading out */
             static float fl_[DK_BLK], fr_[DK_BLK];
             float fpb[PX_N];
-            float g = fv_g[i], dg = 1.0f / (0.006f * DK_SR);
+            float g = fv_g[i], fade_time, dg;
+            const dk_engine_t *fe;
             if (g <= 0.0f || fv[i].trk != t)
                 continue;
+            fe = TAPE.eng[fv[i].eng];
+            /* a stolen lead or bass is still the note: 20 ms, not the 6 ms click-fade */
+            fade_time = (fe->flags & EF_LEGATO) ? 0.020f : 0.006f;
+            dg = 1.0f / (fade_time * DK_SR);
             for (j = 0; j < n; j++)
                 fl_[j] = fr_[j] = 0.0f;
-            TAPE.eng[fv[i].eng]->render(fv[i].st, fl_, fr_, (int)n, voice_params(&fv[i], fpb));
+            fe->render(fv[i].st, fl_, fr_, (int)n, voice_params(&fv[i], fpb));
             for (j = 0; j < n && g > 0.0f; j++, g -= dg) {
                 tl[j] += fl_[j] * g;
                 tr[j] += fr_[j] * g;
