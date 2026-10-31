@@ -447,10 +447,15 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
                 best = &vc[i];
             }
         }
-        if (!best) {                           /* the sequencer's oldest first: the hand's voices are the last to go */
+        if (!best) {                           /* the sequencer's oldest first: the hand's voices are the last to go.
+                                             * a lead or a bass is not taken: cutting it cuts the note itself */
             uint32_t top = 0;
             for (i = 0; i < DK_NVOICE; i++) {
-                uint32_t score = (age_ctr - vc[i].age) + (vc[i].src ? 0x40000000u : 0u);
+                const dk_engine_t *se = TAPE.eng[vc[i].eng];
+                uint32_t score;
+                if ((se->flags & (EF_MONO | EF_LEGATO)) && !(se->flags & EF_CONT))
+                    continue;
+                score = (age_ctr - vc[i].age) + (vc[i].src ? 0x40000000u : 0u);
                 if (!best || score >= top) {
                     top = score;
                     best = &vc[i];
@@ -766,9 +771,9 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
                 continue;
             lv = e->level(u->st);
             if (u->src == 0 && (u->held || lv > 0.02f))
-                return u;
+                return 0;
             if (note_take && vc_take[i] && note_take < vc_take[i] && (u->held || lv > 0.02f))
-                return u;
+                return 0;
         }
     }
     budget_make_room(e->cost, !src);
@@ -1223,8 +1228,9 @@ static void render_tracks(uint32_t n)
             if (g <= 0.0f || fv[i].trk != t)
                 continue;
             fe = TAPE.eng[fv[i].eng];
-            /* a stolen lead or bass is still the note: 20 ms, not the 6 ms click-fade */
-            fade_time = (fe->flags & EF_LEGATO) ? 0.020f : 0.006f;
+            /* a stolen lead or bass is still the note: 20 ms, not the 6 ms click-fade.
+             * the world is mono too, and it is a bed, not a note: it keeps the short fade. */
+            fade_time = ((fe->flags & EF_LEGATO) || ((fe->flags & EF_MONO) && !(fe->flags & EF_CONT))) ? 0.020f : 0.006f;
             dg = 1.0f / (fade_time * DK_SR);
             for (j = 0; j < n; j++)
                 fl_[j] = fr_[j] = 0.0f;

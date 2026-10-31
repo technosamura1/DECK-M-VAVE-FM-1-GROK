@@ -100,7 +100,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"NIGHT", 0, {32, 70, 50, 50, 50}, E50, FX_N_TAPE, 20, 25, 20, 75, 25, FELT_M, -1},
     {"MEMORY", 0, {38, 65, 60, 55, 55}, E50, FX_N_TAPE, 45, 45, 35, 80, 20, FELT_M, -2},
     /* TINE: twelve electric pianos, not one with the knobs nudged */
-    {"RAINY DAY", 1, {48, 28, 22, 42, 58}, TONE, FX_N_TAPE, 18, 25, 20, 42, 14, TINE_M, 0},
+    {"RAINY DAY", 1, {48, 28, 22, 42, 58}, {14, 42, 50}, FX_N_TAPE, 18, 25, 20, 42, 14, TINE_M, 0},
     {"SUITCASE", 1, {78, 6, 4, 82, 22}, SNAP, FX_N_NONE, 0, 0, 0, 14, 0, TINE_M, 2},
     {"DUSTY", 1, {36, 70, 80, 28, 46}, {28, 52, 44}, FX_N_VINYL, 60, 70, 45, 32, 6, TINE_M, 0},
     {"VELVET", 1, {88, 42, 18, 58, 78}, LONG, FX_N_CHORUS, 50, 22, 60, 58, 16, TINE_M, 2},
@@ -135,7 +135,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"STARS", 3, {3, 36, 96, 2}, {4, 28, 55}, FX_N_CHORUS, 32, 22, 48, 64, 42, GLASS_M, 3},
     {"CHAPEL", 3, {1, 98, 22, 0}, {22, 68, 92}, FX_N_NONE, 0, 0, 0, 100, 12, GLASS_M, -4},
     {"WOOD", 3, {2, 8, 15, 0}, {2, 12, 10}, FX_N_NONE, 0, 0, 0, 12, 2, GLASS_M, 16},
-    {"DROPS", 3, {0, 22, 0, 0}, SNAP, FX_N_SPRING, 40, 65, 50, 70, 32, GLASS_M, 0},
+    {"DROPS", 3, {0, 22, 0, 0}, SNAP, FX_N_SPRING, 22, 28, 8, 70, 32, GLASS_M, 0},
     {"GLOCK", 3, {1, 10, 100, 2}, {2, 14, 26}, FX_N_NONE, 0, 0, 0, 30, 16, GLASS_M, 2},
     {"CHIMES", 3, {0, 74, 50, 2}, LONG, FX_N_NONE, 0, 0, 0, 88, 44, GLASS_M, -4},
     /* SOFTBASS: a sub, a thumb, a reese. a slide is the GLIDE effect, not a fifth of every bass */

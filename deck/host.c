@@ -144,6 +144,23 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "evpos")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].pos : -1;   /* the clip's first event */
     else if (!strcmp(what, "evlast")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at + dk_song.clip[cur_clip()].n - 1].pos : -1;
     else if (!strcmp(what, "evdur")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].dur : -1;
+    else if (!strcmp(what, "cover")) {          /* ticks of this clip where any note sounds: a hold through two loops covers the bar */
+        const dk_clip_t *cl = &dk_song.clip[cur_clip()];
+        int len = clip_len(cur_clip()), i, t, n = 0;
+        if (len < 1)
+            len = 1;
+        if (len > 8192)
+            len = 8192;
+        for (t = 0; t < len; t++)
+            for (i = 0; i < cl->n; i++) {
+                const dk_ev_t *e = &dk_ev[cl->at + i];
+                if ((e->fl & EV_MOTION) || t < e->pos || t >= e->pos + e->dur)
+                    continue;
+                n++;
+                break;
+            }
+        g = n;
+    }
     else if (!strcmp(what, "evsnd")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_SND(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;   /* the first event's frozen sound */
     else if (!strcmp(what, "evlay")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_TAKE(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;
     else if (!strcmp(what, "nfrozen") || !strcmp(what, "nlive")) {      /* the clip's notes with a frozen sound / with the track's own */

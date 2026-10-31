@@ -28,6 +28,7 @@ int dk_rec_pending(void) { return rec_wait_note || rec_start_after; }   /* REC p
 static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
 static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
 static uint8_t open_carry[128];               /* held across the loop: the rest records from 0, not cut at the bar */
+static uint8_t open_full[128];                /* held a whole extra loop: the release is the whole bar, not only up to the key */
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */
 static uint8_t open_vel[128], open_trk[128];
 /* the count-in's last beat: notes played after its last click belong to the take's first beat (a hand a little
@@ -301,6 +302,7 @@ static void rec_pre_flush(void)                /* the take begins: the early not
             open_trk[n] = pre_trk[n];
             open_nc[n] = 0;
             open_carry[n] = 0;
+            open_full[n] = 0;
         } else
             rec_push(cur_part * DK_NTRACK + pre_trk[n], 0, 0, pre_dur[n] > DK_T16 / 2 ? pre_dur[n] : DK_T16 / 2, n,
                      pre_vel[n], 0);
@@ -320,22 +322,31 @@ static void rec_open(int t, int note, int vel, int delay)
                                                  * then the strum's offset after it (STRUM survives QUANT) */
     open_nc[note] = rec_nocomp;
     open_carry[note] = 0;
+    open_full[note] = 0;
     open_vel[note] = (uint8_t)vel;
     open_trk[note] = (uint8_t)t;
 }
 static void rec_close(int note, int to_end)
 {
     int t = open_trk[note], s = open_pos[note], clen, d, now;
-    if (s < 0)
+    if (s < 0) {
+        open_carry[note] = 0;
+        open_full[note] = 0;
         return;
+    }
     clen = clip_len_of(cur_part, t);
     now = to_end ? clen : (int)clip_heard(t, open_nc[note]);
     d = to_end ? clen - s : ((now - s) % clen + clen) % clen;
+    if (open_full[note]) {                 /* two loops held: the gap in the middle was held too, so the bar is the note */
+        s = 0;
+        d = clen;
+    }
     if (d <= 0)
         d = DK_T16 / 2;
     rec_push(cur_part * DK_NTRACK + t, 0, s, d, note, open_vel[note], 0);
     open_pos[note] = -1;
     open_carry[note] = 0;
+    open_full[note] = 0;
 }
 static void rec_close_all(void)
 {
@@ -374,6 +385,7 @@ static void rec_split_open(void)
         open_pos[br_note[i]] = (int16_t)rec_pos(t);
         open_nc[br_note[i]] = br_nc[i];
         open_carry[br_note[i]] = 0;
+        open_full[br_note[i]] = 0;
         open_vel[br_note[i]] = br_vel[i];
         open_trk[br_note[i]] = (uint8_t)t;
     }
@@ -1579,8 +1591,13 @@ static void seq_tick(void)
             int i, n = 0;
             static uint8_t hn[128], hv[128], ht[128], hc[128];
             for (i = 0; i < 128; i++) {
-                if (open_pos[i] < 0 || open_carry[i])
-                    continue;                 /* already carried: one continuation, not a new full bar each loop */
+                if (open_pos[i] < 0)
+                    continue;
+                if (open_carry[i]) {          /* already one continuation. a second bar held is the whole loop,
+                                               * written when the key is let go, not a new full bar every time round */
+                    open_full[i] = 1;
+                    continue;
+                }
                 hn[n] = (uint8_t)i;
                 hv[n] = open_vel[i];
                 ht[n] = open_trk[i];
@@ -1829,8 +1846,11 @@ static void drain(void)
 static void seq_init(void)
 {
     int i;
-    for (i = 0; i < 128; i++)
+    for (i = 0; i < 128; i++) {
         open_pos[i] = -1;
+        open_carry[i] = 0;
+        open_full[i] = 0;
+    }
     tempo_set();
     harm_regrow();
 }
