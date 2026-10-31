@@ -290,7 +290,6 @@ static void preset_apply(int slot)       /* (the take being recorded has been fr
 }
 static void preset_select_id(int slot)
 {
-    fxmem_store(dk_song.cur_track);      /* what is sounding stays on the preset we leave */
     track_sound_to(dk_song.cur_track);
     preset_apply(slot);
 }
@@ -298,7 +297,6 @@ static void preset_select(int slot)      /* a white key 0..15: 0..11 the block's
 {
     if (slot < DK_NFACT && keys_group()) {
         keys_all_up();
-        fxmem_store(dk_song.cur_track);
         track_sound_to(dk_song.cur_track);
         cur()->eng = TAPE.keys_set[slot][0];
         preset_apply(TAPE.keys_set[slot][1]);
@@ -551,8 +549,7 @@ static void pb_engine(int e)              /* the instrument: the same block if i
     int b = pb_shown(), n, i, ok = 0;
     if (e == cur()->eng)
         return;
-    fxmem_store(dk_song.cur_track);      /* the preset we leave keeps the effect; the instrument does not put another on */
-    track_sound_to(dk_song.cur_track);
+    track_sound_to(dk_song.cur_track);   /* the instrument does not put its factory effect on; the one sounding stays */
     keys_all_up();
     cur()->eng = (uint8_t)e;
     n = pb_blocks(e, bl);
@@ -700,6 +697,7 @@ static void preset_save(int slot)        /* SAVE held + white 13..16 */
     user_save();
     blk_seen[dk_song.cur_track] = (uint8_t)cur_blk();
     cur()->preset = (uint8_t)(DK_NFACT + (slot & 3));
+    fxmem_store(dk_song.cur_track);      /* the saved preset is this sound, knobs included */
     s[10] = (char)('3' + (slot & 3));
     say(s, u->name);
 }
@@ -2051,6 +2049,7 @@ static void turn(int i, int e)
             k->mod[0][0] = MOD_SWING;
         k->mod[0][3] = (uint8_t)field_target(page_field(i, 0));
         k->mod[0][1] = (uint8_t)clamp(k->mod[0][1] + e * 3, 0, 100);
+        fxmem_store(dk_song.cur_track);  /* MOD onto a knob is this preset's, same as turning the knob */
         {
             char s[8];
             itoa_b(k->mod[0][1], s);

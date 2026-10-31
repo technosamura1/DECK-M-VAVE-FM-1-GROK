@@ -165,6 +165,18 @@ static void song_track_order(void)
             dk_song.rsv[t] = rs[t];
             dk_song.fbank[t] = fb[t];
         }
+        {                                    /* knobs remembered per preset follow the track they were set on */
+            static uint8_t pk[DK_NTRACK][15][29];
+            int a, b;
+            for (t = 0; t < DK_NTRACK; t++)
+                for (a = 0; a < 15; a++)
+                    for (b = 0; b < 29; b++)
+                        pk[to[t]][a][b] = dk_song.pmkeep[t][a][b];
+            for (t = 0; t < DK_NTRACK; t++)
+                for (a = 0; a < 15; a++)
+                    for (b = 0; b < 29; b++)
+                        dk_song.pmkeep[t][a][b] = pk[t][a][b];
+        }
         for (p = 0; p < DK_NPART; p++) {
             uint8_t m = dk_song.part[p].mute, n = 0;
             for (t = 0; t < DK_NTRACK; t++)
@@ -248,6 +260,7 @@ int project_load(int slot)
         part_inst_boot();                    /* the tracks already are this part's instruments */
     else
         part_inst_capture(dk_song.cur_part); /* an older project: every part starts as the tracks are */
+    fxmem_rebind();                          /* knobs they set on a preset, from this project (an older one: none) */
     dk_unlock();
     return 0;
 empty:

@@ -915,6 +915,7 @@ static void pinst_load(int p)
         for (i = 0; i < 3; i++)
             k->env[i] = d->env[i];
         k->macro = d->macro;
+        fxmem_apply_sound(t);           /* cutoff and the rest they set; the effect stays */
     }
 }
 /* the part that is about to sound: keep the one we leave, bring this one's instruments */
@@ -1448,69 +1449,191 @@ static void fx_put(int t, uint8_t fx, uint8_t rev, uint8_t echo, int8_t amt, int
     k->fxb = b;
 }
 
-/* the hand's effect on this preset. sixteen a track: a whole block, and the four they saved.
- * the oldest goes when a seventeenth is set. an empty song (zeros) has none, so a preset
- * that was never turned keeps the effect it was written with. */
-static int fxmem_find(int t, int eng, int slot, int make)
+/* every knob the hand turned on a preset: the engine's, the envelope, the effect, macro, drift, both mods.
+ * the live table holds a lot (browsing does not fill it). the song keeps fifteen a track, so a saved
+ * project still has them. a preset never turned still loads as written. */
+#define PM_LIVE 128
+#define PM_KEEP 15
+#define PM_JB 29
+#define PM_MAGIC 0xA5u
+typedef struct {
+    uint8_t b[PM_JB];
+    uint8_t pad;
+    uint16_t age;
+} pm_slot_t;
+static pm_slot_t pm[DK_NTRACK][PM_LIVE] DK_POOL;
+static uint16_t pm_clock;
+
+static int pm_find(int t, int eng, int slot, int make)
 {
-    uint8_t (*row)[8] = dk_song.fxmem[t];
-    int i, free_i = -1, old = 0;
+    int i, free_i = -1, old = -1;
     uint8_t key = (uint8_t)(eng + 1);
     if (t < 0 || t >= DK_NTRACK)
         return -1;
-    for (i = 0; i < 16; i++) {
-        if (row[i][0] == key && row[i][1] == (uint8_t)slot)
+    for (i = 0; i < PM_LIVE; i++) {
+        if (pm[t][i].b[0] == key && pm[t][i].b[1] == (uint8_t)slot)
             return i;
-        if (!row[i][0] && free_i < 0)
+        if (!pm[t][i].b[0] && free_i < 0)
             free_i = i;
-        if (row[i][0] && dk_song.fxmem_age[t][i] < dk_song.fxmem_age[t][old])
+        if (pm[t][i].b[0] && (old < 0 || pm[t][i].age < pm[t][old].age))
             old = i;
     }
     if (!make)
         return -1;
     return free_i >= 0 ? free_i : old;
 }
+static uint16_t pm_age_next(void)
+{
+    int t, i;
+    if (pm_clock == 65535) {
+        for (t = 0; t < DK_NTRACK; t++)
+            for (i = 0; i < PM_LIVE; i++)
+                pm[t][i].age /= 2;
+        pm_clock = 32768;
+    }
+    return ++pm_clock;
+}
+static void pm_pack(uint8_t *e, const dk_track_t *k)
+{
+    int n;
+    e[0] = (uint8_t)(k->eng + 1);
+    e[1] = k->preset;
+    for (n = 0; n < DK_NP; n++)
+        e[2 + n] = (uint8_t)k->p[n];
+    e[10] = (uint8_t)k->env[0];
+    e[11] = (uint8_t)k->env[1];
+    e[12] = (uint8_t)k->env[2];
+    e[13] = k->fx;
+    e[14] = (uint8_t)k->fxamt;
+    e[15] = (uint8_t)k->fxa;
+    e[16] = (uint8_t)k->fxb;
+    e[17] = k->rev;
+    e[18] = k->echo;
+    e[19] = (uint8_t)k->macro;
+    e[20] = k->drift;
+    for (n = 0; n < 4; n++) {
+        e[21 + n] = k->mod[0][n];
+        e[25 + n] = k->mod[1][n];
+    }
+}
+static void pm_unpack(dk_track_t *k, const uint8_t *e, int with_fx)
+{
+    int n;
+    for (n = 0; n < DK_NP; n++)
+        k->p[n] = (int8_t)e[2 + n];
+    k->env[0] = (int8_t)e[10];
+    k->env[1] = (int8_t)e[11];
+    k->env[2] = (int8_t)e[12];
+    if (with_fx) {
+        k->fx = e[13];
+        k->fxamt = (int8_t)e[14];
+        k->fxa = (int8_t)e[15];
+        k->fxb = (int8_t)e[16];
+        k->rev = e[17];
+        k->echo = e[18];
+    }
+    k->macro = (int8_t)e[19];
+    k->drift = e[20];
+    for (n = 0; n < 4; n++) {
+        k->mod[0][n] = e[21 + n];
+        k->mod[1][n] = e[25 + n];
+    }
+}
+static void pm_journal(int t)
+{
+    int best[PM_KEEP], n = 0, i, j, k;
+    for (i = 0; i < PM_LIVE; i++) {
+        if (!pm[t][i].b[0])
+            continue;
+        j = n < PM_KEEP ? n : PM_KEEP;
+        while (j > 0 && pm[t][best[j - 1]].age < pm[t][i].age)
+            j--;
+        if (j == PM_KEEP)
+            continue;
+        k = n < PM_KEEP ? n : PM_KEEP - 1;
+        while (k > j) {
+            best[k] = best[k - 1];
+            k--;
+        }
+        best[j] = i;
+        if (n < PM_KEEP)
+            n++;
+    }
+    for (i = 0; i < PM_KEEP; i++) {
+        uint8_t *d = dk_song.pmkeep[t][i];
+        if (i >= n) {
+            d[0] = 0;
+            continue;
+        }
+        for (j = 0; j < PM_JB; j++)
+            d[j] = pm[t][best[i]].b[j];
+    }
+    dk_song.pmmagic = PM_MAGIC;
+}
+void fxmem_rebind(void)
+{
+    int t, i, s;
+    for (t = 0; t < DK_NTRACK; t++)
+        for (i = 0; i < PM_LIVE; i++) {
+            pm[t][i].b[0] = 0;
+            pm[t][i].age = 0;
+        }
+    pm_clock = 1;
+    if (dk_song.pmmagic != PM_MAGIC)
+        return;
+    for (t = 0; t < DK_NTRACK; t++)
+        for (s = 0; s < PM_KEEP; s++) {
+            const uint8_t *e = dk_song.pmkeep[t][s];
+            int slot;
+            if (!e[0])
+                continue;
+            slot = pm_find(t, e[0] - 1, e[1], 1);
+            if (slot < 0)
+                continue;
+            for (i = 0; i < PM_JB; i++)
+                pm[t][slot].b[i] = e[i];
+            pm[t][slot].age = (uint16_t)(PM_KEEP - s);
+            if (pm[t][slot].age > pm_clock)
+                pm_clock = pm[t][slot].age;
+        }
+}
 void fxmem_store(int t)
 {
     const dk_track_t *k;
-    uint8_t *e, age = 0;
-    int i, tr, s;
+    int i;
     if (t < 0 || t >= DK_NTRACK)
         return;
     k = &dk_song.trk[t];
-    i = fxmem_find(t, k->eng, k->preset, 1);
+    i = pm_find(t, k->eng, k->preset, 1);
     if (i < 0)
         return;
-    e = dk_song.fxmem[t][i];
-    e[0] = (uint8_t)(k->eng + 1);
-    e[1] = k->preset;
-    e[2] = k->fx;
-    e[3] = (uint8_t)k->fxamt;
-    e[4] = (uint8_t)k->fxa;
-    e[5] = (uint8_t)k->fxb;
-    e[6] = k->rev;
-    e[7] = k->echo;
-    for (tr = 0; tr < DK_NTRACK; tr++)
-        for (s = 0; s < 16; s++)
-            if (dk_song.fxmem_age[tr][s] > age)
-                age = dk_song.fxmem_age[tr][s];
-    if (age == 255) {
-        for (tr = 0; tr < DK_NTRACK; tr++)
-            for (s = 0; s < 16; s++)
-                dk_song.fxmem_age[tr][s] /= 2;
-        age = 128;
-    }
-    dk_song.fxmem_age[t][i] = (uint8_t)(age + 1);
+    pm_pack(pm[t][i].b, k);
+    pm[t][i].age = pm_age_next();
+    pm_journal(t);
 }
 void fxmem_apply(int t)
 {
-    const dk_track_t *k = &dk_song.trk[t];
-    int i = fxmem_find(t, k->eng, k->preset, 0);
-    const uint8_t *e;
+    dk_track_t *k;
+    int i;
+    if (t < 0 || t >= DK_NTRACK)
+        return;
+    k = &dk_song.trk[t];
+    i = pm_find(t, k->eng, k->preset, 0);
     if (i < 0)
         return;
-    e = dk_song.fxmem[t][i];
-    fx_put(t, e[2], e[6], e[7], (int8_t)e[3], (int8_t)e[4], (int8_t)e[5]);
+    pm_unpack(k, pm[t][i].b, 1);
+}
+/* the engine's knobs they set. the effect that is sounding is not replaced
+ * (a part change, a mood, an instrument, an erase: the effect stays). */
+void fxmem_apply_sound(int t)
+{
+    uint8_t fx, rev, echo;
+    int8_t amt, a, b;
+    if (t < 0 || t >= DK_NTRACK)
+        return;
+    fx_keep(t, &fx, &rev, &echo, &amt, &a, &b);
+    fxmem_apply(t);
+    fx_put(t, fx, rev, echo, amt, a, b);
 }
 
 void track_preset(int t, int slot)
@@ -1536,16 +1659,26 @@ void track_preset(int t, int slot)
     k->echo = p->echo;
     k->trim = p->vol;
     k->macro = 0;
+    k->drift = 35;
+    for (i = 0; i < 2; i++) {            /* a preset not yet turned: the mod as a fresh track, not the one we left */
+        k->mod[i][0] = 0;
+        k->mod[i][1] = 30;
+        k->mod[i][2] = 40;
+        k->mod[i][3] = T_P0;
+    }
     song_edits++;
 }
 
-/* the hand picked another preset or another instrument: its sound comes in. the FX stays. */
+/* the hand picked another preset or another instrument: its sound comes in.
+ * knobs they already set on that preset come back. the effect stays the one sounding,
+ * unless the caller loaded the preset on purpose (preset_apply). */
 void track_preset_sound(int t, int slot)
 {
     uint8_t fx, rev, echo;
     int8_t fxamt, fxa, fxb;
     fx_keep(t, &fx, &rev, &echo, &fxamt, &fxa, &fxb);
     track_preset(t, slot);
+    fxmem_apply(t);
     fx_put(t, fx, rev, echo, fxamt, fxa, fxb);
 }
 
@@ -1627,6 +1760,7 @@ void dk_song_clear(void)
     reindex();
     song_edits++;
     part_inst_capture(0);                /* the tape's instruments: every part starts here */
+    fxmem_rebind();                      /* a new song remembers nothing */
 }
 
 /* CLEAR ALL: the whole composition erased: every clip (8 parts x 6 tracks), the road, the frozen sounds, the parts' bars (4),
@@ -1690,6 +1824,7 @@ void part_inst_reset(int p)
         fx_keep(t, &fx, &rev, &echo, &amt, &a, &b);
         dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
         fx_put(t, fx, rev, echo, amt, a, b);
+        fxmem_store(t);                  /* the instrument is back; the effect they had is what this preset keeps */
     }
     pinst_save(p);
     dk_unlock();
@@ -1714,6 +1849,7 @@ void part_inst_reset_track(int p, int t)
     role = k->role;
     dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
     fx_put(t, fx, rev, echo, fxamt, fxa, fxb);
+    fxmem_store(t);
     pinst_save(p);
     dk_unlock();
 }
@@ -1758,6 +1894,7 @@ static int wipe_restore(void)            /* the part that was current */
     part_live = wlive;
     song_edits++;
     part = dk_song.cur_part & 7;
+    fxmem_rebind();                      /* the song is the one from before the wipe, knobs included */
     dk_unlock();
     wundo = 0;
     wredo = 1;
@@ -1775,6 +1912,7 @@ static void wipe_apply(void)
         fx_keep(t, &fx, &rev, &echo, &amt, &a, &b);
         track_defaults(t);
         fx_put(t, fx, rev, echo, amt, a, b);   /* clearing the road does not clear the effect */
+        fxmem_store(t);
     }
     part_inst_capture(0);
     dk_song.cur_part = 0;
