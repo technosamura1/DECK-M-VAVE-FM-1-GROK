@@ -275,9 +275,13 @@ static void say_preset(int slot)
     say(blk, n);
     ui.msg_tag = 1;
 }
-static void preset_apply(int slot)       /* (the take being recorded has been frozen with the old sound) */
+static void preset_apply(int slot)       /* (the take being recorded has been frozen with the old sound).
+                                          * a factory preset does not replace the FX they set; a preset they saved brings its own */
 {
-    track_preset(dk_song.cur_track, slot);
+    if (preset_block(slot) < 0)
+        track_preset(dk_song.cur_track, slot);
+    else
+        track_preset_sound(dk_song.cur_track, slot);
     if (preset_block(slot) >= 0)
         blk_seen[dk_song.cur_track] = (uint8_t)preset_block(slot);
     mark_dirty();
@@ -553,7 +557,7 @@ static void pb_engine(int e)              /* the instrument: the same block if i
         ok |= bl[i] == b;
     if (!ok)
         b = n ? bl[0] : 0;
-    track_preset(dk_song.cur_track, b >= DK_NBLK ? pb_user_id(e, 0) : preset_id(b, 0));
+    track_preset_sound(dk_song.cur_track, b >= DK_NBLK ? pb_user_id(e, 0) : preset_id(b, 0));
     if (b < DK_NBLK)
         blk_seen[dk_song.cur_track] = (uint8_t)b;
     mark_dirty();
@@ -1440,7 +1444,7 @@ static void edit_list_do(int w)
         auto_erase();
         return;
     }
-    if (w == 13) {                       /* this track, this part: its notes and its instrument. The rest stays */
+    if (w == 13) {                       /* this track, this part: its notes and its instrument. The FX stays. The rest stays */
         int cl = (dk_song.cur_part % DK_NPART) * DK_NTRACK + t;
         p = dk_song.cur_part % DK_NPART;
         if (dk_song.clip[cl].n) {

@@ -236,6 +236,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "endlon")) g = ui.endl_on;
     else if (!strncmp(what, "fbank", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.fbank[what[5] - '0'];   /* the song's byte, raw */
     else if (!strcmp(what, "preset")) g = cur()->preset;
+    else if (!strcmp(what, "fx")) g = cur()->fx;
     else if (!strcmp(what, "eng")) g = cur()->eng;
     else if (!strcmp(what, "blk")) g = cur_blk();                     /* the preset block of the track */
     else if (!strncmp(what, "pcnt", 4)) {                              /* "pcnt<engine>.<block>": the presets there */

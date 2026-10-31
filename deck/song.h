@@ -89,5 +89,6 @@ int preset_block(int id);                   /* 0..DK_NBLK-1; the user's: -1 */
 int preset_id(int blk, int i);
 int preset_count(int eng, int blk);
 void track_preset(int t, int slot);
+void track_preset_sound(int t, int slot);   /* a preset or an instrument by hand: the FX they set is kept */
 void song_template(int tp);
 void song_mood(int m);

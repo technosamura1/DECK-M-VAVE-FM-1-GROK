@@ -1454,6 +1454,22 @@ void track_preset(int t, int slot)
     song_edits++;
 }
 
+/* the hand picked another preset or another instrument: its sound comes in, the FX they set stays
+ * (the effect, its knobs, the sends). coming back to the preset does not put the factory FX back. */
+void track_preset_sound(int t, int slot)
+{
+    dk_track_t *k = &dk_song.trk[t];
+    uint8_t fx = k->fx, rev = k->rev, echo = k->echo;
+    int8_t fxamt = k->fxamt, fxa = k->fxa, fxb = k->fxb;
+    track_preset(t, slot);
+    k->fx = fx;
+    k->fxamt = fxamt;
+    k->fxa = fxa;
+    k->fxb = fxb;
+    k->rev = rev;
+    k->echo = echo;
+}
+
 void dk_track_setup(int t, int eng, int preset, int seq, int role)
 {
     dk_track_t *k = &dk_song.trk[t];
@@ -1596,18 +1612,35 @@ void part_inst_reset(int p)
     dk_unlock();
 }
 
-/* one track of this part, back to the tape; the part's other tracks and the other parts stay */
+/* one track of this part, back to the tape; the part's other tracks and the other parts stay.
+ * the FX stays: erase clears the notes and the instrument, not the effect they dialled. */
 void part_inst_reset_track(int p, int t)
 {
     int seq, role;
+    dk_track_t *k;
+    uint8_t fx, rev, echo;
+    int8_t fxamt, fxa, fxb;
     p &= 7;
     if (t < 0 || t >= DK_NTRACK)
         return;
     dk_lock();
     part_inst_sync(p);
-    seq = dk_song.trk[t].seq;
-    role = dk_song.trk[t].role;
+    k = &dk_song.trk[t];
+    fx = k->fx;
+    rev = k->rev;
+    echo = k->echo;
+    fxamt = k->fxamt;
+    fxa = k->fxa;
+    fxb = k->fxb;
+    seq = k->seq;
+    role = k->role;
     dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
+    k->fx = fx;
+    k->fxamt = fxamt;
+    k->fxa = fxa;
+    k->fxb = fxb;
+    k->rev = rev;
+    k->echo = echo;
     pinst_save(p);
     dk_unlock();
 }
