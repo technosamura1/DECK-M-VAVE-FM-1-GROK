@@ -908,15 +908,13 @@ static void pinst_load(int p)
         int i;
         k->eng = d->eng;
         k->preset = d->preset;
-        k->fx = d->fx;
+        /* the effect is the track's, not the part's: a part change does not put another FX back.
+         * it moves only when its own knobs are turned. */
         for (i = 0; i < DK_NP; i++)
             k->p[i] = d->p[i];
         for (i = 0; i < 3; i++)
             k->env[i] = d->env[i];
         k->macro = d->macro;
-        k->fxamt = d->fxamt;
-        k->fxa = d->fxa;
-        k->fxb = d->fxb;
     }
 }
 /* the part that is about to sound: keep the one we leave, bring this one's instruments */
@@ -1428,6 +1426,28 @@ const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp)
     }
 }
 
+/* the effect moves only from its own knobs. a preset, a mood, an instrument and an erase leave it. */
+static void fx_keep(int t, uint8_t *fx, uint8_t *rev, uint8_t *echo, int8_t *amt, int8_t *a, int8_t *b)
+{
+    const dk_track_t *k = &dk_song.trk[t];
+    *fx = k->fx;
+    *rev = k->rev;
+    *echo = k->echo;
+    *amt = k->fxamt;
+    *a = k->fxa;
+    *b = k->fxb;
+}
+static void fx_put(int t, uint8_t fx, uint8_t rev, uint8_t echo, int8_t amt, int8_t a, int8_t b)
+{
+    dk_track_t *k = &dk_song.trk[t];
+    k->fx = fx;
+    k->rev = rev;
+    k->echo = echo;
+    k->fxamt = amt;
+    k->fxa = a;
+    k->fxb = b;
+}
+
 void track_preset(int t, int slot)
 {
     dk_track_t *k = &dk_song.trk[t];
@@ -1454,20 +1474,14 @@ void track_preset(int t, int slot)
     song_edits++;
 }
 
-/* the hand picked another preset or another instrument: its sound comes in, the FX they set stays
- * (the effect, its knobs, the sends). coming back to the preset does not put the factory FX back. */
+/* the hand picked another preset or another instrument: its sound comes in. the FX stays. */
 void track_preset_sound(int t, int slot)
 {
-    dk_track_t *k = &dk_song.trk[t];
-    uint8_t fx = k->fx, rev = k->rev, echo = k->echo;
-    int8_t fxamt = k->fxamt, fxa = k->fxa, fxb = k->fxb;
+    uint8_t fx, rev, echo;
+    int8_t fxamt, fxa, fxb;
+    fx_keep(t, &fx, &rev, &echo, &fxamt, &fxa, &fxb);
     track_preset(t, slot);
-    k->fx = fx;
-    k->fxamt = fxamt;
-    k->fxa = fxa;
-    k->fxb = fxb;
-    k->rev = rev;
-    k->echo = echo;
+    fx_put(t, fx, rev, echo, fxamt, fxa, fxb);
 }
 
 void dk_track_setup(int t, int eng, int preset, int seq, int role)
@@ -1606,7 +1620,11 @@ void part_inst_reset(int p)
     part_inst_sync(p);
     for (t = 0; t < DK_NTRACK; t++) {
         int seq = dk_song.trk[t].seq, role = dk_song.trk[t].role;
+        uint8_t fx, rev, echo;
+        int8_t amt, a, b;
+        fx_keep(t, &fx, &rev, &echo, &amt, &a, &b);
         dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
+        fx_put(t, fx, rev, echo, amt, a, b);
     }
     pinst_save(p);
     dk_unlock();
@@ -1626,21 +1644,11 @@ void part_inst_reset_track(int p, int t)
     dk_lock();
     part_inst_sync(p);
     k = &dk_song.trk[t];
-    fx = k->fx;
-    rev = k->rev;
-    echo = k->echo;
-    fxamt = k->fxamt;
-    fxa = k->fxa;
-    fxb = k->fxb;
+    fx_keep(t, &fx, &rev, &echo, &fxamt, &fxa, &fxb);
     seq = k->seq;
     role = k->role;
     dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
-    k->fx = fx;
-    k->fxamt = fxamt;
-    k->fxa = fxa;
-    k->fxb = fxb;
-    k->rev = rev;
-    k->echo = echo;
+    fx_put(t, fx, rev, echo, fxamt, fxa, fxb);
     pinst_save(p);
     dk_unlock();
 }
@@ -1696,8 +1704,13 @@ static void wipe_apply(void)
     int t;
     song_clear_all();                    /* clips, the road, the frozen sounds; undo flags off; the copy stays */
     dk_lock();
-    for (t = 0; t < DK_NTRACK; t++)
+    for (t = 0; t < DK_NTRACK; t++) {
+        uint8_t fx, rev, echo;
+        int8_t amt, a, b;
+        fx_keep(t, &fx, &rev, &echo, &amt, &a, &b);
         track_defaults(t);
+        fx_put(t, fx, rev, echo, amt, a, b);   /* clearing the road does not clear the effect */
+    }
     part_inst_capture(0);
     dk_song.cur_part = 0;
     dk_unlock();
@@ -1761,7 +1774,7 @@ void song_mood(int m)
         if (dk_song.trk[t].role == R_NATURE && md->eng[t] >= 0 && md->eng[t] < TAPE.neng && TAPE.eng[md->eng[t]]->role == R_LEAD)
             dk_song.trk[t].role = R_LEAD;     /* (an older project's NATURE track becomes the LEAD) */
         if (md->preset[t] >= 0)
-            track_preset(t, md->preset[t]);
+            track_preset_sound(t, md->preset[t]);   /* the mood's sound, not its factory effect */
         dk_song.trk[t].drv[1] = md->style;
     }
     song_edits++;

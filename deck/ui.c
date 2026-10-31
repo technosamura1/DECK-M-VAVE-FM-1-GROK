@@ -276,12 +276,9 @@ static void say_preset(int slot)
     ui.msg_tag = 1;
 }
 static void preset_apply(int slot)       /* (the take being recorded has been frozen with the old sound).
-                                          * a factory preset does not replace the FX they set; a preset they saved brings its own */
+                                          * the effect stays: it moves only when its own knobs are turned */
 {
-    if (preset_block(slot) < 0)
-        track_preset(dk_song.cur_track, slot);
-    else
-        track_preset_sound(dk_song.cur_track, slot);
+    track_preset_sound(dk_song.cur_track, slot);
     if (preset_block(slot) >= 0)
         blk_seen[dk_song.cur_track] = (uint8_t)preset_block(slot);
     mark_dirty();

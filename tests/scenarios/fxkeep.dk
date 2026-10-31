@@ -8,6 +8,13 @@ wait 100
 tap HOME
 wait 100
 expect track 0
+# parts remember the factory effect first, so a later part change would put it back
+page 11
+turn K2 1
+wait 80
+turn K2 -1
+wait 80
+expect part 0
 page 2
 row 3
 turn K1 4
@@ -48,4 +55,11 @@ tapkey w13
 wait 100
 said TRACK CLEARED
 expect preset 0
+expect fx 6
+# another part, and a mood, leave the effect where the knobs set it
+turn K2 1
+wait 80
+expect fx 6
+mood 1
+wait 40
 expect fx 6
