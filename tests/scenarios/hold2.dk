@@ -1,0 +1,25 @@
+# a key held across TWO bars of a 1-bar loop. the first pass keeps the end, the next keeps going.
+# a second time round used to forget the middle: playback had a hole between the release and the first press.
+wait 300
+tap SAVE
+wait 100
+turn SELECT 2
+wait 100
+expect track 4
+expect eng 11
+setbars 0 1
+qnt 0
+lat 0
+tap PLAY
+wait 200
+tap REC
+wait 2200
+key w0 down 100
+wait 4200
+key w0 up
+wait 200
+tap REC
+wait 400
+dumpclip
+expect events >1
+expect cover >370

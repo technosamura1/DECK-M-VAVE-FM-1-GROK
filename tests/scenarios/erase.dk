@@ -1,6 +1,5 @@
-# ERASING lives in the EDIT LIST now (TRACKS, EDIT; white 12 ERASE NOTES, 13 ERASE AUTO, 14 ERASE ALL PARTS): the first press asks,
-# the second (within 3 s) does it, each one undo step. No timed REC hold erases any more. PLAY on ROAD from the chosen block; the
-# block chosen picks the part. DREAM's drums play
+# ERASING lives in the EDIT LIST now (TRACKS, EDIT; white 12 ERASE NOTES, 13 ERASE AUTO, 14 ERASE ALL): the first press asks,
+# the second (within 3 s) does it, each one undo step. ERASE ALL is this part only (every track). No timed REC hold erases any more.
 wait 300
 demo
 wait 100
@@ -19,7 +18,7 @@ expect events >0
 expect recording 0
 expect counting 0
 page 11
-tap EDIT
+tap LFO
 wait 100
 expect layview 1
 shot p40_edit_erase.png
@@ -33,27 +32,27 @@ wait 100
 said NOTES ERASED
 expect events 0
 expect eventsB1 >0
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
 expect same 1
-# ALL PARTS: this track in all 8 parts, notes and automation; one undo step
+# this track, this part: notes go; the other parts stay. one undo step
 tapkey w13
 wait 100
 said AGAIN = ERASE
 tapkey w13
 wait 100
-said ALL ERASED
+said TRACK CLEARED
 expect events 0
-expect eventsB1 0
-expect eventsC1 0
-press EDIT
+expect eventsB1 >0
+expect eventsC1 >0
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
 expect same 1
-expect eventsB1 >0
+expect events >0
 # another item between the asks forgets the ask
 tapkey w11
 wait 100
@@ -63,7 +62,7 @@ tapkey w11
 wait 100
 said AGAIN = ERASE
 expect events >0
-tap EDIT
+tap LFO
 wait 50
 expect layview 0
 # a tap is still a recording
@@ -86,17 +85,4 @@ wait 300
 expect part 2
 tap PLAY
 wait 100
-# DREAM on the drums (C418, energy 45): it plays something
-tap HOME
-press HOME
-tapkey b4
-release HOME
-tap SEQ
-seqtype 2
-wait 50
-expect seq 4
-mark
-tap PLAY
-wait 4000
-tap PLAY
 expect textfit 0

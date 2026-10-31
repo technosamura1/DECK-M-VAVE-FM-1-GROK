@@ -9,6 +9,9 @@
  *   deck_test bench                    the render's cost: the demo's busiest, and all voices busy
  *   deck_test metro                    the metronome's clicks against the clock
  * It prints the peak, the rms and the cost (us a 128-frame block, host). */
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 199309L   /* clock_gettime under -std=c99 */
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,6 +135,8 @@ static void fresh(void)
     TAPE.init();
     dk_lock();
     dk_song_clear();
+    dk_song.dust = 25;   /* (the old default: its noise draws on the random numbers in quiet_all, and the calibrated
+                          * renders were made with that sequence; each render sets its own dust after) */
     dk_unlock();
     quiet_all();
 }
@@ -371,30 +376,120 @@ static void balance(void)
     }
 }
 
-static void drive_all(int mood, int style, double secs, const char *out)
+
+/* GROOVE: the drummer through the song: each section's three grooves a bar each, a fill at the end of each section,
+ * the ending; on DUSTKIT (track 5), 90 BPM */
+static void groove_demo(const char *out, int preset)
 {
-    int t;
+    double bar;
+    int sec, j;
     fresh();
     dk_lock();
-    song_mood(mood);
-    if (style >= 0)
-        dk_song.style = (uint8_t)style;
-    for (t = 0; t < DK_NTRACK; t++) {
-        dk_song.trk[t].seq = SQ_DRIVE;
-        dk_song.trk[t].drv[0] = 55;
-        dk_song.trk[t].drv[1] = dk_song.style;
-        dk_song.trk[t].drv[2] = 50;
-    }
+    dk_song.tempo = 90;
+    dk_song.dust = 0;
+    dk_track_setup(4, 5, preset, SQ_GROOVE, R_DRUM);
+    dk_song.trk[4].vol = 80;
     dk_unlock();
-    dk_cmd(C_SEED, 0, 0, 1234 + mood * 7 + style);
-    dk_cmd(C_RETUNE, 0, 0, 0);
-    run(0.1);
+    bar = 4.0 * 60.0 / 90.0;
     reset_out();
     dk_cmd(C_PLAY, 1, 0, 0);
-    run(secs);
+    dk_cmd(C_GROOVE, 4, 0, 1);
+    run(0.02);
+    for (sec = 0; sec < 5; sec++)
+        for (j = 0; j < 3; j++) {
+            int g = sec * 3 + j + 1;
+            if (g > 1)
+                dk_cmd(C_GROOVE, 4, 0, g);          /* (on the next bar) */
+            run(bar * 0.5);
+            if (j == 2)                              /* the section's end: a fill, longer each time */
+                dk_cmd(C_GROOVE, 4, 1, 2 + sec * 2);
+            run(bar * 0.5);
+        }
+    dk_cmd(C_GROOVE, 4, 0, 0);
+    run(bar * 1.2);
     dk_cmd(C_PLAY, 0, 0, 0);
-    tail(12.0);
+    tail(3.0);
     wav(out);
+    report("groove: 5 sections x 3, fills, the end");
+}
+
+/* GROOVE by itself: VERSE 2 with AUTO FILL every 4 bars and MUTATE, a DICE, then a new section (a long fill into it) */
+static void groove_auto(const char *out)
+{
+    double bar = 4.0 * 60.0 / 90.0;
+    fresh();
+    dk_lock();
+    dk_song.tempo = 90;
+    dk_song.dust = 0;
+    dk_track_setup(4, 5, 0, SQ_GROOVE, R_DRUM);
+    dk_song.trk[4].vol = 80;
+    dk_song.trk[4].drv[0] = 1;               /* a fill every 4 bars */
+    dk_song.trk[4].drv[1] = 70;              /* MUTATE */
+    dk_song.trk[4].drv[2] = 0;
+    dk_unlock();
+    reset_out();
+    dk_cmd(C_PLAY, 1, 0, 0);
+    dk_cmd(C_GROOVE, 4, 0, 5);
+    {                                        /* the fills that came by themselves: two in 8 bars */
+        int fills = 0, was = 0, i;
+        for (i = 0; i < (int)(bar * 8.0 / 0.05); i++) {
+            run(0.05);
+            if (dk_gr_fill[4] && !was)
+                fills++;
+            was = dk_gr_fill[4];
+        }
+        printf("auto fills in 8 bars: %d%s\n", fills, fills == 2 ? "" : "  BAD");
+    }
+    dk_cmd(C_GROOVE, 4, 3, 0);               /* DICE */
+    run(bar * 4.0);
+    dk_cmd(C_GROOVE, 4, 0, 8);               /* CHORUS 2: a long fill into it by itself */
+    run(bar * 8.0);
+    dk_cmd(C_GROOVE, 4, 0, 0);
+    run(bar * 1.2);
+    dk_cmd(C_PLAY, 0, 0, 0);
+    tail(3.0);
+    wav(out);
+    report("groove auto: fills every 4, mutate 70, dice, a section");
+}
+
+/* LEAD as played: a legato line (each key down before the last let go), then detached notes; every LEAD preset to DIR/NN.wav
+ * (tools/sound_check.py finds the clicks) */
+static void lead_lines(const char *dir)
+{
+    static const int MEL[8] = {60, 62, 64, 67, 65, 64, 62, 60};
+    int p, i;
+    char path[256];
+    MKDIR(dir);
+    for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+        int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT);
+        dk_preset_t tmp;
+        if (p % DK_NFACT >= preset_count(11, blk))
+            continue;
+        fresh();
+        dk_lock();
+        dk_song.dust = 0;
+        dk_track_setup(5, 11, id, SQ_STEP, R_LEAD);
+        dk_unlock();
+        run(0.1);
+        reset_out();
+        for (i = 0; i < 8; i++) {                /* legato: the next down, then the last up */
+            note(5, MEL[i], 80 + (i & 1) * 25);
+            if (i)
+                note(5, MEL[i - 1], 0);
+            run(0.22);
+        }
+        note(5, MEL[7], 0);
+        run(0.4);
+        for (i = 0; i < 8; i++) {                /* detached: up, a short gap, down */
+            note(5, MEL[i], 70 + (i & 1) * 35);
+            run(0.16);
+            note(5, MEL[i], 0);
+            run(0.06);
+        }
+        tail(2.0);
+        snprintf(path, sizeof path, "%s/%02d_%s.wav", dir, p, preset_of(11, id, &tmp)->name);
+        wav(path);
+    }
 }
 
 static void chords(const char *out)
@@ -494,53 +589,6 @@ static void phrase(int inst, const char *out)
 
 /* FINGER's banks: every pattern of every bank (a drum, a bass, a pad, a melody track) held for two bars on the default
  * engines, one WAV each in <dir>/<BANK>_<ROLE>/pNN.wav; sound_check.py --nolevel checks them. Silence fails the run. */
-static int fingerbank(const char *dir)
-{
-    static const struct { int t; const char *tag; } TR[4] = {{4, "DRUM_DUSTKIT"}, {3, "BASS"}, {2, "PAD"}, {0, "MEL"}};
-    int b, k, p, bad = 0, n = 0;
-    char cmd[256], fn[320];
-    for (b = 0; b < DK_NFBANK; b++)
-        for (k = 0; k < 4; k++) {
-            int t = TR[k].t;
-            snprintf(fn, sizeof fn, "%s/%s_%s", dir, dk_fb_bankname(b), TR[k].tag);
-            snprintf(cmd, sizeof cmd, "mkdir -p '%s'", fn);
-            if (system(cmd))
-                return 2;
-            for (p = 0; p < 16; p++) {
-                double bar;
-                int v, vmax;
-                fresh();
-                dk_lock();
-                dk_song.trk[t].seq = SQ_FINGER;
-                dk_song.fbank[t] = (uint8_t)b;
-                dk_song.dust = 0;
-                dk_unlock();
-                bar = 4.0 * 60.0 / (dk_song.tempo > 0 ? dk_song.tempo : 100);
-                run(0.05);
-                reset_out();
-                dk_cmd(C_FINGER, t, 1, p);
-                for (vmax = 0, v = 0; v < 20; v++) {       /* two bars, the busiest moment's voices counted */
-                    run(0.1 * bar);
-                    vmax = (int)dk_voices_on > vmax ? (int)dk_voices_on : vmax;
-                }
-                dk_cmd(C_FINGER, t, 0, p);
-                tail(8.0);
-                snprintf(fn, sizeof fn, "%s/%s_%s/p%02d.wav", dir, dk_fb_bankname(b), TR[k].tag, p + 1);
-                wav(fn);
-                n++;
-                if (vmax >= DK_NVOICE) {
-                    printf("VOICES FULL %s\n", fn);
-                    bad++;
-                }
-                if (peak < 200) {
-                    printf("SILENT %s (peak %d)\n", fn, peak);
-                    bad++;
-                }
-            }
-        }
-    printf("fingerbank: %d patterns rendered, %d silent\n", n, bad);
-    return bad ? 1 : 0;
-}
 
 /* ATMO to listen to: the demo's chorus three times: dry; with RAIN and the FIRE under it; with the TAPE as well */
 static void atmo_demo(const char *out)
@@ -778,7 +826,7 @@ static int bypass_test(void)
 {
     int bad = 0, st, fx, n = 0;
     for (st = 0; st < 4; st++)
-        for (fx = st ? 0 : 1; fx < (st ? 1 : 8); fx++) {
+        for (fx = st ? 0 : 1; fx < (st ? 1 : TAPE.nfx); fx++) {
             int t = 2, k, sw[2] = {44100 * 2, 44100 * 4}, ref, jmp[2];
             fresh();
             dk_lock();
@@ -936,6 +984,71 @@ static double fundamental(int f0, double *conf)
 }
 /* every BASS-role preset (all blocks): the notes C2, G2, C3 sound at their pitch (a quarter tone); every other melodic engine's
  * presets: a report line (the octave off by more than one in a periodic sound is an error too). Written to the output. */
+
+/* the time from a key to its sound: each preset, one note from silence, rendered alone. `first`: the first sample over
+ * -60 dBFS; `-20`: the level reaches a tenth of the note's own peak (what the ear calls "it started"). A preset whose
+ * -20 point is later than LAT_SLOW ms is listed as SLOW (by design only for pads, swells, bowed sounds). */
+#define LAT_SLOW 25.0
+static int latency_test(int verbose)
+{
+    int e, p, slow = 0, n = 0;
+    double worst = 0.0;
+    for (e = 0; e < TAPE.neng; e++) {
+        const dk_engine_t *eng = TAPE.eng[e];
+        if (eng->flags & EF_CONT)
+            continue;
+        for (p = 0; p < DK_NBLK * DK_NFACT; p++) {
+            int blk = p / DK_NFACT, id = preset_id(blk, p % DK_NFACT), i, pk = 0, pk0, i0 = -1, i20 = -1;
+            int nn = eng->flags & EF_DRUM ? 36 : eng->role == R_BASS ? 36 : 60;
+            dk_preset_t tmp;
+            const dk_preset_t *pr;
+            double t0, t20;
+            if (p % DK_NFACT >= preset_count(e, blk))
+                continue;
+            pr = preset_of(e, id, &tmp);
+            fresh();
+            dk_lock();
+            dk_song.dust = 0;
+            dk_track_setup(2, e, id, SQ_STEP, eng->role);
+            dk_song.trk[2].vol = 80;
+            dk_unlock();
+            run(2.0);
+            reset_out();
+            run(0.05);
+            for (i = 0; i < 2 * frames; i++)
+                if (abs(buf[i]) > pk) pk = abs(buf[i]);
+            pk0 = pk;                                  /* (a preset's own crackle, VINYL, or hiss under the note) */
+            pk = 0;
+            reset_out();
+            note(2, nn, 100);
+            run(0.6);
+            note(2, nn, 0);
+            for (i = 0; i < 2 * frames; i++)
+                if (abs(buf[i]) > pk) pk = abs(buf[i]);
+            for (i = 0; i < 2 * frames; i++) {
+                int a = abs(buf[i]);
+                if (i0 < 0 && a > 33 && a > 2 * pk0)
+                    i0 = i / 2;
+                if (a * 10 >= pk && a > 3 * pk0) {
+                    i20 = i / 2;
+                    break;
+                }
+            }
+            t0 = i0 < 0 ? -1.0 : i0 / 44.1;
+            t20 = i20 < 0 ? -1.0 : i20 / 44.1;
+            n++;
+            if (t20 > worst && eng->role != R_PAD)
+                worst = t20;
+            if (verbose || t20 > LAT_SLOW || t20 < 0.0)
+                printf("%-5s %-9s %-22s first %5.1f ms  -20dB %6.1f ms  peak %5d\n", t20 > LAT_SLOW || t20 < 0 ? "SLOW" : "",
+                       eng->name, pr->name, t0, t20, pk);
+            if ((t20 > LAT_SLOW || t20 < 0.0) && eng->role != R_PAD)
+                slow++;
+        }
+    }
+    printf("%d presets, %d slow (pads not counted), worst non-pad %.1f ms\n", n, slow, worst);
+    return 0;
+}
 static int pitch_test(void)
 {
     static const int N[3] = {36, 43, 48};
@@ -1046,6 +1159,56 @@ static int fxlong_test(void)
     return bad;
 }
 
+/* KEYS presets change the engine (TINE, then GLASS). The first note of a switch used to start
+ * before tp[] caught up, so GLASS read TINE's BARK (p[3], ~45) as OCTAVE and the phase ran away. */
+static int keys_switch(void)
+{
+    static const int SET[12][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9}, {3, 0}, {3, 1},
+                                    {3, 3}, {3, 4}, {7, 0}, {7, 1}, {7, 7}, {7, 9}};
+    int i, bad = 0;
+    for (i = 0; i < 12; i++) {
+        int32_t blk[512];
+        int n, rails = 0;
+        long pk = 0;
+        fresh();
+        dk_lock();
+        dk_song.dust = 0;
+        dk_song.tempo = 100;
+        dk_track_setup(1, 1, 3, SQ_LIVE, R_ARP);   /* VELVET: BARK 70, the value GLASS must not hear */
+        dk_song.trk[1].rev = 70;
+        dk_unlock();
+        note(1, 60, 100);
+        run(0.06);
+        note(1, 60, 0);
+        run(0.02);
+        dk_lock();
+        dk_song.trk[1].eng = (uint8_t)SET[i][0];
+        track_preset(1, SET[i][1]);
+        dk_unlock();
+        note(1, 60, 110);
+        for (n = 0; n < 8; n++) {              /* ~46 ms: the note, before a later params refresh could save it */
+            int k;
+            dk_render(blk, 256, 4096u);
+            for (k = 0; k < 512; k++) {
+                long a;
+                if (blk[k] == (int32_t)0x80000000)
+                    a = 2147483648L;
+                else
+                    a = blk[k] < 0 ? -(long)blk[k] : (long)blk[k];
+                if (a > pk)
+                    pk = a;
+                if (a > 6000000L)
+                    rails++;
+            }
+        }
+        printf("keys slot %2d eng %d peak %ld rails %d\n", i, SET[i][0], pk, rails);
+        if (rails > 20 || pk > 6000000L)
+            bad++;
+    }
+    printf("keys_switch bad %d\n", bad);
+    return bad ? 1 : 0;
+}
+
 int main(int argc, char **argv)
 {
     const char *m = argc > 1 ? argv[1] : "sounds";
@@ -1056,14 +1219,33 @@ int main(int argc, char **argv)
         kitvoices(argc > 2 ? argv[2] : "out/kits");
     else if (!strcmp(m, "demo"))
         demo(argc > 2 ? argv[2] : "out/demo.wav");
-    else if (!strcmp(m, "drive") && argc > 4) {
-        int st = atoi(argv[2]), mood = st == 0 ? 0 : st == 1 ? 7 : st == 2 ? 3 : 6;
-        drive_all(mood, st, atof(argv[3]), argv[4]);
-        report(TAPE.style_name[st]);
-    } else if (!strcmp(m, "mood") && argc > 4) {
-        drive_all(atoi(argv[2]), -1, atof(argv[3]), argv[4]);
-        report(TAPE.moods[atoi(argv[2]) % TAPE.nmood].name);
-    } else if (!strcmp(m, "chords"))
+    else if (0) {
+    } else if (!strcmp(m, "gmlev")) {                 /* the kit's GM notes, each alone: how loud (the grooves' balance) */
+        static const int N[13] = {36, 38, 37, 39, 42, 46, 45, 47, 50, 49, 51, 70, 76};
+        int i, j;
+        for (i = 0; i < 13; i++) {
+            fresh();
+            dk_lock();
+            dk_song.dust = 0;
+            dk_track_setup(4, 5, argc > 2 ? atoi(argv[2]) : 0, SQ_STEP, R_DRUM);
+            dk_unlock();
+            run(0.1);
+            reset_out();
+            note(4, N[i], 100);
+            run(0.05);
+            note(4, N[i], 0);
+            run(0.6);
+            j = peak;
+            printf("%d:%.1f ", N[i], 20.0 * log10((j + 1) / 32768.0));
+        }
+        printf("\n");
+    } else if (!strcmp(m, "groove"))
+        groove_demo(argc > 2 ? argv[2] : "out/groove.wav", argc > 3 ? atoi(argv[3]) : 0);
+    else if (!strcmp(m, "grooveauto"))
+        groove_auto(argc > 2 ? argv[2] : "out/groove_auto.wav");
+    else if (!strcmp(m, "leadlines"))
+        lead_lines(argc > 2 ? argv[2] : "out/leadlines");
+    else if (!strcmp(m, "chords"))
         chords(argc > 2 ? argv[2] : "out/chords.wav");
     else if (!strcmp(m, "phrase") && argc > 3)
         phrase(atoi(argv[2]) & 3, argv[3]);
@@ -1071,8 +1253,8 @@ int main(int argc, char **argv)
         balance();
     else if (!strcmp(m, "atmo"))
         atmo_demo(argc > 2 ? argv[2] : "out/atmo.wav");
-    else if (!strcmp(m, "fingerbank"))
-        return fingerbank(argc > 2 ? argv[2] : "out/fingerbanks");
+    else if (!strcmp(m, "keys_switch"))
+        return keys_switch();
     else if (!strcmp(m, "bypass"))
         return bypass_test();
     else if (!strcmp(m, "automation"))
@@ -1085,6 +1267,8 @@ int main(int argc, char **argv)
 #endif
     else if (!strcmp(m, "metro"))
         metro();
+    else if (!strcmp(m, "latency"))
+        return latency_test(argc > 2);
     else if (!strcmp(m, "pitch"))
         return pitch_test();
     else if (!strcmp(m, "fxlong"))
@@ -1092,7 +1276,7 @@ int main(int argc, char **argv)
     else if (!strcmp(m, "stress24"))
         return stress24();
     else {
-        fprintf(stderr, "deck_test sounds|demo|drive|mood|chords|phrase|fingerbank|bench|metro\n");
+        fprintf(stderr, "deck_test sounds|demo|chords|phrase|bench|metro\n");
         return 2;
     }
     return 0;

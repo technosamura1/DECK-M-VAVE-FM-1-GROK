@@ -10,12 +10,12 @@ import wave
 
 out = sys.argv[1] if len(sys.argv) > 1 else "out"
 ABOUT = {
-    "FELT": "пианино с войлоком — главный инструмент (FM-пиано OVERWORLD + мягкая атака, срез верха, стук клавиши)",
-    "TINE": "лоу-фай электропиано (VENUS из OVERWORLD) с тремоло и «плаванием»",
-    "AIRPAD": "тёплые пады OVERWORLD: SWEDEN, AIR, WARM, SHIMMER, STRINGS",
+    "PIANO": "пианино с войлоком — главный инструмент (FM-пиано OVERWORLD + мягкая атака, срез верха, стук клавиши)",
+    "KEYS": "лоу-фай электропиано (VENUS из OVERWORLD) с тремоло и «плаванием»",
+    "PAD": "тёплые пады OVERWORLD: SWEDEN, AIR, WARM, SHIMMER, STRINGS",
     "GLASS": "колокольчики: стекло, челеста, маримба, музыкальная шкатулка, вибрафон",
-    "SOFTBASS": "мягкий бас: SUB, UPRIGHT (контрабас), MOOG",
-    "DUSTKIT": "барабаны: пыльные лоу-фай киты и синтез-эмуляции 808 / 909 / 606 / CR-78 / 707",
+    "BASS": "мягкий бас: SUB, UPRIGHT (контрабас), MOOG",
+    "DRUMKIT": "барабаны: пыльные лоу-фай киты и синтез-эмуляции 808 / 909 / 606 / CR-78 / 707",
     "WORLD": "звуки мира: дождь, ветер, костёр, ручей, капли, сверчки, птицы, океан, гроза, снег",
     "KALIMBA": "калимба: язычок, щипок пальцем, деревянный корпус",
     "WINDS": "духовые: флейта, дудук, свирель, синт-брасс, рога",
@@ -23,10 +23,10 @@ ABOUT = {
     "PLUCK": "щипковые: арфа, лютня, чип-пилинь, гитара, балалайка",
 }
 BLOCKS = ["AMBIENT LOFI", "8-16 BIT", "SYNTHWAVE", "CINEMATIC"]
-ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "KALIMBA", "SOFTBASS", "DUSTKIT", "WORLD", "WINDS", "SYNTH", "PLUCK"]
+ORDER = ["PIANO", "KEYS", "PAD", "GLASS", "KALIMBA", "BASS", "DRUMKIT", "WORLD", "WINDS", "SYNTH", "PLUCK"]
 MOODS = ["PLAINS", "RAIN", "CAVE", "SNOW", "OCEAN", "NIGHT", "CAMPFIRE", "STUDY"]
 STYLES = ["C418", "LOFI", "AMBIENT", "CAMPFIRE"]
-COMPARE = ["Пианино (FELT)", "Пад (AIRPAD SWEDEN)", "Колокол (GLASS CELESTA)", "Бас (SOFTBASS SUB)"]
+COMPARE = ["Пианино (PIANO)", "Пад (PAD SWEDEN)", "Колокол (GLASS CELESTA)", "Бас (BASS SUB)"]
 
 
 def secs(path):

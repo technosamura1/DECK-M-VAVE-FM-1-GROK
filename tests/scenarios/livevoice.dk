@@ -17,7 +17,10 @@ page 0
 wait 100
 press HOME
 turn PRESET 1
+turn PRESET 1
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -161,8 +164,11 @@ wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 2
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -306,8 +312,11 @@ wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 3
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -451,8 +460,11 @@ wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 4
 release HOME
+wait 30
+tap HOME
 wait 100
 tap REC
 wait 3500
@@ -597,21 +609,24 @@ wait 6000
 expect voices >5
 page 11
 wait 100
-tapkey w5
+tapkey w4
 wait 100
 page 0
 wait 100
 press HOME
+turn PRESET 1
 turn PRESET 5
 release HOME
+wait 30
+tap HOME
 wait 100
 key w0 down 100
 wait 60
 expect livev >0
-expect tvoices6 >0
+expect tvoices5 >0
 wait 340
 expect livev >0
-expect tlevel6 >2
+expect tlevel5 >2
 wait 1100
 expect livev >0
 key w0 up
@@ -619,10 +634,10 @@ wait 500
 key w2 down 100
 wait 60
 expect livev >0
-expect tvoices6 >0
+expect tvoices5 >0
 wait 340
 expect livev >0
-expect tlevel6 >2
+expect tlevel5 >2
 wait 1100
 expect livev >0
 key w2 up
@@ -630,10 +645,10 @@ wait 500
 key w4 down 100
 wait 60
 expect livev >0
-expect tvoices6 >0
+expect tvoices5 >0
 wait 340
 expect livev >0
-expect tlevel6 >2
+expect tlevel5 >2
 wait 1100
 expect livev >0
 key w4 up
@@ -641,10 +656,10 @@ wait 500
 key w1 down 100
 wait 60
 expect livev >0
-expect tvoices6 >0
+expect tvoices5 >0
 wait 340
 expect livev >0
-expect tlevel6 >2
+expect tlevel5 >2
 wait 1100
 expect livev >0
 key w1 up
@@ -652,10 +667,10 @@ wait 500
 key w3 down 100
 wait 60
 expect livev >0
-expect tvoices6 >0
+expect tvoices5 >0
 wait 340
 expect livev >0
-expect tlevel6 >2
+expect tlevel5 >2
 wait 1100
 expect livev >0
 key w3 up
@@ -663,10 +678,10 @@ wait 500
 key w5 down 100
 wait 60
 expect livev >0
-expect tvoices6 >0
+expect tvoices5 >0
 wait 340
 expect livev >0
-expect tlevel6 >2
+expect tlevel5 >2
 wait 1100
 expect livev >0
 key w5 up

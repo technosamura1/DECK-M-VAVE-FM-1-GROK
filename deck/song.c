@@ -6,9 +6,11 @@
  * build) and the tests. */
 #include "song.h"
 
-dk_user_t dk_user;                       /* the user's presets: 4 an engine */
+dk_user_t dk_user DK_POOL;                       /* the user's presets: 4 an engine */
 static dk_ev_t ubuf[1024] DK_POOL;       /* undo: snapshots back to back (entries below) */
 static dk_ev_t rbuf[512] DK_POOL;        /* redo */
+enum { UBUFN = (int)(sizeof(ubuf) / sizeof(ubuf[0])) };
+enum { RBUFN = (int)(sizeof(rbuf) / sizeof(rbuf[0])) };
 static dk_ev_t clipboard[384] DK_POOL;
 static int clip_n = -1, clipb_len;
 static uint8_t clip_src_t;               /* the track the clipboard came from (its frozen sounds are that track's) */
@@ -26,10 +28,23 @@ static uint8_t grp_now, grp_seq;
 static snap_t usnap[NSNAP], rsnap[8];
 static int un, rn;                       /* entries */
 uint32_t song_edits;                     /* changes (autosave, the screen) */
+uint32_t song_notes_lost;                 /* events refused because the pool was full */
+uint32_t song_notes_lost_at;              /* dk_ticks of the last one */
 /* SNAPSHOT: one part (its six clips, bars, mutes) kept in memory to come back to after an experiment (one slot; gone with
- * the song). Its notes keep their frozen sounds alive like the undo's do (snd_in_use) */
+ * the song). Its notes keep their frozen sounds alive like the undo's do (snd_in_use). CLEAR ROAD's one undo step uses
+ * the same bytes for the whole song (a second event array does not fit the pool): the events go in ubuf+rbuf, 1536 of
+ * them. CLEAR ALL never arms that step. */
 #define SNAP_EV 768
-static dk_ev_t sbuf[SNAP_EV] DK_POOL;
+static union {
+    dk_song_t song;
+    dk_ev_t ev[SNAP_EV];
+} snapb DK_POOL;
+#define sbuf snapb.ev
+static uint8_t wundo, wredo, wlive, wbusy;   /* the wiped road can be undone / redone; the part that was live; a wipe is running */
+static uint16_t wnev;
+static uint32_t wedit;
+static void wipe_apply(void);
+static int wipe_restore(void);
 static struct {
     uint8_t ok, part, bars, mute;
     uint16_t n[DK_NTRACK], len[DK_NTRACK];
@@ -213,6 +228,10 @@ int auto_point(int clip, int target, int pos, int val, int from, int len)
 void auto_thin(int clip, int target, int from, int to, int tol)
 {
     enum { MAXP = 96 };
+    /* 768 bytes. the UI thread only, never re-entered, so a static in the pool
+     * is safe and the device's stack is not. */
+    static int s_stack[MAXP][2] DK_POOL;
+    int (*stack)[2] = s_stack;
     dk_clip_t *c = &dk_song.clip[clip];
     int idx[MAXP], np = 0, i, maxn, keepn;
     uint8_t keep[MAXP];
@@ -225,7 +244,7 @@ void auto_thin(int clip, int target, int from, int to, int tol)
         return;
     maxn = 24 * ((to - from) / DK_TPB + 1);
     for (;;) {
-        int stack[MAXP][2], sp = 0;
+        int sp = 0;
         for (i = 0; i < np; i++)
             keep[i] = 0;
         keep[0] = keep[np - 1] = 1;
@@ -312,6 +331,9 @@ static int snap_take(snap_t *tab, int *cnt, int max, dk_ev_t *buf, int bufn, int
 {
     snap_t *s;
     int need = road == 1 ? ROAD_EV : road ? 0 : dk_song.clip[clip].n, used = 0, i;
+    if (wbusy)                           /* the wipe is using these buffers */
+        return -1;
+    wundo = wredo = 0;                   /* a normal step reuses them: the wiped road cannot come back after */
     if (*cnt > 0)
         used = tab[*cnt - 1].at + tab[*cnt - 1].n;
     while (*cnt > 0 && (*cnt >= max || used + need > bufn)) {   /* full: the oldest forgotten */
@@ -370,7 +392,7 @@ static void snap_restore(const snap_t *s, const dk_ev_t *buf)
 }
 void undo_push(int clip)
 {
-    if (snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0) == 0)
+    if (snap_take(usnap, &un, NSNAP, ubuf, UBUFN, clip, 0) == 0)
         usnap[un - 1].grp = grp_now;
     rn = 0;
 }
@@ -385,24 +407,29 @@ void undo_group(int on)                  /* the pushes until undo_group(0) are o
 }
 void undo_push_part(int p)                /* a part's bars and track mutes */
 {
-    if (snap_take(usnap, &un, NSNAP, ubuf, 1024, p & 7, 2) == 0)
+    if (snap_take(usnap, &un, NSNAP, ubuf, UBUFN, p & 7, 2) == 0)
         usnap[un - 1].grp = grp_now;
     rn = 0;
 }
-void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, 1024, 0, 1), rn = 0; }
+void undo_push_road(void) { snap_take(usnap, &un, NSNAP, ubuf, UBUFN, 0, 1), rn = 0; }
 int undo_count(void) { return un; }
 /* 1 = done; what: the clip (or -1 the road) */
 int song_undo(int *what)
 {
     snap_t s;
     uint8_t g;
+    if (wundo) {                         /* CLEAR ROAD: notes, every part, the road, the instruments */
+        dk_cmd(C_PART, wipe_restore(), 0, 0);   /* the sequencer on the part that was current */
+        *what = -1;
+        return 1;
+    }
     if (!un)
         return 0;
     do {                                 /* (a group: all of it) */
         s = usnap[un - 1];
         g = s.grp;
         dk_lock();
-        if (snap_take(rsnap, &rn, 8, rbuf, 512, s.clip, s.kind) == 0)
+        if (snap_take(rsnap, &rn, 8, rbuf, RBUFN, s.clip, s.kind) == 0)
             rsnap[rn - 1].grp = g;
         snap_restore(&s, ubuf);
         dk_unlock();
@@ -416,6 +443,20 @@ int song_redo(int *what)
     snap_t s;
     int keep;
     uint8_t g;
+    if (wredo) {
+        if (song_edits != wedit)         /* something changed since the undo: do not wipe over it */
+            wredo = 0;
+        else {
+            wbusy = 1;
+            wipe_apply();                /* the copy in the buffers stays, so UNDO can bring it back again */
+            wbusy = 0;
+            wundo = 1;
+            wredo = 0;
+            dk_cmd(C_PART, 0, 0, 0);
+            *what = -1;
+            return 1;
+        }
+    }
     if (!rn)
         return 0;
     do {
@@ -423,7 +464,7 @@ int song_redo(int *what)
         g = s.grp;
         dk_lock();
         keep = rn;
-        if (snap_take(usnap, &un, NSNAP, ubuf, 1024, s.clip, s.kind) == 0)
+        if (snap_take(usnap, &un, NSNAP, ubuf, UBUFN, s.clip, s.kind) == 0)
             usnap[un - 1].grp = g;
         rn = keep;
         snap_restore(&s, rbuf);
@@ -596,26 +637,29 @@ static int takes_waiting(void)
 }
 
 /* --------------------------------------------------------- the recording --- */
-static uint32_t rec_r;
 static uint8_t snp_pass[DK_NCLIP];       /* per clip: the pass whose undo snapshot is taken (0xFF none) */
 static uint8_t rep_pass[DK_NCLIP];       /* REPLACE, per clip: the pass the erase is in (0xFF none) */
 static uint8_t rep_started;               /* REPLACE: the first look is done (tracks armed later start from where they are) */
 static uint16_t rep_pos[DK_NCLIP];       /*   and how far it has erased (the take has passed over up to here) */
+static uint8_t rep_wrap[DK_NCLIP];       /*   the next pass told before the loop's tick came round to 0: wait for it */
 /* one undo snapshot per (pass, clip): the first change a pass makes to the clip (a note in, or REPLACE's erase) */
 static void rec_snap(int clip, int pass)
 {
     if (snp_pass[clip] == pass)
         return;
-    snap_take(usnap, &un, NSNAP, ubuf, 1024, clip, 0);
+    snap_take(usnap, &un, NSNAP, ubuf, UBUFN, clip, 0);
     rn = 0;
     snp_pass[clip] = (uint8_t)pass;
 }
 /* REPLACE: the notes of the clip from `from` up to `to` that were there before this REC press go (the song is locked) */
+static int rep_groove(int t) { return dk_song.trk[t].seq == SQ_GROOVE && dk_gr_cur[t]; }
 static int rep_erase(int clip, int pass, int from, int to)
 {
     const dk_clip_t *c = &dk_song.clip[clip];
     int i, n = 0, take0 = dk_rec_floor[clip % DK_NTRACK];
-    if (take0 < 1)
+    if (rep_groove(clip % DK_NTRACK))        /* GROOVE: the drummer's last pass is the clip (its earlier passes go too) */
+        take0 = dk_rec_take[clip % DK_NTRACK];
+    else if (take0 < 1)
         take0 = dk_rec_pass0 > 31 ? 31 : dk_rec_pass0;
     if (take0 > 31)
         take0 = 31;
@@ -636,18 +680,26 @@ static void rep_run(void)
     int t;
     for (t = 0; t < DK_NTRACK; t++) {
         int c, len, now;
-        if (!(dk_rec_mask >> t & 1u))
-            continue;
+        if (!(dk_rec_mask >> t & 1u) || !(dk_rec_mode || rep_groove(t)))
+            continue;                    /* (REPLACE: every armed track; OVERDUB: a GROOVE track with its drummer playing) */
         c = (dk_cur_part & 7) * DK_NTRACK + t;
         len = clip_len(c);
         now = (int)(dk_part_tick % (uint16_t)(len ? len : 1));
         if (rep_pass[c] != dk_pass) {    /* the first look, or the next pass: the rest of the last one first */
             if (rep_pass[c] != 0xFF) {
-                rep_erase(c, rep_pass[c], rep_pos[c], len);
+                if (!rep_groove(t))      /* (GROOVE: the last pass's tail is the drummer's own, just played: it stays) */
+                    rep_erase(c, rep_pass[c], rep_pos[c], len);
                 rep_pos[c] = 0;
+                rep_wrap[c] = (uint8_t)(now > len / 2);   /* (the pass counted a tick early: the loop's end is still under it,
+                                                           * and [0, now) would be the whole of the last pass) */
             } else
                 rep_pos[c] = (uint16_t)(rep_started || dk_pass != dk_rec_pass0 ? now : dk_rec_tick0 % (len ? len : 1));
             rep_pass[c] = dk_pass;
+        }
+        if (rep_wrap[c]) {
+            if (now > len / 2)
+                continue;
+            rep_wrap[c] = 0;
         }
         if (now > rep_pos[c]) {
             rep_erase(c, dk_pass, rep_pos[c], now);
@@ -691,7 +743,7 @@ static int mem_make_room(int pass)
             ;
         if (take >= cur && (dk_rec_mask >> (best % DK_NTRACK) & 1u) && best / DK_NTRACK == (dk_cur_part & 7))
             return 0;                              /* (the oldest is the one being recorded) */
-        snap_take(usnap, &un, NSNAP, ubuf, 1024, best, 0);
+        snap_take(usnap, &un, NSNAP, ubuf, UBUFN, best, 0);
         rn = 0;
         for (i = 0, w = 0; i < k->n; i++) {
             const dk_ev_t *e = &dk_ev[k->at + i];
@@ -715,15 +767,15 @@ static int rec_flush_do(int only_t)
     uint32_t w;
     int n = 0;
     __asm__ volatile("" ::: "memory");
-    if (rec_on && dk_rec_mode && only_t < 0) {
+    if (rec_on && only_t < 0) {
         dk_lock();
         rep_run();
         dk_unlock();
     }
     w = dk_recq_w;
-    if (w - rec_r > DK_RECQ)
-        rec_r = w - DK_RECQ;
-    if (rec_r == w) {
+    if (w - dk_rec_r > DK_RECQ)
+        dk_rec_r = w - DK_RECQ;
+    if (dk_rec_r == w) {
         if (!takes_waiting())
             return 0;
         dk_lock();
@@ -732,18 +784,18 @@ static int rec_flush_do(int only_t)
         return n;
     }
     dk_lock();
-    while (rec_r != w) {
+    while (dk_rec_r != w) {
         dk_recev_t r;
-        r.clip = dk_recq[rec_r % DK_RECQ].clip;
-        r.kind = dk_recq[rec_r % DK_RECQ].kind;
-        r.pass = dk_recq[rec_r % DK_RECQ].pass;
-        r.ev.pos = dk_recq[rec_r % DK_RECQ].ev.pos;
-        r.ev.dur = dk_recq[rec_r % DK_RECQ].ev.dur;
-        r.ev.note = dk_recq[rec_r % DK_RECQ].ev.note;
-        r.ev.vel = dk_recq[rec_r % DK_RECQ].ev.vel;
-        r.ev.fl = dk_recq[rec_r % DK_RECQ].ev.fl;
-        r.ev.layer = dk_recq[rec_r % DK_RECQ].ev.layer;
-        rec_r++;
+        r.clip = dk_recq[dk_rec_r % DK_RECQ].clip;
+        r.kind = dk_recq[dk_rec_r % DK_RECQ].kind;
+        r.pass = dk_recq[dk_rec_r % DK_RECQ].pass;
+        r.ev.pos = dk_recq[dk_rec_r % DK_RECQ].ev.pos;
+        r.ev.dur = dk_recq[dk_rec_r % DK_RECQ].ev.dur;
+        r.ev.note = dk_recq[dk_rec_r % DK_RECQ].ev.note;
+        r.ev.vel = dk_recq[dk_rec_r % DK_RECQ].ev.vel;
+        r.ev.fl = dk_recq[dk_rec_r % DK_RECQ].ev.fl;
+        r.ev.layer = dk_recq[dk_rec_r % DK_RECQ].ev.layer;
+        dk_rec_r++;
         if (r.clip >= DK_NCLIP)
             continue;
         rec_snap(r.clip, r.pass);
@@ -762,15 +814,30 @@ static int rec_flush_do(int only_t)
         }
         if (dk_song.clip[r.clip].len == 0 && r.ev.pos + r.ev.dur > clip_len(r.clip))
             r.ev.dur = (uint16_t)(clip_len(r.clip) - r.ev.pos);
+        if (!(r.ev.fl & EV_MOTION)) {    /* the same note at the same place in the same take: there once (a drummer's step
+                                          * caught twice as the take began) */
+            const dk_clip_t *cc = &dk_song.clip[r.clip];
+            int i, dup = 0;
+            for (i = 0; i < cc->n && !dup; i++) {
+                const dk_ev_t *e = &dk_ev[cc->at + i];
+                dup = !(e->fl & EV_MOTION) && e->pos == r.ev.pos && e->note == r.ev.note && DK_L_TAKE(e->layer) == DK_L_TAKE(r.ev.layer);
+            }
+            if (dup)
+                continue;
+        }
         {
             int tries = DK_NCLIP;
             while (dk_song.nev >= DK_NEV && tries-- > 0 && mem_make_room(pass))
                 ;
             if (dk_song.nev >= DK_NEV) {       /* nothing to drop: said, not silent */
+                song_notes_lost++;
+                song_notes_lost_at = dk_ticks;
                 song_mem_full = 1;
                 continue;
             }
         }
+        if (!(r.ev.fl & EV_MOTION))              /* a take is never born muted (a layer mute left on that number from before) */
+            dk_song.lmute[r.clip] &= ~(1u << DK_L_TAKE(r.ev.layer));
         if (dk_song_insert(r.clip, &r.ev) >= 0 && !(r.ev.fl & EV_MOTION) && !DK_L_SND(r.ev.layer)) {
             take_pend[r.clip] = (uint8_t)(DK_L_TAKE(r.ev.layer) + 1u);
             if (last_sess[r.clip] != rec_sess) {     /* the first note of this REC press in the clip: its take is where it starts */
@@ -799,15 +866,102 @@ void rec_reset(void)
             last_sess[c] = 0;
     }
     rep_started = 0;
-    rec_r = dk_recq_w;
+    dk_rec_r = dk_recq_w;
     for (c = 0; c < DK_NCLIP; c++) {
         snp_pass[c] = 0xFF;
         rep_pass[c] = 0xFF;
+        rep_wrap[c] = 0;
         rep_pos[c] = 0;
     }
 }
 
 /* ------------------------------------------------------------------ parts --- */
+static uint8_t part_live = 0xFF;         /* which part's instruments are in dk_song.trk (0xFF: not bound yet) */
+static void pinst_save(int p)
+{
+    int t;
+    p &= 7;
+    for (t = 0; t < DK_NTRACK; t++) {
+        const dk_track_t *k = &dk_song.trk[t];
+        dk_pinst_t *d = &dk_song.pinst[p][t];
+        int i;
+        d->eng = k->eng;
+        d->preset = k->preset;
+        d->fx = k->fx;
+        for (i = 0; i < DK_NP; i++)
+            d->p[i] = k->p[i];
+        for (i = 0; i < 3; i++)
+            d->env[i] = k->env[i];
+        d->macro = k->macro;
+        d->fxamt = k->fxamt;
+        d->fxa = k->fxa;
+        d->fxb = k->fxb;
+    }
+}
+static void pinst_load(int p)
+{
+    int t;
+    p &= 7;
+    for (t = 0; t < DK_NTRACK; t++) {
+        dk_track_t *k = &dk_song.trk[t];
+        const dk_pinst_t *d = &dk_song.pinst[p][t];
+        int i;
+        k->eng = d->eng;
+        k->preset = d->preset;
+        /* the effect is the track's, not the part's: a part change does not put another FX back.
+         * it moves only when its own knobs are turned. */
+        for (i = 0; i < DK_NP; i++)
+            k->p[i] = d->p[i];
+        for (i = 0; i < 3; i++)
+            k->env[i] = d->env[i];
+        k->macro = d->macro;
+    }
+}
+/* the part that is about to sound: keep the one we leave, bring this one's instruments */
+void part_inst_sync(int p)
+{
+    int i;
+    p &= 7;
+    if (!dk_song.pinst_init) {
+        for (i = 0; i < DK_NPART; i++)
+            pinst_save(i);               /* every part starts as the tracks are now */
+        dk_song.pinst_init = 1;
+        part_live = (uint8_t)p;
+        return;
+    }
+    if (part_live == 0xFF)
+        part_live = (uint8_t)(dk_song.cur_part & 7);
+    if (part_live == (uint8_t)p)
+        return;
+    pinst_save(part_live);
+    pinst_load(p);
+    part_live = (uint8_t)p;
+}
+/* the tracks as they are now: every part starts from them (then each one keeps its own) */
+void part_inst_capture(int p)
+{
+    int i;
+    p &= 7;
+    for (i = 0; i < DK_NPART; i++)
+        pinst_save(i);
+    dk_song.pinst_init = 1;
+    part_live = (uint8_t)p;
+    wundo = wredo = 0;                   /* a new song is not the wiped road (song_wipe arms the undo after this) */
+}
+/* what the tracks are playing, written into the part they belong to (a save must not keep a stale slot) */
+void part_inst_flush(void)
+{
+    if (!dk_song.pinst_init)
+        return;
+    if (part_live == 0xFF)
+        part_live = (uint8_t)(dk_song.cur_part & 7);
+    pinst_save(part_live);
+}
+void part_inst_boot(void)
+{
+    part_live = dk_song.pinst_init ? (uint8_t)(dk_song.cur_part & 7) : 0xFF;
+    wundo = wredo = 0;                   /* a project just loaded */
+}
 int part_has_events(int p)
 {
     int t;
@@ -864,6 +1018,13 @@ int part_copy_x(int from, int to, int wipe)
     }
     dk_song.part[to].bars = dk_song.part[from].bars;
     dk_song.part[to].mute = dk_song.part[from].mute;
+    if (dk_song.pinst_init && part_live == (uint8_t)from)
+        pinst_save(from);                /* the knobs turned since we arrived are still only in the tracks */
+    part_inst_sync(from);
+    for (t = 0; t < DK_NTRACK; t++)
+        dk_song.pinst[to][t] = dk_song.pinst[from][t];
+    if (part_live == (uint8_t)to)
+        pinst_load(to);
     song_edits++;
     pc_edits = song_edits;
     dk_unlock();
@@ -880,6 +1041,7 @@ int snapshot_take(int part)
         n += dk_song.clip[part * DK_NTRACK + t].n;
     if (n > SNAP_EV)
         return 0;
+    wundo = wredo = 0;                   /* those bytes are the wiped song's until now */
     n = 0;
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_clip_t *c = &dk_song.clip[part * DK_NTRACK + t];
@@ -973,7 +1135,7 @@ int clip_paste(int clip)
     undo_push(clip);
     dk_lock();
     if (clip_src_t != clip % DK_NTRACK) {   /* on another track: the frozen sounds go with the notes (its table's places) */
-        static dk_ev_t pt[384];
+        static dk_ev_t pt[384] DK_POOL;
         int i, to = clip % DK_NTRACK;
         for (i = 0; i < clip_n; i++) {
             pt[i] = clipboard[i];
@@ -991,7 +1153,7 @@ void clip_double(int clip)
 {
     dk_clip_t *c = &dk_song.clip[clip];
     int len = clip_len(clip), n = c->n, i;
-    static dk_ev_t tmp[384];
+    static dk_ev_t tmp[384] DK_POOL;
     if (n > 192 || len * 2 > 16 * DK_TPB)
         return;
     undo_push(clip);
@@ -1264,6 +1426,28 @@ const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp)
     }
 }
 
+/* the effect moves only from its own knobs. a preset, a mood, an instrument and an erase leave it. */
+static void fx_keep(int t, uint8_t *fx, uint8_t *rev, uint8_t *echo, int8_t *amt, int8_t *a, int8_t *b)
+{
+    const dk_track_t *k = &dk_song.trk[t];
+    *fx = k->fx;
+    *rev = k->rev;
+    *echo = k->echo;
+    *amt = k->fxamt;
+    *a = k->fxa;
+    *b = k->fxb;
+}
+static void fx_put(int t, uint8_t fx, uint8_t rev, uint8_t echo, int8_t amt, int8_t a, int8_t b)
+{
+    dk_track_t *k = &dk_song.trk[t];
+    k->fx = fx;
+    k->rev = rev;
+    k->echo = echo;
+    k->fxamt = amt;
+    k->fxa = a;
+    k->fxb = b;
+}
+
 void track_preset(int t, int slot)
 {
     dk_track_t *k = &dk_song.trk[t];
@@ -1288,6 +1472,16 @@ void track_preset(int t, int slot)
     k->trim = p->vol;
     k->macro = 0;
     song_edits++;
+}
+
+/* the hand picked another preset or another instrument: its sound comes in. the FX stays. */
+void track_preset_sound(int t, int slot)
+{
+    uint8_t fx, rev, echo;
+    int8_t fxamt, fxa, fxb;
+    fx_keep(t, &fx, &rev, &echo, &fxamt, &fxa, &fxb);
+    track_preset(t, slot);
+    fx_put(t, fx, rev, echo, fxamt, fxa, fxb);
 }
 
 void dk_track_setup(int t, int eng, int preset, int seq, int role)
@@ -1353,10 +1547,12 @@ void dk_song_clear(void)
     dk_song.dim = 1;
     dk_song.harm_track = 0;   /* SPLIT: the chords to the piano */
     dk_song.style = 0;
-    dk_song.dust = 25;
+    dk_song.dust = 0;                    /* the sound clean: no dust unless you add it (GLOBAL) */
     dk_song.sidechain = 15;
     dk_song.space = 1;
     dk_song.cur_track = 2;
+    dk_song.pinst_init = 0;
+    part_live = 0xFF;
     for (i = 0; i < DK_NPART; i++) {
         dk_song.part[i].bars = 4;
         dk_song.part[i].label = (uint8_t)(i % 8);
@@ -1365,6 +1561,7 @@ void dk_song_clear(void)
         track_defaults(t);
     reindex();
     song_edits++;
+    part_inst_capture(0);                /* the tape's instruments: every part starts here */
 }
 
 /* CLEAR ALL: the whole composition erased: every clip (8 parts x 6 tracks), the road, the frozen sounds, the parts' bars (4),
@@ -1407,9 +1604,128 @@ void song_clear_all(void)
     takes_forget();
     un = 0;
     rn = 0;
+    wundo = 0;
+    wredo = 0;                           /* CLEAR ALL forgets the road's undo too; song_wipe arms it again after */
     pc_part = 0xFF;
     song_edits++;
     dk_unlock();
+}
+
+/* this part's instruments back to the tape's defaults (the other parts keep theirs); the sequencer and the mixer stay */
+void part_inst_reset(int p)
+{
+    int t;
+    p &= 7;
+    dk_lock();
+    part_inst_sync(p);
+    for (t = 0; t < DK_NTRACK; t++) {
+        int seq = dk_song.trk[t].seq, role = dk_song.trk[t].role;
+        uint8_t fx, rev, echo;
+        int8_t amt, a, b;
+        fx_keep(t, &fx, &rev, &echo, &amt, &a, &b);
+        dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
+        fx_put(t, fx, rev, echo, amt, a, b);
+    }
+    pinst_save(p);
+    dk_unlock();
+}
+
+/* one track of this part, back to the tape; the part's other tracks and the other parts stay.
+ * the FX stays: erase clears the notes and the instrument, not the effect they dialled. */
+void part_inst_reset_track(int p, int t)
+{
+    int seq, role;
+    dk_track_t *k;
+    uint8_t fx, rev, echo;
+    int8_t fxamt, fxa, fxb;
+    p &= 7;
+    if (t < 0 || t >= DK_NTRACK)
+        return;
+    dk_lock();
+    part_inst_sync(p);
+    k = &dk_song.trk[t];
+    fx_keep(t, &fx, &rev, &echo, &fxamt, &fxa, &fxb);
+    seq = k->seq;
+    role = k->role;
+    dk_track_setup(t, TAPE.def_eng[t], TAPE.def_preset[t], seq, role);
+    fx_put(t, fx, rev, echo, fxamt, fxa, fxb);
+    pinst_save(p);
+    dk_unlock();
+}
+
+/* the song and its events, into the snapshot buffers (0: more than 1536 events, undo cannot hold it) */
+static int wipe_capture(void)
+{
+    int n, i;
+    dk_lock();
+    part_inst_flush();
+    n = dk_song.nev;
+    if (n < 0)
+        n = 0;
+    if (n > UBUFN + RBUFN) {
+        dk_unlock();
+        return 0;
+    }
+    (void)sizeof(char[(sizeof(dk_song_t) <= sizeof snapb.ev) ? 1 : -1]);
+    snp.ok = 0;                          /* this buffer is the song now, not a part snapshot */
+    snapb.song = dk_song;
+    for (i = 0; i < n && i < UBUFN; i++)
+        ubuf[i] = dk_ev[i];
+    for (; i < n && i < UBUFN + RBUFN; i++)
+        rbuf[i - UBUFN] = dk_ev[i];
+    wnev = (uint16_t)n;
+    wlive = part_live;
+    dk_unlock();
+    return 1;
+}
+static int wipe_restore(void)            /* the part that was current */
+{
+    int i, n, part;
+    dk_lock();
+    dk_song = snapb.song;
+    n = wnev;
+    if (n > DK_NEV)
+        n = DK_NEV;
+    for (i = 0; i < n && i < UBUFN; i++)
+        dk_ev[i] = ubuf[i];
+    for (; i < n && i < UBUFN + RBUFN; i++)
+        dk_ev[i] = rbuf[i - UBUFN];
+    part_live = wlive;
+    song_edits++;
+    part = dk_song.cur_part & 7;
+    dk_unlock();
+    wundo = 0;
+    wredo = 1;
+    wedit = song_edits;
+    return part;
+}
+static void wipe_apply(void)
+{
+    int t;
+    song_clear_all();                    /* clips, the road, the frozen sounds; undo flags off; the copy stays */
+    dk_lock();
+    for (t = 0; t < DK_NTRACK; t++) {
+        uint8_t fx, rev, echo;
+        int8_t amt, a, b;
+        fx_keep(t, &fx, &rev, &echo, &amt, &a, &b);
+        track_defaults(t);
+        fx_put(t, fx, rev, echo, amt, a, b);   /* clearing the road does not clear the effect */
+    }
+    part_inst_capture(0);
+    dk_song.cur_part = 0;
+    dk_unlock();
+}
+/* CLEAR ROAD: every part's notes, the road, and every part's instruments back to the tape. UNDO brings it all back */
+void song_wipe(void)
+{
+    int ok;
+    rec_flush();                         /* notes still queued are part of what comes back */
+    ok = wipe_capture();
+    wbusy = 1;
+    wipe_apply();
+    wbusy = 0;
+    wundo = (uint8_t)ok;
+    wredo = 0;
 }
 
 /* the templates: empty parts with their labels and a road of them */
@@ -1449,7 +1765,7 @@ void song_mood(int m)
     dk_song.mode = md->mode;
     dk_song.style = md->style;
     dk_song.biome = md->biome;
-    dk_song.dust = md->dust;
+    dk_song.dust = 0;                    /* (a mood's dust no more: the sound clean) */
     dk_song.space = md->space;
     for (t = 0; t < DK_NTRACK; t++) {
         track_sound_to(t);
@@ -1458,7 +1774,7 @@ void song_mood(int m)
         if (dk_song.trk[t].role == R_NATURE && md->eng[t] >= 0 && md->eng[t] < TAPE.neng && TAPE.eng[md->eng[t]]->role == R_LEAD)
             dk_song.trk[t].role = R_LEAD;     /* (an older project's NATURE track becomes the LEAD) */
         if (md->preset[t] >= 0)
-            track_preset(t, md->preset[t]);
+            track_preset_sound(t, md->preset[t]);   /* the mood's sound, not its factory effect */
         dk_song.trk[t].drv[1] = md->style;
     }
     song_edits++;
@@ -1634,8 +1950,10 @@ int clip_quantize(int clip, int strength)
         if (e->fl & EV_MOTION)
             continue;
         np = p + (g - p) * strength / 100;
+        /* a note at the end of the clip used to wrap to 0 and sit on top of
+         * whatever already lived there. keep it on the last tick. */
         if (np >= len)
-            np = 0;
+            np = len > 0 ? len - 1 : 0;
         if (np < 0)
             np = 0;
         if (np != p)

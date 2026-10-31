@@ -23,7 +23,7 @@ SPEC_DB = 0.5   # mean absolute difference of the band spectra (dB), the level t
 ENV_DB = 1.3    # ... and of the bands' loudness over time (dB)
 TWINS = set()   # {("ENGINE", "NAME A", "NAME B")} on purpose (none)
 # pairs a player has named as the same sound: they must be clearly apart (the spectrum this far, or the motion this far)
-NAMED = [("TINE", "VELVET", "MELLOW", 3.0, 4.0)]
+NAMED = [("KEYS", "VELVET", "MELLOW", 3.0, 4.0)]
 
 EDGES = 40.0 * 2.0 ** (np.arange(0, 50) / 6.0)           # 1/6 octave from 40 Hz up to ~16 kHz
 BANDS = [(60, 250), (250, 700), (700, 1800), (1800, 4000), (4000, 8000), (8000, 16000)]

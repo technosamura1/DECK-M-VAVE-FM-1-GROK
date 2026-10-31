@@ -2,8 +2,11 @@
 # the old ids (0..15) mean what they did, the blocks are 16.. ; the counts an engine has in each
 wait 300
 press HOME
+turn PRESET -1
 turn PRESET -2
 release HOME
+wait 30
+tap HOME
 wait 100
 expect eng 0
 expect blk 0
@@ -67,15 +70,18 @@ tap SEL
 release HOME
 wait 50
 expect blk 2
-# another engine (HOME + PRESET): SOFTBASS starts in its first block, has all four
+# another engine (SOUNDS: HOME + PRESET opens it, then the instrument): SOFTBASS in the same block (SYNTHWAVE), has all four
 press HOME
+turn PRESET 1
 turn PRESET 4
 release HOME
+wait 30
+tap HOME
 wait 50
 expect eng 4
-expect blk 0
+expect blk 2
 press HOME
 tap FX
 release HOME
 wait 50
-expect blk 1
+expect blk 3

@@ -13,7 +13,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
 from sound_check import SR, check, load  # noqa: E402
 
-NAMES = ["PIANO (FELT)", "PAD (AIRPAD SWEDEN)", "BELL (GLASS CELESTA)", "BASS (SOFTBASS SUB)"]
+NAMES = ["PIANO (PIANO)", "PAD (PAD SWEDEN)", "BELL (GLASS CELESTA)", "BASS (BASS SUB)"]
 
 
 def bands(x):

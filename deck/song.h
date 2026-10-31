@@ -20,6 +20,8 @@ typedef struct {
 } dk_user_t;
 extern dk_user_t dk_user;
 extern uint32_t song_edits;
+extern uint32_t song_notes_lost;         /* events refused because the pool was full (the UI says the count) */
+extern uint32_t song_notes_lost_at;      /* dk_ticks of the last refused event */
 
 int clip_len(int clip);
 int clip_len_raw(int clip);
@@ -60,6 +62,13 @@ int song_undo(int *what);
 int song_redo(int *what);
 int rec_flush(void);
 void song_clear_all(void);               /* CLEAR ALL: every clip, the road, the frozen sounds, the parts' bars; undo forgotten; the sounds kept */
+void song_wipe(void);                    /* every part, the road, and the instruments back to the tape; UNDO brings them back */
+void part_inst_sync(int p);             /* this part's instruments into the tracks (the one we leave is kept) */
+void part_inst_capture(int p);          /* the tracks' instruments, copied into every part (a new song, a demo, an old project) */
+void part_inst_flush(void);             /* the live part's instruments back into its slot (before a save) */
+void part_inst_boot(void);              /* after a project loads */
+void part_inst_reset(int p);            /* this part's instruments back to the tape's; the others stay */
+void part_inst_reset_track(int p, int t); /* one track of this part; the other tracks and parts stay */
 int part_has_events(int p);              /* 1: any of the part's six clips has an event */
 /* NEW PART = COPY: the part `from` copied into the empty part `to` (all six clips with their events, takes and frozen-sound ids,
  * lengths, the part's bars and track mutes), one undo step. 1 copied; 0 nothing done (same part, `to` not empty, `from` empty);
@@ -80,5 +89,6 @@ int preset_block(int id);                   /* 0..DK_NBLK-1; the user's: -1 */
 int preset_id(int blk, int i);
 int preset_count(int eng, int blk);
 void track_preset(int t, int slot);
+void track_preset_sound(int t, int slot);   /* a preset or an instrument by hand: the FX is not touched */
 void song_template(int tp);
 void song_mood(int m);

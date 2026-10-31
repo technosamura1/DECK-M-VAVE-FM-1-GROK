@@ -10,7 +10,7 @@ wait 50
 expect events >4
 mark
 page 11
-tap EDIT
+tap LFO
 tapkey w6
 wait 50
 expect same 0
@@ -19,22 +19,22 @@ wait 50
 tapkey w6
 wait 50
 # back step by step (hold EDIT = undo) to where it began
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
 expect same 1
 # forward again (HOME + EDIT = redo)
 press HOME
-tap EDIT
+tap LFO
 release HOME
 wait 50
 expect same 0
@@ -42,7 +42,7 @@ expect same 0
 tapkey w7
 wait 50
 expect same 0
-tap EDIT
+tap LFO
 # the ARP into STEP: on the keys track, notes latched, SEQ
 press HOME
 tapkey b1
@@ -110,7 +110,10 @@ wait 50
 expect eng 0
 press HOME
 turn PRESET -1
+turn PRESET -1
 release HOME
+wait 30
+tap HOME
 wait 50
 expect eng 11
 expect preset 0
@@ -124,15 +127,21 @@ wait 400
 expect voices >=0
 press HOME
 turn PRESET 1
+turn PRESET 1
 release HOME
+wait 30
+tap HOME
 wait 50
 expect eng 0
 press HOME
-tapkey b4
+tapkey b5
 release HOME
 press HOME
 turn PRESET 1
+turn PRESET 1
 release HOME
+wait 30
+tap HOME
 wait 50
 expect eng 5
 expect textfit 0

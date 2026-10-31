@@ -21,7 +21,7 @@ seedat 0 1 30
 seedat 0 1 400
 expect events 2
 page 11
-tap EDIT
+tap LFO
 wait 100
 expect layview 1
 shot p37_edit_list.png
@@ -33,9 +33,9 @@ expect evpos 27
 shot p38_clip_quant.png
 expect evlast 404
 # one undo step brings the notes back
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect evpos 30
 expect evlast 400
@@ -61,9 +61,9 @@ shot p39_bar_paste.png
 expect events 3
 expect evlast 798
 # undo the last paste
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect events 2
 # SHIFT (SEQ's first row on STEP, K1): the whole clip a step later (30 -> 54), round; one undo step

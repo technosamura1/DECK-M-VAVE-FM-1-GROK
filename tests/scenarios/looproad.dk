@@ -1,0 +1,40 @@
+# the looper builds the road: a take into a part with no block puts its block at the road's end (A is there already)
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+tap HOME
+expect nroad 1
+tap PLAY
+wait 200
+press ARP
+tapkey w1
+release ARP
+wait 4500
+expect part 1
+tap PLAY
+wait 200
+qnt 0
+tap REC
+wait 4000
+expect recording 1
+key w0 down 100
+wait 600
+key w0 up
+wait 2000
+tap REC
+wait 500
+expect recording 0
+expect nroad 2
+expect road1 1
+# ROAD: HOME + K1 moves the chosen block (B, the new one) a place left
+tap ENV
+wait 50
+press HOME
+turn K1 -1
+release HOME
+wait 50
+expect road0 1
+expect road1 0
+expect textfit 0

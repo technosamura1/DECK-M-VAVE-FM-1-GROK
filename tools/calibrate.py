@@ -11,9 +11,9 @@ import re
 import sys
 
 # each engine's loudness (gated, K-weighted, dB): the piano the reference, the pads a little under, the world behind
-TARGET = {"FELT": -20.5, "TINE": -21.5, "KALIMBA": -21.5, "GLASS": -21.5, "AIRPAD": -23.0, "SOFTBASS": -23.5,
-          "DUSTKIT": -24.0, "WORLD": -33.0, "WINDS": -22.0, "SYNTH": -22.5, "PLUCK": -22.0, "LEAD": -22.5}
-ORDER = ["FELT", "TINE", "AIRPAD", "GLASS", "SOFTBASS", "DUSTKIT", "WORLD", "KALIMBA", "WINDS", "SYNTH", "PLUCK", "LEAD"]
+TARGET = {"PIANO": -20.5, "KEYS": -21.5, "KALIMBA": -21.5, "GLASS": -21.5, "PAD": -23.0, "BASS": -23.5,
+          "DRUMKIT": -24.0, "WORLD": -33.0, "WINDS": -22.0, "SYNTH": -22.5, "PLUCK": -22.0, "LEAD": -22.5}
+ORDER = ["PIANO", "KEYS", "PAD", "GLASS", "BASS", "DRUMKIT", "WORLD", "KALIMBA", "WINDS", "SYNTH", "PLUCK", "LEAD"]
 OLD = 9 * 12  # the presets the first release shipped: their trims stay put
 RX = re.compile(r'^(\s*\{"[^"]*", \d+, .*, )(-?\d+)\},\s*$')
 

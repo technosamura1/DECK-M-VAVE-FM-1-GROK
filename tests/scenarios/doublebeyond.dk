@@ -19,7 +19,7 @@ seedat 0 1 100
 setbars 0 1
 expect events 3
 page 11
-tap EDIT
+tap LFO
 wait 100
 expect layview 1
 tapkey w3

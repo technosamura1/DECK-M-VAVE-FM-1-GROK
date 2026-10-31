@@ -1,0 +1,121 @@
+# TRACKS K2 is the part (no copy). A preset changed on one part stays there. ERASE ALL clears that part only.
+# EDIT held + white 14 (host: LFO, the panel's EDIT) clears the whole road, twice.
+wait 300
+demo
+wait 100
+listen
+page 11
+tapkey w0
+wait 50
+expect track 0
+expect part 0
+expect preset 1
+trkset 1 0 0 4
+wait 20
+expect preset 4
+turn K2 2
+wait 100
+expect part 2
+said PART
+expect preset 1
+expect eventsC1 >0
+trkset 1 0 0 6
+wait 20
+expect preset 6
+turn K2 -2
+wait 100
+expect part 0
+expect preset 4
+expect eventsA1 >0
+turn K2 2
+wait 100
+expect part 2
+expect preset 6
+tap LFO
+wait 50
+expect layview 1
+tapkey w13
+wait 50
+said AGAIN = ERASE
+tapkey w13
+wait 100
+said TRACK CLEARED
+expect events 0
+expect eventsC1 0
+expect eventsC3 >0
+expect eventsA1 >0
+expect eventsB1 >0
+expect preset 0
+tap LFO
+wait 40
+tapkey w1
+wait 40
+expect track 1
+expect eng 3
+tapkey w0
+wait 40
+expect track 0
+turn K2 -2
+wait 100
+expect part 0
+expect preset 4
+expect eventsA1 >0
+# the whole road: the panel's EDIT (the button that opens this list) held + W14, twice
+press EDIT
+tapkey w13
+release EDIT
+wait 50
+said EDIT+W14 AGAIN
+expect eventsA1 >0
+expect nroad >0
+press EDIT
+tapkey w13
+release EDIT
+wait 100
+said ROAD CLEARED
+expect nev 0
+expect nroad 0
+expect eventsA1 0
+expect eventsB1 0
+expect eventsC1 0
+expect part 0
+expect preset 0
+# hold EDIT: the whole road comes back (notes, parts, instruments)
+press EDIT
+wait 800
+release EDIT
+wait 200
+said ROAD
+expect nev >0
+expect nroad >0
+expect eventsA1 >0
+expect eventsB1 >0
+expect eventsC3 >0
+expect part 0
+expect preset 4
+tapkey w1
+wait 40
+expect track 1
+expect eng 3
+tapkey w0
+wait 40
+expect preset 4
+# HOME + EDIT: redo the wipe. EDIT again: it is back
+press HOME
+tap EDIT
+release HOME
+wait 150
+said REDO
+expect nev 0
+expect nroad 0
+expect preset 0
+press EDIT
+wait 800
+release EDIT
+wait 200
+said ROAD
+expect nev >0
+expect nroad >0
+expect eventsA1 >0
+expect preset 4
+expect textfit 0

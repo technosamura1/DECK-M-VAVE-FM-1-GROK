@@ -1,0 +1,42 @@
+# NATURE is gone, the tracks are PIANO KEYS PAD BASS LEAD DRUMKIT: an older project (... DRUMS NATURE) opens with the
+# drums as track 6 (their notes with them) and a LEAD as track 5 (the world's drones gone)
+wait 300
+trkset 5 5 0 0
+trkset 6 6 0 0
+seed 0 5 3 0
+seed 0 6 4 0
+expect eventsA5 3
+expect eventsA6 4
+roundtrip
+wait 100
+expect eventsA5 0
+expect eventsA6 3
+tap HOME
+wait 100
+tapkey w4
+wait 100
+tap HOME
+wait 100
+expect track 4
+expect eng 11
+turn SELECT 1
+wait 100
+expect track 5
+expect eng 5
+# the demo itself: track 5 a LEAD, track 6 the drums
+tap SAVE
+wait 100
+tapkey w5
+wait 300
+tap HOME
+wait 100
+tap HOME
+wait 100
+tapkey w4
+wait 100
+expect track 4
+expect eng 11
+tapkey w5
+wait 100
+expect track 5
+expect eng 5

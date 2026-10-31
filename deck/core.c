@@ -15,7 +15,7 @@ static double prof_t0;
 
 #define BARRIER() __asm__ volatile("" ::: "memory")
 
-dk_song_t dk_song;
+dk_song_t dk_song DK_POOL;   /* (the big state in the pool: plain RAM kept for the rest) */
 dk_ev_t dk_ev[DK_NEV] DK_POOL;
 dk_ctx_t dk_ctx;
 dk_metro_t dk_metro = {0, 1, METRO_WOOD, 0, 40, 0};
@@ -44,7 +44,7 @@ float dk_white(void) { return (float)(int32_t)dk_rnd() * (1.0f / 2147483648.0f);
 static int irand(int n) { return n > 0 ? (int)((dk_rnd() >> 8) % (uint32_t)n) : 0; }
 
 #define SN 1024
-float dk_sint[SN + 1];
+float dk_sint[SN + 1] DK_POOL;
 float dk_sine(float ph) { return dk_sinx(ph); }
 float dk_mtof(float n) { return 440.0f * dk_ctx.tune * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
 float dk_decay(float tau) { return fm_expf(-1.0f / (fm_maxf(tau, 0.0001f) * DK_SR)); }
@@ -73,7 +73,7 @@ typedef struct {
     int32_t d;
 } cmd_t;
 #define QN 256u
-static cmd_t q[QN];
+static cmd_t q[QN] DK_POOL;
 static volatile uint32_t q_w, q_r;
 void dk_cmd(int c, int a, int b, int d)
 {
@@ -101,8 +101,10 @@ void dk_unlock(void)
 }
 
 /* ------------------------------------------------------------------- state --- */
-volatile dk_recev_t dk_recq[DK_RECQ];
+volatile dk_recev_t dk_recq[DK_RECQ] DK_POOL;
 volatile uint32_t dk_recq_w;
+volatile uint32_t dk_rec_r;
+volatile uint32_t dk_rec_dropped;
 volatile uint32_t dk_seen_w;
 volatile uint32_t dk_seen[DK_SEEN];
 volatile uint8_t dk_playing, dk_recording, dk_counting, dk_rec_trk, dk_pass;
@@ -118,8 +120,6 @@ volatile uint8_t dk_beat_flash;
 volatile float dk_level[DK_NTRACK], dk_master_level;
 volatile uint8_t dk_hush, dk_hushed;
 static float hush_g = 1.0f;
-volatile uint8_t dk_finger_on[DK_NTRACK];
-volatile uint32_t dk_finger_latch[DK_NTRACK];
 volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;
 volatile uint8_t dk_perform;
 volatile uint8_t dk_open_n;
@@ -155,10 +155,49 @@ static float modv[DK_NTRACK][2];              /* the modulators now, -1..1 (PEDA
 static float dice_v[DK_NTRACK][2], pedal_v[DK_NTRACK][2];
 static uint8_t perf_rain;
 
+/* an empty tape (host bring-up, a bad image) must not hand back NULL: the render
+ * and the panel call through this pointer. NONE is silent and costs nothing. */
+static void eng_none_on(float *st, int note, float vel, const float *p, int retrig)
+{
+    (void)st;
+    (void)note;
+    (void)vel;
+    (void)p;
+    (void)retrig;
+}
+static void eng_none_off(float *st, const float *p)
+{
+    (void)st;
+    (void)p;
+}
+static int eng_none_render(float *st, float *l, float *r, int n, const float *p)
+{
+    (void)st;
+    (void)l;
+    (void)r;
+    (void)n;
+    (void)p;
+    return 0;
+}
+static float eng_none_level(const float *st)
+{
+    (void)st;
+    return 0.0f;
+}
+static const dk_engine_t eng_none = {"NONE", 0, 1, 0, 0, 0, eng_none_on, eng_none_off, eng_none_render,
+                                     eng_none_level, 0, 0, 0, 0, 0};
+
 const dk_engine_t *dk_engine(int t)
 {
-    int e = dk_song.trk[t].eng;
-    return TAPE.eng[(unsigned)e < TAPE.neng ? e : 0];
+    int e;
+    if (!TAPE.neng || !TAPE.eng || !TAPE.eng[0])
+        return &eng_none;
+    if ((unsigned)t >= DK_NTRACK)
+        t = 0;
+    e = dk_song.trk[t].eng;
+    if ((unsigned)e >= TAPE.neng || !TAPE.eng[e])
+        return TAPE.eng[0];
+    return TAPE.eng[e];
 }
 
 static int base_value(int t, int target, int *lo, int *hi)
@@ -215,29 +254,51 @@ static int param_value(int t, int target, int live)
 int dk_param_value(int t, int target) { return param_value(t, target, 1); }
 int dk_param_static(int t, int target) { return param_value(t, target, 0); }
 
+static int fx_is_glide(int fx)
+{
+    const char *n;
+    if (fx <= 0 || !TAPE.nfx || fx >= TAPE.nfx || !TAPE.fx[fx])
+        return 0;
+    n = TAPE.fx[fx]->name;
+    return n && n[0] == 'G' && n[1] == 'L' && n[2] == 'I' && n[3] == 'D' && n[4] == 'E' && n[5] == 0;
+}
+/* the GLIDE effect's AMOUNT, 0..100; 0 when that effect is not the one on the track (or it is bypassed).
+ * an insert cannot slide a note (it never hears which note): LEAD and BASS read this instead. */
+static float glide_of(int t)
+{
+    if (!fx_is_glide(dk_song.trk[t].fx) || (DK_BYP(t) & DK_BYP_FX))
+        return 0.0f;
+    return (float)dk_param_value(t, T_FXAMT);
+}
 static uint8_t params_half;
+static void params_track(int t)
+{
+    const dk_engine_t *e = dk_engine(t);
+    int i;
+    for (i = 0; i < DK_NP; i++)
+        tp[t][i] = i < e->nparams ? (float)dk_param_value(t, T_P0 + i) : 0.0f;
+    tp[t][PX_ATT] = (float)dk_param_value(t, T_ATT);
+    tp[t][PX_DEC] = (float)dk_param_value(t, T_DEC);
+    tp[t][PX_REL] = (float)dk_param_value(t, T_REL);
+    tp[t][PX_DRIFT] = (float)dk_song.trk[t].drift;
+    tp[t][PX_GLIDE] = glide_of(t);
+    t_fxamt[t] = (float)dk_param_value(t, T_FXAMT) * 0.01f;
+    t_fxa[t] = (float)dk_param_value(t, T_FXA) * 0.01f;
+    t_fxb[t] = (float)dk_param_value(t, T_FXB) * 0.01f;
+    t_rev[t] = (float)dk_param_value(t, T_REV) * 0.01f;
+    t_echo[t] = (float)dk_param_value(t, T_ECHO) * 0.01f;
+    t_vol[t] = (float)dk_param_value(t, T_VOL) * 0.01f;
+    t_pan[t] = (float)dk_param_value(t, T_PAN) * 0.02f;
+    t_swing[t] = (float)dk_param_value(t, T_SWING) * 0.01f;
+}
 static void params_update_some(int all)
 {
-    int t, i;
+    int t;
     params_half ^= 1u;
     for (t = 0; t < DK_NTRACK; t++) {
         if (!all && (t & 1) != params_half)    /* half the tracks a render (each one every 11.6 ms) */
             continue;
-        const dk_engine_t *e = dk_engine(t);
-        for (i = 0; i < DK_NP; i++)
-            tp[t][i] = i < e->nparams ? (float)dk_param_value(t, T_P0 + i) : 0.0f;
-        tp[t][PX_ATT] = (float)dk_param_value(t, T_ATT);
-        tp[t][PX_DEC] = (float)dk_param_value(t, T_DEC);
-        tp[t][PX_REL] = (float)dk_param_value(t, T_REL);
-        tp[t][PX_DRIFT] = (float)dk_song.trk[t].drift;
-        t_fxamt[t] = (float)dk_param_value(t, T_FXAMT) * 0.01f;
-        t_fxa[t] = (float)dk_param_value(t, T_FXA) * 0.01f;
-        t_fxb[t] = (float)dk_param_value(t, T_FXB) * 0.01f;
-        t_rev[t] = (float)dk_param_value(t, T_REV) * 0.01f;
-        t_echo[t] = (float)dk_param_value(t, T_ECHO) * 0.01f;
-        t_vol[t] = (float)dk_param_value(t, T_VOL) * 0.01f;
-        t_pan[t] = (float)dk_param_value(t, T_PAN) * 0.02f;
-        t_swing[t] = (float)dk_param_value(t, T_SWING) * 0.01f;
+        params_track(t);
     }
 }
 static void params_update(void) { params_update_some(1); }
@@ -251,17 +312,30 @@ typedef struct {
     float ch_l, ch_r, ch_c;                            /* a drum sound's CRUSH: the sample held, its count */
     float st[DK_VSTATE];
 } voice_t;
-static voice_t vc[DK_NVOICE];
+static voice_t vc[DK_NVOICE] DK_POOL;
+static uint8_t vc_take[DK_NVOICE];             /* the overdub a sequencer voice belongs to (0: the hand, or none) */
+static uint8_t note_take;                      /* the take of the note being started (0: the hand) */
 static uint32_t age_ctr;
 static uint8_t shed;
 /* a voice taken while it still sounds fades out over a few milliseconds here, from a copy (no click) */
 #define NFADE 4
-static voice_t fv[NFADE];
+static voice_t fv[NFADE] DK_POOL;
 static float fv_g[NFADE];
 static void voice_fade(const voice_t *v)
 {
     int i, k = 0;
-    if (!v->on || v->delay > 0 || TAPE.eng[v->eng]->level(v->st) < 0.002f)
+    float level;
+    const dk_engine_t *e;
+    if (!v->on || v->delay > 0)
+        return;
+    if (!TAPE.neng || (unsigned)v->eng >= TAPE.neng || !TAPE.eng[v->eng])
+        return;
+    e = TAPE.eng[v->eng];
+    level = e->level(v->st);
+    /* a copy still renders for the whole fade. under 0.01 it is not heard and
+     * only spends the CPU the budget is trying to get back. the caller turns
+     * the voice off either way. */
+    if (level < 0.01f)
         return;
     for (i = 1; i < NFADE; i++)
         if (fv_g[i] < fv_g[k])
@@ -304,6 +378,7 @@ static const float *voice_params(const voice_t *v, float *b)
     b[PX_DEC] = (float)s->env[1];
     b[PX_REL] = (float)s->env[2];
     b[PX_DRIFT] = (float)s->drift;
+    b[PX_GLIDE] = glide_of(v->trk);          /* the effect is the track's, not the frozen sound's */
     return b;
 }
 
@@ -328,10 +403,11 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
     if (e->flags & EF_MONO) {                  /* one voice: played again while held (legato glides); a sound that
                                                 * goes on (the world) whenever it still sounds */
         for (i = 0; i < DK_NVOICE; i++)
-            if (vc[i].on && vc[i].trk == t && vc[i].eng == eng && vc[i].snd == snd && (vc[i].held || (e->flags & EF_CONT))) {
+            if (vc[i].on && vc[i].trk == t && vc[i].eng == eng && vc[i].snd == snd &&
+                (vc[i].held || (e->flags & EF_CONT) || ((e->flags & EF_LEGATO) && vc[i].delay <= 0))) {
                 if (vc[i].held)
                     midi(0x80u | ch_of(t), vc[i].note, 0);
-                *retrig = vc[i].held ? 2 : 1;
+                *retrig = vc[i].held ? 2 : (e->flags & EF_CONT) ? 1 : 3;   /* (3: a lead's tail taken on, no restart) */
                 return &vc[i];
             }
     }
@@ -346,7 +422,10 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
     if (cnt >= e->max_voices) {                /* the track's own: its quietest let go, else its oldest */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);
+                const dk_engine_t *se = TAPE.eng[vc[i].eng];
+                float l = se->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);
+                if (se->flags & (EF_MONO | EF_LEGATO))
+                    l += 1000.0f;              /* a lead or a bass is the last voice given up */
                 if ((int32_t)(age_ctr - vc[i].age) < (int32_t)(DK_SR / 10))
                     l += 40.0f;                /* a note just begun is quiet: it is not the one given up */
                 if (l < lo) {
@@ -359,16 +438,24 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
             if (!vc[i].on)
                 return &vc[i];
         for (i = 0; i < DK_NVOICE; i++) {      /* the pool full: the quietest let go anywhere, else the oldest */
-            float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+            const dk_engine_t *se = TAPE.eng[vc[i].eng];
+            float l = se->level(vc[i].st);
+            if (se->flags & (EF_MONO | EF_LEGATO))
+                continue;                      /* its release is the note: another voice goes first */
             if (!vc[i].held && l < lo) {
                 lo = l;
                 best = &vc[i];
             }
         }
-        if (!best) {                           /* the sequencer's oldest first: the hand's voices are the last to go */
+        if (!best) {                           /* the sequencer's oldest first: the hand's voices are the last to go.
+                                             * a lead or a bass is not taken: cutting it cuts the note itself */
             uint32_t top = 0;
             for (i = 0; i < DK_NVOICE; i++) {
-                uint32_t score = (age_ctr - vc[i].age) + (vc[i].src ? 0x40000000u : 0u);
+                const dk_engine_t *se = TAPE.eng[vc[i].eng];
+                uint32_t score;
+                if ((se->flags & (EF_MONO | EF_LEGATO)) && !(se->flags & EF_CONT))
+                    continue;
+                score = (age_ctr - vc[i].age) + (vc[i].src ? 0x40000000u : 0u);
                 if (!best || score >= top) {
                     top = score;
                     best = &vc[i];
@@ -388,28 +475,83 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
  * OVERWORLD's busiest moment cost: over it, the quietest tails go first (faded), then a quiet held voice; never a
  * loud note */
 /* the budget moves with the device's measured load (dk_set_load, from the UI): lower when the render runs long */
-#define DK_BUDGET_MAX 130
-#define DK_BUDGET_MIN 50
-static volatile int dk_budget = 100;     /* (the device's crackles were the flash's erases, not the load: 3.7 of 5.8 ms) */
+/* (11 voices plus the effects were 2.8 of 5.8 ms, ~48 %. The voice sum used to miss the plate and the
+ * inserts, so a full song sat "under budget" while the device was already at 90 % and the lead crackled.
+ * mix_overhead() adds that cost in engine-cost units (a voice is about 7..17): an eighth of it while
+ * the tape is cool, so a lead and a pad still ring out, and all of it once the load ramp is full.
+ * Shedding starts at 75 % and is full at 95 %. A mono or legato tail (LEAD, BASS) is never the one cut.) */
+#define DK_BUDGET_MAX 250
+#define DK_BUDGET_MIN 60
+#define REVERB_COST 12                   /* the plate runs every block, sends or not */
+#define INSERT_COST 4                    /* one track insert that is actually on */
+static volatile int dk_budget = 180;
 static volatile int dk_budget_hold;      /* (the host's scenarios: a device that holds its budget low, as a CPU load of 45-62% does) */
+static volatile int dk_load_pct;         /* the device's last measure, 0..100 (the host can hold one) */
+static volatile int dk_load_hold;
 void dk_budget_force(int b)
 {
     dk_budget_hold = b;
     if (b)
         dk_budget = b;
 }
+void dk_load_force(int pct)              /* -1: the device's measure again; else hold this % (a test of the 90 % crackle) */
+{
+    if (pct < 0) {
+        dk_load_hold = 0;
+        return;
+    }
+    dk_load_pct = pct > 100 ? 100 : pct;
+    dk_load_hold = 1;
+}
 void dk_set_load(int pct)
 {
     int b = dk_budget;
+    if (pct < 0)
+        pct = 0;
+    if (pct > 100)
+        pct = 100;
+    if (!dk_load_hold)
+        dk_load_pct = pct;
     if (dk_budget_hold)
         return;
-    if (pct > 62)
-        b -= pct > 80 ? 14 : 5;
-    else if (pct < 45)
-        b += 2;
+    /* slower than the old cliffs (-8 from 64 %). a lead at 70 % used to lose its tail in a few blocks. */
+    if (pct >= 90)
+        b -= 20;                         /* critical: down fast */
+    else if (pct >= 80)
+        b -= 10;                         /* high: down moderate */
+    else if (pct >= 70)
+        b -= 4;                          /* medium: down slow */
+    else if (pct < 55)
+        b += 3;                          /* low: recover faster */
     dk_budget = b < DK_BUDGET_MIN ? DK_BUDGET_MIN : b > DK_BUDGET_MAX ? DK_BUDGET_MAX : b;
 }
 int dk_get_budget(void) { return dk_budget; }
+/* 0 under 75 % load, 1 at 95 % and above. dk_shed() is already in trouble: full ramp. */
+static float shed_factor(void)
+{
+    float f;
+    if (shed)
+        return 1.0f;
+    f = ((float)dk_load_pct - 75.0f) / 20.0f;   /* 0 at 75 %, 1 at 95 % */
+    if (f < 0.0f)
+        return 0.0f;
+    if (f > 1.0f)
+        return 1.0f;
+    return f;
+}
+static int mix_overhead(void)
+{
+    int t, full = REVERB_COST, nfx = TAPE.nfx;
+    float sf = shed_factor();
+    for (t = 0; t < DK_NTRACK; t++) {
+        int fx = dk_song.trk[t].fx;
+        if (fx > 0 && nfx && fx < nfx && TAPE.fx[fx] && TAPE.fx[fx]->process && !(DK_BYP(t) & DK_BYP_FX))
+            full += INSERT_COST;
+    }
+    /* an eighth while the tape is cool (a lead's tail still fits),
+     * the whole of it once the device is hot. the measured load remains the real shed. */
+    return full / 8 + (int)((float)(full - full / 8) * sf);
+}
 /* a voice younger than this (samples) is still in its attack: it is never the one given up (a chord's own first notes, the
  * note the hand has just played: the live note that "did not sound" was the quietest voice of all, at its start) */
 #define BUDGET_YOUNG (DK_SR / 2)
@@ -418,23 +560,42 @@ int dk_get_budget(void) { return dk_budget; }
  * always has a voice. A voice the hand holds is never taken by the sequencer. */
 static void budget_make_room(int want, int live)
 {
+    float sf = shed_factor();
+    int melt = sf > 0.8f;                    /* 84 %: a fade copy still renders, so the voice just goes */
+    int overhead = mix_overhead();
+    int cap = DK_NVOICE;
     int guard = DK_NVOICE;
+    if (sf >= 0.8f)
+        cap = 12;
+    else if (sf > 0.4f)
+        cap = 14 - (int)((sf - 0.4f) * (2.0f / 0.4f));
+    else if (sf > 0.0f)
+        cap = DK_NVOICE - (int)(sf * ((float)(DK_NVOICE - 14) / 0.4f));
     while (guard--) {
-        int i, total = want, best = -1, most = 0, cnt[DK_NTRACK];
+        int i, total = want + overhead, best = -1, most = 0, cnt[DK_NTRACK], nv = 0;
         float lo = 1e9f;
         for (i = 0; i < DK_NTRACK; i++)
             cnt[i] = 0;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on) {
                 total += TAPE.eng[vc[i].eng]->cost;
+                nv++;
                 if (vc[i].trk < DK_NTRACK)
                     cnt[vc[i].trk]++;
             }
-        if (total <= dk_budget)
+        if (total <= dk_budget && nv <= cap)
             return;
         for (i = 0; i < DK_NVOICE; i++)          /* 1: a tail (let go) - the quietest */
             if (vc[i].on && !vc[i].held) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+                const dk_engine_t *ve = TAPE.eng[vc[i].eng];
+                float l = ve->level(vc[i].st);
+                /* a lead or a bass is one voice. its release is the note, not spare CPU. */
+                if (ve->flags & (EF_MONO | EF_LEGATO))
+                    continue;
+                /* 70 % and up, until melt: an audible tail stays. a cool device that is simply
+                 * over its voice budget still gives the quietest tail up (four pad chords). */
+                if (!melt && l > 0.1f && dk_load_pct >= 70)
+                    continue;
                 if (l < lo) {
                     lo = l;
                     best = i;
@@ -442,13 +603,22 @@ static void budget_make_room(int want, int live)
             }
         if (best < 0) {                          /* 2: a held voice of the sequencer past its attack, from the track with the most */
             int pass;
-            for (pass = 0; pass < 1 + live && best < 0; pass++) {   /* (the quiet ones; for a live note, any) */
+            /* (the quiet ones; for a live note any; any too when the device runs over (its budget lowered by the load):
+             * the sequencer's oldest loud notes give way rather than the render running past its block - a crackle, or
+             * the 5th track's notes lost in it) */
+            int any = live || melt;             /* a held note stays unless the hand needs a voice, or the device is already melting.
+                                             * a low budget alone used to cut the oldest note mid-sustain (the first
+                                             * note of a take, about a third of the way through, with no release) */
+            for (pass = 0; pass < 1 + any && best < 0; pass++) {
                 most = 0;
                 lo = 1e9f;
                 for (i = 0; i < DK_NVOICE; i++)
                     if (vc[i].on && vc[i].src && vc[i].trk < DK_NTRACK &&
                         (int32_t)(age_ctr - vc[i].age) >= (int32_t)BUDGET_YOUNG) {
-                        float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+                        const dk_engine_t *ve = TAPE.eng[vc[i].eng];
+                        float l = ve->level(vc[i].st);
+                        if (ve->flags & (EF_MONO | EF_LEGATO))
+                            continue;          /* one voice: cutting it cuts the note itself */
                         if ((pass || l <= 0.15f) && (cnt[vc[i].trk] > most || (cnt[vc[i].trk] == most && l < lo))) {
                             most = cnt[vc[i].trk];
                             lo = l;
@@ -461,32 +631,60 @@ static void budget_make_room(int want, int live)
             return;
         if (vc[best].held)
             midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
-        voice_fade(&vc[best]);
-        vc[best].on = 0;
+        if (melt)
+            vc[best].on = 0;
+        else {
+            voice_fade(&vc[best]);
+            vc[best].on = 0;
+        }
     }
 }
 
 /* between notes the tails stay on and over the budget, so the next instrument has no room. once a chunk, if the
  * mix is heavy, the quietest tails (already let go) fade out: at most NFADE of them. a sparse song is left alone
  * (six felt voices sit under the line). a loud tail stays unless the mix is actually over the budget, or the pool
- * is nearly full. */
+ * is nearly full.
+ * when the DEVICE is hot (the measure, or a block that already ran past 90 %), the cost sum is not trusted: tails
+ * go now, and if it is already crackling a few of the sequencer's older notes go too. the hand's notes stay. */
 static void tails_trim(void)
 {
-    int guard = NFADE;
+    float sf = shed_factor();
+    int hot = sf > 0.4f, melt = sf > 0.8f;
+    int overhead = mix_overhead();
+    int margin = 14 + (int)(sf * (14.0f / 0.4f));
+    int cap = 18 - (int)(sf * (6.0f / 0.4f));
+    int guard = 4 + (int)(sf * 5.0f);        /* 4 at rest, 6 at 72 %, 8 at 84 % */
+    if (margin > 28)
+        margin = 28;
+    if (cap < 12)
+        cap = 12;
+    if (guard > 8)
+        guard = 8;
     while (guard--) {
-        int i, total = 0, nv = 0, best = -1;
+        int i, total = overhead, nv = 0, best = -1;
         float lo = 1e9f;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on) {
                 total += TAPE.eng[vc[i].eng]->cost;
                 nv++;
             }
-        if (total <= dk_budget - 14 && nv <= 18)
+        if (melt) {
+            if (nv <= 12)
+                break;
+        } else if (total <= dk_budget - margin && nv <= cap)
             return;
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && !vc[i].held) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
-                if (l > 0.5f && total <= dk_budget && nv <= 20)
+                const dk_engine_t *ve = TAPE.eng[vc[i].eng];
+                float l = ve->level(vc[i].st);
+                /* a lead or a bass is one voice. its release is the note, not spare CPU. */
+                if (ve->flags & (EF_MONO | EF_LEGATO))
+                    continue;
+                /* 70 % and up, until melt: an audible tail stays. below that, a mix that does
+                 * not fit the voice budget still sheds its quietest tail. */
+                if (!melt && l > 0.15f && dk_load_pct >= 70)
+                    continue;
+                if (!hot && l > 0.5f && total <= dk_budget && nv <= 20)
                     continue;
                 if (l < lo) {
                     lo = l;
@@ -494,8 +692,45 @@ static void tails_trim(void)
                 }
             }
         if (best < 0)
+            break;
+        if (melt || lo < 0.12f)              /* a tail, and the render is already late: do not keep a copy that still renders */
+            vc[best].on = 0;
+        else {
+            voice_fade(&vc[best]);
+            vc[best].on = 0;
+        }
+    }
+    if (!melt)
+        return;
+    guard = 4;                               /* still packed: the sequencer's older notes, never the hand's */
+    while (guard--) {
+        int i, best = -1, nv = 0;
+        uint32_t top = 0;
+        for (i = 0; i < DK_NVOICE; i++)
+            nv += vc[i].on;
+        if (nv <= 12)
             return;
-        voice_fade(&vc[best]);
+        for (i = 0; i < DK_NVOICE; i++) {
+            int32_t age;
+            uint32_t score;
+            float l;
+            if (!vc[i].on || !vc[i].held || !vc[i].src)
+                continue;
+            if (TAPE.eng[vc[i].eng]->flags & (EF_MONO | EF_LEGATO))
+                continue;                    /* a lead or a bass keeps sounding through a hot block */
+            age = (int32_t)(age_ctr - vc[i].age);   /* wraps cleanly for ~12 h; a negative means "just born" */
+            if (age < (int32_t)(DK_SR / 10))
+                continue;                    /* a note just begun, left alone (its attack is the quietest) */
+            l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+            score = (uint32_t)age + (l < 0.25f ? 0x20000000u : 0u);
+            if (best < 0 || score >= top) {
+                top = score;
+                best = i;
+            }
+        }
+        if (best < 0)
+            return;
+        midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
         vc[best].on = 0;
     }
 }
@@ -513,10 +748,34 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
         snd = 0;
     if (note < 0 || note > 127 || vel <= 0.0f)
         return 0;
+    if (!e || e == &eng_none)
+        return 0;
+    /* dk_engine fell back to engine 0: the voice has to index that, not a wild id */
+    if (!fs && ((unsigned)eng >= TAPE.neng || !TAPE.eng[eng]))
+        eng = 0;
+    if (!fs)
+        params_track(t);                       /* the note hears this preset. tp[] is refreshed later, and only half
+                                                * the tracks a block: a KEYS engine swap otherwise plays one note on
+                                                * the previous engine's numbers (GLASS's OCTAVE was TINE's BARK) */
     if ((e->flags & EF_DRUM) && (note == 42 || note == 44 || note == 46))   /* the hats choke each other */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t && (vc[i].note == 42 || vc[i].note == 44 || vc[i].note == 46))
                 TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);   /* (drums are never frozen) */
+    /* an older overdub, or the song under a key still down, does not take a mono voice that is
+     * still the note (its sustain, or its release). the line's own next note, and a newer take, do. */
+    if (src && (e->flags & (EF_MONO | EF_LEGATO))) {
+        for (i = 0; i < DK_NVOICE; i++) {
+            voice_t *u = &vc[i];
+            float lv;
+            if (!u->on || u->trk != (uint8_t)t || u->eng != (uint8_t)eng || u->snd != (uint8_t)snd)
+                continue;
+            lv = e->level(u->st);
+            if (u->src == 0 && (u->held || lv > 0.02f))
+                return 0;
+            if (note_take && vc_take[i] && note_take < vc_take[i] && (u->held || lv > 0.02f))
+                return 0;
+        }
+    }
     budget_make_room(e->cost, !src);
     v = voice_get(t, e, eng, snd, &retrig, note, src);
     if (!v)
@@ -532,10 +791,14 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
     v->eng = (uint8_t)eng;
     v->snd = (uint8_t)snd;
     v->gate = gate;
+    if (retrig && v->delay <= 0)              /* a voice already sounding (legato, a tail taken on): never paused - a strum's delay
+                                             * on it cut the sound out and back (two clicks) */
+        delay = 0;
     v->delay = delay > 0 ? delay : 0;
     v->age = age_ctr + (uint32_t)(delay > 0 ? delay : 0);
     v->lane = 0;
     v->ch_c = 0.0f;
+    vc_take[(int)(v - vc)] = src ? note_take : 0;
     if ((e->flags & EF_DRUM) && e->nlanes) {          /* a drum sound: its own tune and decay (the kit's p[0], p[1]) */
         int l;
         for (l = 0; l < e->nlanes && l < 8; l++)
@@ -676,7 +939,7 @@ static void plate_init(void)
 }
 /* SHIMMER: an octave up fed into the plate (two heads gliding through a short line, crossfaded) */
 #define SH_N 1024
-static float sh_buf[SH_N];
+static float sh_buf[SH_N] DK_POOL;
 static int sh_w;
 static float sh_ph;
 static uint8_t shimmer;
@@ -781,23 +1044,27 @@ static inline float metro_step(void)
 }
 
 /* -------------------------------------------------------------- the tracks --- */
-static dk_fxst_t fxs[DK_NTRACK];
+static dk_fxst_t fxs[DK_NTRACK] DK_POOL;
 static uint8_t fx_prev[DK_NTRACK];
 static float fx_byp[DK_NTRACK];            /* the insert's bypass, faded: 0 in, 1 out */
 static int16_t fxbuf[DK_NTRACK][DK_FXBUF] DK_POOL;
 static float bus_st[DK_NTRACK][16];
 static float g_cur[DK_NTRACK][2];             /* the gain now (left, right): glides to the knob */
 static int32_t tail[DK_NTRACK];               /* samples the effect still rings after the last voice */
-static uint8_t t_soloed, drop_mask, stems_solo = 0xFF, perf_mute_drums, perf_echo, dream_off;
-int dk_dream_off(void) { return dream_off; }   /* PERFORM's DREAM key: the DREAM tracks silenced */
+static uint8_t t_soloed, drop_mask, stems_solo = 0xFF, perf_mute_drums, perf_echo;
 static float master_lp_k = 1.0f, master_lp_l, master_lp_r, master_lp_l2, master_lp_r2;
 static float mixl[DK_BLK], mixr[DK_BLK], rsend[DK_BLK], esend[DK_BLK], tl[DK_BLK], tr[DK_BLK];
 static float lvl_acc[DK_NTRACK];
 
+static int part_heard(void)
+{
+    uint8_t playing = dk_playing;
+    return (playing ? dk_cur_part : dk_song.cur_part) & 7;
+}
 static int track_audible(int t)
 {
     const dk_track_t *k = &dk_song.trk[t];
-    int pm = dk_song.part[(dk_playing ? dk_cur_part : dk_song.cur_part) & 7].mute >> t & 1u;   /* muted in the part playing */
+    int pm = dk_song.part[part_heard()].mute >> t & 1u;   /* muted in the part playing */
     if (stems_solo != 0xFF)                    /* STEMS: the one track alone, silent where the song has it muted in the part */
         return t == stems_solo && !pm;
     if ((drop_mask >> t & 1u) || pm)
@@ -807,6 +1074,31 @@ static int track_audible(int t)
     if (t_soloed && !k->solo)
         return 0;
     return 1;
+}
+
+/* why a track the hand plays is not heard (the "KEYS silent" the device showed and the host did not): 0 nothing found,
+ * 1 muted in the part playing, 2 another track soloed, 3 dropped (a ROAD block), 4 its VOL low, 5 its VOL low by a curve
+ * (automation), 6 a tremolo, 7 the drums muted by a perform key */
+int dk_silent_why(int t)
+{
+    const dk_track_t *k = &dk_song.trk[t & 7];
+    int i;
+    if (t < 0 || t >= DK_NTRACK)
+        return 0;
+    if (dk_song.part[part_heard()].mute >> t & 1u)
+        return 1;
+    if (t_soloed && !k->solo)
+        return 2;
+    if (drop_mask >> t & 1u)
+        return 3;
+    if (perf_mute_drums && (dk_engine(t)->flags & EF_DRUM))
+        return 7;
+    if (t_vol[t] < 0.12f)
+        return mot[t][T_VOL] >= 0 ? 5 : 4;
+    for (i = 0; i < 2; i++)
+        if (k->mod[i][0] == MOD_TREMOLO && k->mod[i][1] > 80)
+            return 6;
+    return 0;
 }
 
 /* a drum sound's own settings beyond its level, tune and decay (those at its start): any to apply while it rings */
@@ -915,7 +1207,8 @@ static void render_tracks(uint32_t n)
                     if (v->held)
                         midi(0x80u | ch_of(t), v->note, 0);
                     v->on = 0;
-                } else if (shed && !v->held && ve->level(v->st) < 0.05f)
+                } else if (shed && !v->held && ve->level(v->st) < 0.05f &&
+                           !(ve->flags & (EF_MONO | EF_LEGATO)))
                     v->on = 0;
                 continue;
             }
@@ -923,18 +1216,25 @@ static void render_tracks(uint32_t n)
                 if (v->held)
                     midi(0x80u | ch_of(t), v->note, 0);
                 v->on = 0;
-            } else if (shed && !v->held && ve->level(v->st) < 0.05f)
+            } else if (shed && !v->held && ve->level(v->st) < 0.05f &&
+                       !(ve->flags & (EF_MONO | EF_LEGATO)))
                 v->on = 0;
         }
         for (i = 0; i < NFADE; i++) {          /* the voices fading out */
             static float fl_[DK_BLK], fr_[DK_BLK];
             float fpb[PX_N];
-            float g = fv_g[i], dg = 1.0f / (0.006f * DK_SR);
+            float g = fv_g[i], fade_time, dg;
+            const dk_engine_t *fe;
             if (g <= 0.0f || fv[i].trk != t)
                 continue;
+            fe = TAPE.eng[fv[i].eng];
+            /* a stolen lead or bass is still the note: 20 ms, not the 6 ms click-fade.
+             * the world is mono too, and it is a bed, not a note: it keeps the short fade. */
+            fade_time = ((fe->flags & EF_LEGATO) || ((fe->flags & EF_MONO) && !(fe->flags & EF_CONT))) ? 0.020f : 0.006f;
+            dg = 1.0f / (fade_time * DK_SR);
             for (j = 0; j < n; j++)
                 fl_[j] = fr_[j] = 0.0f;
-            TAPE.eng[fv[i].eng]->render(fv[i].st, fl_, fr_, (int)n, voice_params(&fv[i], fpb));
+            fe->render(fv[i].st, fl_, fr_, (int)n, voice_params(&fv[i], fpb));
             for (j = 0; j < n && g > 0.0f; j++, g -= dg) {
                 tl[j] += fl_[j] * g;
                 tr[j] += fr_[j] * g;
@@ -1035,7 +1335,7 @@ static void atmo_render(uint32_t n)
             for (k = 0; k < DK_VSTATE; k++)
                 atmo_st[i][k] = 0.0f;
             for (k = 0; k < PX_N; k++)
-                atmo_p[i][k] = k < 3 ? (float)a->p[k] : k == PX_DRIFT ? 0.0f : 50.0f;
+                atmo_p[i][k] = k < 3 ? (float)a->p[k] : (k == PX_DRIFT || k == PX_GLIDE) ? 0.0f : 50.0f;
             e->on(atmo_st[i], 60, 1.0f, atmo_p[i], 0);
             atmo_on[i] = 1;
         } else if (want <= 0.0f && atmo_on[i] == 1) {
@@ -1227,7 +1527,12 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     shed = 0;
 }
 
-void dk_shed(void) { shed = 1; }
+void dk_shed(void)
+{
+    shed = 1;                                /* the block just rendered past 90 %: the next one drops tails first */
+    if (!dk_budget_hold && dk_budget > 120)
+        dk_budget = dk_budget - 40 < 120 ? 120 : dk_budget - 40;
+}
 
 void dk_init(void)
 {

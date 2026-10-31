@@ -40,9 +40,13 @@ expect sndeng 0
 # the track takes another engine: the take is the same, it is still the piano
 press HOME
 turn PRESET -1
+turn PRESET -1
+turn PRESET -1
 release HOME
+wait 30
+tap HOME
 wait 100
-expect eng 11
+expect eng 10
 expect evsnd 1
 expect nfrozen 4
 expect sndeng 0
@@ -102,7 +106,11 @@ key w0 up
 wait 200
 press HOME
 turn PRESET 1
+turn PRESET 1
+turn PRESET 1
 release HOME
+wait 30
+tap HOME
 wait 100
 expect eng 0
 key w0 down 90
@@ -112,8 +120,9 @@ wait 300
 tap REC
 wait 400
 expect recording 0
-expect events 20
-expect nfrozen 16
+# a chord that was still down as the 4 bars came round is two events: to the end of the loop, and the rest from 0
+expect events 24
+expect nfrozen 20
 expect nlive 4
 # the setting through the page: GLO, its fourth row, the last knob
 locktake 1

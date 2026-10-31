@@ -137,11 +137,30 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "same")) g = host_clip_hash() == host_mark;
     else if (!strncmp(what, "events", 6) && what[6] && what[7]) g = host_events(what[6] - 'A', what[7] - '1');
     else if (!strcmp(what, "nroad")) g = dk_song.nroad;
+    else if (!strncmp(what, "rdrop", 5) && what[5] >= '0' && what[5] <= '9') g = dk_song.road[atoi(what + 5) % DK_NROAD].drop;
+    else if (!strncmp(what, "road", 4) && what[4] >= '0' && what[4] <= '9') g = dk_song.road[atoi(what + 4) % DK_NROAD].part;   /* block N's part */
     else if (!strcmp(what, "pass")) g = dk_pass;
     else if (!strcmp(what, "lat")) g = dk_rec_lat;
     else if (!strcmp(what, "evpos")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].pos : -1;   /* the clip's first event */
     else if (!strcmp(what, "evlast")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at + dk_song.clip[cur_clip()].n - 1].pos : -1;
     else if (!strcmp(what, "evdur")) g = dk_song.clip[cur_clip()].n ? dk_ev[dk_song.clip[cur_clip()].at].dur : -1;
+    else if (!strcmp(what, "cover")) {          /* ticks of this clip where any note sounds: a hold through two loops covers the bar */
+        const dk_clip_t *cl = &dk_song.clip[cur_clip()];
+        int len = clip_len(cur_clip()), i, t, n = 0;
+        if (len < 1)
+            len = 1;
+        if (len > 8192)
+            len = 8192;
+        for (t = 0; t < len; t++)
+            for (i = 0; i < cl->n; i++) {
+                const dk_ev_t *e = &dk_ev[cl->at + i];
+                if ((e->fl & EV_MOTION) || t < e->pos || t >= e->pos + e->dur)
+                    continue;
+                n++;
+                break;
+            }
+        g = n;
+    }
     else if (!strcmp(what, "evsnd")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_SND(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;   /* the first event's frozen sound */
     else if (!strcmp(what, "evlay")) g = dk_song.clip[cur_clip()].n ? (int)DK_L_TAKE(dk_ev[dk_song.clip[cur_clip()].at].layer) : -1;
     else if (!strcmp(what, "nfrozen") || !strcmp(what, "nlive")) {      /* the clip's notes with a frozen sound / with the track's own */
@@ -175,12 +194,31 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "lsolo")) g = dk_lsolo_clip == lay_clip() ? dk_lsolo_take + 1 : 0;
     else if (!strcmp(what, "laycur")) g = ui.lay_cur;
     else if (!strcmp(what, "layview")) g = ui.lay;
+    else if (!strcmp(what, "grcur")) g = dk_gr_cur[dk_song.cur_track];     /* GROOVE: playing (0 none) */
+    else if (!strcmp(what, "grnext")) g = dk_gr_next[dk_song.cur_track];   /* queued (255 none, 0 the end) */
+    else if (!strcmp(what, "grfill")) g = dk_gr_fill[dk_song.cur_track];
+    else if (!strcmp(what, "grhits")) g = (int)dk_gr_hits;
+    else if (!strcmp(what, "dupes")) {                                 /* the clip's notes doubled: the same note at the same place */
+        const dk_clip_t *cl = &dk_song.clip[cur_clip()];
+        int i, j;
+        g = 0;
+        for (i = 0; i < cl->n; i++)
+            for (j = i + 1; j < cl->n; j++) {
+                const dk_ev_t *a = &dk_ev[cl->at + i], *b = &dk_ev[cl->at + j];
+                g += !(a->fl & EV_MOTION) && !(b->fl & EV_MOTION) && a->pos == b->pos && a->note == b->note;
+            }
+    }
+    else if (!strcmp(what, "grmod")) g = dk_gr_mod[dk_song.cur_track];
+    else if (!strcmp(what, "grdens")) g = dk_gr_dens[dk_song.cur_track];
+    else if (!strcmp(what, "grafill")) g = cur()->drv[0] & 3;
+    else if (!strcmp(what, "seq")) g = cur()->seq;
     else if (!strcmp(what, "fired")) g = (int)dk_fired;              /* the takes the sequencer has played (bit = take) */
     else if (!strcmp(what, "armtrk")) g = ui.arm_trk;              /* the tracks armed on TRACKS (bit t) */
     else if (!strcmp(what, "recmode")) g = dk_rec_mode;            /* 0 OVERDUB, 1 REPLACE */
     else if (!strcmp(what, "dirty")) g = ui.dirty;
     else if (!strcmp(what, "voices")) g = dk_voices_on;
     else if (!strncmp(what, "tlevel", 6) && what[6] >= '1' && what[6] <= '6') g = (int)(dk_level[what[6] - '1'] * 1000.0f);   /* the track's output level now (thousandths): audible */
+    else if (!strcmp(what, "why")) g = ui_why_last;           /* a silent track the hand played: why (reason + 1, 0 none) */
     else if (!strcmp(what, "livev")) g = dk_live_voices;      /* the hand's notes still held and sounding */
     else if (!strncmp(what, "tvoices", 7) && what[7] >= '1' && what[7] <= '6') g = dk_trk_voices[what[7] - '1'];   /* voices sounding on track N */
     else if (!strcmp(what, "clicks")) g = (int)dk_metro_clicks;
@@ -189,6 +227,7 @@ int app_expect(const char *what, int *got)
     else if (!strncmp(what, "tswing", 6)) g = dk_song.trk[atoi(what + 6) % DK_NTRACK].swing;
     else if (!strcmp(what, "fill")) g = dk_fill;
     else if (!strcmp(what, "arpstep")) g = dk_arp_step[dk_song.cur_track];   /* the ARP pattern's step on this track */
+    else if (!strcmp(what, "heldn")) g = dk_held_n[dk_song.cur_track];       /* notes the ARP is holding (a chord, or the latch) */
     else if (!strcmp(what, "garage")) g = ui.garage;                /* the garage open (hold ENV) */
     else if (!strcmp(what, "perform")) g = dk_perform;
     else if (!strcmp(what, "harmroot")) g = dk_harm_pcs[0];
@@ -208,9 +247,13 @@ int app_expect(const char *what, int *got)
     }
     else if (!strncmp(what, "clen", 4) && what[4] >= 'A' && what[4] <= 'H' && what[5] >= '1')
         g = dk_song.clip[(what[4] - 'A') * DK_NTRACK + (what[5] - '1') % DK_NTRACK].len;
-    else if (!strcmp(what, "fbank")) g = dk_fb_bank(dk_song.cur_track);        /* FINGER's bank of the track */
+    else if (!strcmp(what, "endlsteps")) g = dk_song.clip[cur_clip()].len / DK_T16;   /* ENDLESS: the steps played in */
+    else if (!strcmp(what, "endltr")) g = dk_endl_tr[dk_song.cur_track];       /* ENDLESS: the transposition now */
+    else if (!strcmp(what, "endlstep")) g = dk_endl_step[dk_song.cur_track];   /* ENDLESS: the step playing */
+    else if (!strcmp(what, "endlon")) g = ui.endl_on;
     else if (!strncmp(what, "fbank", 5) && what[5] >= '0' && what[5] <= '5') g = dk_song.fbank[what[5] - '0'];   /* the song's byte, raw */
     else if (!strcmp(what, "preset")) g = cur()->preset;
+    else if (!strcmp(what, "fx")) g = cur()->fx;
     else if (!strcmp(what, "eng")) g = cur()->eng;
     else if (!strcmp(what, "blk")) g = cur_blk();                     /* the preset block of the track */
     else if (!strncmp(what, "pcnt", 4)) {                              /* "pcnt<engine>.<block>": the presets there */
@@ -338,8 +381,30 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         host_mark = host_clip_hash();
         return 1;
     }
+    if (!strcmp(cmd, "dumpclip")) {             /* dumpclip: the current clip's notes (pos dur note vel layer), to the log */
+        const dk_clip_t *cl = &dk_song.clip[cur_clip()];
+        int i;
+        printf("clip %d: n %d len %d\n", cur_clip(), cl->n, clip_len(cur_clip()));
+        for (i = 0; i < cl->n; i++) {
+            const dk_ev_t *e = &dk_ev[cl->at + i];
+            printf("  %5d %5d %3d %3d %3d%s\n", e->pos, e->dur, e->note, e->vel, e->layer, (e->fl & EV_MOTION) ? " M" : "");
+        }
+        return 1;
+    }
     if (!strcmp(cmd, "budget")) {               /* budget N: the voice budget held at N (0: the load moves it again) */
         dk_budget_force(atoi(a));
+        return 1;
+    }
+    if (!strcmp(cmd, "load")) {                 /* load N: pretend the device measured this CPU % (-1: stop pretending) */
+        dk_load_force(atoi(a));
+        return 1;
+    }
+    if (!strcmp(cmd, "held")) {                 /* held: the ARP's notes on this track (the chord it is actually playing) */
+        int t = dk_song.cur_track, i;
+        printf("held n=%d", dk_held_n[t]);
+        for (i = 0; i < dk_held_n[t] && i < 8; i++)
+            printf(" %d", dk_held[t][i]);
+        printf("\n");
         return 1;
     }
     if (!strcmp(cmd, "qnt")) {                  /* qnt N: the track's QUANT (the latency scenario wants none) */
@@ -494,7 +559,7 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
             if (dk_song.lmute[i])
                 host_oldck |= 64;
         for (i = 0; i < DK_NTRACK; i++)
-            if (dk_song.trk[i].seq != SQ_LIVE && sv[i] == SQ_LIVE)
+            if (dk_song.trk[i].seq != SQ_STEP && (sv[i] == SQ_LIVE || sv[i] == SQ_STEP))   /* (LIVE loads as SEQ now) */
                 host_oldck |= 128;
         return 1;
     }
@@ -557,6 +622,14 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "setpmask")) {             /* setpmask P MASK */
         dk_song.part[atoi(a) & 7].mute = (uint8_t)atoi(b);
+        return 1;
+    }
+    if (!strcmp(cmd, "setlmute")) {             /* setlmute CLIP MASK: the clip's muted takes (as a project saved so) */
+        dk_song.lmute[atoi(a) % DK_NCLIP] = (uint32_t)atol(b);
+        return 1;
+    }
+    if (!strcmp(cmd, "setsolo")) {              /* setsolo T V (T 0..5) */
+        dk_song.trk[atoi(a) % DK_NTRACK].solo = (uint8_t)atoi(b);
         return 1;
     }
     if (!strcmp(cmd, "newpart")) {              /* newpart N: NEW PART COPY (1) / EMPTY (0) */
@@ -634,14 +707,6 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
         dk_song.biome = (uint8_t)atoi(a);
         return 1;
     }
-    if (!strcmp(cmd, "dayphase")) {
-        gd.phase = (float)atoi(a) * 0.01f;
-        return 1;
-    }
-    if (!strcmp(cmd, "flower")) {
-        fl.grow = fl.shown = (float)atoi(a) * 0.01f;
-        return 1;
-    }
     if (!strcmp(cmd, "uiprof")) {               /* the UI's cost: ms a frame, page by page (host) */
         int pg, i, keep = ui.page;
         for (pg = 0; pg < NPG; pg++) {
@@ -657,6 +722,10 @@ int app_host_cmd(const char *cmd, const char *a, const char *b, const char *c, c
     }
     if (!strcmp(cmd, "splash")) {
         app_splash();
+        return 1;
+    }
+    if (!strcmp(cmd, "grclr")) {
+        dk_gr_hits = 0;
         return 1;
     }
     if (!strcmp(cmd, "seqtype")) {            /* seqtype N: the sequencer by its SEQ page index (0 STEP 1 LIVE 2 DRIVE 3 FINGER), as K1 of its row */

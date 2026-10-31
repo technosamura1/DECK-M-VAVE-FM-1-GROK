@@ -1,0 +1,92 @@
+# SOUNDS (HOME + PRESET): the instrument, the block, the twelve presets on one screen; each choice heard; HOME back.
+# PRESET alone: round the block the track is in (no more along every block of the instrument)
+wait 300
+tap HOME
+wait 100
+tapkey w0
+wait 100
+tap HOME
+wait 100
+expect track 0
+expect eng 0
+expect page 0
+# PRESET outside the page: within the block, round (FELT AMBIENT has 12: 12 steps = back where it was)
+turn PRESET 1
+wait 600
+expect blk 0
+expect preset 2
+turn PRESET 11
+wait 600
+expect preset 1
+expect blk 0
+# open it
+press HOME
+turn PRESET 1
+release HOME
+wait 100
+expect page 12
+expect eng 0
+shot sounds_felt.png
+# white 3: the third preset, heard (a voice), then quiet again
+tapkey w2
+wait 60
+expect preset 2
+expect livev >0
+wait 900
+expect livev 0
+# black 3: SYNTHWAVE (FELT has 4 there), the same place
+tapkey b2
+wait 100
+expect blk 2
+expect preset >15
+shot sounds_synthwave.png
+# black 2 on an instrument without that block: nothing changes
+tapkey b4
+wait 100
+expect blk 2
+# OCT+: the next instrument, the block kept (TINE has SYNTHWAVE)
+tap OCT+
+wait 100
+expect eng 1
+expect blk 2
+# K1: the instrument by the knob, far left = FELT
+turn K1 -20
+wait 100
+expect eng 0
+# K3: the preset in the block
+turn K3 1
+wait 100
+expect blk 2
+shot sounds_k3.png
+# white 1 while the page is up plays no note in the clip: it chooses
+expect events 30
+tapkey w0
+wait 100
+expect events 30
+# HOME: back where it was opened (PLAY)
+tap HOME
+wait 100
+expect page 0
+# the drums: one instrument, OCT does nothing; their blocks
+tap HOME
+wait 100
+tapkey w5
+wait 100
+tap HOME
+wait 100
+expect track 5
+press HOME
+turn PRESET 1
+release HOME
+wait 100
+expect page 12
+tap OCT+
+wait 100
+expect eng 5
+tapkey b3
+wait 100
+expect blk 3
+shot sounds_drums.png
+tap HOME
+wait 100
+expect page 0

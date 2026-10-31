@@ -76,9 +76,9 @@ release REC
 wait 200
 expect events 12
 # UNDO (hold EDIT): the erased take is back, one step
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 300
 expect events 20
 # a knob turned during the hold is AUTOMATION: nothing is erased (the notes stay, the curve is there)
@@ -128,8 +128,8 @@ tap REC
 wait 200
 expect recording 0
 expect events 26
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 200
 expect events 30   # (the state at the erase: the two passes' notes back)

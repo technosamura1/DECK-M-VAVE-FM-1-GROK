@@ -3,7 +3,7 @@ wait 300
 shot mem_none.png
 ballast 2400
 wait 300
-expect nev 3761
+expect nev 3766
 shot mem_90.png
 tap SEQ
 wait 300
@@ -14,7 +14,7 @@ shot mem_90_load.png
 release HOME
 ballast 250
 wait 300
-expect nev 4011
+expect nev 4016
 shot mem_97.png
 tap PLAY
 wait 600

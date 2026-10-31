@@ -12,9 +12,10 @@ void dk_shed(void);
 void dk_midi_out(uint32_t st, uint32_t d1, uint32_t d2);   /* the app sends it (from the render) */
 
 /* commands (main loop -> render) */
-enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_FINGER, C_FVAR, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
+enum { C_NOTE = 1, C_PLAY, C_REC, C_PART, C_PANIC, C_ENDLTR, C_GROOVE, C_PERFORM, C_FILL, C_SEED, C_PEDAL,
        C_STEMS, C_ARPCLR, C_SEEK, C_REWIND, C_RECTRK, C_HOLDCLR, C_RETUNE, C_PMUTE, C_RECMASK };
 void dk_cmd(int c, int a, int b, int d);
+int dk_rec_pending(void);
 #define dk_note(trk, note, vel, delay) dk_cmd(C_NOTE, (trk), (note) | (vel) << 8, (delay))
 
 /* the song locked: the render's sequencer waits (the sound goes on) */
@@ -30,6 +31,8 @@ typedef struct {
 #define DK_RECQ 128
 extern volatile dk_recev_t dk_recq[DK_RECQ];
 extern volatile uint32_t dk_recq_w;
+extern volatile uint32_t dk_rec_r;          /* the UI's read cursor: rec_push drops a note when the ring is full */
+extern volatile uint32_t dk_rec_dropped;    /* how many the ring refused (the UI says it) */
 
 /* the garden's ring: every note that sounds (note | track << 8 | vel << 16 | src << 24; src 0 you, 1 the clip,
  * 2 a generator) */
@@ -58,9 +61,12 @@ extern volatile float dk_level[DK_NTRACK], dk_master_level;
 /* the flash's erase stops the sound ~17 ms: before one the UI asks for a hush (the output faded to nothing in ~6 ms),
  * waits for silent blocks, erases, lets go; the cut is then silence, not a click (dust, tape hiss, a tail) */
 extern volatile uint8_t dk_hush, dk_hushed;
-int dk_dream_off(void);
-extern volatile uint8_t dk_finger_on[DK_NTRACK];        /* FINGER: the pattern held (+1), 0 none */
-extern volatile uint32_t dk_finger_latch[DK_NTRACK];
+extern volatile uint8_t dk_endl_step[DK_NTRACK];   /* ENDLESS: the step it plays (the page) */
+extern volatile int8_t dk_endl_tr[DK_NTRACK];
+extern volatile uint8_t dk_gr_cur[DK_NTRACK], dk_gr_next[DK_NTRACK], dk_gr_fill[DK_NTRACK];   /* GROOVE: playing, queued (0xFF none), fill */
+extern volatile uint32_t dk_gr_hits;
+extern volatile uint8_t dk_gr_mod[DK_NTRACK], dk_gr_dens[DK_NTRACK];   /* GROOVE: diced / mutated; FOLLOW's level 0..100 */      /* ENDLESS: its transposition now (a key played on it) */
+int dk_endl_root(int t);
 extern volatile uint8_t dk_harm_pcs[4], dk_harm_n, dk_harm_deg;
 extern volatile uint8_t dk_perform;                     /* the performance effect held (PF_*) */
 extern volatile uint8_t dk_open_n;                      /* notes held while recording (the tape's red) */
@@ -69,6 +75,7 @@ extern volatile uint8_t dk_open_note[8];
 extern volatile uint8_t dk_open_trk[8];                 /* which track each held note belongs to */
 extern volatile uint8_t dk_voices_on;
 extern volatile uint8_t dk_trk_voices[];
+int dk_silent_why(int t);
 extern volatile uint8_t dk_live_voices;
 void dk_budget_force(int b);
 extern volatile uint8_t dk_voices_frozen;   /* (of them, with a frozen sound) */
@@ -105,18 +112,11 @@ extern volatile uint32_t dk_metro_err_max;              /* the worst offset of a
 
 /* the engine of a track and the values its voices get */
 const dk_engine_t *dk_engine(int trk);
-/* FINGER's banks (the tape's text patterns, decoded here) */
-const char *dk_fb_bankname(int bank);
-const char *dk_fb_banksub(int bank);
-int dk_fb_bank(int t);                  /* the track's bank (0 LOFI 1 8BIT 2 SYNTH 3 CINEMA) */
-int dk_fb_set(int t);                   /* the track's set: 0 drums 1 keys 2 bass 3 pad */
-const char *dk_fb_name(int t, int p);
-int dk_fb_drum(int t, int p, int lane, int step);
-int dk_fb_mel(int t, int p, int step, int *len, int *oct, int *vel, int *deg2);
 int dk_param_static(int trk, int target);               /* the knobs and the MACRO only (what a take is frozen with) */
 int dk_param_value(int trk, int target);                /* the value now (MACRO, motion and modulation applied) */
 uint32_t dk_cpu_cost(void);
 /* the CPU's load (the render's %, the device's measure) to the voices' budget: it sheds sooner when the render runs
  * long, and gives back slowly */
 void dk_set_load(int pct);
+void dk_load_force(int pct);                 /* -1 follows the device again; else a held CPU % (tests) */
 int dk_get_budget(void);                             /* the render's cost, microseconds a block (host) */

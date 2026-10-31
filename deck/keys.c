@@ -155,10 +155,41 @@ static int chord_build(int d, int base, int *out)
     return n;
 }
 
+static uint32_t latch_mask[DK_NTRACK];   /* keys that built the latched arp: the same key again stops it */
+void keys_latch_forget(int t)
+{
+    if ((unsigned)t < DK_NTRACK)
+        latch_mask[t] = 0;
+}
+/* 1: this press stopped the latch (the notes are not played). a key still held is part of the same hand */
+static int latch_stop(int key, int t)
+{
+    const dk_track_t *tr;
+    int i, held = 0;
+    if ((unsigned)t >= DK_NTRACK || key < 0 || key >= NKEYS)
+        return 0;
+    tr = &dk_song.trk[t];
+    if (!dk_arp_on(tr) || !tr->arp[3] || (TAPE.eng[tr->eng % TAPE.neng]->flags & EF_DRUM)) {
+        latch_mask[t] = 0;
+        return 0;
+    }
+    for (i = 0; i < NKEYS; i++)
+        if (i != key && kh[i].trk == (int8_t)t && kh[i].kind == 0 && kh[i].n)
+            held = 1;
+    if (!held && (latch_mask[t] & (1u << key))) {
+        latch_mask[t] = 0;
+        dk_cmd(C_ARPCLR, t, 0, 0);
+        return 1;
+    }
+    latch_mask[t] = held ? latch_mask[t] | (1u << key) : (1u << key);
+    return 0;
+}
+
 static void notes_post(int k, int t, const int *nt, int n, int vel, int strum)
 {
     int i, one[1];
-    if (n > 1 && is_bass(t)) {               /* a chord on a bass: its lowest note (the root) */
+    if (n > 1 && (is_bass(t) || (TAPE.eng[dk_song.trk[t].eng % TAPE.neng]->flags & EF_LEGATO))) {   /* a chord on a bass (or a mono
+                                                                       * lead): its lowest note (the root) */
         one[0] = nt[0];
         for (i = 1; i < n; i++)
             if (nt[i] < one[0])
@@ -167,6 +198,8 @@ static void notes_post(int k, int t, const int *nt, int n, int vel, int strum)
         n = 1;
         strum = 0;
     }
+    if (latch_stop(k, t))
+        return;
     kh[k].trk = (int8_t)t;
     kh[k].kind = 0;
     kh[k].n = 0;
@@ -205,20 +238,6 @@ void keys_down(int k, int vel)
     int harm = dk_song.split ? dk_song.harm_track : t;
     kh[k].trk = -1;
     kh[k].n = 0;
-    if (trk->seq == SQ_FINGER) {                /* FINGER: patterns on the white keys, variations on the black */
-        if (w >= 0) {
-            dk_cmd(C_FINGER, t, trk->arp[3] ? 2 : 1, w);
-            kh[k].kind = 2;
-            kh[k].notes[0] = (uint8_t)w;
-            kh[k].trk = (int8_t)t;
-        } else if (b < 6) {
-            dk_cmd(C_FVAR, t, 1, b);
-            kh[k].kind = 3;
-            kh[k].notes[0] = (uint8_t)b;
-            kh[k].trk = (int8_t)t;
-        }
-        return;
-    }
     if (e->flags & EF_DRUM) {
         nt[0] = key_note_of(k, t);
         notes_post(k, t, nt, 1, vel, 0);
@@ -266,11 +285,6 @@ void keys_up(int k)
         else
             dk_cmd(C_PERFORM, kh[k].notes[0], 0, 0);
         break;
-    case 2:
-        if (!dk_song.trk[kh[k].trk].arp[3])
-            dk_cmd(C_FINGER, kh[k].trk, 0, kh[k].notes[0]);
-        break;
-    case 3: dk_cmd(C_FVAR, kh[k].trk, 0, kh[k].notes[0]); break;
     default:
         for (i = 0; i < kh[k].n; i++)
             dk_note(kh[k].trk, kh[k].notes[i], 0, 0);

@@ -33,7 +33,7 @@
 #define DK_NFACT 12                     /* factory presets an engine; + 4 the user's = 16 slots, the white keys */
 #define DK_NSLOT 16
 #define DK_NP 8                         /* engine parameters (the first three on the ENGINE tab) */
-#define DK_NVOICE 24                    /* the voices' pool, shared by the tracks */
+#define DK_NVOICE 32                    /* the voices' pool, shared by the tracks (the CPU budget decides how many sound) */
 #define DK_NBLK 4                       /* a tape's preset blocks (an engine has up to DK_NFACT presets in each) */
 #define DK_PBASE 16                     /* the preset id of block 1's first: 0..11 block 0, 12..15 the user's, then 12 a block */
 #define DK_VSTATE 76                    /* an engine's voice state, floats */
@@ -41,7 +41,8 @@
 #define DK_FXBUF 1024                   /* a track effect's delay line, 16-bit samples */
 
 /* ------------------------------------------------------------------ engines --- */
-enum { EF_POLY = 1, EF_MONO = 2, EF_DRUM = 4, EF_CONT = 8 };   /* EF_CONT: a sound that goes on (the world) */
+enum { EF_POLY = 1, EF_MONO = 2, EF_DRUM = 4, EF_CONT = 8, EF_LEGATO = 16 };   /* EF_CONT: a sound that goes on (the world); EF_LEGATO
+ * (a mono lead): a note played while its last one still rings (let go, in its release) takes that voice on: on(retrig 3) */
 /* the pictures a parameter is drawn as (the tape may draw its own; these are DECK's) */
 enum { VZ_BAR, VZ_SUN, VZ_WAVE, VZ_ENV, VZ_TYPE, VZ_DROP, VZ_DUST, VZ_SWELL, VZ_BELL, VZ_GLIDE, VZ_WOBBLE, VZ_SPACE };
 
@@ -53,8 +54,9 @@ typedef struct {
 } dk_param_t;
 
 /* p: the voice's parameters as numbers in their units: p[0..7] the engine's, p[8..10] ENV (ATTACK, DECAY, RELEASE,
- * 0..100, 50 the engine's own), p[11] the track's drift (0..100) */
-enum { PX_ATT = 8, PX_DEC, PX_REL, PX_DRIFT, PX_N };
+ * 0..100, 50 the engine's own), p[11] the track's drift (0..100), p[12] GLIDE (0..100). GLIDE is not an engine knob:
+ * the track effect GLIDE writes it (its AMOUNT). 0 jumps. Poly engines ignore it. */
+enum { PX_ATT = 8, PX_DEC, PX_REL, PX_DRIFT, PX_GLIDE, PX_N };
 typedef struct {
     const char *name;
     uint8_t flags, max_voices, cost, nparams;
@@ -102,7 +104,7 @@ typedef struct {
 } dk_fx_t;
 
 /* ------------------------------------------------------------------ the song --- */
-enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_RSV7, SQ_N };
+enum { SQ_STEP, SQ_LIVE, SQ_ENDLESS, SQ_ARP, SQ_DRIVE, SQ_FINGER, SQ_HOLD, SQ_GROOVE, SQ_N };   /* (7: GROOVE, a drum track's; was TOMBOLA) */
 
 /* an event: a note, or (EV_MOTION) a knob's move: note = its target (T_*), vel = the value 0..100, dur 0 a move,
  * dur > 0 a p-lock held that long. EV_MOTION|EV_RAMP (dur 0): a point of an AUTOMATION curve: the value moves in a straight line
@@ -178,6 +180,13 @@ typedef struct {
     uint8_t mute, rsv;                  /* mute: the tracks silent in THIS part (bit t = track t; 0 = all play). Older projects: 0 */
 } dk_part_t;
 #define DK_PMUTE_ALL 0x3Fu              /* (DK_NTRACK bits) */
+/* a part's instruments: what that part's tracks sound like. The mixer (vol, pan), the sequencer and the ARP stay the track's */
+typedef struct {
+    uint8_t eng, preset, fx;
+    int8_t p[DK_NP];
+    int8_t env[3];
+    int8_t macro, fxamt, fxa, fxb;
+} dk_pinst_t;
 
 #define DK_MAGIC 0x4B434544u            /* "DECK" */
 #define DK_FORMAT 1u
@@ -205,6 +214,9 @@ typedef struct {
     uint8_t fbank[DK_NTRACK];           /* FINGER: each track's pattern bank (0 LOFI .. DK_NFBANK-1); old projects: 0 */
     dk_snd_t snd[DK_NTRACK][DK_NSND];   /* the frozen sounds of each track (events' layer bits 5..7 point here) */
     uint32_t lmute[DK_NCLIP];           /* LAYERS: per clip, the takes muted (bit = take 0..31; playback skips them). Older projects: 0 */
+    /* each part keeps its own instruments (engine, preset, knobs). Older projects: 0, filled from the tracks on first use */
+    uint8_t pinst_init;
+    dk_pinst_t pinst[DK_NPART][DK_NTRACK];
 } dk_song_t;
 #define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
 
@@ -268,6 +280,10 @@ typedef struct {
 int dk_fch(const char *s, int step);    /* a pattern string's character at a step ('.' past its end) */
 
 /* an ATMO layer: an engine's voice that keeps going (WORLD's rain, its fire...) at a level of its own */
+/* GROOVE: a drum pattern; rows "L" + 16 or 32 steps ('.' or '1'..'9'), '|' between (the letters: seq.c groove_note) */
+typedef struct dk_groove_s {
+    const char *name, *rows;
+} dk_groove_t;
 typedef struct dk_atmo_s {
     const char *name;
     uint8_t eng;
@@ -311,6 +327,9 @@ typedef struct {
     const dk_preset_t *presets2;        /* the blocks 1..DK_NBLK-1: the engines' blocks 1.. one after the other, as many as pcount says (no padding) */
     const uint8_t *pcount;              /* presets in a block: DK_NBLK an engine (block 0: its DK_NFACT, or fewer) */
     const char *const *block_name;      /* DK_NBLK names: AMBIENT LOFI, 8-16 BIT, SYNTHWAVE, CINEMATIC */
+    const struct dk_groove_s *groove;   /* GROOVE (a drum track): white 1-15 the grooves, black the fills, white 16 the end */
+    uint8_t ngroove, nfill;
+    const struct dk_groove_s *fill, *groove_end;
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 

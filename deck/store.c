@@ -72,6 +72,19 @@ static void clips_repack(void)
     uint32_t cum = 0, tot = 0, i, j;
     for (i = 0; i < DK_NCLIP; i++)
         tot += dk_song.clip[i].n;
+    /* a permuted table is legal (that is why we repack). Overlap or a range past the pool is not. */
+    for (i = 0; i < DK_NCLIP; i++) {
+        uint32_t a = dk_song.clip[i].at, n = dk_song.clip[i].n;
+        if (!n)
+            continue;
+        if (a > tot || n > tot || a + n > tot)
+            return;
+        for (j = 0; j < i; j++) {
+            uint32_t b = dk_song.clip[j].at, m = dk_song.clip[j].n;
+            if (m && a < b + m && b < a + n)
+                return;
+        }
+    }
     if (tot != dk_song.nev || tot > DK_NEV)
         return;
     for (i = 0; i < DK_NCLIP; i++) {
@@ -90,11 +103,12 @@ static void clips_repack(void)
     }
 }
 
-/* older projects: the tracks in the order of today's (PIANO KEYS PAD BASS DRUMS NATURE), by their roles, when the
- * six roles are six different places; the clips, the road's drops, SPLIT's track and FOLLOW's sources go with them */
+/* older projects: the tracks in the order of today's (PIANO KEYS PAD BASS LEAD DRUMKIT), by their roles, when the
+ * six roles are six different places; the clips (their layer mutes), the frozen sounds, the parts' mutes, the road's drops,
+ * the bypasses, SPLIT's track and FOLLOW's sources go with them */
 static void song_track_order(void)
 {
-    static const uint8_t RANK[R_N] = {4, 3, 0, 1, 2, 1, 1, 5};   /* DRUM BASS KEYS(piano) ARP PAD LEAD BELL NATURE */
+    static const uint8_t RANK[R_N] = {5, 3, 0, 1, 2, 4, 1, 4};   /* DRUM BASS KEYS(piano) ARP PAD LEAD BELL NATURE (-> LEAD) */
     static dk_track_t tk[DK_NTRACK];
     static dk_clip_t cl[DK_NCLIP];
     uint8_t to[DK_NTRACK], seen = 0, same = 1;
@@ -130,6 +144,35 @@ static void song_track_order(void)
     }
     for (p = 0; p < DK_NCLIP; p++)
         dk_song.clip[p] = cl[p];
+    {                                    /* the rest that is a track's: layer mutes (per clip), frozen sounds, bypasses, banks */
+        static uint32_t lm[DK_NCLIP];
+        static dk_snd_t sn[DK_NTRACK][DK_NSND];
+        uint8_t rs[DK_NTRACK], fb[DK_NTRACK];
+        for (p = 0; p < DK_NPART; p++)
+            for (t = 0; t < DK_NTRACK; t++)
+                lm[p * DK_NTRACK + to[t]] = dk_song.lmute[p * DK_NTRACK + t];
+        for (p = 0; p < DK_NCLIP; p++)
+            dk_song.lmute[p] = lm[p];
+        for (t = 0; t < DK_NTRACK; t++) {
+            for (j = 0; j < DK_NSND; j++)
+                sn[to[t]][j] = dk_song.snd[t][j];
+            rs[to[t]] = dk_song.rsv[t];
+            fb[to[t]] = dk_song.fbank[t];
+        }
+        for (t = 0; t < DK_NTRACK; t++) {
+            for (j = 0; j < DK_NSND; j++)
+                dk_song.snd[t][j] = sn[t][j];
+            dk_song.rsv[t] = rs[t];
+            dk_song.fbank[t] = fb[t];
+        }
+        for (p = 0; p < DK_NPART; p++) {
+            uint8_t m = dk_song.part[p].mute, n = 0;
+            for (t = 0; t < DK_NTRACK; t++)
+                if (m >> t & 1u)
+                    n |= (uint8_t)(1u << to[t]);
+            dk_song.part[p].mute = n;
+        }
+    }
     clips_repack();
     for (j = 0; j < DK_NROAD; j++) {
         uint8_t d = dk_song.road[j].drop, n = 0;
@@ -179,13 +222,32 @@ int project_load(int slot)
         dk_song.part[i].mute &= DK_PMUTE_ALL;
     dk_pm_x = 0;
     song_track_order();
-    for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer, ENDLESS, HOLD and TOMBOLA too */
+    if (dk_song.dust == 25)                /* the old default dust (every song had it): off, the sound clean */
+        dk_song.dust = 0;
+    for (i = 0; i < DK_NTRACK; i++) {      /* older projects: ARP was a sequencer; LIVE, DREAM, FINGER, HOLD, TOMBOLA are SEQ now */
         dk_track_t *k = &dk_song.trk[i];
         if (k->seq == SQ_ARP)
             k->arp_opt |= ARPO_ON;
-        if (k->seq == SQ_ARP || k->seq == SQ_ENDLESS || k->seq == SQ_HOLD || k->seq >= SQ_RSV7)   /* (SQ_RSV7: TOMBOLA once) */
-            k->seq = SQ_LIVE;
+        if (k->seq != SQ_STEP && k->seq != SQ_ENDLESS &&
+            !(k->seq == SQ_GROOVE && (TAPE.eng[k->eng % TAPE.neng]->flags & EF_DRUM)))   /* GROOVE: a drum track's */
+            k->seq = SQ_STEP;
+        if (k->role == R_NATURE || TAPE.eng[k->eng % TAPE.neng]->role == R_NATURE) {   /* NATURE is gone: LEAD there */
+            int p;                                                         /* (its notes were the world's drones) */
+            for (p = 0; p < DK_NPART; p++)
+                clip_clear_all(p * DK_NTRACK + i);
+            {
+                int d, le = 11;                          /* the tape's default LEAD engine (where its LEAD track is) */
+                for (d = 0; d < DK_NTRACK; d++)
+                    if (TAPE.def_role[d] == R_LEAD)
+                        le = TAPE.def_eng[d];
+                dk_track_setup(i, le, 0, k->seq, R_LEAD);
+            }
+        }
     }
+    if (dk_song.pinst_init)
+        part_inst_boot();                    /* the tracks already are this part's instruments */
+    else
+        part_inst_capture(dk_song.cur_part); /* an older project: every part starts as the tracks are */
     dk_unlock();
     return 0;
 empty:
@@ -253,7 +315,10 @@ static void hush_begin(void)
 }
 static void hush_end(void)
 {
-    if (hush_depth && !--hush_depth)
+    if (!hush_depth)
+        return;
+    --hush_depth;
+    if (!hush_depth)
         dk_hush = 0;
 }
 
@@ -264,6 +329,9 @@ int project_save(int slot)
     const phead_t *old = head_of(slot);
     if (dk_playing || dk_recording || (unsigned)slot >= DK_NPROJ)
         return -1;
+    dk_lock();
+    part_inst_flush();                       /* the knobs turned since this part was entered */
+    dk_unlock();
     h.magic = PROJ_HEAD_MAGIC;
     h.format = DK_FORMAT;
     h.nsong = sizeof dk_song;
@@ -305,7 +373,7 @@ void settings_save(void)
     set.metro[2] = dk_metro.sound;
     set.metro[3] = dk_metro.div;
     set.metro[4] = dk_metro.vol;
-    set.metro[5] = dk_metro.on_note;
+    set.metro[5] = dk_metro.on_note ? 1 : 2;   /* (2 = COUNT IN; 0, as in any older store, is ON NOTE now: the default) */
     set.midi_notes = dk_midi_notes;
     set.midi_clock = dk_midi_clock;
     set.lat = (uint8_t)(dk_rec_lat + 1u);
@@ -351,12 +419,12 @@ static void settings_load(void)
     dk_metro.sound = set.metro[2] % METRO_N;
     dk_metro.div = set.metro[3] % 3;
     dk_metro.vol = set.metro[4] > 100 ? 100 : set.metro[4];
-    dk_metro.on_note = set.metro[5] ? 1 : 0;
+    dk_metro.on_note = set.metro[5] != 2;   /* REC stopped: the take starts with the first note, as on OP-1 */
     dk_midi_notes = set.midi_notes;
     dk_midi_clock = set.midi_clock;
     dk_rec_lat = set.lat ? (uint8_t)(set.lat - 1u > 30u ? 30u : set.lat - 1u) : 9u;
     dk_lock_take = set.nolock ? 0 : 1;
-    dk_rec_arm = set.recarm == 1 ? 1 : 0;
+    dk_rec_arm = 1;                     /* REC arms (the tape), REC again records: always now (set.recarm no longer read) */
     dk_rec_mode = set.recmode == 1 ? 1 : 0;
     dk_newpart_copy = set.emptypart ? 0 : 1;
     if (set.proj >= DK_NPROJ)

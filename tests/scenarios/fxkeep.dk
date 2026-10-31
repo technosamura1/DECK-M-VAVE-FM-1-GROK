@@ -1,0 +1,65 @@
+# the effect they set stays: another preset, the instrument, then back, and ERASE ALL, do not put the factory FX back
+wait 300
+listen
+tap HOME
+wait 100
+tapkey w0
+wait 100
+tap HOME
+wait 100
+expect track 0
+# parts remember the factory effect first, so a later part change would put it back
+page 11
+turn K2 1
+wait 80
+turn K2 -1
+wait 80
+expect part 0
+page 2
+row 3
+turn K1 4
+wait 40
+expect fx 6
+press HOME
+tapkey w3
+release HOME
+wait 80
+expect fx 6
+press HOME
+tapkey w0
+release HOME
+wait 80
+expect fx 6
+page 12
+tap OCT+
+wait 80
+expect eng >0
+expect fx 6
+tap OCT-
+wait 80
+expect eng 0
+expect fx 6
+turn PRESET 1
+wait 100
+expect fx 6
+expect preset >0
+page 11
+wait 50
+tap LFO
+wait 100
+expect layview 1
+tapkey w13
+wait 100
+said AGAIN = ERASE
+tapkey w13
+wait 100
+said TRACK CLEARED
+expect preset 0
+expect fx 6
+# another part, and a mood, leave the effect where the knobs set it
+turn K2 1
+wait 80
+expect fx 6
+mood 1
+wait 40
+expect fx 6

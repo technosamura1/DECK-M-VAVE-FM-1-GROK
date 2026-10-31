@@ -108,7 +108,7 @@ def check(path):
         problems.append("DC")
     if clicks and "WORLD" not in path:  # the world's crackles are its sound
         problems.append(f"{clicks} click(s) at {where[:3]} s")
-    noisy = any(k in path for k in ("DUSTKIT", "WORLD"))
+    noisy = any(k in path for k in ("DRUMKIT", "WORLD"))
     if r["top_db"] > (-14 if noisy else -30):
         problems.append("harsh top / aliasing")
     if r["tail_db"] > -60:
