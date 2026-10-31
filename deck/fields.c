@@ -1093,6 +1093,8 @@ static void field_set(int f, int v)
     case F_ALVL: dk_song.atmo_lvl = (uint8_t)(v + 1); break;
     default: return;
     }
+    if (f == F_FXTYPE || f == F_FXAMT || f == F_FXA || f == F_FXB || f == F_REV || f == F_ECHO)
+        fxmem_store(dk_song.cur_track);  /* this preset remembers the effect. another preset, then this one, brings it back */
     if (f != F_MVOL && f != F_LANE && f != F_CURSOR && f != F_ROADCUR && f != F_GPART && f != F_SLOT &&
         f != F_TEMPLATE && f != F_MODSLOT && f != F_STEPPAGE && f != F_SLEN)
         mark_dirty();

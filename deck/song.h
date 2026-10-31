@@ -90,5 +90,7 @@ int preset_id(int blk, int i);
 int preset_count(int eng, int blk);
 void track_preset(int t, int slot);
 void track_preset_sound(int t, int slot);   /* a preset or an instrument by hand: the FX is not touched */
+void fxmem_store(int t);                    /* the effect sounding now belongs to this track's preset */
+void fxmem_apply(int t);                    /* this preset's effect, if the hand set one (else the one just loaded) */
 void song_template(int tp);
 void song_mood(int m);

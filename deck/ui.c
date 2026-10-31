@@ -276,17 +276,21 @@ static void say_preset(int slot)
     ui.msg_tag = 1;
 }
 static void preset_apply(int slot)       /* (the take being recorded has been frozen with the old sound).
-                                          * the effect stays: it moves only when its own knobs are turned */
+                                          * the preset's own effect comes with it. one the hand already set on
+                                          * this preset comes back instead of the factory one. */
 {
-    track_preset_sound(dk_song.cur_track, slot);
+    int t = dk_song.cur_track;
+    track_preset(t, slot);
+    fxmem_apply(t);
     if (preset_block(slot) >= 0)
-        blk_seen[dk_song.cur_track] = (uint8_t)preset_block(slot);
+        blk_seen[t] = (uint8_t)preset_block(slot);
     mark_dirty();
     if (ui.page != PG_SOUNDS)            /* (SOUNDS shows it itself) */
         say_preset(slot);
 }
 static void preset_select_id(int slot)
 {
+    fxmem_store(dk_song.cur_track);      /* what is sounding stays on the preset we leave */
     track_sound_to(dk_song.cur_track);
     preset_apply(slot);
 }
@@ -294,6 +298,7 @@ static void preset_select(int slot)      /* a white key 0..15: 0..11 the block's
 {
     if (slot < DK_NFACT && keys_group()) {
         keys_all_up();
+        fxmem_store(dk_song.cur_track);
         track_sound_to(dk_song.cur_track);
         cur()->eng = TAPE.keys_set[slot][0];
         preset_apply(TAPE.keys_set[slot][1]);
@@ -546,6 +551,7 @@ static void pb_engine(int e)              /* the instrument: the same block if i
     int b = pb_shown(), n, i, ok = 0;
     if (e == cur()->eng)
         return;
+    fxmem_store(dk_song.cur_track);      /* the preset we leave keeps the effect; the instrument does not put another on */
     track_sound_to(dk_song.cur_track);
     keys_all_up();
     cur()->eng = (uint8_t)e;

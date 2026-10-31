@@ -217,6 +217,10 @@ typedef struct {
     /* each part keeps its own instruments (engine, preset, knobs). Older projects: 0, filled from the tracks on first use */
     uint8_t pinst_init;
     dk_pinst_t pinst[DK_NPART][DK_NTRACK];
+    /* FX the hand set on a preset, so leaving it and coming back does not put the factory one on.
+     * fxmem[t][i][0] is the engine + 1 (0: empty). [1] the preset. [2..7] fx, amount, a, b, reverb, echo. */
+    uint8_t fxmem[DK_NTRACK][16][8];
+    uint8_t fxmem_age[DK_NTRACK][16];
 } dk_song_t;
 #define DK_SONG_V1 ((uint32_t)offsetof(dk_song_t, lane))
 

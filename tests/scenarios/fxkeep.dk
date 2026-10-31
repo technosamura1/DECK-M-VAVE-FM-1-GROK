@@ -1,4 +1,5 @@
-# the effect they set stays: another preset, the instrument, then back, and ERASE ALL, do not put the factory FX back
+# the effect they set belongs to that preset. another preset brings its own. this one, turned back on, has theirs.
+# an instrument, a part, a mood and ERASE ALL do not put a different effect on.
 wait 300
 listen
 tap HOME
@@ -17,6 +18,11 @@ wait 80
 expect part 0
 page 2
 row 3
+press HOME
+tapkey w0
+release HOME
+wait 80
+expect preset 0
 turn K1 4
 wait 40
 expect fx 6
@@ -24,11 +30,13 @@ press HOME
 tapkey w3
 release HOME
 wait 80
-expect fx 6
+expect preset 3
+expect fx 0
 press HOME
 tapkey w0
 release HOME
 wait 80
+expect preset 0
 expect fx 6
 page 12
 tap OCT+
@@ -39,10 +47,15 @@ tap OCT-
 wait 80
 expect eng 0
 expect fx 6
+# the next preset wears its own effect. this one, turned back on, still has the hand's
 turn PRESET 1
-wait 100
+wait 80
+expect preset 1
+expect fx 2
+turn PRESET -1
+wait 80
+expect preset 0
 expect fx 6
-expect preset >0
 page 11
 wait 50
 tap LFO

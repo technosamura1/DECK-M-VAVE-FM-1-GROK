@@ -1448,6 +1448,71 @@ static void fx_put(int t, uint8_t fx, uint8_t rev, uint8_t echo, int8_t amt, int
     k->fxb = b;
 }
 
+/* the hand's effect on this preset. sixteen a track: a whole block, and the four they saved.
+ * the oldest goes when a seventeenth is set. an empty song (zeros) has none, so a preset
+ * that was never turned keeps the effect it was written with. */
+static int fxmem_find(int t, int eng, int slot, int make)
+{
+    uint8_t (*row)[8] = dk_song.fxmem[t];
+    int i, free_i = -1, old = 0;
+    uint8_t key = (uint8_t)(eng + 1);
+    if (t < 0 || t >= DK_NTRACK)
+        return -1;
+    for (i = 0; i < 16; i++) {
+        if (row[i][0] == key && row[i][1] == (uint8_t)slot)
+            return i;
+        if (!row[i][0] && free_i < 0)
+            free_i = i;
+        if (row[i][0] && dk_song.fxmem_age[t][i] < dk_song.fxmem_age[t][old])
+            old = i;
+    }
+    if (!make)
+        return -1;
+    return free_i >= 0 ? free_i : old;
+}
+void fxmem_store(int t)
+{
+    const dk_track_t *k;
+    uint8_t *e, age = 0;
+    int i, tr, s;
+    if (t < 0 || t >= DK_NTRACK)
+        return;
+    k = &dk_song.trk[t];
+    i = fxmem_find(t, k->eng, k->preset, 1);
+    if (i < 0)
+        return;
+    e = dk_song.fxmem[t][i];
+    e[0] = (uint8_t)(k->eng + 1);
+    e[1] = k->preset;
+    e[2] = k->fx;
+    e[3] = (uint8_t)k->fxamt;
+    e[4] = (uint8_t)k->fxa;
+    e[5] = (uint8_t)k->fxb;
+    e[6] = k->rev;
+    e[7] = k->echo;
+    for (tr = 0; tr < DK_NTRACK; tr++)
+        for (s = 0; s < 16; s++)
+            if (dk_song.fxmem_age[tr][s] > age)
+                age = dk_song.fxmem_age[tr][s];
+    if (age == 255) {
+        for (tr = 0; tr < DK_NTRACK; tr++)
+            for (s = 0; s < 16; s++)
+                dk_song.fxmem_age[tr][s] /= 2;
+        age = 128;
+    }
+    dk_song.fxmem_age[t][i] = (uint8_t)(age + 1);
+}
+void fxmem_apply(int t)
+{
+    const dk_track_t *k = &dk_song.trk[t];
+    int i = fxmem_find(t, k->eng, k->preset, 0);
+    const uint8_t *e;
+    if (i < 0)
+        return;
+    e = dk_song.fxmem[t][i];
+    fx_put(t, e[2], e[6], e[7], (int8_t)e[3], (int8_t)e[4], (int8_t)e[5]);
+}
+
 void track_preset(int t, int slot)
 {
     dk_track_t *k = &dk_song.trk[t];
