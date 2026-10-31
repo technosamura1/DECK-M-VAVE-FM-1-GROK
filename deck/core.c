@@ -254,6 +254,22 @@ static int param_value(int t, int target, int live)
 int dk_param_value(int t, int target) { return param_value(t, target, 1); }
 int dk_param_static(int t, int target) { return param_value(t, target, 0); }
 
+static int fx_is_glide(int fx)
+{
+    const char *n;
+    if (fx <= 0 || !TAPE.nfx || fx >= TAPE.nfx || !TAPE.fx[fx])
+        return 0;
+    n = TAPE.fx[fx]->name;
+    return n && n[0] == 'G' && n[1] == 'L' && n[2] == 'I' && n[3] == 'D' && n[4] == 'E' && n[5] == 0;
+}
+/* the GLIDE effect's AMOUNT, 0..100; 0 when that effect is not the one on the track (or it is bypassed).
+ * an insert cannot slide a note (it never hears which note): LEAD and BASS read this instead. */
+static float glide_of(int t)
+{
+    if (!fx_is_glide(dk_song.trk[t].fx) || (DK_BYP(t) & DK_BYP_FX))
+        return 0.0f;
+    return (float)dk_param_value(t, T_FXAMT);
+}
 static uint8_t params_half;
 static void params_track(int t)
 {
@@ -265,6 +281,7 @@ static void params_track(int t)
     tp[t][PX_DEC] = (float)dk_param_value(t, T_DEC);
     tp[t][PX_REL] = (float)dk_param_value(t, T_REL);
     tp[t][PX_DRIFT] = (float)dk_song.trk[t].drift;
+    tp[t][PX_GLIDE] = glide_of(t);
     t_fxamt[t] = (float)dk_param_value(t, T_FXAMT) * 0.01f;
     t_fxa[t] = (float)dk_param_value(t, T_FXA) * 0.01f;
     t_fxb[t] = (float)dk_param_value(t, T_FXB) * 0.01f;
@@ -361,6 +378,7 @@ static const float *voice_params(const voice_t *v, float *b)
     b[PX_DEC] = (float)s->env[1];
     b[PX_REL] = (float)s->env[2];
     b[PX_DRIFT] = (float)s->drift;
+    b[PX_GLIDE] = glide_of(v->trk);          /* the effect is the track's, not the frozen sound's */
     return b;
 }
 
@@ -522,7 +540,7 @@ static int mix_overhead(void)
     float sf = shed_factor();
     for (t = 0; t < DK_NTRACK; t++) {
         int fx = dk_song.trk[t].fx;
-        if (fx > 0 && nfx && fx < nfx && !(DK_BYP(t) & DK_BYP_FX))
+        if (fx > 0 && nfx && fx < nfx && TAPE.fx[fx] && TAPE.fx[fx]->process && !(DK_BYP(t) & DK_BYP_FX))
             full += INSERT_COST;
     }
     /* an eighth while the tape is cool (a lead's tail still fits),
@@ -1311,7 +1329,7 @@ static void atmo_render(uint32_t n)
             for (k = 0; k < DK_VSTATE; k++)
                 atmo_st[i][k] = 0.0f;
             for (k = 0; k < PX_N; k++)
-                atmo_p[i][k] = k < 3 ? (float)a->p[k] : k == PX_DRIFT ? 0.0f : 50.0f;
+                atmo_p[i][k] = k < 3 ? (float)a->p[k] : (k == PX_DRIFT || k == PX_GLIDE) ? 0.0f : 50.0f;
             e->on(atmo_st[i], 60, 1.0f, atmo_p[i], 0);
             atmo_on[i] = 1;
         } else if (want <= 0.0f && atmo_on[i] == 1) {

@@ -826,7 +826,7 @@ static int bypass_test(void)
 {
     int bad = 0, st, fx, n = 0;
     for (st = 0; st < 4; st++)
-        for (fx = st ? 0 : 1; fx < (st ? 1 : 8); fx++) {
+        for (fx = st ? 0 : 1; fx < (st ? 1 : TAPE.nfx); fx++) {
             int t = 2, k, sw[2] = {44100 * 2, 44100 * 4}, ref, jmp[2];
             fresh();
             dk_lock();

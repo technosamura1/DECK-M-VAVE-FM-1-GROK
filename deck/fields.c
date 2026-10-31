@@ -1123,7 +1123,16 @@ static const char *field_label(int f)
     case F_DEC: return "DECAY";
     case F_REL: return "RELEASE";
     case F_FXTYPE: return "EFFECT";
-    case F_FXAMT: return cur()->fx == 5 ? "CUTOFF" : "AMOUNT";   /* FILTER: its cutoff is the amount */
+    case F_FXAMT: {                                              /* FILTER: cutoff is the amount; GLIDE: how long the slide is */
+        int fx = cur()->fx;
+        const char *nm;
+        if (fx == 5)
+            return "CUTOFF";
+        nm = (fx > 0 && TAPE.nfx && fx < TAPE.nfx && TAPE.fx[fx]) ? TAPE.fx[fx]->name : 0;
+        if (nm && nm[0] == 'G' && nm[1] == 'L' && nm[2] == 'I')
+            return "TIME";
+        return "AMOUNT";
+    }
     case F_FXA: return TAPE.fx[cur()->fx % TAPE.nfx]->pa[0] ? TAPE.fx[cur()->fx % TAPE.nfx]->pa : "-";
     case F_FXB: return TAPE.fx[cur()->fx % TAPE.nfx]->pb[0] ? TAPE.fx[cur()->fx % TAPE.nfx]->pb : "-";
     case F_MODTYPE: return ui_mod_slot ? "MOD 2" : "MOD 1";

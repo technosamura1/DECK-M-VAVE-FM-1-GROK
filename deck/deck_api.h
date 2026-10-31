@@ -54,8 +54,9 @@ typedef struct {
 } dk_param_t;
 
 /* p: the voice's parameters as numbers in their units: p[0..7] the engine's, p[8..10] ENV (ATTACK, DECAY, RELEASE,
- * 0..100, 50 the engine's own), p[11] the track's drift (0..100) */
-enum { PX_ATT = 8, PX_DEC, PX_REL, PX_DRIFT, PX_N };
+ * 0..100, 50 the engine's own), p[11] the track's drift (0..100), p[12] GLIDE (0..100). GLIDE is not an engine knob:
+ * the track effect GLIDE writes it (its AMOUNT). 0 jumps. Poly engines ignore it. */
+enum { PX_ATT = 8, PX_DEC, PX_REL, PX_DRIFT, PX_GLIDE, PX_N };
 typedef struct {
     const char *name;
     uint8_t flags, max_voices, cost, nparams;

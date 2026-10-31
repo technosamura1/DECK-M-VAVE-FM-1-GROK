@@ -2,8 +2,8 @@
  * Copyright (C) 2026 OVERWORLD / DECK contributors */
 /* OVERWORLD's air and depth: AIRPAD (its pads: SWEDEN two detuned saws, AIR a breathy choir, WARM soft strings,
  * SHIMMER glassy, STRINGS bowed), GLASS (its bells: glass, celesta, marimba, music box, vibes; two-operator FM),
- * SOFTBASS (its basses: SUB a round sine, UPRIGHT a thumb on a string, MOOG a saw through a resonant low-pass; MONO,
- * with a glide). Part of tape_dsp.c. */
+ * SOFTBASS (its basses: SUB a round sine, UPRIGHT a thumb on a string, MOOG a saw through a resonant low-pass; MONO.
+ * A slide is the track's GLIDE effect, not a knob of the bass). Part of tape_dsp.c. */
 
 /* ------------------------------------------------------------------ AIRPAD --- */
 #define PSN 1024
@@ -275,22 +275,23 @@ typedef struct {
 CHECK_SIZE(bass_v);
 static const char *const BASS_TYPES[] = {"SUB", "MOOG", "UPRIGHT", "SQUARE", "SAW", "TRI", "SUBDRONE"};
 static const dk_param_t BASS_P[] = {
-    {"TONE", 0, 100, 40, VZ_SUN, 0},  {"PLUCK", 0, 100, 35, VZ_ENV, 0}, {"GLIDE", 0, 100, 0, VZ_GLIDE, 0},
+    {"TONE", 0, 100, 40, VZ_SUN, 0},  {"PLUCK", 0, 100, 35, VZ_ENV, 0},
     {"TYPE", 0, 6, 0, VZ_TYPE, BASS_TYPES}, {"LENGTH", 0, 100, 50, VZ_ENV, 0},
 };
 static void bass_on(float *st, int note, float vel, const float *p, int retrig)
 {
     bass_v *v = (bass_v *)st;
-    int k = (int)p[3], mg;                                /* mg: a filtered saw (MOOG, SAW) */
-    float tone = p[0] * 0.01f, pluck = p[1] * 0.01f, len = fm_exp2f((p[4] - 50.0f) * (1.0f / 35.0f)) * env_dec(p);
+    int k = (int)p[2], mg;                                /* mg: a filtered saw (MOOG, SAW) */
+    float tone = p[0] * 0.01f, pluck = p[1] * 0.01f, len = fm_exp2f((p[3] - 50.0f) * (1.0f / 35.0f)) * env_dec(p);
     float inc = dk_mtof((float)note) * drift_of(p) * (1.0f / DK_SR);
+    float g = p[PX_GLIDE];
     k = k < 0 ? 0 : k > 6 ? 6 : k;
     mg = k == 1 || k == 4;
     v->kind = (float)k;
     v->vel = vel;
     v->inc_to = inc;
-    v->glide = p[2] > 0.5f && retrig == 2 ? 1.0f - fm_expf(-1.0f / (p[2] * 0.004f * DK_SR)) : 1.0f;
-    if (retrig != 2 || p[2] <= 0.5f)
+    v->glide = g > 0.5f && retrig == 2 ? 1.0f - fm_expf(-1.0f / (g * 0.004f * DK_SR)) : 1.0f;
+    if (retrig != 2 || g <= 0.5f)
         v->inc = inc;
     pan_of((float)note, 0.15f, &v->gl, &v->gr);
     if (retrig != 2)                                      /* legato: no new attack (and none from zero again) */
@@ -331,8 +332,8 @@ static int bass_render(float *st, float *l, float *r, int n, const float *p)
 {
     bass_v *v = (bass_v *)st;
     int k = (int)v->kind, j;
-    float lvl = 0.26f, w = dk_ctx.wow;
-    (void)p;
+    float lvl = 0.26f, w = dk_ctx.wow, g = p[PX_GLIDE];
+    v->glide = g > 0.5f ? 1.0f - fm_expf(-1.0f / (g * 0.004f * DK_SR)) : 1.0f;
     for (j = 0; j < n; j++) {
         float a, s, inc;
         v->inc += (v->inc_to - v->inc) * v->glide;
@@ -393,5 +394,5 @@ static float bass_level(const float *st)
     const bass_v *v = (const bass_v *)st;
     return v->es * v->vel;
 }
-const dk_engine_t ENG_SOFTBASS = {"BASS", EF_MONO, 2, 10, 5, BASS_P, bass_on, bass_off, bass_render, bass_level, 0,
+const dk_engine_t ENG_SOFTBASS = {"BASS", EF_MONO, 2, 10, 4, BASS_P, bass_on, bass_off, bass_render, bass_level, 0,
                                   0, 0, 0, R_BASS};

@@ -1,9 +1,10 @@
 /* SPDX-License-Identifier: MPL-2.0
  * Copyright (C) 2026 OVERWORLD / DECK contributors */
-/* LEAD: a lead synth for a single line. One voice that glides (a note played while one is held slides to it: GLIDE), a
- * vibrato that comes in after the note has begun (VIBRATO), the waves of a lead: a saw (two, spread), a square, a moving
- * pulse, a supersaw (three), a triangle, a two-operator FM voice; a sub octave under it (SUB); through a resonant low-pass
- * whose cut-off a note's envelope sweeps. Built on SYNTH's band-limited oscillators (syn_osc). Part of tape_dsp.c. */
+/* LEAD: a lead synth for a single line. One voice: a new note while one is held keeps the wave (no second start).
+ * The pitch jumps, unless the track's effect is GLIDE (its AMOUNT is the slide, PX_GLIDE). A vibrato that comes in
+ * after the note has begun (VIBRATO). The waves: a saw (two, spread), a square, a moving pulse, a supersaw (three),
+ * a triangle, a two-operator FM voice; a sub octave under it (SUB); through a resonant low-pass whose cut-off a
+ * note's envelope sweeps. Built on SYNTH's band-limited oscillators (syn_osc). Part of tape_dsp.c. */
 typedef struct {
     float inc, tinc, glk, ph1, ph2, ph3, phs, pm, vph, vel, gl, gr;
     float es, att, att_inc, mr, held, kind, t;
@@ -16,16 +17,19 @@ static const char *const LD_WAVES[] = {"SAW", "SQUARE", "PULSE", "SUPER", "TRI",
 static const dk_param_t LD_P[] = {
     {"WAVE", 0, 5, 0, VZ_TYPE, LD_WAVES}, {"CUTOFF", 0, 100, 70, VZ_SUN, 0}, {"RESO", 0, 100, 20, VZ_WAVE, 0},
     {"SWEEP", 0, 100, 30, VZ_DROP, 0},    {"SPREAD", 0, 100, 30, VZ_BAR, 0}, {"VIBRATO", 0, 100, 30, VZ_WOBBLE, 0},
-    {"GLIDE", 0, 100, 0, VZ_ENV, 0},      {"SUB", 0, 100, 0, VZ_SWELL, 0},
+    {"SUB", 0, 100, 0, VZ_SWELL, 0},
 };
+static float ld_glk(float g)
+{
+    /* TIME 0 (or no GLIDE effect): the pitch steps. Up to about a second (the time to travel most of the way). */
+    return g < 1.0f ? 1.0f : 1.0f - fm_expf(-1.0f / (0.012f * fm_exp2f(g * 0.065f) * DK_SR));
+}
 static void ld_pitch(ld_v *v, int note, const float *p)
 {
-    float g = p[6];
     v->tinc = dk_mtof((float)note) * drift_of(p) * (1.0f / DK_SR);
     v->kt = fm_exp2f((float)(note - 60) * (1.0f / 36.0f));
     v->fct = fm_minf(50.0f * fm_exp2f(p[1] * 0.082f) * v->kt, 7400.0f);
-    /* GLIDE: 0 jumps; up to about a second (the time to travel most of the way) */
-    v->glk = g < 1.0f ? 1.0f : 1.0f - fm_expf(-1.0f / (0.012f * fm_exp2f(g * 0.065f) * DK_SR));
+    v->glk = ld_glk(p[PX_GLIDE]);
 }
 static void ld_on(float *st, int note, float vel, const float *p, int retrig)
 {
@@ -33,10 +37,8 @@ static void ld_on(float *st, int note, float vel, const float *p, int retrig)
     int k = (int)p[0];
     float spread = p[4] * 0.01f;
     k = k < 0 ? 0 : k > 5 ? 5 : k;
-    if (retrig == 2) {                                  /* legato: the same voice slides to the new pitch - eased, not jumped */
+    if (retrig == 2) {                                  /* legato: the same voice, the new pitch now (GLIDE, if it is on, slides) */
         ld_pitch(v, note, p);
-        if (v->glk > 0.0012f)                           /* GLIDE 0 too: a slide (~60 ms to arrive), a singer's, not a step */
-            v->glk = 0.0012f;
         v->vt = vel;                                    /* (the force, the cut-off's lift: eased in render, a jump clicked) */
         v->fup = 0.5f;
         return;
@@ -44,8 +46,6 @@ static void ld_on(float *st, int note, float vel, const float *p, int retrig)
     if (retrig == 3) {                                  /* played again while the last note still rings out: that voice goes on -
                                                          * no restart from zero, the wave and the filter where they are */
         ld_pitch(v, note, p);
-        if (v->glk > 0.004f)                            /* GLIDE 0: a quick slide (~20 ms); GLIDE up: its own */
-            v->glk = 0.004f;
         v->held = 1.0f;
         v->att = v->es;                                 /* the attack from the level it has */
         v->vt = vel;
@@ -78,7 +78,7 @@ static void ld_on(float *st, int note, float vel, const float *p, int retrig)
     v->pm = 0.0f;
     v->vph = 0.0f;
     v->vdep = p[5] * 0.01f * 0.035f;                    /* up to ~60 cents */
-    v->sub = p[7] * 0.01f;
+    v->sub = p[6] * 0.01f;
     v->fmi = 0.15f + spread * 1.1f;                     /* FM: the index (in turns) */
     v->pwm = 0.0f;
     v->lp = 0.0f;
@@ -102,7 +102,8 @@ static int ld_render(float *st, float *l, float *r, int n, const float *p)
     static const uint8_t OSC[6] = {0, 3, 1, 5, 4, 7};     /* syn_osc's kinds: saw, square, pulse, super, tri, sine */
     for (j = 0; j < n; j++) {
         float s, a, d1, d2, d3, vib, vin, pw;
-        if ((j & 15) == 0) {                            /* legato's moves, eased (~3 ms) */
+        if ((j & 15) == 0) {                            /* legato's moves, eased (~3 ms); GLIDE's time, if the knob moved */
+            v->glk = ld_glk(p[PX_GLIDE]);
             v->vel += (v->vt - v->vel) * 0.12f;
             v->fc0 += (v->fct - v->fc0) * 0.12f;
             if (v->fup > v->fe)
@@ -173,4 +174,4 @@ static float ld_level(const float *st)
     const ld_v *v = (const ld_v *)st;
     return v->es * v->vel * 0.5f;
 }
-const dk_engine_t ENG_LEAD = {"LEAD", EF_MONO | EF_LEGATO, 2, 9, 8, LD_P, ld_on, ld_off, ld_render, ld_level, 0, 0, 0, 0, R_LEAD};
+const dk_engine_t ENG_LEAD = {"LEAD", EF_MONO | EF_LEGATO, 2, 9, 7, LD_P, ld_on, ld_off, ld_render, ld_level, 0, 0, 0, 0, R_LEAD};
