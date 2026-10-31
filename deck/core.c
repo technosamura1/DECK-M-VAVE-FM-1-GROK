@@ -296,6 +296,8 @@ typedef struct {
     float st[DK_VSTATE];
 } voice_t;
 static voice_t vc[DK_NVOICE] DK_POOL;
+static uint8_t vc_take[DK_NVOICE];             /* the overdub a sequencer voice belongs to (0: the hand, or none) */
+static uint8_t note_take;                      /* the take of the note being started (0: the hand) */
 static uint32_t age_ctr;
 static uint8_t shed;
 /* a voice taken while it still sounds fades out over a few milliseconds here, from a copy (no click) */
@@ -402,7 +404,10 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
     if (cnt >= e->max_voices) {                /* the track's own: its quietest let go, else its oldest */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t) {
-                float l = TAPE.eng[vc[i].eng]->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);
+                const dk_engine_t *se = TAPE.eng[vc[i].eng];
+                float l = se->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);
+                if (se->flags & (EF_MONO | EF_LEGATO))
+                    l += 1000.0f;              /* a lead or a bass is the last voice given up */
                 if ((int32_t)(age_ctr - vc[i].age) < (int32_t)(DK_SR / 10))
                     l += 40.0f;                /* a note just begun is quiet: it is not the one given up */
                 if (l < lo) {
@@ -415,7 +420,10 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
             if (!vc[i].on)
                 return &vc[i];
         for (i = 0; i < DK_NVOICE; i++) {      /* the pool full: the quietest let go anywhere, else the oldest */
-            float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+            const dk_engine_t *se = TAPE.eng[vc[i].eng];
+            float l = se->level(vc[i].st);
+            if (se->flags & (EF_MONO | EF_LEGATO))
+                continue;                      /* its release is the note: another voice goes first */
             if (!vc[i].held && l < lo) {
                 lo = l;
                 best = &vc[i];
@@ -575,14 +583,19 @@ static void budget_make_room(int want, int live)
             /* (the quiet ones; for a live note any; any too when the device runs over (its budget lowered by the load):
              * the sequencer's oldest loud notes give way rather than the render running past its block - a crackle, or
              * the 5th track's notes lost in it) */
-            int any = live || melt || (!dk_budget_hold && dk_budget < 100) || (dk_budget_hold && dk_budget < 60);
+            int any = live || melt;             /* a held note stays unless the hand needs a voice, or the device is already melting.
+                                             * a low budget alone used to cut the oldest note mid-sustain (the first
+                                             * note of a take, about a third of the way through, with no release) */
             for (pass = 0; pass < 1 + any && best < 0; pass++) {
                 most = 0;
                 lo = 1e9f;
                 for (i = 0; i < DK_NVOICE; i++)
                     if (vc[i].on && vc[i].src && vc[i].trk < DK_NTRACK &&
                         (int32_t)(age_ctr - vc[i].age) >= (int32_t)BUDGET_YOUNG) {
-                        float l = TAPE.eng[vc[i].eng]->level(vc[i].st);
+                        const dk_engine_t *ve = TAPE.eng[vc[i].eng];
+                        float l = ve->level(vc[i].st);
+                        if (ve->flags & (EF_MONO | EF_LEGATO))
+                            continue;          /* one voice: cutting it cuts the note itself */
                         if ((pass || l <= 0.15f) && (cnt[vc[i].trk] > most || (cnt[vc[i].trk] == most && l < lo))) {
                             most = cnt[vc[i].trk];
                             lo = l;
@@ -680,6 +693,8 @@ static void tails_trim(void)
             float l;
             if (!vc[i].on || !vc[i].held || !vc[i].src)
                 continue;
+            if (TAPE.eng[vc[i].eng]->flags & (EF_MONO | EF_LEGATO))
+                continue;                    /* a lead or a bass keeps sounding through a hot block */
             age = (int32_t)(age_ctr - vc[i].age);   /* wraps cleanly for ~12 h; a negative means "just born" */
             if (age < (int32_t)(DK_SR / 10))
                 continue;                    /* a note just begun, left alone (its attack is the quietest) */
@@ -723,6 +738,21 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t && (vc[i].note == 42 || vc[i].note == 44 || vc[i].note == 46))
                 TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);   /* (drums are never frozen) */
+    /* an older overdub, or the song under a key still down, does not take a mono voice that is
+     * still the note (its sustain, or its release). the line's own next note, and a newer take, do. */
+    if (src && (e->flags & (EF_MONO | EF_LEGATO))) {
+        for (i = 0; i < DK_NVOICE; i++) {
+            voice_t *u = &vc[i];
+            float lv;
+            if (!u->on || u->trk != (uint8_t)t || u->eng != (uint8_t)eng || u->snd != (uint8_t)snd)
+                continue;
+            lv = e->level(u->st);
+            if (u->src == 0 && (u->held || lv > 0.02f))
+                return u;
+            if (note_take && vc_take[i] && note_take < vc_take[i] && (u->held || lv > 0.02f))
+                return u;
+        }
+    }
     budget_make_room(e->cost, !src);
     v = voice_get(t, e, eng, snd, &retrig, note, src);
     if (!v)
@@ -745,6 +775,7 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
     v->age = age_ctr + (uint32_t)(delay > 0 ? delay : 0);
     v->lane = 0;
     v->ch_c = 0.0f;
+    vc_take[(int)(v - vc)] = src ? note_take : 0;
     if ((e->flags & EF_DRUM) && e->nlanes) {          /* a drum sound: its own tune and decay (the kit's p[0], p[1]) */
         int l;
         for (l = 0; l < e->nlanes && l < 8; l++)

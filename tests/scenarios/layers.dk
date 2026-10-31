@@ -120,8 +120,9 @@ wait 300
 tap REC
 wait 400
 expect recording 0
-expect events 20
-expect nfrozen 16
+# a chord that was still down as the 4 bars came round is two events: to the end of the loop, and the rest from 0
+expect events 24
+expect nfrozen 20
 expect nlive 4
 # the setting through the page: GLO, its fourth row, the last knob
 locktake 1

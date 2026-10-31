@@ -27,6 +27,7 @@ static uint8_t rec_start_after, rec_wait_note, rec_bake;
 int dk_rec_pending(void) { return rec_wait_note || rec_start_after; }   /* REC pressed: the first note / the count-in awaited */
 static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
 static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
+static uint8_t open_carry[128];               /* held across the loop: the rest records from 0, not cut at the bar */
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */
 static uint8_t open_vel[128], open_trk[128];
 /* the count-in's last beat: notes played after its last click belong to the take's first beat (a hand a little
@@ -299,6 +300,7 @@ static void rec_pre_flush(void)                /* the take begins: the early not
             open_vel[n] = pre_vel[n];
             open_trk[n] = pre_trk[n];
             open_nc[n] = 0;
+            open_carry[n] = 0;
         } else
             rec_push(cur_part * DK_NTRACK + pre_trk[n], 0, 0, pre_dur[n] > DK_T16 / 2 ? pre_dur[n] : DK_T16 / 2, n,
                      pre_vel[n], 0);
@@ -317,6 +319,7 @@ static void rec_open(int t, int note, int vel, int delay)
     open_pos[note] = (int16_t)((rec_pos(t) + strum_ticks(delay)) % clip_len_of(cur_part, t));   /* the grid's place,
                                                  * then the strum's offset after it (STRUM survives QUANT) */
     open_nc[note] = rec_nocomp;
+    open_carry[note] = 0;
     open_vel[note] = (uint8_t)vel;
     open_trk[note] = (uint8_t)t;
 }
@@ -332,6 +335,7 @@ static void rec_close(int note, int to_end)
         d = DK_T16 / 2;
     rec_push(cur_part * DK_NTRACK + t, 0, s, d, note, open_vel[note], 0);
     open_pos[note] = -1;
+    open_carry[note] = 0;
 }
 static void rec_close_all(void)
 {
@@ -369,6 +373,7 @@ static void rec_split_open(void)
             continue;
         open_pos[br_note[i]] = (int16_t)rec_pos(t);
         open_nc[br_note[i]] = br_nc[i];
+        open_carry[br_note[i]] = 0;
         open_vel[br_note[i]] = br_vel[i];
         open_trk[br_note[i]] = (uint8_t)t;
     }
@@ -486,9 +491,11 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
     if (r > 1)
         dur /= r;
     ev_snd = fs ? (uint8_t)DK_L_SND(e->layer) : 0;   /* (the track's sound as it was when this was recorded) */
+    note_take = (uint8_t)(DK_L_TAKE(e->layer) + 1u);
     for (i = 0; i < r; i++)
         note_play(t, note, vel * (i ? 0.85f : 1.0f), (int32_t)((float)dur * tick_len * (r > 1 ? 0.8f : 1.0f)),
                   delay + (int32_t)((float)(i * dur) * tick_len), 1);
+    note_take = 0;
     ev_snd = 0;
 }
 
@@ -1564,16 +1571,37 @@ static void seq_tick(void)
             return;
         }
     }
-    if (dk_recording) {                        /* the recording clip comes round: a new pass (a layer for undo) */
+    if (dk_recording) {                        /* the recording clip comes round: a new pass (a layer for undo).
+                                             * a key still down is not cut here: this pass keeps it to the bar line,
+                                             * the next pass keeps the rest, from 0, until the key is let go */
         int clen = clip_len_of(cur_part, dk_rec_trk);
         if (clen > 0 && part_tick % clen == 0) {
-            int i;
-            rec_close_all();
+            int i, n = 0;
+            static uint8_t hn[128], hv[128], ht[128], hc[128];
+            for (i = 0; i < 128; i++) {
+                if (open_pos[i] < 0 || open_carry[i])
+                    continue;                 /* already carried: one continuation, not a new full bar each loop */
+                hn[n] = (uint8_t)i;
+                hv[n] = open_vel[i];
+                ht[n] = open_trk[i];
+                hc[n] = open_nc[i];
+                n++;
+                rec_close(i, 1);
+            }
             if (dk_pass < 250)
                 dk_pass++;
             for (i = 0; i < DK_NTRACK; i++)
                 if ((dk_rec_mask >> i & 1u) && dk_rec_take[i] && dk_rec_take[i] < 31)
                     dk_rec_take[i]++;          /* the floor stays: REPLACE still means "what was there before this press" */
+            for (i = 0; i < n; i++) {
+                if (!rec_track_of(ht[i]))
+                    continue;
+                open_pos[hn[i]] = 0;
+                open_vel[hn[i]] = hv[i];
+                open_trk[hn[i]] = ht[i];
+                open_nc[hn[i]] = hc[i];
+                open_carry[hn[i]] = 1;
+            }
         }
         open_publish();
     }
