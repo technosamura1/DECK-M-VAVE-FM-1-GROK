@@ -2,7 +2,7 @@
 # note names: a read before the table, a hard fault on the device). Both octaves down (the keys' and the track's), WHITE off
 # (the degree numbers hide the names). Under ASAN/UBSAN the old code is reported here.
 wait 300
-tap EDIT
+tap LFO
 wait 100
 expect page 5
 row 0

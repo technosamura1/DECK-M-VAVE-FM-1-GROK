@@ -24,31 +24,31 @@ expect autos >=3
 mark
 # the EDIT list (TRACKS, EDIT): ERASE NOTES (white 12, twice): the notes of the clip go, the curve stays
 page 11
-tap EDIT
+tap LFO
 tapkey w11
 tapkey w11
 wait 100
 expect events 3
 expect autos 3
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect events >0
 expect same 1
-# ERASE ALL PARTS (white 14, twice): the track in every part, the automation too
+# ERASE ALL (white 14, twice): this part, the notes and the automation; the other parts stay
 tapkey w13
 tapkey w13
 wait 100
 expect events 0
 expect autos 0
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect autos >=3
 expect same 1
-tap EDIT
+tap LFO
 # a part copy (ARP held + a white key of an empty part) takes the curve along
 press ARP
 tapkey w3
@@ -56,7 +56,9 @@ release ARP
 wait 300
 expect autos >=3
 # MIX: REC held and the volume knob
-tap LFO
+page 0
+wait 50
+tap EDIT
 wait 100
 expect page 3
 press REC

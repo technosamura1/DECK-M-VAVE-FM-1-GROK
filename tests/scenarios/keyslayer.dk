@@ -1,0 +1,66 @@
+# KEYS over PIANO: a held piano chord recorded, the keys chord played over it - both sound (the old budget 100 let the hand
+# take the piano's voices: 8 voices of 13 = 104). Budget held at the device's start (140).
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+budget 140
+tap HOME
+wait 100
+tap HOME
+wait 100
+tapkey w0
+wait 100
+tap HOME
+wait 100
+expect track 0
+tap REC
+wait 3500
+key w0 down 90
+key w2 down 90
+key w4 down 90
+key w7 down 90
+wait 2500
+key w0 up
+key w2 up
+key w4 up
+key w7 up
+key w3 down 90
+key w5 down 90
+key w7 down 90
+key w10 down 90
+wait 2500
+key w3 up
+key w5 up
+key w7 up
+key w10 up
+wait 3000
+tap REC
+wait 300
+expect events >3
+tap HOME
+wait 100
+tap HOME
+wait 100
+tapkey w1
+wait 100
+tap HOME
+wait 100
+expect track 1
+expect tvoices1 >3
+wait 1000
+key w9 down 100
+wait 60
+expect livev >2
+expect tvoices2 >2
+wait 300
+expect tlevel2 >2
+expect tvoices1 >3
+key w9 up
+wait 100
+key w11 down 100
+key w13 down 100
+wait 300
+expect livev >2
+expect tvoices1 >3

@@ -33,7 +33,7 @@ turn SELECT 5
 wait 100
 expect track 0
 shot seq_step_drums.png
-tap LFO
+tap EDIT
 wait 120
 expect page 3
 shot mix.png
@@ -46,7 +46,7 @@ wait 700
 release ENV
 wait 120
 shot garage.png
-tap EDIT
+tap LFO
 wait 120
 expect page 5
 key w4 down 90

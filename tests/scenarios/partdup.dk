@@ -43,9 +43,9 @@ expect nev 18
 expect eventsC1 4
 expect eventsC2 2
 # one undo brings C back as it was (and B stays)
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect nev 15
 expect eventsC2 3

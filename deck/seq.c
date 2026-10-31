@@ -2,7 +2,7 @@
  * Copyright (C) 2026 DECK contributors */
 /* The sequencer, part of the core's unit (core.c): the clock (free, and the transport's), the parts and the road,
  * the clips' playback with the road's tricks, recording (LIVE, the generators', BAKE), the count-in and the
- * metronome, the generators (ARP, FINGER, DRIVE), the harmony, the modulators, the performance
+ * metronome, the generators (ARP, ENDLESS), the harmony, the modulators, the performance
  * effects, STEMS, MIDI clock. Everything here runs in the render, a tick at a time. */
 
 static uint32_t gt;                            /* the grid's clock: the transport's ticks, or the free clock */
@@ -24,8 +24,11 @@ static void pm_apply(void)
 }
 static int32_t count_left;
 static uint8_t rec_start_after, rec_wait_note, rec_bake;
+int dk_rec_pending(void) { return rec_wait_note || rec_start_after; }   /* REC pressed: the first note / the count-in awaited */
 static uint8_t rec_nocomp;                     /* the note that starts a take is at 0, not made up for the latency */
 static uint8_t open_nc[128];                  /* ... and it began at the take's start, not made up for the latency */
+static uint8_t open_carry[128];               /* held across the loop: the rest records from 0, not cut at the bar */
+static uint8_t open_full[128];                /* held a whole extra loop: the release is the whole bar, not only up to the key */
 static int16_t open_pos[128];                  /* recording: the clip tick a held note began (-1 none) */
 static uint8_t open_vel[128], open_trk[128];
 /* the count-in's last beat: notes played after its last click belong to the take's first beat (a hand a little
@@ -36,10 +39,8 @@ static int32_t pre_at[128];                    /* count_left when pressed */
 #define PRE_WIN DK_PPQ
 uint8_t dk_arp_step[DK_NTRACK];            /* (the pattern's step: it starts from 1 again with every new hand) */
 #define arp_step dk_arp_step
-static uint8_t arp_order[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
+static uint8_t arp_order[DK_NTRACK][8], arp_cnt[DK_NTRACK][8], arp_n[DK_NTRACK], arp_keys[DK_NTRACK];
 volatile uint8_t dk_arp_rpos[DK_NTRACK], dk_arp_hit[DK_NTRACK];   /* for the page: where the rhythm is, a hit just now */
-static uint16_t finger_held[DK_NTRACK];        /* FINGER: the patterns held (a bit each) */
-static uint8_t finger_var[DK_NTRACK];          /* its variations: 1 HALF 2 DOUBLE 4 ACCENT 8 GHOST 16 SHIFT- 32 SHIFT+ */
 static uint8_t perf_half, perf_rev, perf_stutter, stems_pass, stems_gap;
 static uint16_t stutter_at;
 static float lp_target = 1.0f;
@@ -220,9 +221,18 @@ static void rec_take_join(int t)
 static void rec_push(int clip, int kind, int pos, int dur, int note, int vel, int fl)
 {
     uint32_t w = dk_recq_w;
-    volatile dk_recev_t *r = &dk_recq[w % DK_RECQ];
+    volatile dk_recev_t *r;
     int tr = clip % DK_NTRACK;
     int take = dk_pass;
+    /* the UI publishes dk_rec_r. overwriting a slot it has not copied yet loses
+     * a note that was already played, and can tear the one it is reading. drop
+     * the new one instead: the hand still sounding is recorded on the next tick
+     * if the ring has drained. */
+    if (w - dk_rec_r >= DK_RECQ) {
+        dk_rec_dropped++;
+        return;
+    }
+    r = &dk_recq[w % DK_RECQ];
     if ((unsigned)tr < DK_NTRACK && dk_rec_take[tr])
         take = dk_rec_take[tr];
     take = take_clamp(take);
@@ -291,36 +301,52 @@ static void rec_pre_flush(void)                /* the take begins: the early not
             open_vel[n] = pre_vel[n];
             open_trk[n] = pre_trk[n];
             open_nc[n] = 0;
+            open_carry[n] = 0;
+            open_full[n] = 0;
         } else
             rec_push(cur_part * DK_NTRACK + pre_trk[n], 0, 0, pre_dur[n] > DK_T16 / 2 ? pre_dur[n] : DK_T16 / 2, n,
                      pre_vel[n], 0);
         pre_vel[n] = 0;
     }
 }
-static void rec_open(int t, int note, int vel)
+static int strum_ticks(int delay)              /* a strummed note's delay (samples) in ticks: kept in the take */
 {
-    const dk_track_t *k = &dk_song.trk[t];
-    int clip = cur_part * DK_NTRACK + t;
+    return tick_len > 0.0f && delay > 0 ? (int)((float)delay / tick_len + 0.5f) : 0;
+}
+static void rec_open(int t, int note, int vel, int delay)
+{
     if (open_pos[note] >= 0)
         rec_push(cur_part * DK_NTRACK + open_trk[note], 0, open_pos[note], DK_T16, note,
                  open_vel[note], 0);
-    open_pos[note] = (int16_t)rec_pos(t);
+    open_pos[note] = (int16_t)((rec_pos(t) + strum_ticks(delay)) % clip_len_of(cur_part, t));   /* the grid's place,
+                                                 * then the strum's offset after it (STRUM survives QUANT) */
     open_nc[note] = rec_nocomp;
+    open_carry[note] = 0;
+    open_full[note] = 0;
     open_vel[note] = (uint8_t)vel;
     open_trk[note] = (uint8_t)t;
 }
 static void rec_close(int note, int to_end)
 {
     int t = open_trk[note], s = open_pos[note], clen, d, now;
-    if (s < 0)
+    if (s < 0) {
+        open_carry[note] = 0;
+        open_full[note] = 0;
         return;
+    }
     clen = clip_len_of(cur_part, t);
     now = to_end ? clen : (int)clip_heard(t, open_nc[note]);
     d = to_end ? clen - s : ((now - s) % clen + clen) % clen;
+    if (open_full[note]) {                 /* two loops held: the gap in the middle was held too, so the bar is the note */
+        s = 0;
+        d = clen;
+    }
     if (d <= 0)
         d = DK_T16 / 2;
     rec_push(cur_part * DK_NTRACK + t, 0, s, d, note, open_vel[note], 0);
     open_pos[note] = -1;
+    open_carry[note] = 0;
+    open_full[note] = 0;
 }
 static void rec_close_all(void)
 {
@@ -358,6 +384,8 @@ static void rec_split_open(void)
             continue;
         open_pos[br_note[i]] = (int16_t)rec_pos(t);
         open_nc[br_note[i]] = br_nc[i];
+        open_carry[br_note[i]] = 0;
+        open_full[br_note[i]] = 0;
         open_vel[br_note[i]] = br_vel[i];
         open_trk[br_note[i]] = (uint8_t)t;
     }
@@ -382,6 +410,8 @@ static void open_publish(void)
         }
     dk_open_n = (uint8_t)k;
 }
+/* a take asked for: the part it records goes round (its bars), the road (SONG) set aside till the take ends */
+static uint8_t rec_loop;
 static void rec_stop(void)
 {
     if (dk_recording)
@@ -389,7 +419,7 @@ static void rec_stop(void)
     dk_recording = 0;
     rec_wait_note = 0;
     rec_start_after = 0;
-    rec_bake = 0;
+    rec_bake = 0;                              /* (rec_loop stays: the part goes on round after the take, till the stop) */
     {                                          /* (stopped in the count-in: the early notes forgotten) */
         int n;
         for (n = 0; n < 128; n++)
@@ -405,17 +435,18 @@ static void rec_stop(void)
 /* ---------------------------------------------------------------- playing --- */
 static uint32_t ch_bits(void) { return 0; }
 static uint8_t ev_snd;                   /* the sound of the event being played (fire): 0 the track's own */
+static uint16_t gr_act;
 static void note_play(int t, int note, float vel, int32_t gate, int32_t delay, int src)
 {
     if (!track_audible(t) && src)
         return;
+    if (!(dk_engine(t)->flags & EF_DRUM))
+        gr_act++;                              /* (GROOVE's FOLLOW: how much the others play) */
     voice_start(t, note, vel, gate, delay, src, ev_snd);
 }
 void dk_emit(int t, int note, int vel, int dur, int delay)
 {
     if ((unsigned)t >= DK_NTRACK || note < 0 || note > 127)
-        return;
-    if (dream_off && dk_song.trk[t].seq == SQ_DRIVE)
         return;
     note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)dur * tick_len), delay, 2);
     if (rec_track_of(t))
@@ -468,17 +499,15 @@ static void fire(int t, const dk_ev_t *e, int ct_pos)
             note -= 12;
     }
     delay = swing_delay(t, ct_pos);
-    if (dk_song.trk[t].seq == SQ_LIVE) {
-        delay += jitter() / 2;
-        vel = fm_clampf(vel + (dk_frand() - 0.5f) * 0.12f * (float)TAPE.human * 0.01f, 0.05f, 1.0f);
-    }
     r = ((e->fl & EV_RATCH) >> 2) + 1;
     if (r > 1)
         dur /= r;
     ev_snd = fs ? (uint8_t)DK_L_SND(e->layer) : 0;   /* (the track's sound as it was when this was recorded) */
+    note_take = (uint8_t)(DK_L_TAKE(e->layer) + 1u);
     for (i = 0; i < r; i++)
         note_play(t, note, vel * (i ? 0.85f : 1.0f), (int32_t)((float)dur * tick_len * (r > 1 ? 0.8f : 1.0f)),
                   delay + (int32_t)((float)(i * dur) * tick_len), 1);
+    note_take = 0;
     ev_snd = 0;
 }
 
@@ -596,111 +625,418 @@ static void clip_tick(int t, uint32_t *harm_pcs)
     }
 }
 
-/* ----------------------------------------------------------------- FINGER --- */
-/* the banks (the tape's text patterns) decoded a step at a time: no table in RAM */
-int dk_fch(const char *s, int step)
+/* ---------------------------------------------------------------- ENDLESS --- */
+/* ENDLESS (as OP-1's): its clip a row of steps, a sixteenth each in the clip (a step's notes at step * DK_T16, a tie
+ * longer), played at its own rate - not the part's bars: it goes round by itself - FORWARD, BACKWARD, PINGPONG or
+ * RANDOM, each step as long as the GATE says. A key played on it (not entering) transposes it: the first step's
+ * lowest note goes to the key (dk_endl_tr, till the next key or a stop) */
+volatile uint8_t dk_endl_step[DK_NTRACK];
+volatile int8_t dk_endl_tr[DK_NTRACK];
+static const uint8_t ERATE[6] = {96, 48, 32, 24, 16, 12};
+static void endless_tick(int t)
 {
-    int i;
-    if (!s)
-        return '.';
-    for (i = 0; i < step; i++)
-        if (!s[i])
-            return '.';
-    return s[step] ? s[step] : '.';
+    static const float GATE[4] = {0.8f, 0.35f, 1.0f, 1.08f};
+    const dk_track_t *k = &dk_song.trk[t];
+    const dk_clip_t *c = CLIP(cur_part, t);
+    int n = c->len / DK_T16, dv = ERATE[k->drv[2] % 6], dir = k->drv[0] & 3, i, step, kk;
+    float g = GATE[k->drv[1] & 3];
+    if (n <= 0 || !c->n || dk_ticks % (uint32_t)dv)
+        return;
+    kk = (int)(dk_ticks / (uint32_t)dv);
+    switch (dir) {
+    case 1: step = n - 1 - kk % n; break;
+    case 2: {
+        int per = n > 1 ? 2 * n - 2 : 1, x = kk % per;
+        step = x < n ? x : per - x;
+        break;
+    }
+    case 3: step = (int)(((uint32_t)kk * 2654435761u >> 13) % (uint32_t)n); break;
+    default: step = kk % n; break;
+    }
+    dk_endl_step[t] = (uint8_t)step;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        int steps, note;
+        if ((e->fl & EV_MOTION) || e->pos != step * DK_T16)
+            continue;
+        steps = (e->dur + 2 + DK_T16 - 1) / DK_T16;   /* a tie: more steps long */
+        note = e->note + ((dk_engine(t)->flags & EF_DRUM) ? 0 : dk_endl_tr[t]);
+        if (note < 0 || note > 127)
+            continue;
+        note_play(t, note, (float)e->vel * (1.0f / 127.0f), (int32_t)((float)(steps * dv) * g * tick_len), 0, 1);
+    }
 }
-const char *dk_fb_bankname(int bank) { return TAPE.fbank[bank >= 0 && bank < DK_NFBANK ? bank : 0].name; }
-const char *dk_fb_banksub(int bank) { return TAPE.fbank[bank >= 0 && bank < DK_NFBANK ? bank : 0].sub; }
-int dk_fb_bank(int t) { return dk_song.fbank[t] < DK_NFBANK ? dk_song.fbank[t] : 0; }
-/* the track's set: 0 drums, 1 keys/lead (everything melodic), 2 bass, 3 pad */
-int dk_fb_set(int t)
+/* the lowest note of an ENDLESS clip's first step (the key a transposition is measured from), -1 none */
+int dk_endl_root(int t)
 {
-    const dk_engine_t *e = dk_engine(t);
-    int r = dk_song.trk[t].role;
-    return (e->flags & EF_DRUM) ? 0 : r == R_BASS ? 2 : r == R_PAD ? 3 : 1;
-}
-static const char *const *fb_row(int t, int p)
-{
-    const dk_fbank_t *b = &TAPE.fbank[dk_fb_bank(t)];
-    int s = dk_fb_set(t);
-    p &= 15;
-    return s == 0 ? b->drum[p] : s == 1 ? b->mel[p] : s == 2 ? b->bass[p] : b->pad[p];
-}
-const char *dk_fb_name(int t, int p) { return fb_row(t, p)[0]; }
-/* a drum pattern: the velocity 0..9 of a lane at a step */
-int dk_fb_drum(int t, int p, int lane, int step)
-{
-    int c = dk_fch(fb_row(t, p)[1 + (lane & 7)], step);
-    return c >= '1' && c <= '9' ? c - '0' : 0;
-}
-static int fb_deg(int c) { return c >= '1' && c <= '9' ? c - '0' : c >= 'a' && c <= 'c' ? c - 'a' + 10 : 0; }
-/* a melodic pattern's step: the degree 1..12 (0 a rest); its length in sixteenths, octave shift (-2..2), velocity
- * (0 the default) and the second voice's degree (0 none) through the pointers */
-int dk_fb_mel(int t, int p, int step, int *len, int *oct, int *vel, int *deg2)
-{
-    const char *const *r = fb_row(t, p);
-    int d = fb_deg(dk_fch(r[1], step)), l = dk_fch(r[2], step), o = dk_fch(r[3], step), v = dk_fch(r[4], step);
-    if (len)
-        *len = l >= '1' && l <= '9' ? l - '0' : l >= 'a' && l <= 'f' ? l - 'a' + 10 : l == 'g' ? 16 : 1;
-    if (oct)
-        *oct = o == 'd' ? -1 : o == 'D' ? -2 : o == 'u' ? 1 : o == 'U' ? 2 : 0;
-    if (vel)
-        *vel = v >= '1' && v <= '9' ? 20 + 11 * (v - '0') : 0;
-    if (deg2)
-        *deg2 = fb_deg(dk_fch(r[5], step));
-    return d;
+    const dk_clip_t *c = CLIP(dk_song.cur_part, t);
+    int i, lo = -1;
+    for (i = 0; i < c->n; i++) {
+        const dk_ev_t *e = &dk_ev[c->at + i];
+        if (!(e->fl & EV_MOTION) && e->pos == 0 && (lo < 0 || e->note < lo))
+            lo = e->note;
+    }
+    return lo;
 }
 
-static void finger_tick(int t, uint32_t pats, uint8_t var, int is_fill)
+/* FILL (GLOBAL held) on a drum track: a bar that builds - the snare in sixteenths, the toms coming down, louder to its end */
+static void fill_tick(int t)
 {
     const dk_engine_t *e = dk_engine(t);
-    uint32_t g = gt + (var & 16 ? DK_T16 : 0) - (var & 32 ? DK_T16 : 0) + 100000u * DK_T16;
-    int unit = var & 1 ? 2 * DK_T16 : var & 2 ? DK_T16 / 2 : DK_T16, step, p, lane;
-    if (g % (uint32_t)unit)
+    int step, l, n = e->nlanes;
+    float v;
+    if (gt % DK_T16 || n < 2)
         return;
-    step = (int)((g / (uint32_t)unit) % 16u);
-    for (p = 0; p < 16; p++) {
-        if (!(pats >> p & 1u))
-            continue;
-        if (e->flags & EF_DRUM) {
-            for (lane = 0; lane < 8 && lane < e->nlanes; lane++) {
-                int v = dk_fb_drum(t, p, lane, step);
-                float vel;
-                if (!v)
-                    continue;
-                vel = (float)v * (1.0f / 9.0f);
-                if ((var & 4) && step % 4 == 0)
-                    vel = fm_minf(1.0f, vel * 1.3f);
-                if (var & 8)
-                    vel *= 0.55f;
-                note_play(t, e->lane_note[lane], vel * (0.92f + 0.08f * dk_frand()), (int32_t)((float)DK_T16 * tick_len),
-                          jitter() / 3 + swing_delay(t, step * DK_T16), is_fill ? 1 : 2);
-                if (rec_track_of(t))
-                    rec_done(t, e->lane_note[lane], (int)(vel * 127.0f), DK_T16);
-            }
-        } else {
-            int len, oct, pv, d2, v = dk_fb_mel(t, p, step, &len, &oct, &pv, &d2), voice;
-            static const uint8_t BASE[R_N] = {36, 36, 60, 64, 55, 72, 79, 60};
-            if (!v)
+    step = (int)((gt / DK_T16) % 16u);
+    v = 0.45f + 0.5f * (float)step / 15.0f;
+    if (step % 4 == 0)
+        note_play(t, e->lane_note[0], v, (int32_t)((float)DK_T16 * tick_len), 0, 1);
+    l = step < 8 || n < 5 ? 1 : 4 + (step / 2) % (n - 4 > 0 ? n - 4 : 1);   /* the snare, then what follows it in the kit */
+    note_play(t, e->lane_note[l % n], v * (step % 2 ? 0.8f : 1.0f), (int32_t)((float)DK_T16 * tick_len),
+              jitter() / 3 + swing_delay(t, step * DK_T16), 1);
+}
+
+
+/* ----------------------------------------------------------------- GROOVE --- */
+/* A drum track played as EZdrummer: the tape's grooves (white 1-15), fills (black 1-10), DICE (black 11), the ending
+ * (white 16). A new groove comes in on the next bar (from silence at once: stopped, on the free clock from the next 1/16);
+ * a fill from the next beat to the bar's end, the groove under it stopped there, then on (a long fill: a crash on the
+ * next one). Stopped with the transport. Recording, its notes go into the clip as any generator's.
+ * The groove plays from a copy (gp[t]) the drummer can change: DICE (the same drums, other hits), MUTATE (a hit or two
+ * moved every two bars), FOLLOW (fewer hits when the others play little, ghosts when they play a lot); its white key
+ * again brings the written one back. AUTO FILL: a fill every 4 / 8 / 16 bars, a long one before a new section.
+ * The track's drv[]: 0 AUTO FILL (0 off, 1 4 bars, 2 8, 3 16), 1 MUTATE 0..100, 2 FOLLOW 0..100. */
+#define GP_ROWS 8
+typedef struct {
+    uint8_t n, note[GP_ROWS], len[GP_ROWS], v[GP_ROWS][32], mod;   /* v: 0 none, else 1..9 */
+} gpat_t;
+static gpat_t gp[DK_NTRACK] DK_POOL;
+volatile uint8_t dk_gr_cur[DK_NTRACK], dk_gr_next[DK_NTRACK] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, dk_gr_fill[DK_NTRACK];
+volatile uint8_t dk_gr_mod[DK_NTRACK], dk_gr_dens[DK_NTRACK];   /* changed from the written one; FOLLOW's level 0..100 */
+volatile uint32_t dk_gr_hits;                         /* (the drummer's notes so far: the tests) */
+static uint8_t gr_fst[DK_NTRACK], gr_from[DK_NTRACK];   /* the fill: 1 this bar (from gr_from), 2 the next bar */
+static uint32_t gr_bar0[DK_NTRACK];                    /* stopped: the free clock's tick its first step was */
+static uint16_t gr_bars[DK_NTRACK];                    /* bars since it started (AUTO FILL, MUTATE) */
+static uint16_t gr_act_at[DK_NTRACK];          /* FOLLOW: the other tracks' notes, counted; at the bar line */
+static float gr_dens[DK_NTRACK];                       /* their density, smoothed, 0..1 */
+static int groove_note(char c)
+{
+    switch (c) {
+    case 'K': return 36;
+    case 'S': return 38;
+    case 'R': return 37;
+    case 'P': return 39;
+    case 'H': return 42;
+    case 'O': return 46;
+    case 'L': return 45;
+    case 'M': return 47;
+    case 'T': return 50;
+    case 'X': return 49;
+    case 'Y': return 51;
+    case 'Z': return 70;
+    case 'W': return 76;
+    default: return -1;
+    }
+}
+static int grand(int n) { return n > 0 ? (int)(dk_frand() * (float)n) % n : 0; }
+static void groove_hit(int t, int note, int d, int step)
+{
+    int vel = 30 + 10 * d + grand(9) - 4;
+    vel = vel < 1 ? 1 : vel > 127 ? 127 : vel;
+    dk_gr_hits++;
+    note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)DK_T16 * tick_len), jitter() / 3 + swing_delay(t, step * DK_T16), 2);
+    if (rec_track_of(t))
+        rec_done(t, note, vel, DK_T16);
+}
+/* the written groove into the copy (its full rows; the short ones are a fill's / the ending's) */
+static void gp_load(int t, const dk_groove_t *g)
+{
+    gpat_t *p = &gp[t];
+    const char *r = g->rows;
+    p->n = 0;
+    p->mod = 0;
+    dk_gr_mod[t] = 0;
+    while (*r && p->n < GP_ROWS) {
+        const char *e = r + 1;
+        int n, note = groove_note(*r), i;
+        while (*e && *e != '|')
+            e++;
+        n = (int)(e - r) - 1;
+        if (note >= 0 && n >= 16) {
+            n = n >= 32 ? 32 : 16;
+            p->note[p->n] = (uint8_t)note;
+            p->len[p->n] = (uint8_t)n;
+            for (i = 0; i < 32; i++)
+                p->v[p->n][i] = (uint8_t)(i < n && r[1 + i] >= '1' && r[1 + i] <= '9' ? r[1 + i] - '0' : 0);
+            p->n++;
+        }
+        r = *e ? e + 1 : e;
+    }
+}
+/* a step that holds the groove up: the kick on the one, the snare's backbeats, the crash */
+static int gp_strong(int note, int i)
+{
+    return (note == 36 && i % 16 == 0) || (note == 38 && (i % 16 == 4 || i % 16 == 12)) || note == 49;
+}
+static int gp_keeper(int note) { return note == 42 || note == 46 || note == 51 || note == 70; }   /* the hats, the ride, the shaker */
+/* DICE: the same drums, other hits: each row keeps how many it has (its strong ones where they are), the rest put again
+ * where that drum would go (the kick on 8ths, the snare's ghosts between, the hats their grid, an accent moved) */
+static void gp_dice(int t)
+{
+    gpat_t *p = &gp[t];
+    int r, i, bar;
+    for (r = 0; r < p->n; r++) {
+        int note = p->note[r], len = p->len[r];
+        for (bar = 0; bar < len; bar += 16) {
+            uint8_t *v = &p->v[r][bar], vel[16];
+            int nv = 0, free = 0, k;
+            if (gp_keeper(note)) {           /* the time keepers: the grid stays, a hit or two in or out, the accents moved */
+                int sh = grand(3) * 2;
+                uint8_t w[16];
+                for (i = 0; i < 16; i++)
+                    w[i] = v[(i + 16 - sh) % 16] && v[i] ? v[(i + 16 - sh) % 16] : v[i];
+                for (i = 0; i < 16; i++)
+                    v[i] = w[i];
+                for (k = 0; k < 2; k++) {
+                    i = grand(16);
+                    if (v[i] && i % 4)
+                        v[i] = 0;
+                    else if (!v[i] && i % 2)
+                        v[i] = 3;
+                }
                 continue;
-            if (dk_song.trk[t].role == R_PAD && len < 4)
-                len = 4;                         /* a pad swells slowly: a 16th would never be heard */
-            for (voice = 0; voice < 2; voice++) {
-                int base = BASE[dk_song.trk[t].role % R_N] + 12 * dk_song.trk[t].oct, tone, note, vel;
-                int dg = voice ? d2 : v;
-                if (!dg)
-                    continue;
-                tone = (dg - 1) % 4;
-                note = dk_nearest(base + 12 * ((dg - 1) / 4), harm.pcs[tone < harm.n ? tone : 0], base - 6, base + 30) +
-                       12 * oct;
-                note = note < 0 ? note + 12 : note > 127 ? note - 12 : note;
-                vel = (var & 8) ? 50 : (var & 4) && step % 4 == 0 ? 110 : pv ? pv : 84;
-                note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)(len * unit) * tick_len * 0.9f),
-                          jitter() + (int32_t)(0.012f * DK_SR) + swing_delay(t, step * DK_T16), 2);
-                if (rec_track_of(t))
-                    rec_done(t, note, vel, len * unit);
+            }
+            for (i = 0; i < 16; i++)         /* the rest: keep the strong, gather the others' forces */
+                if (v[i] && !gp_strong(note, i))
+                    vel[nv++] = v[i], v[i] = 0;
+            for (k = 0; k < nv; k++) {       /* each again on a free step that suits the drum */
+                int tries;
+                for (tries = 0; tries < 24; tries++) {
+                    int c = note == 36 ? grand(8) * 2 + (grand(4) == 0) : note == 38 ? grand(16) : grand(8) * 2;
+                    c &= 15;
+                    if (!v[c] && !(note == 36 && (c == 4 || c == 12))) {
+                        v[c] = note == 38 && vel[k] > 5 && c % 4 ? 2 : vel[k];   /* (an off snare: a ghost) */
+                        break;
+                    }
+                }
+                free += tries == 24;
+            }
+            (void)free;
+        }
+    }
+    p->mod = 1;
+    dk_gr_mod[t] = 1;
+}
+/* MUTATE: one or two hits moved a step or two, a ghost in, a weak one out */
+static void gp_mutate(int t, int amount)
+{
+    gpat_t *p = &gp[t];
+    int k, n = 1 + (amount > 60) + (amount > 90);
+    if (!p->n)
+        return;
+    for (k = 0; k < n; k++) {
+        int r = grand(p->n), len = p->len[r], i = grand(len), note = p->note[r], j, what = grand(3);
+        uint8_t *v = p->v[r];
+        if (note == 49)
+            continue;
+        if (what == 0 && v[i] && !gp_strong(note, i)) {   /* moved */
+            j = (i + (grand(2) ? 1 : -1) * (1 + grand(2)) + len) % len;
+            if (!v[j] && !gp_strong(note, j))
+                v[j] = v[i], v[i] = 0;
+        } else if (what == 1 && !v[i] && i % 2 && (note == 38 || gp_keeper(note)))   /* a ghost */
+            v[i] = 2;
+        else if (what == 2 && v[i] && v[i] <= 5 && !gp_strong(note, i))   /* a weak one out */
+            v[i] = 0;
+    }
+    p->mod = 1;
+    dk_gr_mod[t] = 1;
+}
+/* the rows of a written groove (`once`: its short rows only, at the one: a fill's after, the ending) */
+static void groove_rows(int t, const dk_groove_t *g, uint32_t q, int step, int once)
+{
+    const char *r = g->rows;
+    while (*r) {
+        const char *e = r + 1;
+        int n, note = groove_note(*r);
+        while (*e && *e != '|')
+            e++;
+        n = (int)(e - r) - 1;
+        if (note >= 0 && n > 0) {
+            if (once) {
+                if (n < 16 && r[1] >= '1' && r[1] <= '9')
+                    groove_hit(t, note, r[1] - '0', 0);
+            } else if (n >= 16) {
+                char c = r[1 + (int)(q % (uint32_t)(n >= 32 ? 32 : 16))];
+                if (c >= '1' && c <= '9')
+                    groove_hit(t, note, c - '0', step);
+            }
+        }
+        r = *e ? e + 1 : e;
+    }
+}
+/* the copy at 1/16 q, FOLLOW's level on it: below the middle the weak hits thin out, above it ghosts come in */
+static void gp_play(int t, uint32_t q, int step)
+{
+    const gpat_t *p = &gp[t];
+    int r, fol = dk_song.trk[t].drv[2];
+    float lvl = 0.5f + (gr_dens[t] - 0.5f) * (float)(fol > 100 ? 100 : fol) * 0.01f;   /* 0.5: as written */
+    for (r = 0; r < p->n; r++) {
+        int note = p->note[r], i = (int)(q % p->len[r]), d = p->v[r][i];
+        if (d) {
+            if (fol && lvl < 0.5f && !gp_strong(note, i) && (i % 4 || d <= 5) && dk_frand() > lvl * 2.0f)
+                continue;                    /* the others quiet: the drummer plays less */
+            groove_hit(t, note, d, step);
+        } else if (fol && lvl > 0.5f && step % 2 && dk_frand() < (lvl - 0.5f) * 0.7f) {
+            if (note == 42 || (note == 38 && dk_frand() < 0.4f))
+                groove_hit(t, note, note == 38 ? 2 : 3, step);   /* the others busy: ghosts, the hat in 16ths */
+        }
+    }
+}
+static int fill_first(const dk_groove_t *f)   /* the step its notes start (the full rows) */
+{
+    const char *r = f->rows;
+    int first = 15;
+    while (*r) {
+        const char *e = r + 1;
+        int n, i;
+        while (*e && *e != '|')
+            e++;
+        n = (int)(e - r) - 1;
+        for (i = 0; n >= 16 && i < 16; i++)
+            if (r[1 + i] != '.') {
+                first = i < first ? i : first;
+                break;
+            }
+        r = *e ? e + 1 : e;
+    }
+    return first;
+}
+static uint32_t groove_pos(int t) { return dk_playing ? part_tick : gt - gr_bar0[t]; }
+static void groove_fill_at(int t, int b, uint32_t pos);
+static int groove_section(int g) { return g ? (g - 1) / 3 : -1; }
+static void groove_tick(int t)
+{
+    uint32_t pos = groove_pos(t), q;
+    int step;
+    if (!TAPE.groove || pos % DK_T16)
+        return;
+    q = pos / DK_T16;
+    step = (int)(q % 16u);
+    if (step == 0) {                           /* the bar line */
+        const dk_track_t *k = &dk_song.trk[t];
+        uint16_t act = (uint16_t)(gr_act - gr_act_at[t]);
+        gr_act_at[t] = gr_act;                 /* FOLLOW: the others' notes this bar (16 a bar: busy) */
+        gr_dens[t] += ((float)(act > 24 ? 24 : act) / 24.0f - gr_dens[t]) * 0.5f;
+        dk_gr_dens[t] = (uint8_t)(gr_dens[t] * 100.0f);
+        if (gr_fst[t] == 1) {                  /* the fill done (its crash) */
+            if (dk_gr_fill[t] && dk_gr_fill[t] <= TAPE.nfill)
+                groove_rows(t, &TAPE.fill[dk_gr_fill[t] - 1], q, 0, 1);
+            gr_fst[t] = 0;
+            dk_gr_fill[t] = 0;
+        } else if (gr_fst[t] == 2)
+            gr_fst[t] = 1;
+        if (dk_gr_next[t] != 0xFF) {           /* the groove queued */
+            if (dk_gr_next[t] == 0) {
+                if (dk_gr_cur[t] && TAPE.groove_end)
+                    groove_rows(t, TAPE.groove_end, q, 0, 1);
+                dk_gr_cur[t] = 0;
+                gr_fst[t] = 0;
+                dk_gr_fill[t] = 0;
+            } else if (dk_gr_next[t] <= TAPE.ngroove) {
+                dk_gr_cur[t] = dk_gr_next[t];
+                gp_load(t, &TAPE.groove[dk_gr_cur[t] - 1]);
+                gr_bars[t] = 0;
+            }
+            dk_gr_next[t] = 0xFF;
+        } else if (dk_gr_cur[t]) {
+            gr_bars[t]++;
+            if (k->drv[1] && gr_bars[t] % 2 == 0 && grand(100) < k->drv[1])
+                gp_mutate(t, k->drv[1]);
+            if ((k->drv[0] & 3) && !gr_fst[t] && TAPE.nfill) {   /* AUTO FILL: in the last bar of 4 / 8 / 16 */
+                int every = 4 << ((k->drv[0] & 3) - 1);
+                if ((gr_bars[t] + 1) % every == 0)
+                    groove_fill_at(t, 1 + grand(TAPE.nfill > 4 ? 4 : TAPE.nfill), pos);
             }
         }
     }
+    if (!dk_gr_cur[t])
+        return;
+    if (gr_fst[t] == 1 && step >= gr_from[t] && dk_gr_fill[t] && dk_gr_fill[t] <= TAPE.nfill) {
+        groove_rows(t, &TAPE.fill[dk_gr_fill[t] - 1], (uint32_t)step, step, 0);
+        return;
+    }
+    gp_play(t, q, step);
+}
+/* a fill b (1..): from the next beat, or where its notes start; too late in the bar: the whole next bar */
+static void groove_fill_at(int t, int b, uint32_t pos)
+{
+    uint32_t q = (pos + DK_T16 - 1) / DK_T16;
+    int step = (int)(q % 16u), nb = (step + 3) / 4 * 4, first = fill_first(&TAPE.fill[b - 1]);
+    dk_gr_fill[t] = (uint8_t)b;
+    if (q % 16u == 0 && pos % DK_T16 == 0)
+        nb = 0;
+    if (nb >= 16 || (step > first && nb > 12)) {
+        gr_fst[t] = 2;
+        gr_from[t] = (uint8_t)first;
+    } else {
+        gr_fst[t] = 1;
+        gr_from[t] = (uint8_t)(nb > first ? nb : first);
+    }
+}
+static void play_start(void);
+/* a GROOVE track of the set (bits) whose drummer plays */
+static int groove_in(int mask)
+{
+    int t;
+    for (t = 0; t < DK_NTRACK; t++)
+        if ((mask >> t & 1) && dk_song.trk[t].seq == SQ_GROOVE && dk_gr_cur[t])
+            return 1;
+    return 0;
+}
+/* C_GROOVE: kind 0 a groove (b 1..15; 0 the ending), 1 a fill (b 1..), 2 off at once, 3 DICE */
+static void groove_cmd(int t, int kind, int b)
+{
+    t %= DK_NTRACK;
+    if (kind == 2) {
+        dk_gr_cur[t] = 0, dk_gr_next[t] = 0xFF, dk_gr_fill[t] = 0, gr_fst[t] = 0;
+        return;
+    }
+    if (kind == 3) {
+        if (dk_gr_cur[t])
+            gp_dice(t);
+        return;
+    }
+    if (kind == 0) {
+        if (b > TAPE.ngroove)
+            return;
+        if (b && rec_wait_note && !dk_playing) {   /* REC waiting for the first note: a groove is one - the take starts with it */
+            rec_wait_note = 0;
+            play_start();
+            rec_on_now();
+            dk_gr_cur[t] = (uint8_t)b;
+            dk_gr_next[t] = 0xFF;
+            gp_load(t, &TAPE.groove[b - 1]);
+            gr_bars[t] = 0;
+            return;
+        }
+        if (!dk_gr_cur[t] && b) {              /* from silence: at once (playing: where the bar is; stopped: its bar from the next 1/16) */
+            if (!dk_playing)
+                gr_bar0[t] = gt + (DK_T16 - gt % DK_T16) % DK_T16;
+            dk_gr_cur[t] = (uint8_t)b;
+            dk_gr_next[t] = 0xFF;
+            gp_load(t, &TAPE.groove[b - 1]);
+            gr_bars[t] = 0;
+            return;
+        }
+        if (b && (dk_song.trk[t].drv[0] & 3) && !gr_fst[t] && groove_section(b) != groove_section(dk_gr_cur[t]) &&
+            TAPE.nfill > 4)                    /* AUTO FILL: a new section: a long fill into it */
+            groove_fill_at(t, 5 + grand(TAPE.nfill - 4), groove_pos(t));
+        dk_gr_next[t] = (uint8_t)b;            /* on the next bar (the same one again: the written one back) */
+        return;
+    }
+    if (!dk_gr_cur[t] || b < 1 || b > TAPE.nfill)
+        return;
+    groove_fill_at(t, b, groove_pos(t));
 }
 
 /* -------------------------------------------------------------------- ARP --- */
@@ -792,6 +1128,53 @@ static void arp_publish(int t)
         dk_held[t][i] = arp_order[t][i];
     dk_held_n[t] = arp_n[t];
 }
+/* one pitch, however many keys hold it: letting the old chord go must not take a note the new chord still holds
+ * (that left only the low one and the high one). a full pattern drops the oldest pitch the new chord does not use */
+static void arp_drop_at(int t, int drop)
+{
+    int i;
+    for (i = drop + 1; i < arp_n[t]; i++) {
+        arp_order[t][i - 1] = arp_order[t][i];
+        arp_cnt[t][i - 1] = arp_cnt[t][i];
+    }
+    arp_n[t]--;
+}
+static void arp_add(int t, int note)
+{
+    int i;
+    note &= 127;
+    for (i = 0; i < arp_n[t]; i++)
+        if (arp_order[t][i] == (uint8_t)note) {
+            if (arp_cnt[t][i] < 255)
+                arp_cnt[t][i]++;
+            return;
+        }
+    if (arp_n[t] >= 8) {
+        int drop = 0;
+        for (i = 0; i < arp_n[t]; i++)
+            if (arp_cnt[t][i] <= 1) {
+                drop = i;
+                break;
+            }
+        arp_drop_at(t, drop);
+    }
+    arp_order[t][arp_n[t]] = (uint8_t)note;
+    arp_cnt[t][arp_n[t]] = 1;
+    arp_n[t]++;
+}
+static void arp_sub(int t, int note)
+{
+    int i;
+    for (i = 0; i < arp_n[t]; i++)
+        if (arp_order[t][i] == (uint8_t)note) {
+            if (arp_cnt[t][i] > 1) {
+                arp_cnt[t][i]--;
+                return;
+            }
+            arp_drop_at(t, i);
+            return;
+        }
+}
 
 /* ------------------------------------------------------------- modulators --- */
 static void mods_tick(void)
@@ -850,10 +1233,14 @@ static void motion_reset(void)
 }
 
 /* --------------------------------------------------------------- transport --- */
+/* (rec_loop: a take asked for - see rec_stop) */
+static int song_on(void) { return dk_song.play_mode && dk_song.nroad && !rec_loop; }
+/* the part that is about to play: its instruments (song.c) */
+void part_inst_sync(int p);
 static void block_enter(void)
 {
     const dk_block_t *b;
-    if (dk_song.play_mode && dk_song.nroad) {
+    if (song_on()) {
         if (dk_road_i >= dk_song.nroad)
             dk_road_i = 0;
         b = &dk_song.road[dk_road_i];
@@ -867,6 +1254,7 @@ static void block_enter(void)
     dk_cur_part = cur_part;
     dk_part_len = (uint16_t)part_len_of(cur_part);
     stop_to = 1.0f;
+    part_inst_sync(cur_part);            /* the block's part brings its own instruments */
 }
 static uint8_t road_from;                  /* SONG: the block PLAY starts from (the one chosen on ROAD) */
 static void play_start(void)
@@ -876,7 +1264,7 @@ static void play_start(void)
     part_tick = 0;
     bar_n = 0;
     part_loops = 0;
-    if (dk_song.play_mode) {
+    if (song_on()) {
         dk_road_i = road_from < dk_song.nroad ? road_from : 0;
         road_from = 0;
         dk_road_rep = 0;
@@ -898,9 +1286,12 @@ static void play_stop(void)
 {
     int i;
     rec_stop();
+    rec_loop = 0;                              /* (the stop gives the road back) */
     pm_apply();
     dk_playing = 0;
     dk_stems = 0;
+    for (i = 0; i < DK_NTRACK; i++)        /* GROOVE: the drummer stops with the song */
+        groove_cmd(i, 2, 0);
     stems_solo = 0xFF;
     queued = 0xFF;
     dk_next_part = 0xFF;
@@ -915,12 +1306,25 @@ static void play_stop(void)
         dk_midi_out(0xFC, 0, 0);
 }
 
+/* a mono lead's keys held (the hand's), the last on top: let the top one go and the voice slides back to the one still
+ * held, as a mono synth does (EF_LEGATO) */
+static uint8_t mono_stk[DK_NTRACK][8], mono_n[DK_NTRACK], mono_vel[DK_NTRACK];
+static void mono_drop(int t, int note)
+{
+    int i, j = 0;
+    for (i = 0; i < mono_n[t]; i++)
+        if (mono_stk[t][i] != note)
+            mono_stk[t][j++] = mono_stk[t][i];
+    mono_n[t] = (uint8_t)j;
+}
 static void live_note(int t, int note, int vel, int delay)
 {
     dk_track_t *k = &dk_song.trk[t];
     const dk_engine_t *e = dk_engine(t);
     if ((unsigned)t >= DK_NTRACK)
         return;
+    if (vel && !(e->flags & EF_DRUM))
+        gr_act++;                              /* (GROOVE's FOLLOW: the hands count too) */
     if (vel) {
         if (rec_wait_note && !dk_playing) {    /* armed: the first note starts the take */
             rec_wait_note = 0;
@@ -950,21 +1354,26 @@ static void live_note(int t, int note, int vel, int delay)
             }
         }
         if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {   /* ARP over the sequencer: the keys feed it */
-            if (!arp_keys[t])                  /* a new hand from silence: the pattern starts again from its first step */
+            if (!arp_keys[t]) {                /* a new hand from silence: the pattern starts again from its first step.
+                                                * latched notes are replaced (the same key stops them before it gets here) */
                 arp_step[t] = 0;
-            if (!arp_keys[t] && !k->arp[3])
                 arp_n[t] = 0;
-            if (k->arp[3] && !arp_keys[t])     /* latched: a new hand replaces the old */
-                arp_n[t] = 0;
+            }
             arp_keys[t]++;
-            if (arp_n[t] < 8)
-                arp_order[t][arp_n[t]++] = (uint8_t)note;
+            arp_add(t, note);
             arp_publish(t);
             return;
         }
+        if (e->flags & EF_LEGATO) {
+            mono_drop(t, note);
+            if (mono_n[t] >= 8)
+                mono_drop(t, mono_stk[t][0]);
+            mono_stk[t][mono_n[t]++] = (uint8_t)note;
+            mono_vel[t] = (uint8_t)vel;
+        }
         voice_start(t, note, (float)vel * (1.0f / 127.0f), -1, delay, 0, 0);
         if (rec_track_of(t))
-            rec_open(t, note, vel);
+            rec_open(t, note, vel, delay);
         else if (rec_pre_track(t)) {           /* a touch early: kept for the take's first beat */
             pre_vel[note] = (uint8_t)vel;
             pre_trk[note] = (uint8_t)t;
@@ -976,15 +1385,24 @@ static void live_note(int t, int note, int vel, int delay)
         if (dk_arp_on(k) && !(dk_engine(t)->flags & EF_DRUM)) {
             if (arp_keys[t])
                 arp_keys[t]--;
-            if (!k->arp[3]) {
-                int i, j = 0;
-                for (i = 0; i < arp_n[t]; i++)
-                    if (arp_order[t][i] != note)
-                        arp_order[t][j++] = arp_order[t][i];
-                arp_n[t] = (uint8_t)j;
-            }
+            if (!k->arp[3])                    /* latched: the notes stay until the same key (or a new hand) */
+                arp_sub(t, note);
             arp_publish(t);
             return;
+        }
+        if (e->flags & EF_LEGATO) {
+            int top = mono_n[t] ? mono_stk[t][mono_n[t] - 1] : -1, i, back = 0;
+            mono_drop(t, note);
+            if (top == note && mono_n[t])          /* the top key let go, another still held: back to it, legato */
+                for (i = 0; i < DK_NVOICE && !back; i++)
+                    if (vc[i].on && vc[i].held && vc[i].trk == t && vc[i].note == note && vc[i].gate < 0 && !vc[i].src)
+                        back = 1;
+            if (back) {
+                voice_start(t, mono_stk[t][mono_n[t] - 1], (float)mono_vel[t] * (1.0f / 127.0f), -1, 0, 0, 0);
+                if (rec_track_of(t))
+                    rec_close(note, 0);
+                return;
+            }
         }
         voices_off_note(t, note);
         if (rec_track_of(t))
@@ -1011,24 +1429,19 @@ static void metro_tick(void)
         }
     }
 }
-
-static void drive_tick(int t)
+/* METRO ALWAYS, transport stopped: the same click, on the free clock */
+static void metro_free(void)
 {
-    dk_drive_t d;
-    const dk_track_t *k = &dk_song.trk[t];
-    int plen = part_len_of(cur_part), bar = (int)(bar_n % 8u);
-    d.trk = (uint8_t)t;
-    d.role = k->role;
-    d.style = k->drv[1];
-    d.energy = k->drv[0];
-    d.var = k->drv[2];
-    d.tick = dk_ticks;
-    d.bar_tick = (uint32_t)(part_tick % DK_TPB);
-    d.fill = (uint8_t)(dk_fill || (bar % 4 == 3 && (k->drv[2] > 30 || bar == 7)));
-    d.breath = (uint8_t)(TAPE.style_breath && TAPE.style_breath[dk_song.style % TAPE.nstyle] && bar == 7);
-    d.part_end = (uint8_t)(part_tick >= plen - DK_TPB && (dk_song.play_mode ? block_last : queued != 0xFF));
-    if (TAPE.drive)
-        TAPE.drive(&d, &harm);
+    static const uint8_t DV[3] = {DK_PPQ, DK_PPQ / 2, DK_PPQ / 4};
+    int dv = DV[dk_metro.div % 3];
+    if (gt % (uint32_t)dv)
+        return;
+    if (gt % DK_PPQ == 0)
+        metro_click(gt % DK_TPB == 0);
+    else {
+        metro_click(0);
+        clk.env *= 0.4f;
+    }
 }
 
 static void road_next(void)
@@ -1080,11 +1493,16 @@ static void seq_tick(void)
     if (!dk_playing) {                         /* stopped: the hands' generators still run, on the free clock */
         for (t = 0; t < DK_NTRACK; t++) {
             const dk_track_t *k = &dk_song.trk[t];
+            const dk_engine_t *e = dk_engine(t);
             if (dk_arp_on(k))
                 arp_tick(t);
-            else if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
-                finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
+            if (dk_fill && (e->flags & EF_DRUM))   /* FILL held: the building bar, instead of the groove */
+                fill_tick(t);
+            else if (k->seq == SQ_GROOVE)
+                groove_tick(t);
         }
+        if (dk_metro.mode == 2)            /* METRO ALWAYS clicks with the transport stopped too */
+            metro_free();
         mods_tick();
         return;
     }
@@ -1107,26 +1525,29 @@ static void seq_tick(void)
     motion_expire();
     if (part_tick % DK_TPB == 0)
         harm_bar();
-    block_last = (uint8_t)(dk_song.play_mode && dk_song.nroad &&
+    block_last = (uint8_t)(song_on() &&
                            dk_road_rep + 1 >= (dk_song.road[dk_road_i].reps ? dk_song.road[dk_road_i].reps : 1));
-    if (dk_song.play_mode && (tricks & TR_STOP) && block_last && part_tick >= part_len_of(cur_part) - DK_PPQ)
+    if (song_on() && (tricks & TR_STOP) && block_last && part_tick >= part_len_of(cur_part) - DK_PPQ)
         stop_to = 0.0f;                        /* TAPESTOP: the block's last beat */
     for (t = 0; t < DK_NTRACK; t++) {
         const dk_track_t *k = &dk_song.trk[t];
         const dk_engine_t *e = dk_engine(t);
         int fill = dk_fill && (e->flags & EF_DRUM);
         if (fill)
-            finger_tick(t, 1u << (13 + (bar_n % 3u)), 0, 1);
-        else if (k->seq == SQ_DRIVE) {
+            fill_tick(t);
+        else if (k->seq == SQ_GROOVE) {      /* the drummer, or (silent) the clip: what was recorded of it */
             if (!(drop_mask >> t & 1u))
-                drive_tick(t);
+                groove_tick(t);
+            if (!dk_gr_cur[t])
+                clip_tick(t, t == dk_song.harm_track ? &hp : 0);
+        } else if (k->seq == SQ_ENDLESS) {
+            if (!(drop_mask >> t & 1u))
+                endless_tick(t);
         } else
             clip_tick(t, t == dk_song.harm_track ? &hp : 0);
         auto_tick(t);
         if (dk_arp_on(k))
             arp_tick(t);
-        if (k->seq == SQ_FINGER && (finger_held[t] || dk_finger_latch[t]))
-            finger_tick(t, finger_held[t] | dk_finger_latch[t], finger_var[t], 0);
     }
     if (auto_dirty) {
         auto_dirty = 0;
@@ -1148,7 +1569,7 @@ static void seq_tick(void)
         pm_apply();                            /* the part's mutes asked for during the bar */
         if (rec_bake && --rec_bake == 0)       /* BAKE done (the UI turns the track to STEP) */
             rec_stop();
-        if (!dk_song.play_mode && queued != 0xFF) {   /* PART: the queued part, from the bar's end */
+        if (!song_on() && queued != 0xFF) {   /* PART: the queued part, from the bar's end */
             cur_part = queued;
             queued = 0xFF;
             dk_next_part = 0xFF;
@@ -1162,23 +1583,49 @@ static void seq_tick(void)
             return;
         }
     }
-    if (dk_recording) {                        /* the recording clip comes round: a new pass (a layer for undo) */
+    if (dk_recording) {                        /* the recording clip comes round: a new pass (a layer for undo).
+                                             * a key still down is not cut here: this pass keeps it to the bar line,
+                                             * the next pass keeps the rest, from 0, until the key is let go */
         int clen = clip_len_of(cur_part, dk_rec_trk);
         if (clen > 0 && part_tick % clen == 0) {
-            int i;
-            rec_close_all();
+            int i, n = 0;
+            static uint8_t hn[128], hv[128], ht[128], hc[128];
+            for (i = 0; i < 128; i++) {
+                if (open_pos[i] < 0)
+                    continue;
+                if (open_carry[i]) {          /* already one continuation. a second bar held is the whole loop,
+                                               * written when the key is let go, not a new full bar every time round */
+                    open_full[i] = 1;
+                    continue;
+                }
+                hn[n] = (uint8_t)i;
+                hv[n] = open_vel[i];
+                ht[n] = open_trk[i];
+                hc[n] = open_nc[i];
+                n++;
+                rec_close(i, 1);
+            }
             if (dk_pass < 250)
                 dk_pass++;
             for (i = 0; i < DK_NTRACK; i++)
                 if ((dk_rec_mask >> i & 1u) && dk_rec_take[i] && dk_rec_take[i] < 31)
                     dk_rec_take[i]++;          /* the floor stays: REPLACE still means "what was there before this press" */
+            for (i = 0; i < n; i++) {
+                if (!rec_track_of(ht[i]))
+                    continue;
+                open_pos[hn[i]] = 0;
+                open_vel[hn[i]] = hv[i];
+                open_trk[hn[i]] = ht[i];
+                open_nc[hn[i]] = hc[i];
+                open_carry[hn[i]] = 1;
+            }
         }
         open_publish();
     }
     if (part_tick >= part_len_of(cur_part)) {
         part_tick = 0;
         part_loops++;
-        if (dk_song.play_mode && dk_song.nroad)
+        if (song_on())
             road_next();
         for (t = 0; t < DK_NTRACK; t++)
             pedal_v[t][0] = pedal_v[t][1] = 0.0f;
@@ -1208,6 +1655,9 @@ static void drain(void)
         case C_REC:
             if (a) {
                 int t = c.d & 7, bake = (c.d >> 8) & 31;
+                rec_loop = 1;                  /* (the take's part goes round, SONG or not) */
+                drop_mask = 0;                 /* (and plain: a ROAD block's DROP and tricks do not silence what is recorded) */
+                tricks = 0;
                 int t2 = c.d >> 16 & 0xFF, m = c.d >> 24 & 0x3F, i, lay = 0;
                 if (t >= DK_NTRACK)
                     t = 0;
@@ -1229,7 +1679,10 @@ static void drain(void)
                     rec_on_now();
                 } else if (dk_playing)
                     rec_on_now();
-                else if (dk_metro.on_note)
+                else if (groove_in(m)) {       /* a drummer playing (stopped, its own clock): the take starts now, from the bar */
+                    play_start();
+                    rec_on_now();
+                } else if (dk_metro.on_note)
                     rec_wait_note = 1;
                 else {
                     count_left = (dk_metro.count ? dk_metro.count : 1) * DK_TPB;
@@ -1296,10 +1749,18 @@ static void drain(void)
                     dk_cur_part = cur_part;
                     dk_part_len = (uint16_t)len;
                     rec_split_open();
+                    part_inst_sync(cur_part);    /* the take went on into this part: its instruments too */
                 } else {
                     if (dk_playing)
                         part_tick = 0;
                     block_enter();
+                    if (!dk_playing) {           /* a song's road must not pull the part back: this is the one being edited */
+                        cur_part = (uint8_t)a;
+                        dk_song.cur_part = (uint8_t)a;
+                        dk_cur_part = cur_part;
+                        dk_part_len = (uint16_t)part_len_of(cur_part);
+                        part_inst_sync(cur_part);
+                    }
                 }
             } else {
                 queued = (uint8_t)a;
@@ -1318,20 +1779,11 @@ static void drain(void)
                 vc[i].on = 0;
             break;
         }
-        case C_FINGER:                         /* a pattern's key: b 1 down, 0 up, 2 latch toggled */
-            if (b == 2)
-                dk_finger_latch[a % DK_NTRACK] ^= 1u << (c.d & 15);
-            else if (b)
-                finger_held[a % DK_NTRACK] |= (uint16_t)(1u << (c.d & 15));
-            else
-                finger_held[a % DK_NTRACK] &= (uint16_t)~(1u << (c.d & 15));
-            dk_finger_on[a % DK_NTRACK] = (uint8_t)(finger_held[a % DK_NTRACK] ? 1 : 0);
+        case C_GROOVE:                         /* GROOVE: track a, kind b, which d */
+            groove_cmd(a, b, c.d);
             break;
-        case C_FVAR:
-            if (b)
-                finger_var[a % DK_NTRACK] |= (uint8_t)(1u << (c.d & 7));
-            else
-                finger_var[a % DK_NTRACK] &= (uint8_t)~(1u << (c.d & 7));
+        case C_ENDLTR:                         /* ENDLESS: the transposition (semitones) of track a */
+            dk_endl_tr[a % DK_NTRACK] = (int8_t)(b < -48 ? -48 : b > 48 ? 48 : b);
             break;
         case C_PERFORM: {
             int on = b != 0;
@@ -1342,10 +1794,6 @@ static void drain(void)
             case PF_LOWPASS: lp_target = on ? dk_lpk(420.0f) : 1.0f; break;
             case PF_FILTERUP: lp_target = on ? dk_lpk(1500.0f) : 1.0f; break;
             case PF_RAINUP: perf_rain = (uint8_t)on; break;
-            case PF_DREAM:
-                if (on)
-                    dream_off ^= 1u;
-                break;
             case PF_HALFTIME: perf_half = (uint8_t)on; break;
             case PF_ECHOTHROW: perf_echo = (uint8_t)on; break;
             case PF_MUTEDRUMS: perf_mute_drums = (uint8_t)on; break;
@@ -1398,8 +1846,11 @@ static void drain(void)
 static void seq_init(void)
 {
     int i;
-    for (i = 0; i < 128; i++)
+    for (i = 0; i < 128; i++) {
         open_pos[i] = -1;
+        open_carry[i] = 0;
+        open_full[i] = 0;
+    }
     tempo_set();
     harm_regrow();
 }

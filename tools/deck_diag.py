@@ -28,7 +28,7 @@ def main():
     secs = float(sys.argv[1]) if len(sys.argv) > 1 else 60
     log = sys.argv[2] if len(sys.argv) > 2 else "deck_diag.txt"
     i_name, o_name = port()
-    worst = {"rmax": 0, "ui_max_ms": 0, "irqoff_max_us": 0, "scan_gap_max_us": 0}
+    worst = {"rmax": 0, "ui_max_ms": 0, "key_gap_ms": 0, "irqoff_max_us": 0, "scan_gap_max_us": 0}
     first_x = last_x = None
     with mido.open_input(i_name) as i, mido.open_output(o_name) as o, open(log, "w", encoding="utf-8") as f:
         f.write("port %s / %s\n" % (i_name, o_name))
@@ -66,8 +66,8 @@ def main():
                 x = int(kv.get("xrun", 0))
                 first_x = x if first_x is None else first_x
                 last_x = x
-                print("\r cpu %3s%%  render max %5s us (из 5805)  xrun %4s  ui %4s ms   " %
-                      (kv.get("cpu"), kv.get("rmax"), x, kv.get("ui_max_ms")), end="", flush=True)
+                print("\r cpu %3s%%  render max %5s us (из 5805)  xrun %4s  ui %4s ms  клавиши ждут до %4s ms   " %
+                      (kv.get("cpu"), kv.get("rmax"), x, kv.get("ui_max_ms"), kv.get("key_gap_ms")), end="", flush=True)
             time.sleep(0.1)
         summary = "\nSUMMARY answers=%d xruns_during=%s worst=%s\n" % (got, (last_x - first_x) if got else "-", worst)
         f.write(summary)

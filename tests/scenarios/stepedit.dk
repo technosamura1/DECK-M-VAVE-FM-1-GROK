@@ -2,7 +2,7 @@
 # in / a third on it / out, K3 a tie up to the cursor and a cut, K4 the pitch, a key at the cursor, the undo
 wait 300
 expect keyw4 60
-tap EDIT
+tap LFO
 wait 50
 turn K1 5
 turn K2 1
@@ -23,7 +23,7 @@ tap SEQ
 wait 50
 # the EDIT list: ERASE NOTES (white 12) twice, then back to SEQ
 page 11
-tap EDIT
+tap LFO
 tapkey w11
 tapkey w11
 page 1
@@ -88,16 +88,16 @@ tap PLAY
 wait 1200
 shot stepedit.png
 tap PLAY
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 50
 expect events 2
 expect textfit 0
 # a melody by the knobs only (the manual's picture)
 # the EDIT list: ERASE NOTES (white 12) twice, then back to SEQ
 page 11
-tap EDIT
+tap LFO
 tapkey w11
 tapkey w11
 page 1

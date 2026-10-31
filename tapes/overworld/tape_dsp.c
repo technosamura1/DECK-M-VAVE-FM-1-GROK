@@ -66,9 +66,6 @@ static const char *const FM_SRC[16][6] = {
     {"DENSE", "1.3.5.8.5.3.1.3.", "2.2.2.2.2.2.2.2"}, {"FILL UP", "............1235", ""},
     {"FILL DOWN", "............8531", ""},        {"HOLD", "1...............", "g"},
 };
-#include "finger_banks.c"
-
-#include "dream.c"
 
 /* -------------------------------------------------------------------- presets --- */
 /* name, engine, its parameters, ENV, the effect (kind, amount, a, b), reverb, echo, MACRO's targets and amounts, trim */
@@ -76,7 +73,7 @@ static const char *const FM_SRC[16][6] = {
 #define TINE_M {T_P1, T_FXB, T_P3}, {50, 50, -40}
 #define PAD_M {T_P0, T_REV, T_P2}, {45, 45, 40}
 #define GLASS_M {T_P1, T_ECHO, T_P3}, {45, 50, 50}
-#define BASS_M {T_P0, T_P4, T_NONE}, {-40, 50, 0}
+#define BASS_M {T_P0, T_P3, T_NONE}, {-40, 50, 0}
 #define KIT_M {T_P2, T_SWING, T_FXAMT}, {50, 40, 40}
 #define WORLD_M {T_P1, T_P2, T_REV}, {45, -40, 40}
 #define KAL_M {T_P2, T_REV, T_P0}, {50, 40, -25}
@@ -84,6 +81,9 @@ static const char *const FM_SRC[16][6] = {
 #define SYN_M {T_P1, T_P3, T_REV}, {50, 40, 40}
 #define PLK_M {T_P1, T_P2, T_REV}, {50, 40, 40}
 #define E50 {50, 50, 50}
+#define SNAP {5, 24, 18}          /* a hit: short, gone */
+#define TONE {14, 42, 36}         /* a note you play */
+#define LONG {36, 58, 72}         /* it stays */
 #define LD_M {T_P1, T_P3, T_REV}, {50, 40, 40}
 static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     /* FELT */
@@ -99,19 +99,19 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"LOFI KEYS", 0, {42, 55, 45, 60, 45}, E50, FX_N_LOFI, 40, 35, 30, 45, 15, FELT_M, 2},
     {"NIGHT", 0, {32, 70, 50, 50, 50}, E50, FX_N_TAPE, 20, 25, 20, 75, 25, FELT_M, -1},
     {"MEMORY", 0, {38, 65, 60, 55, 55}, E50, FX_N_TAPE, 45, 45, 35, 80, 20, FELT_M, -2},
-    /* TINE */
-    {"RAINY DAY", 1, {50, 35, 30, 45, 50}, E50, FX_N_TAPE, 20, 30, 25, 40, 15, TINE_M, 0},
-    {"SUITCASE", 1, {55, 50, 20, 55, 55}, E50, FX_N_NONE, 0, 0, 0, 35, 10, TINE_M, 1},
-    {"DUSTY", 1, {45, 40, 45, 35, 50}, E50, FX_N_TAPE, 40, 40, 45, 40, 15, TINE_M, 0},
-    {"VELVET", 1, {75, 55, 40, 70, 40}, E50, FX_N_CHORUS, 35, 30, 40, 50, 10, TINE_M, 3},
-    {"BELLTONE", 1, {80, 20, 20, 60, 60}, E50, FX_N_NONE, 0, 0, 0, 50, 20, TINE_M, -1},
-    {"STUDY", 1, {48, 30, 35, 40, 45}, E50, FX_N_VINYL, 30, 40, 30, 35, 12, TINE_M, 1},
-    {"WARM", 1, {30, 20, 15, 25, 55}, E50, FX_N_TAPE, 15, 20, 30, 40, 8, TINE_M, 0},
-    {"SHIMMER", 1, {65, 45, 25, 50, 65}, E50, FX_N_CHORUS, 50, 40, 50, 60, 25, TINE_M, 2},
-    {"BROKEN", 1, {50, 60, 70, 40, 45}, E50, FX_N_LOFI, 35, 40, 35, 35, 10, TINE_M, 1},
-    {"MELLOW", 1, {25, 15, 10, 20, 50}, E50, FX_N_NONE, 0, 0, 0, 45, 10, TINE_M, -1},
-    {"NIGHT", 1, {40, 55, 30, 35, 60}, E50, FX_N_SPRING, 30, 50, 40, 50, 15, TINE_M, 2},
-    {"WORN", 1, {45, 45, 60, 45, 50}, E50, FX_N_TAPE, 55, 60, 50, 40, 15, TINE_M, 0},
+    /* TINE: twelve electric pianos, not one with the knobs nudged */
+    {"RAINY DAY", 1, {48, 28, 22, 42, 58}, {14, 42, 50}, FX_N_TAPE, 18, 25, 20, 42, 14, TINE_M, 0},
+    {"SUITCASE", 1, {78, 6, 4, 82, 22}, SNAP, FX_N_NONE, 0, 0, 0, 14, 0, TINE_M, 2},
+    {"DUSTY", 1, {36, 70, 80, 28, 46}, {28, 52, 44}, FX_N_VINYL, 60, 70, 45, 32, 6, TINE_M, 0},
+    {"VELVET", 1, {88, 42, 18, 58, 78}, LONG, FX_N_CHORUS, 50, 22, 60, 58, 16, TINE_M, 2},
+    {"BELLTONE", 1, {98, 10, 6, 92, 16}, {2, 20, 42}, FX_N_SPRING, 32, 60, 50, 64, 30, TINE_M, 3},
+    {"STUDY", 1, {32, 14, 10, 22, 34}, {8, 36, 26}, FX_N_NONE, 0, 0, 0, 18, 4, TINE_M, 1},
+    {"WURLI", 1, {62, 78, 12, 60, 36}, SNAP, FX_N_TREM, 38, 22, 48, 22, 6, TINE_M, 8},
+    {"SHIMMER", 1, {74, 30, 14, 46, 86}, LONG, FX_N_CHORUS, 55, 35, 65, 72, 38, TINE_M, 1},
+    {"BROKEN", 1, {50, 90, 95, 34, 24}, SNAP, FX_N_LOFI, 78, 70, 55, 18, 4, TINE_M, 1},
+    {"MELLOW", 1, {12, 4, 4, 8, 70}, {42, 60, 68}, FX_N_TAPE, 10, 12, 18, 36, 8, TINE_M, 0},
+    {"NIGHT", 1, {40, 58, 48, 24, 74}, LONG, FX_N_SPRING, 26, 48, 32, 55, 24, TINE_M, 1},
+    {"CLAV", 1, {92, 2, 2, 100, 8}, {2, 12, 10}, FX_N_FILTER, 78, 40, 8, 8, 10, TINE_M, 3},
     /* AIRPAD */
     {"SWEDEN", 2, {45, 50, 30, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 70, 10, PAD_M, -4},
     {"AIR", 2, {50, 50, 45, 1, 50}, E50, FX_N_NONE, 0, 0, 0, 75, 10, PAD_M, -10},
@@ -125,123 +125,123 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"SKY", 2, {65, 60, 55, 1, 50}, E50, FX_N_CHORUS, 35, 25, 35, 95, 20, PAD_M, -7},
     {"DEEP", 2, {30, 50, 20, 4, 55}, E50, FX_N_NONE, 0, 0, 0, 60, 5, PAD_M, -7},
     {"SLOW", 2, {40, 72, 40, 0, 50}, E50, FX_N_TAPE, 20, 25, 20, 85, 12, PAD_M, 1},
-    /* GLASS */
-    {"GLASS", 3, {0, 50, 50, 0}, E50, FX_N_NONE, 0, 0, 0, 75, 25, GLASS_M, -3},
-    {"CELESTA", 3, {1, 50, 50, 0}, E50, FX_N_NONE, 0, 0, 0, 70, 20, GLASS_M, -1},
-    {"MARIMBA", 3, {2, 50, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 55, 10, GLASS_M, 7},
-    {"MUSIC BOX", 3, {3, 55, 55, 0}, E50, FX_N_NONE, 0, 0, 0, 70, 25, GLASS_M, 0},
-    {"VIBES", 3, {4, 50, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 60, 15, GLASS_M, 4},
-    {"SNOW", 3, {0, 70, 45, 1}, E50, FX_N_NONE, 0, 0, 0, 90, 40, GLASS_M, -5},
-    {"STARS", 3, {3, 60, 50, 1}, E50, FX_N_NONE, 0, 0, 0, 85, 35, GLASS_M, -2},
-    {"CHAPEL", 3, {1, 75, 40, 0}, E50, FX_N_NONE, 0, 0, 0, 95, 20, GLASS_M, -3},
-    {"WOOD", 3, {2, 40, 35, 0}, E50, FX_N_NONE, 0, 0, 0, 45, 8, GLASS_M, 10},
-    {"DROPS", 3, {0, 40, 50, 1}, E50, FX_N_NONE, 0, 0, 0, 80, 30, GLASS_M, -2},
-    {"NIGHT VIBES", 3, {4, 70, 40, 0}, E50, FX_N_NONE, 0, 0, 0, 75, 25, GLASS_M, 4},
-    {"WIND CHIME", 3, {0, 75, 45, 1}, E50, FX_N_NONE, 0, 0, 0, 90, 30, GLASS_M, -4},
-    /* SOFTBASS */
-    {"SUB", 4, {40, 35, 0, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 0},
-    {"ROUND", 4, {30, 20, 0, 0, 60}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 0},
-    {"UPRIGHT", 4, {45, 50, 0, 2, 50}, E50, FX_N_NONE, 0, 0, 0, 20, 0, BASS_M, 1},
-    {"THUMB", 4, {95, 95, 0, 2, 15}, E50, FX_N_NONE, 0, 0, 0, 15, 0, BASS_M, 4},
-    {"MOOG", 4, {40, 40, 0, 1, 50}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 6},
-    {"GLIDE", 4, {10, 20, 60, 1, 60}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 5},
-    {"DEEP", 4, {5, 0, 0, 0, 100}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, -1},
-    {"WARM MOOG", 4, {30, 25, 20, 1, 55}, E50, FX_N_TAPE, 20, 30, 30, 10, 0, BASS_M, 5},
-    {"JAZZ", 4, {35, 85, 0, 2, 20}, E50, FX_N_NONE, 0, 0, 0, 20, 0, BASS_M, 3},
-    {"FELT BASS", 4, {35, 45, 0, 0, 40}, E50, FX_N_TAPE, 25, 20, 20, 10, 0, BASS_M, 0},
-    {"NIGHT", 4, {15, 30, 30, 4, 65}, E50, FX_N_NONE, 0, 0, 0, 15, 0, BASS_M, 6},
-    {"PLUCKY", 4, {50, 70, 0, 1, 30}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 7},
-    /* DUSTKIT */
-    {"DUSTY", 5, {50, 50, 45, 1}, E50, FX_N_VINYL, 25, 40, 30, 15, 0, KIT_M, 4},
-    {"707", 5, {50, 50, 15, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 0, KIT_M, -1},
-    {"BRUSH", 5, {50, 55, 35, 2}, E50, FX_N_NONE, 0, 0, 0, 25, 0, KIT_M, -1},
-    {"BOOM BAP", 5, {45, 50, 55, 1}, E50, FX_N_TAPE, 30, 30, 40, 12, 0, KIT_M, 5},
-    {"SOFT", 5, {55, 40, 40, 2}, E50, FX_N_VINYL, 20, 30, 20, 20, 0, KIT_M, 2},
-    {"WOODEN", 5, {60, 45, 30, 2}, E50, FX_N_NONE, 0, 0, 0, 25, 0, KIT_M, 0},
-    {"OLD TAPE", 5, {45, 55, 70, 1}, E50, FX_N_TAPE, 40, 40, 50, 12, 0, KIT_M, 4},
-    {"CRISP", 5, {55, 45, 25, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 0, KIT_M, 0},
-    {"LAZY", 5, {42, 60, 50, 1}, E50, FX_N_VINYL, 35, 40, 30, 15, 0, KIT_M, 4},
-    {"CAMPFIRE", 5, {55, 50, 35, 2}, E50, FX_N_NONE, 0, 0, 0, 30, 0, KIT_M, 0},
-    {"TINY", 5, {70, 35, 40, 0}, E50, FX_N_NONE, 0, 0, 0, 15, 0, KIT_M, 0},
-    {"DEEP", 5, {38, 65, 55, 1}, E50, FX_N_TAPE, 25, 30, 40, 12, 0, KIT_M, 4},
+    /* GLASS: a mallet, a box, a bell, not the same shine twelve times */
+    {"GLASS", 3, {0, 32, 78, 0}, {6, 36, 48}, FX_N_NONE, 0, 0, 0, 68, 18, GLASS_M, -3},
+    {"CELESTA", 3, {1, 24, 48, 1}, SNAP, FX_N_SPRING, 22, 42, 35, 48, 16, GLASS_M, 4},
+    {"MARIMBA", 3, {2, 14, 72, 0}, {2, 16, 12}, FX_N_NONE, 0, 0, 0, 18, 4, GLASS_M, 14},
+    {"MUSIC BOX", 3, {3, 18, 36, 2}, {2, 20, 28}, FX_N_TREM, 28, 18, 72, 36, 20, GLASS_M, 8},
+    {"VIBES", 3, {4, 62, 30, 0}, TONE, FX_N_TREM, 62, 12, 40, 34, 10, GLASS_M, 9},
+    {"SNOW", 3, {0, 90, 22, 1}, LONG, FX_N_NONE, 0, 0, 0, 96, 48, GLASS_M, -4},
+    {"STARS", 3, {3, 36, 96, 2}, {4, 28, 55}, FX_N_CHORUS, 32, 22, 48, 64, 42, GLASS_M, 3},
+    {"CHAPEL", 3, {1, 98, 22, 0}, {22, 68, 92}, FX_N_NONE, 0, 0, 0, 100, 12, GLASS_M, -4},
+    {"WOOD", 3, {2, 8, 15, 0}, {2, 12, 10}, FX_N_NONE, 0, 0, 0, 12, 2, GLASS_M, 16},
+    {"DROPS", 3, {0, 22, 0, 0}, SNAP, FX_N_SPRING, 22, 28, 8, 70, 32, GLASS_M, 0},
+    {"GLOCK", 3, {1, 10, 100, 2}, {2, 14, 26}, FX_N_NONE, 0, 0, 0, 30, 16, GLASS_M, 2},
+    {"CHIMES", 3, {0, 74, 50, 2}, LONG, FX_N_NONE, 0, 0, 0, 88, 44, GLASS_M, -4},
+    /* SOFTBASS: a sub, a thumb, a reese. a slide is the GLIDE effect, not a fifth of every bass */
+    {"SUB", 4, {18, 4, 0, 78}, TONE, FX_N_NONE, 0, 0, 0, 6, 0, BASS_M, -1},
+    {"ROUND", 4, {32, 18, 1, 58}, TONE, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 6},
+    {"UPRIGHT", 4, {34, 48, 2, 42}, TONE, FX_N_NONE, 0, 0, 0, 24, 0, BASS_M, 6},
+    {"THUMB", 4, {96, 100, 2, 6}, {2, 8, 8}, FX_N_NONE, 0, 0, 0, 10, 6, BASS_M, 11},
+    {"MOOG", 4, {68, 40, 1, 46}, {8, 34, 28}, FX_N_FILTER, 74, 62, 8, 6, 0, BASS_M, 7},
+    {"GLIDE", 4, {55, 34, 4, 72}, LONG, FX_N_GLIDE, 82, 0, 0, 10, 0, BASS_M, 4},
+    {"DEEP", 4, {4, 0, 6, 88}, {14, 42, 42}, FX_N_NONE, 0, 0, 0, 16, 0, BASS_M, 4},
+    {"REESE", 4, {52, 28, 4, 74}, {16, 48, 44}, FX_N_CHORUS, 48, 16, 62, 6, 0, BASS_M, 7},
+    {"JAZZ", 4, {78, 100, 2, 6}, SNAP, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 7},
+    {"FELT BASS", 4, {16, 22, 0, 48}, {18, 46, 52}, FX_N_TAPE, 28, 22, 24, 12, 0, BASS_M, -1},
+    {"NIGHT", 4, {6, 8, 4, 88}, LONG, FX_N_TAPE, 16, 18, 20, 14, 0, BASS_M, 6},
+    {"PLUCK", 4, {80, 100, 3, 8}, {2, 10, 8}, FX_N_NONE, 0, 0, 0, 8, 8, BASS_M, 10},
+    /* DUSTKIT: a different machine, not the same dust turned a little */
+    {"DUSTY", 5, {46, 58, 68, 1}, TONE, FX_N_VINYL, 42, 55, 38, 16, 0, KIT_M, 3},
+    {"707", 5, {50, 40, 22, 0}, SNAP, FX_N_NONE, 0, 0, 0, 6, 0, KIT_M, 0},
+    {"BRUSH", 5, {50, 46, 22, 2}, TONE, FX_N_NONE, 0, 0, 0, 34, 0, KIT_M, 0},
+    {"BOOM BAP", 5, {40, 66, 74, 1}, {8, 44, 26}, FX_N_TAPE, 48, 42, 55, 12, 0, KIT_M, 4},
+    {"808", 5, {34, 92, 4, 6}, {6, 55, 30}, FX_N_NONE, 0, 0, 0, 8, 0, KIT_M, -8},
+    {"WOODEN", 5, {60, 32, 16, 2}, SNAP, FX_N_NONE, 0, 0, 0, 26, 0, KIT_M, 6},
+    {"909", 5, {50, 38, 4, 7}, SNAP, FX_N_NONE, 0, 0, 0, 6, 0, KIT_M, 0},
+    {"CHIP", 5, {66, 24, 36, 3}, SNAP, FX_N_NONE, 0, 0, 0, 4, 0, KIT_M, 7},
+    {"606", 5, {56, 50, 10, 8}, SNAP, FX_N_NONE, 0, 0, 0, 8, 0, KIT_M, 2},
+    {"CAMPFIRE", 5, {48, 44, 28, 2}, TONE, FX_N_NONE, 0, 0, 0, 36, 0, KIT_M, 1},
+    {"WAR", 5, {38, 74, 12, 5}, {8, 48, 36}, FX_N_NONE, 0, 0, 0, 48, 0, KIT_M, -2},
+    {"SYNTH", 5, {58, 36, 8, 4}, SNAP, FX_N_CHORUS, 22, 24, 42, 16, 0, KIT_M, 0},
     /* WORLD */
-    {"RAIN", 6, {0, 50, 55}, E50, FX_N_NONE, 0, 0, 0, 15, 0, WORLD_M, 13},
-    {"WIND", 6, {1, 50, 62}, E50, FX_N_NONE, 0, 0, 0, 15, 0, WORLD_M, -2},
-    {"FIRE", 6, {2, 50, 55}, E50, FX_N_NONE, 0, 0, 0, 10, 0, WORLD_M, 15},
-    {"STREAM", 6, {3, 50, 55}, E50, FX_N_NONE, 0, 0, 0, 15, 0, WORLD_M, 10},
-    {"CAVE DROPS", 6, {4, 50, 50}, E50, FX_N_NONE, 0, 0, 0, 60, 10, WORLD_M, 8},
-    {"CRICKETS", 6, {5, 50, 55}, E50, FX_N_NONE, 0, 0, 0, 20, 0, WORLD_M, 14},
-    {"BIRDS", 6, {6, 50, 60}, E50, FX_N_NONE, 0, 0, 0, 25, 0, WORLD_M, 2},
-    {"OCEAN", 6, {7, 50, 50}, E50, FX_N_NONE, 0, 0, 0, 15, 0, WORLD_M, 9},
-    {"THUNDER", 6, {8, 50, 45}, E50, FX_N_NONE, 0, 0, 0, 20, 0, WORLD_M, 14},
-    {"SNOW STEPS", 6, {9, 50, 55}, E50, FX_N_NONE, 0, 0, 0, 20, 0, WORLD_M, 0},
-    {"STORM", 6, {8, 80, 50}, E50, FX_N_NONE, 0, 0, 0, 20, 0, WORLD_M, 5},
-    {"DRIZZLE", 6, {0, 40, 40}, E50, FX_N_NONE, 0, 0, 0, 15, 0, WORLD_M, 24},
+    {"RAIN", 6, {0, 78, 42}, LONG, FX_N_NONE, 0, 0, 0, 22, 0, WORLD_M, 13},
+    {"WIND", 6, {1, 40, 82}, LONG, FX_N_NONE, 0, 0, 0, 28, 0, WORLD_M, 1},
+    {"FIRE", 6, {2, 88, 68}, TONE, FX_N_NONE, 0, 0, 0, 8, 0, WORLD_M, 6},
+    {"STREAM", 6, {3, 62, 74}, TONE, FX_N_NONE, 0, 0, 0, 24, 0, WORLD_M, 4},
+    {"CAVE DROPS", 6, {4, 36, 30}, {12, 50, 70}, FX_N_NONE, 0, 0, 0, 88, 16, WORLD_M, 20},
+    {"CRICKETS", 6, {5, 70, 80}, TONE, FX_N_NONE, 0, 0, 0, 16, 0, WORLD_M, -2},
+    {"BIRDS", 6, {6, 42, 84}, SNAP, FX_N_NONE, 0, 0, 0, 38, 0, WORLD_M, 4},
+    {"OCEAN", 6, {7, 80, 26}, LONG, FX_N_NONE, 0, 0, 0, 30, 0, WORLD_M, 5},
+    {"THUNDER", 6, {8, 96, 22}, {6, 36, 48}, FX_N_NONE, 0, 0, 0, 42, 0, WORLD_M, 14},
+    {"SNOW STEPS", 6, {9, 32, 64}, SNAP, FX_N_NONE, 0, 0, 0, 32, 0, WORLD_M, 5},
+    {"STORM", 6, {8, 100, 58}, {10, 40, 55}, FX_N_NONE, 0, 0, 0, 36, 0, WORLD_M, -1},
+    {"DRIZZLE", 6, {0, 22, 66}, TONE, FX_N_NONE, 0, 0, 0, 10, 0, WORLD_M, 20},
     /* KALIMBA */
-    {"KALIMBA", 7, {50, 50, 45}, E50, FX_N_NONE, 0, 0, 0, 50, 15, KAL_M, -2},
-    {"MBIRA", 7, {60, 45, 35}, E50, FX_N_TAPE, 25, 30, 30, 45, 12, KAL_M, -2},
-    {"THUMB", 7, {20, 60, 90}, E50, FX_N_NONE, 0, 0, 0, 45, 10, KAL_M, 2},
-    {"BRIGHT", 7, {75, 40, 30}, E50, FX_N_NONE, 0, 0, 0, 50, 15, KAL_M, -2},
-    {"CAMPFIRE", 7, {45, 85, 60}, E50, FX_N_NONE, 0, 0, 0, 55, 10, KAL_M, -2},
-    {"BOX", 7, {70, 65, 20}, E50, FX_N_NONE, 0, 0, 0, 60, 30, KAL_M, -4},
-    {"WOODEN", 7, {35, 35, 80}, E50, FX_N_NONE, 0, 0, 0, 35, 8, KAL_M, 3},
-    {"DREAM", 7, {55, 75, 40}, E50, FX_N_NONE, 0, 0, 0, 85, 30, KAL_M, -5},
-    {"LOFI", 7, {45, 45, 50}, E50, FX_N_LOFI, 35, 35, 35, 40, 10, KAL_M, 0},
-    {"STARLIGHT", 7, {92, 95, 8}, E50, FX_N_NONE, 0, 0, 0, 80, 25, KAL_M, -7},
-    {"TINY", 7, {95, 15, 10}, E50, FX_N_NONE, 0, 0, 0, 45, 15, KAL_M, -1},
-    {"DEEP", 7, {30, 65, 60}, E50, FX_N_NONE, 0, 0, 0, 55, 10, KAL_M, -1},
-    /* WINDS */
-    {"FLUTE", 8, {50, 40, 40, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 55, 12, WIND_M, 1},
-    {"PAN FLUTE", 8, {40, 70, 25, 1, 40}, E50, FX_N_NONE, 0, 0, 0, 65, 15, WIND_M, 1},
-    {"OCARINA", 8, {30, 30, 35, 2, 50}, E50, FX_N_NONE, 0, 0, 0, 60, 15, WIND_M, 1},
-    {"SHAKUHACHI", 8, {35, 90, 50, 1, 60}, E50, FX_N_NONE, 0, 0, 0, 80, 20, WIND_M, 1},
-    {"CLARINET", 8, {45, 20, 30, 3, 50}, E50, FX_N_NONE, 0, 0, 0, 50, 10, WIND_M, -1},
-    {"TRUMPET", 8, {60, 15, 35, 4, 45}, E50, FX_N_NONE, 0, 0, 0, 50, 10, WIND_M, 0},
-    {"MUTED", 8, {50, 15, 30, 5, 45}, E50, FX_N_TAPE, 20, 25, 20, 55, 15, WIND_M, 0},
-    {"HORN", 8, {35, 10, 25, 6, 55}, E50, FX_N_NONE, 0, 0, 0, 75, 8, WIND_M, 1},
-    {"BRASS", 8, {55, 10, 20, 7, 55}, E50, FX_N_NONE, 0, 0, 0, 60, 8, WIND_M, 0},
-    {"FLUGEL", 8, {40, 20, 40, 4, 58}, E50, FX_N_TAPE, 20, 25, 25, 65, 12, WIND_M, 0},
-    {"MORNING", 8, {60, 50, 50, 0, 40}, E50, FX_N_CHORUS, 25, 25, 30, 85, 25, WIND_M, -1},
-    {"OLD BAND", 8, {50, 20, 30, 7, 50}, E50, FX_N_VINYL, 35, 40, 30, 45, 10, WIND_M, 1},
+    {"KALIMBA", 7, {58, 42, 48}, SNAP, FX_N_NONE, 0, 0, 0, 38, 10, KAL_M, -1},
+    {"MBIRA", 7, {28, 72, 92}, TONE, FX_N_TAPE, 18, 22, 22, 34, 6, KAL_M, -1},
+    {"THUMB", 7, {10, 24, 100}, {2, 16, 12}, FX_N_NONE, 0, 0, 0, 20, 4, KAL_M, 3},
+    {"BRIGHT", 7, {98, 18, 6}, SNAP, FX_N_NONE, 0, 0, 0, 28, 14, KAL_M, -1},
+    {"CAMPFIRE", 7, {36, 84, 74}, TONE, FX_N_VINYL, 28, 40, 32, 46, 6, KAL_M, -1},
+    {"BOX", 7, {18, 96, 98}, {10, 58, 42}, FX_N_NONE, 0, 0, 0, 52, 18, KAL_M, -3},
+    {"WOODEN", 7, {48, 30, 82}, SNAP, FX_N_NONE, 0, 0, 0, 16, 2, KAL_M, 3},
+    {"DREAM", 7, {64, 100, 16}, LONG, FX_N_CHORUS, 34, 22, 46, 92, 36, KAL_M, -12},
+    {"LOFI", 7, {40, 48, 55}, TONE, FX_N_LOFI, 72, 58, 48, 24, 6, KAL_M, 1},
+    {"STARLIGHT", 7, {100, 12, 0}, {2, 14, 40}, FX_N_SPRING, 28, 55, 42, 68, 32, KAL_M, 1},
+    {"TINY", 7, {90, 4, 2}, {2, 8, 12}, FX_N_NONE, 0, 0, 0, 14, 8, KAL_M, 2},
+    {"DEEP", 7, {8, 80, 78}, {14, 52, 48}, FX_N_NONE, 0, 0, 0, 44, 6, KAL_M, 0},
+    /* WINDS: the breath, the stab and the swell are different instruments */
+    {"FLUTE", 8, {64, 58, 32, 0, 36}, TONE, FX_N_NONE, 0, 0, 0, 46, 8, WIND_M, 1},
+    {"PAN FLUTE", 8, {30, 96, 12, 1, 18}, SNAP, FX_N_NONE, 0, 0, 0, 32, 6, WIND_M, 2},
+    {"OCARINA", 8, {22, 8, 6, 2, 42}, {20, 50, 48}, FX_N_NONE, 0, 0, 0, 52, 10, WIND_M, 1},
+    {"SHAKUHACHI", 8, {26, 100, 58, 1, 88}, {78, 62, 80}, FX_N_NONE, 0, 0, 0, 72, 14, WIND_M, 7},
+    {"CLARINET", 8, {18, 6, 14, 3, 28}, TONE, FX_N_NONE, 0, 0, 0, 30, 4, WIND_M, 0},
+    {"TRUMPET", 8, {86, 4, 42, 4, 14}, SNAP, FX_N_NONE, 0, 0, 0, 26, 6, WIND_M, 1},
+    {"MUTED", 8, {38, 16, 8, 5, 22}, SNAP, FX_N_FILTER, 72, 28, 6, 22, 8, WIND_M, 1},
+    {"HORN", 8, {24, 8, 20, 6, 92}, {72, 56, 68}, FX_N_NONE, 0, 0, 0, 82, 8, WIND_M, 7},
+    {"BRASS", 8, {74, 2, 10, 7, 10}, SNAP, FX_N_CHORUS, 28, 18, 36, 24, 4, WIND_M, 2},
+    {"FLUGEL", 8, {40, 22, 26, 4, 58}, LONG, FX_N_TAPE, 20, 22, 24, 52, 12, WIND_M, 0},
+    {"DUDUK", 8, {32, 74, 64, 9, 76}, {52, 58, 74}, FX_N_NONE, 0, 0, 0, 76, 16, WIND_M, -1},
+    {"SYNBRASS", 8, {80, 0, 8, 8, 24}, SNAP, FX_N_CHORUS, 42, 28, 52, 28, 10, WIND_M, 5},
     /* SYNTH */
-    {"SOFT SAW", 9, {0, 38, 10, 15, 30, 0, 100, 25}, E50, FX_N_TAPE, 20, 30, 25, 60, 15, SYN_M, 7},
-    {"DUST LEAD", 9, {4, 55, 10, 0, 20, 15, 100, 30}, E50, FX_N_LOFI, 35, 25, 25, 50, 20, SYN_M, 5},
-    {"WARM SUPER", 9, {5, 35, 10, 10, 40, 0, 100, 20}, E50, FX_N_CHORUS, 35, 25, 40, 70, 15, SYN_M, 12},
-    {"SINE LEAD", 9, {7, 70, 0, 0, 10, 0, 100, 15}, E50, FX_N_TAPE, 20, 25, 20, 55, 40, SYN_M, -3},
-    {"MUSIC BED", 9, {5, 28, 20, 0, 55, 0, 100, 40}, E50, FX_N_TAPE, 15, 20, 20, 85, 20, SYN_M, 14},
-    {"TAPE SQUARE", 9, {3, 30, 15, 10, 15, 10, 70, 20}, E50, FX_N_TAPE, 35, 30, 35, 45, 15, SYN_M, 4},
-    {"HAZE", 9, {0, 25, 25, 20, 45, 0, 100, 60}, E50, FX_N_VINYL, 30, 30, 30, 90, 20, SYN_M, 12},
-    {"GLASS SYNTH", 9, {4, 60, 5, 0, 35, 0, 100, 30}, E50, FX_N_CHORUS, 30, 20, 35, 70, 25, SYN_M, 4},
-    {"SOFT PLUCK", 9, {0, 45, 30, 35, 20, 0, 25, 10}, E50, FX_N_TAPE, 20, 25, 25, 50, 40, SYN_M, 12},
-    {"BREATH", 9, {6, 30, 40, 0, 0, 0, 100, 50}, E50, FX_N_NONE, 0, 0, 0, 80, 10, SYN_M, 3},
-    {"LOFI PULSE", 9, {1, 40, 20, 20, 20, 30, 40, 10}, E50, FX_N_LOFI, 40, 40, 35, 45, 25, SYN_M, 14},
-    {"SLOW SWEEP", 9, {0, 20, 35, 55, 25, 0, 100, 35}, E50, FX_N_TAPE, 20, 20, 20, 75, 25, SYN_M, 9},
+    {"SOFT SAW", 9, {0, 44, 6, 10, 38, 0, 100, 18}, TONE, FX_N_TAPE, 16, 22, 20, 48, 12, SYN_M, 6},
+    {"DUST LEAD", 9, {4, 72, 16, 6, 12, 48, 75, 12}, SNAP, FX_N_LOFI, 62, 48, 40, 28, 14, SYN_M, 9},
+    {"WARM SUPER", 9, {5, 36, 4, 6, 82, 0, 100, 22}, LONG, FX_N_CHORUS, 42, 24, 55, 58, 10, SYN_M, 10},
+    {"SINE", 9, {7, 90, 0, 0, 0, 0, 100, 6}, {12, 48, 68}, FX_N_NONE, 0, 0, 0, 36, 38, SYN_M, -2},
+    {"BED", 9, {5, 34, 8, 0, 70, 0, 100, 24}, {48, 62, 82}, FX_N_TAPE, 10, 16, 16, 82, 12, SYN_M, 10},
+    {"SQUARE", 9, {3, 62, 42, 48, 6, 6, 55, 8}, SNAP, FX_N_NONE, 0, 0, 0, 18, 14, SYN_M, 3},
+    {"HAZE", 9, {0, 40, 10, 8, 55, 0, 100, 18}, {40, 55, 70}, FX_N_VINYL, 18, 22, 20, 80, 12, SYN_M, 8},
+    {"BELL", 9, {4, 84, 6, 40, 12, 0, 45, 8}, {2, 18, 42}, FX_N_SPRING, 24, 45, 38, 52, 30, SYN_M, 15},
+    {"PLUCK", 9, {0, 76, 42, 70, 10, 0, 30, 4}, {2, 14, 14}, FX_N_NONE, 0, 0, 0, 22, 40, SYN_M, 14},
+    {"BREATH", 9, {6, 52, 22, 8, 0, 0, 100, 78}, {68, 55, 66}, FX_N_NONE, 0, 0, 0, 68, 6, SYN_M, 2},
+    {"CRUSH", 9, {1, 64, 18, 8, 8, 82, 35, 16}, SNAP, FX_N_LOFI, 80, 72, 55, 12, 8, SYN_M, 17},
+    {"ACID", 9, {0, 32, 92, 86, 4, 0, 65, 12}, {6, 26, 24}, FX_N_NONE, 0, 0, 0, 10, 22, SYN_M, 5},
     /* PLUCK */
-    {"NYLON", 10, {2, 45, 50, 40, 45, 0}, E50, FX_N_TAPE, 15, 25, 20, 55, 15, PLK_M, -10},
-    {"SOFT HARP", 10, {1, 40, 60, 35, 40, 0}, E50, FX_N_NONE, 0, 0, 0, 75, 20, PLK_M, -16},
-    {"LAZY LUTE", 10, {0, 40, 50, 40, 50, 0}, E50, FX_N_TAPE, 20, 25, 25, 50, 15, PLK_M, -10},
-    {"DUSTY KOTO", 10, {4, 45, 55, 40, 40, 15}, E50, FX_N_LOFI, 30, 25, 30, 55, 15, PLK_M, -10},
-    {"DULCIMER", 10, {5, 50, 60, 45, 50, 0}, E50, FX_N_VINYL, 25, 30, 25, 70, 20, PLK_M, -15},
-    {"WARM STEEL", 10, {3, 35, 50, 40, 50, 0}, E50, FX_N_TAPE, 20, 20, 20, 50, 15, PLK_M, -12},
-    {"NIGHT HARP", 10, {1, 30, 80, 30, 50, 0}, E50, FX_N_NONE, 0, 0, 0, 90, 30, PLK_M, -17},
-    {"WORN NYLON", 10, {2, 35, 45, 40, 45, 25}, E50, FX_N_LOFI, 35, 30, 30, 45, 15, PLK_M, -9},
-    {"RAIN KOTO", 10, {4, 55, 70, 30, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 80, 40, PLK_M, -14},
-    {"CAMPFIRE", 10, {3, 50, 40, 45, 55, 0}, E50, FX_N_NONE, 0, 0, 0, 45, 10, PLK_M, -12},
-    {"FELT HARP", 10, {1, 25, 50, 30, 40, 0}, E50, FX_N_TAPE, 25, 30, 25, 60, 20, PLK_M, -13},
-    {"TINY LUTE", 10, {0, 60, 35, 50, 35, 0}, E50, FX_N_NONE, 0, 0, 0, 40, 10, PLK_M, -4},
+    {"NYLON", 10, {2, 58, 38, 32, 38, 0}, SNAP, FX_N_NONE, 0, 0, 0, 36, 10, PLK_M, -4},
+    {"HARP", 10, {1, 26, 90, 22, 58, 0}, LONG, FX_N_NONE, 0, 0, 0, 82, 20, PLK_M, -16},
+    {"LUTE", 10, {0, 52, 42, 62, 68, 0}, SNAP, FX_N_TAPE, 14, 18, 18, 28, 6, PLK_M, -8},
+    {"KOTO", 10, {4, 82, 28, 14, 18, 0}, {2, 20, 26}, FX_N_NONE, 0, 0, 0, 40, 16, PLK_M, 6},
+    {"DULCIMER", 10, {5, 36, 74, 55, 70, 0}, TONE, FX_N_SPRING, 18, 36, 32, 58, 14, PLK_M, -14},
+    {"STEEL", 10, {3, 90, 24, 12, 22, 0}, SNAP, FX_N_NONE, 0, 0, 0, 18, 8, PLK_M, 3},
+    {"NIGHT HARP", 10, {1, 16, 98, 40, 74, 0}, {18, 64, 86}, FX_N_NONE, 0, 0, 0, 96, 26, PLK_M, -24},
+    {"WORN", 10, {2, 28, 36, 58, 42, 62}, TONE, FX_N_LOFI, 55, 45, 40, 24, 6, PLK_M, -6},
+    {"ECHO KOTO", 10, {4, 64, 48, 28, 30, 0}, {4, 32, 55}, FX_N_NONE, 0, 0, 0, 42, 62, PLK_M, -6},
+    {"CAMPFIRE", 10, {0, 32, 58, 68, 80, 12}, TONE, FX_N_VINYL, 32, 42, 30, 36, 4, PLK_M, -14},
+    {"ANGEL", 10, {1, 48, 92, 16, 24, 0}, LONG, FX_N_CHORUS, 26, 18, 42, 90, 32, PLK_M, -11},
+    {"MUTE", 10, {2, 8, 14, 90, 12, 0}, {2, 10, 10}, FX_N_FILTER, 76, 22, 4, 10, 2, PLK_M, 8},
     /* LEAD */
-    {"SOFT LEAD", 11, {0, 40, 10, 20, 25, 30, 15, 0}, E50, FX_N_TAPE, 20, 25, 20, 50, 20, LD_M, 15},
-    {"LOFI SQUARE LEAD", 11, {1, 38, 10, 15, 15, 25, 10, 0}, E50, FX_N_LOFI, 35, 30, 30, 40, 20, LD_M, 6},
-    {"DUSTY MONO", 11, {0, 34, 15, 25, 0, 35, 35, 20}, E50, FX_N_VINYL, 25, 30, 25, 45, 20, LD_M, 15},
-    {"WARM SUPERLEAD", 11, {3, 42, 10, 15, 35, 25, 10, 0}, E50, FX_N_CHORUS, 35, 30, 45, 55, 25, LD_M, 17},
-    {"MUSIC BOX LEAD", 11, {5, 60, 0, 40, 25, 15, 0, 0}, {40, 60, 55}, FX_N_TAPE, 20, 25, 20, 60, 30, LD_M, 9},
-    {"HAZE FLUTE", 11, {4, 55, 0, 0, 0, 40, 25, 30}, {60, 50, 60}, FX_N_TAPE, 20, 25, 20, 70, 25, LD_M, 8},
-    {"RAIN LEAD", 11, {2, 36, 20, 25, 30, 35, 20, 0}, E50, FX_N_TAPE, 20, 25, 20, 60, 30, LD_M, 9},
-    {"SLOW GLIDE", 11, {0, 32, 25, 30, 20, 30, 60, 10}, E50, FX_N_TAPE, 20, 25, 20, 50, 25, LD_M, 16},
-    {"NIGHT REED", 11, {4, 70, 0, 0, 0, 55, 0, 0}, {55, 50, 60}, FX_N_NONE, 0, 0, 0, 70, 25, LD_M, 8},
-    {"TAPE SAW", 11, {0, 48, 20, 10, 40, 20, 0, 0}, E50, FX_N_TAPE, 20, 25, 20, 40, 20, LD_M, 15},
-    {"VELVET SOLO", 11, {1, 30, 10, 10, 40, 30, 20, 30}, E50, FX_N_CHORUS, 35, 30, 45, 55, 20, LD_M, 12},
-    {"FIRST SNOW", 11, {5, 70, 0, 50, 45, 20, 0, 0}, {45, 60, 60}, FX_N_TAPE, 20, 25, 20, 75, 35, LD_M, 5},
+    {"SOFT LEAD", 11, {0, 50, 10, 16, 26, 20, 12}, TONE, FX_N_TAPE, 16, 20, 18, 38, 14, LD_M, 12},
+    {"SQUARE", 11, {1, 64, 10, 8, 6, 16, 0}, SNAP, FX_N_LOFI, 32, 28, 22, 18, 8, LD_M, 5},
+    {"DUSTY", 11, {0, 34, 20, 28, 8, 26, 28}, TONE, FX_N_VINYL, 45, 50, 38, 26, 10, LD_M, 17},
+    {"SUPER", 11, {3, 58, 8, 10, 88, 16, 0}, {16, 46, 48}, FX_N_CHORUS, 48, 22, 58, 36, 16, LD_M, 13},
+    {"FM BELL", 11, {5, 82, 0, 70, 42, 6, 0}, {2, 22, 46}, FX_N_SPRING, 20, 42, 32, 52, 26, LD_M, 6},
+    {"FLUTE", 11, {4, 66, 2, 0, 0, 58, 0}, {28, 50, 55}, FX_N_NONE, 0, 0, 0, 52, 16, LD_M, 8},
+    {"RAIN", 11, {2, 42, 16, 20, 18, 24, 0}, {10, 38, 50}, FX_N_TAPE, 14, 18, 18, 52, 30, LD_M, 8},
+    {"GLIDE", 11, {0, 52, 18, 22, 14, 18, 16}, TONE, FX_N_GLIDE, 84, 16, 18, 32, 18, LD_M, 12},
+    {"REED", 11, {4, 36, 14, 6, 0, 32, 0}, {22, 46, 52}, FX_N_FILTER, 76, 36, 8, 42, 10, LD_M, 12},
+    {"ACID", 11, {2, 26, 94, 82, 0, 8, 0}, SNAP, FX_N_NONE, 0, 0, 0, 8, 20, LD_M, 2},
+    {"WIDE", 11, {3, 34, 6, 8, 100, 10, 34}, LONG, FX_N_CHORUS, 36, 26, 52, 48, 14, LD_M, 20},
+    {"SNOW", 11, {5, 58, 4, 36, 52, 10, 0}, {6, 36, 72}, FX_N_NONE, 0, 0, 0, 78, 32, LD_M, 5},
 };
 
 /* the blocks 1..3 (8-16 BIT, SYNTHWAVE, CINEMATIC) of each engine, one after the other, as many as PCOUNT says */
@@ -324,36 +324,36 @@ static const dk_preset_t PRESETS2[] = {
     {"TOLL", 3, {0, 95, 25, 0}, E50, FX_N_NONE, 0, 0, 0, 100, 20, GLASS_M, -6},
     {"DAWN CHIME", 3, {4, 80, 60, 2}, E50, FX_N_NONE, 0, 0, 0, 100, 40, GLASS_M, 0},
     /* SOFTBASS, block 1 */
-    {"NES BASS", 4, {50, 0, 0, 5, 50}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 5},
-    {"SQUARE", 4, {70, 0, 0, 3, 60}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 11},
-    {"PULSE 25", 4, {30, 0, 0, 3, 40}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 13},
-    {"GB BASS", 4, {0, 0, 0, 3, 30}, E50, FX_N_LOFI, 50, 60, 40, 5, 0, BASS_M, 17},
-    {"ARCADE", 4, {50, 0, 25, 3, 70}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 11},
-    {"TRI SLIDE", 4, {50, 0, 80, 5, 18}, E50, FX_N_LOFI, 45, 40, 40, 5, 0, BASS_M, 5},
-    {"BOSS SAW", 4, {40, 45, 0, 4, 50}, E50, FX_N_LOFI, 60, 45, 45, 5, 0, BASS_M, 7},
-    {"CHIP SUB", 4, {40, 0, 0, 0, 50}, E50, FX_N_LOFI, 70, 65, 45, 5, 0, BASS_M, 0},
+    {"NES BASS", 4, {50, 0, 5, 50}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 5},
+    {"SQUARE", 4, {70, 0, 3, 60}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 11},
+    {"PULSE 25", 4, {30, 0, 3, 40}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 13},
+    {"GB BASS", 4, {0, 0, 3, 30}, E50, FX_N_LOFI, 50, 60, 40, 5, 0, BASS_M, 17},
+    {"ARCADE", 4, {50, 0, 3, 70}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 11},
+    {"TRI SLIDE", 4, {40, 70, 5, 4}, SNAP, FX_N_GLIDE, 80, 40, 40, 8, 0, BASS_M, 8},
+    {"BOSS SAW", 4, {40, 45, 4, 50}, E50, FX_N_LOFI, 60, 45, 45, 5, 0, BASS_M, 7},
+    {"CHIP SUB", 4, {40, 0, 0, 50}, E50, FX_N_LOFI, 70, 65, 45, 5, 0, BASS_M, 0},
     /* SOFTBASS, block 2 */
-    {"NIGHT DRIVE", 4, {50, 50, 0, 4, 60}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 7},
-    {"OUTRUN", 4, {60, 60, 0, 4, 50}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 7},
-    {"ARP BASS", 4, {45, 70, 0, 4, 25}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 8},
-    {"ANALOG", 4, {55, 50, 10, 1, 50}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 6},
-    {"RESO BASS", 4, {70, 70, 0, 1, 40}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 6},
-    {"DETUNED", 4, {40, 30, 0, 4, 80}, E50, FX_N_CHORUS, 25, 25, 40, 10, 0, BASS_M, 7},
-    {"GLIDER", 4, {50, 40, 60, 4, 70}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 7},
-    {"PULSE DRIVE", 4, {15, 0, 0, 3, 35}, E50, FX_N_CHORUS, 25, 30, 40, 8, 0, BASS_M, 15},
-    {"SUB WAVE", 4, {25, 10, 0, 1, 70}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 5},
-    {"ACID", 4, {80, 90, 40, 1, 30}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 6},
-    {"MIDNIGHT", 4, {35, 40, 0, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 12, 0, BASS_M, 6},
-    {"LASER", 4, {75, 80, 70, 1, 35}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 6},
+    {"NIGHT DRIVE", 4, {50, 50, 4, 60}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 7},
+    {"OUTRUN", 4, {60, 60, 4, 50}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 7},
+    {"ARP BASS", 4, {45, 70, 4, 25}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 8},
+    {"ANALOG", 4, {55, 50, 1, 50}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 6},
+    {"RESO BASS", 4, {70, 70, 1, 40}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 6},
+    {"DETUNED", 4, {40, 30, 4, 80}, E50, FX_N_CHORUS, 25, 25, 40, 10, 0, BASS_M, 7},
+    {"GLIDER", 4, {50, 40, 4, 70}, E50, FX_N_GLIDE, 60, 0, 0, 8, 0, BASS_M, 7},
+    {"PULSE DRIVE", 4, {15, 0, 3, 35}, E50, FX_N_CHORUS, 25, 30, 40, 8, 0, BASS_M, 15},
+    {"SUB WAVE", 4, {25, 10, 1, 70}, E50, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 5},
+    {"ACID", 4, {80, 90, 1, 30}, E50, FX_N_GLIDE, 40, 0, 0, 5, 0, BASS_M, 6},
+    {"MIDNIGHT", 4, {35, 40, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 12, 0, BASS_M, 6},
+    {"LASER", 4, {75, 80, 1, 35}, E50, FX_N_GLIDE, 70, 0, 0, 5, 0, BASS_M, 6},
     /* SOFTBASS, block 3 */
-    {"SUB DRONE", 4, {40, 0, 0, 6, 80}, E50, FX_N_NONE, 0, 0, 0, 25, 0, BASS_M, 7},
-    {"RUMBLE", 4, {10, 0, 0, 1, 100}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 4},
-    {"WAR HORN LOW", 4, {25, 10, 0, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
-    {"BOWED BASS", 4, {35, 15, 0, 2, 85}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 0},
-    {"ANCIENT", 4, {5, 10, 0, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
-    {"DRAGON BREATH", 4, {60, 0, 20, 6, 90}, E50, FX_N_NONE, 0, 0, 0, 35, 0, BASS_M, 5},
-    {"CELLO LOW", 4, {35, 20, 0, 4, 100}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
-    {"BRONZE", 4, {30, 20, 0, 1, 80}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
+    {"SUB DRONE", 4, {40, 0, 6, 80}, E50, FX_N_NONE, 0, 0, 0, 25, 0, BASS_M, 7},
+    {"RUMBLE", 4, {10, 0, 1, 100}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 4},
+    {"WAR HORN LOW", 4, {25, 10, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
+    {"BOWED BASS", 4, {35, 15, 2, 85}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 0},
+    {"ANCIENT", 4, {5, 10, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
+    {"DRAGON BREATH", 4, {60, 0, 6, 90}, E50, FX_N_NONE, 0, 0, 0, 35, 0, BASS_M, 5},
+    {"CELLO LOW", 4, {35, 20, 4, 100}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
+    {"BRONZE", 4, {30, 20, 1, 80}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
     /* DUSTKIT, block 1 */
     {"NES KIT", 5, {50, 50, 45, 3}, E50, FX_N_NONE, 0, 0, 0, 8, 0, KIT_M, 2},
     {"GAME BOY", 5, {60, 40, 60, 3}, E50, FX_N_NONE, 0, 0, 0, 6, 0, KIT_M, 2},
@@ -485,32 +485,32 @@ static const dk_preset_t PRESETS2[] = {
     {"DARK LUTE", 10, {0, 30, 60, 40, 60, 0}, E50, FX_N_NONE, 0, 0, 0, 80, 20, PLK_M, -15},
     {"MOURNING", 10, {1, 55, 90, 70, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 100, 40, PLK_M, -20},
     /* LEAD, block 1 */
-    {"NES LEAD", 11, {1, 100, 0, 0, 0, 0, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 2},
-    {"PULSE 25 LEAD", 11, {2, 100, 0, 0, 0, 20, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 8},
-    {"CHIP VIBRATO", 11, {1, 100, 0, 0, 0, 60, 0, 40}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 2},
-    {"TRI LEAD", 11, {4, 100, 0, 0, 0, 25, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 10, 15, LD_M, 12},
-    {"GB LEAD", 11, {1, 92, 0, 0, 35, 0, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 20, LD_M, 4},
-    {"SNES LEAD", 11, {0, 80, 10, 20, 20, 30, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 15, 20, LD_M, 13},
-    {"ARCADE SLIDE", 11, {1, 100, 0, 0, 0, 20, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 20, LD_M, 2},
-    {"BOSS THEME", 11, {2, 90, 10, 30, 30, 35, 0, 40}, E50, FX_N_NONE, 0, 0, 0, 15, 20, LD_M, 9},
+    {"NES LEAD", 11, {1, 100, 0, 0, 0, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 2},
+    {"PULSE 25 LEAD", 11, {2, 100, 0, 0, 0, 20, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 8},
+    {"CHIP VIBRATO", 11, {1, 100, 0, 0, 0, 60, 40}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 2},
+    {"TRI LEAD", 11, {4, 100, 0, 0, 0, 25, 0}, E50, FX_N_NONE, 0, 0, 0, 10, 15, LD_M, 12},
+    {"GB LEAD", 11, {1, 92, 0, 0, 35, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 20, LD_M, 4},
+    {"SNES LEAD", 11, {0, 80, 10, 20, 20, 30, 0}, E50, FX_N_NONE, 0, 0, 0, 15, 20, LD_M, 13},
+    {"ARCADE SLIDE", 11, {1, 100, 0, 0, 0, 20, 0}, E50, FX_N_GLIDE, 45, 0, 0, 12, 20, LD_M, 2},
+    {"BOSS THEME", 11, {2, 90, 10, 30, 30, 35, 40}, E50, FX_N_NONE, 0, 0, 0, 15, 20, LD_M, 9},
     /* LEAD, block 2 */
-    {"OUTRUN SAW", 11, {0, 62, 25, 30, 35, 35, 10, 25}, E50, FX_N_CHORUS, 35, 30, 45, 45, 35, LD_M, 13},
-    {"NEON SUPERLEAD", 11, {3, 70, 15, 25, 60, 30, 0, 0}, E50, FX_N_CHORUS, 35, 30, 45, 45, 35, LD_M, 14},
-    {"SUNSET LEAD", 11, {0, 50, 20, 35, 25, 40, 25, 0}, E50, FX_N_CHORUS, 35, 30, 45, 55, 35, LD_M, 14},
-    {"SYNTH MONO", 11, {0, 55, 35, 45, 0, 25, 35, 40}, E50, FX_N_NONE, 0, 0, 0, 35, 30, LD_M, 9},
-    {"LASER SOLO", 11, {1, 75, 35, 40, 25, 20, 30, 0}, E50, FX_N_NONE, 0, 0, 0, 35, 40, LD_M, 2},
-    {"DX LEAD", 11, {5, 80, 0, 60, 50, 25, 0, 0}, E50, FX_N_CHORUS, 35, 30, 45, 40, 35, LD_M, 9},
-    {"VAPOR SOLO", 11, {3, 40, 10, 20, 50, 45, 15, 20}, E50, FX_N_CHORUS, 35, 30, 45, 60, 35, LD_M, 16},
-    {"CHROME", 11, {2, 68, 30, 35, 40, 30, 0, 20}, E50, FX_N_CHORUS, 35, 30, 45, 40, 35, LD_M, 9},
+    {"OUTRUN SAW", 11, {0, 62, 25, 30, 35, 35, 25}, E50, FX_N_CHORUS, 35, 30, 45, 45, 35, LD_M, 13},
+    {"NEON SUPERLEAD", 11, {3, 70, 15, 25, 60, 30, 0}, E50, FX_N_CHORUS, 35, 30, 45, 45, 35, LD_M, 14},
+    {"SUNSET LEAD", 11, {0, 50, 20, 35, 25, 40, 0}, E50, FX_N_CHORUS, 35, 30, 45, 55, 35, LD_M, 14},
+    {"SYNTH MONO", 11, {0, 55, 35, 45, 0, 25, 40}, E50, FX_N_NONE, 0, 0, 0, 35, 30, LD_M, 9},
+    {"LASER SOLO", 11, {1, 75, 35, 40, 25, 20, 0}, E50, FX_N_NONE, 0, 0, 0, 35, 40, LD_M, 2},
+    {"DX LEAD", 11, {5, 80, 0, 60, 50, 25, 0}, E50, FX_N_CHORUS, 35, 30, 45, 40, 35, LD_M, 9},
+    {"VAPOR SOLO", 11, {3, 40, 10, 20, 50, 45, 20}, E50, FX_N_CHORUS, 35, 30, 45, 60, 35, LD_M, 16},
+    {"CHROME", 11, {2, 68, 30, 35, 40, 30, 20}, E50, FX_N_CHORUS, 35, 30, 45, 40, 35, LD_M, 9},
     /* LEAD, block 3 */
-    {"HORN LEAD", 11, {0, 40, 10, 50, 20, 35, 0, 30}, {65, 50, 60}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 13},
-    {"EPIC SUPERLEAD", 11, {3, 55, 15, 40, 70, 30, 0, 25}, {60, 50, 60}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 11},
-    {"LONELY TRUMPET", 11, {0, 52, 20, 45, 10, 55, 10, 0}, {55, 50, 60}, FX_N_NONE, 0, 0, 0, 80, 30, LD_M, 8},
-    {"DUDUK", 11, {4, 48, 0, 0, 0, 65, 25, 0}, {60, 50, 65}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 8},
-    {"ELEGY", 11, {1, 35, 15, 20, 20, 50, 30, 0}, {60, 50, 65}, FX_N_NONE, 0, 0, 0, 90, 30, LD_M, 2},
-    {"TENSE FM", 11, {5, 58, 0, 35, 70, 40, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 80, 25, LD_M, 5},
-    {"ARCTIC BELL LEAD", 11, {5, 75, 0, 55, 35, 25, 0, 0}, {45, 70, 70}, FX_N_NONE, 0, 0, 0, 95, 35, LD_M, 4},
-    {"WAR HORN", 11, {0, 32, 25, 55, 30, 25, 20, 60}, {60, 50, 65}, FX_N_NONE, 0, 0, 0, 90, 20, LD_M, 10},
+    {"HORN LEAD", 11, {0, 40, 10, 50, 20, 35, 30}, {65, 50, 60}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 13},
+    {"EPIC SUPERLEAD", 11, {3, 55, 15, 40, 70, 30, 25}, {60, 50, 60}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 11},
+    {"LONELY TRUMPET", 11, {0, 52, 20, 45, 10, 55, 0}, {55, 50, 60}, FX_N_NONE, 0, 0, 0, 80, 30, LD_M, 12},
+    {"DUDUK", 11, {4, 48, 0, 0, 0, 65, 0}, {60, 50, 65}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 8},
+    {"ELEGY", 11, {1, 35, 15, 20, 20, 50, 0}, {60, 50, 65}, FX_N_NONE, 0, 0, 0, 90, 30, LD_M, 2},
+    {"TENSE FM", 11, {5, 58, 0, 35, 70, 40, 0}, E50, FX_N_NONE, 0, 0, 0, 80, 25, LD_M, 5},
+    {"ARCTIC BELL LEAD", 11, {5, 75, 0, 55, 35, 25, 0}, {45, 70, 70}, FX_N_NONE, 0, 0, 0, 95, 35, LD_M, 4},
+    {"WAR HORN", 11, {0, 32, 25, 55, 30, 25, 60}, {60, 50, 65}, FX_N_NONE, 0, 0, 0, 90, 20, LD_M, 10},
 };
 /* presets an engine has in each block (AMBIENT LOFI is the first twelve: PRESETS) */
 static const uint8_t PCOUNT[12 * DK_NBLK] = {
@@ -533,6 +533,8 @@ static const dk_engine_t *const ENGINES[12] = {&ENG_FELT, &ENG_TINE, &ENG_AIRPAD
                                                &ENG_WORLD, &ENG_KALIMBA, &ENG_WINDS, &ENG_SYNTH, &ENG_PLUCK, &ENG_LEAD};
 
 /* ---------------------------------------------------------------- the harmony --- */
+/* the song's styles: its chords and how long each (once also DREAM's, the generator, now gone) */
+enum { ST_C418, ST_LOFI, ST_AMBIENT, ST_CAMPFIRE, NSTYLE };
 static const char *const STYLE_NAME[NSTYLE] = {"C418", "LOFI", "AMBIENT", "CAMPFIRE"};
 static const uint8_t STYLE_CHORD[NSTYLE] = {CH_MAJ7, CH_9, CH_ADD9, CH_TRIAD};
 static const uint8_t STYLE_BARS[NSTYLE] = {2, 1, 2, 1};
@@ -544,9 +546,9 @@ static const dk_borrow_t BORROW_MAJ[4] = {
 static const dk_borrow_t BORROW_MIN[4] = {
     {5, {0, 4, 7, 14, 99}}, {8, {0, 4, 7, 14, 99}}, {3, {0, 4, 7, 11, 99}}, {7, {0, 3, 7, 10, 14, 99}}};
 
-static const char *const PERFORM[11] = {"TAPESTOP", "REWIND", "VINYL STOP", "LOW PASS", "RAIN UP", "DREAM",
+static const char *const PERFORM[11] = {"TAPESTOP", "REWIND", "VINYL STOP", "LOW PASS", "RAIN UP", "STUTTER",
                                         "HALF TIME", "ECHO THROW", "MUTE DRUMS", "SLEEP", "REVERSE"};
-static const uint8_t PERFORM_ACT[11] = {PF_TAPESTOP, PF_REWIND, PF_VINYLSTOP, PF_LOWPASS, PF_RAINUP, PF_DREAM,
+static const uint8_t PERFORM_ACT[11] = {PF_TAPESTOP, PF_REWIND, PF_VINYLSTOP, PF_LOWPASS, PF_RAINUP, PF_STUTTER,
                                         PF_HALFTIME, PF_ECHOTHROW, PF_MUTEDRUMS, PF_SLEEP, PF_REVERSE};
 
 /* the biomes (the garden's scenes): DAWN BLOSSOM RAIN EMBER SNOW LAGOON NIGHT AURORA DUSK */
@@ -565,9 +567,9 @@ static const dk_mood_t MOODS[8] = {
 };
 
 /* the tracks by default: PIANO KEYS PAD BASS DRUMS NATURE (the piano first: it is played the most) */
-static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 5, 11}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 0},
-                     DEF_SEQ[DK_NTRACK] = {SQ_LIVE, SQ_LIVE, SQ_LIVE, SQ_STEP, SQ_FINGER, SQ_LIVE},
-                     DEF_ROLE[DK_NTRACK] = {R_KEYS, R_ARP, R_PAD, R_BASS, R_DRUM, R_LEAD};
+static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 11, 5}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 0},
+                     DEF_SEQ[DK_NTRACK] = {SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP},
+                     DEF_ROLE[DK_NTRACK] = {R_KEYS, R_ARP, R_PAD, R_BASS, R_LEAD, R_DRUM};
 /* the KEYS track's twelve: electric pianos, bells, kalimbas (HOME + white 1-12, the PRESET knob) */
 static const uint8_t KEYS_SET[DK_NFACT][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9},  {3, 0}, {3, 1},
                                               {3, 3}, {3, 4}, {7, 0}, {7, 1}, {7, 7}, {7, 9}};
@@ -579,6 +581,7 @@ static const dk_atmo_t ATMO[6] = {
     {"WIND", 6, {W_WIND, 50, 45}, 0.8f},     {"CRICKETS", 6, {W_CRICKETS, 50, 55}, 0.7f},
 };
 
+#include "grooves.c"
 #include "demo.c"
 
 static void tape_init(void)
@@ -588,8 +591,8 @@ static void tape_init(void)
 }
 
 const dk_tape_t TAPE = {
-    "OVERWORLD", tape_init, ENGINES, 12, PRESETS, TAPE_FX, 8, STYLE_NAME, NSTYLE, tape_drive, PROGS, 5, STYLE_CHORD,
-    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, FBANKS, PERFORM, PERFORM_ACT, MOODS, 8,
+    "OVERWORLD", tape_init, ENGINES, 12, PRESETS, TAPE_FX, 9, STYLE_NAME, NSTYLE, 0, PROGS, 5, STYLE_CHORD,
+    STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, 0, PERFORM, PERFORM_ACT, MOODS, 8,
     BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
-    ATMO, 6, PRESETS2, PCOUNT, BLOCK_NAME,
+    ATMO, 6, PRESETS2, PCOUNT, BLOCK_NAME, GROOVES, 15, 10, FILLS, &GROOVE_END,
 };

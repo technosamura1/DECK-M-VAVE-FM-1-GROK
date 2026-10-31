@@ -19,7 +19,7 @@ tapkey w0
 wait 100
 expect track 0
 # EDIT on TRACKS: the EDIT list (not KEYS); its white 11 opens the layers
-tap EDIT
+tap LFO
 wait 100
 expect page 11
 expect layview 1
@@ -84,9 +84,9 @@ expect nlay 2
 expect nev 8
 said DELETED
 # one undo brings it back
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect nlay 3
 expect nev 12
@@ -100,22 +100,22 @@ said MERGED
 tapkey w3
 wait 100
 said ONE LAYER
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect nlay 3
 expect nfrozen 4
 # EDIT again: back to the EDIT list, again: the six tracks, then KEYS from PLAY
-tap EDIT
+tap LFO
 wait 100
 expect layview 1
-tap EDIT
+tap LFO
 wait 100
 expect layview 0
 expect page 11
 tap HOME
 wait 100
-tap EDIT
+tap LFO
 wait 100
 expect page 5

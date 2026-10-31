@@ -1,6 +1,5 @@
 # the pictures for the report (not a test): every page clean, the tape, the garden by day and by night
 wait 300
-flower 300
 wait 1500
 shot g_plains_day.png
 tap PLAY
@@ -35,7 +34,7 @@ release HOME
 wait 50
 wait 1600
 shot p07_seq_step_drums.png
-tap LFO
+tap EDIT
 wait 1000
 shot p08_mix.png
 tap ENV
@@ -50,7 +49,7 @@ press HOME
 tapkey b0
 release HOME
 wait 1800
-tap EDIT
+tap LFO
 wait 200
 key w5 down 90
 wait 1000
@@ -183,45 +182,9 @@ wait 300
 shot p25_arp_step.png
 tap PLAY
 wait 300
-# the garden: the moods' biomes, by day and by night
+# the PLAY page (the girl) and the splash
 tap HOME
-mood 1
-flower 300
-dayphase 10
-wait 2500
-shot g_rain_day.png
-dayphase 70
 wait 1500
-shot g_rain_night.png
-mood 3
-flower 300
-dayphase 15
-wait 2500
-shot g_snow_day.png
-dayphase 75
-wait 1500
-shot g_snow_night.png
-mood 4
-flower 300
-dayphase 20
-wait 2500
-shot g_ocean_day.png
-mood 5
-flower 300
-wait 2500
-shot g_night.png
-mood 6
-flower 300
-wait 2500
-shot g_campfire.png
-mood 2
-flower 300
-wait 2500
-shot g_cave.png
-mood 7
-flower 300
-dayphase 45
-wait 2500
-shot g_study_dusk.png
+shot g_play.png
 splash
 shot splash.png

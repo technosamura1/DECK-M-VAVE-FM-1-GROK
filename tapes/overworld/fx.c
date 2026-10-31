@@ -207,9 +207,13 @@ static const dk_fx_t FX_CHORUS = {"CHORUS", "RATE", "DEPTH", fx_chorus};
 static const dk_fx_t FX_FILTER = {"FILTER", "RES", "MODE", fx_filter};
 static const dk_fx_t FX_TREM = {"TREMOLO", "RATE", "STEREO", fx_tremolo};
 static const dk_fx_t FX_SPRING = {"SPRING", "DECAY", "TONE", fx_spring};
+/* GLIDE does not touch the buffer. A slide is a note becoming the next note, and an insert never hears the note:
+ * LEAD and BASS read AMOUNT (PX_GLIDE) themselves. 0 jumps; up is a longer slide. The slot is here so the knob is
+ * with the other effects, and so a preset can ask for it. */
+static const dk_fx_t FX_GLIDE = {"GLIDE", "", "", 0};
 static const dk_fx_t *const TAPE_FX[] = {&FX_NONE, &FX_VINYL, &FX_TAPE, &FX_LOFI, &FX_CHORUS, &FX_FILTER, &FX_TREM,
-                                         &FX_SPRING};
-enum { FX_N_NONE, FX_N_VINYL, FX_N_TAPE, FX_N_LOFI, FX_N_CHORUS, FX_N_FILTER, FX_N_TREM, FX_N_SPRING };
+                                         &FX_SPRING, &FX_GLIDE};
+enum { FX_N_NONE, FX_N_VINYL, FX_N_TAPE, FX_N_LOFI, FX_N_CHORUS, FX_N_FILTER, FX_N_TREM, FX_N_SPRING, FX_N_GLIDE };
 
 /* the master: DUST (0 clean, 1 a cassette from childhood: a worn top, its saturation, a hiss that follows the music,
  * a crackle), SLEEP (darker, softer) */

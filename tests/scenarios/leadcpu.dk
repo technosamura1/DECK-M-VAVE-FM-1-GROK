@@ -1,0 +1,29 @@
+# many pad voices, the cost still under a high budget, then the device at 96 % (full shed: 75 % starts, 95 % is the top).
+# tails and a few older sequencer notes go; the hand's note stays. 70 % must not do this.
+wait 300
+budget 180
+trkset 1 2 0 0
+trkset 2 2 0 0
+trkset 3 2 0 0
+trkset 4 2 0 0
+holdseed 0 1 4 4000
+holdseed 0 2 4 4000
+holdseed 0 3 4 4000
+holdseed 0 4 4 4000
+tap PLAY
+wait 700
+expect voices >12
+load 70
+wait 80
+expect voices >12
+load 96
+wait 80
+expect voices <14
+expect voices >4
+key w0 down 110
+wait 60
+expect livev >0
+expect tvoices3 >0
+key w0 up
+wait 40
+expect livev <1

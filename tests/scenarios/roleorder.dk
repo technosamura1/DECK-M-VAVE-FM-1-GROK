@@ -10,7 +10,7 @@ trkset 3 6 6 12
 roundtrip
 wait 100
 expect inv 0
-tap LFO
+tap EDIT
 press REC
 wait 1300
 release REC

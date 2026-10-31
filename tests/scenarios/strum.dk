@@ -1,0 +1,26 @@
+# STRUM on KEYS: a chord recorded on the tape keeps its notes apart (the strum survives the take and QUANT)
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+press HOME
+tapkey b0
+release HOME
+tap LFO
+tap LFO
+wait 50
+turn K4 30
+wait 50
+tap REC
+wait 4100
+key w4 down 100
+wait 800
+key w4 up
+wait 2000
+tap REC
+wait 200
+tap PLAY
+expect events 4
+expect evpos >0
+expect evlast >10

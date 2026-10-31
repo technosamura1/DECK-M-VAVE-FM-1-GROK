@@ -1,0 +1,41 @@
+# a key let go and back within 20 ms is one press (a contact's bounce): one note (a chord: 4), not a note cut and begun again
+# (the mono LEAD's crackle at a note's start and end)
+wait 300
+tap SAVE
+wait 100
+tapkey w4
+wait 200
+onnote 1
+tap HOME
+wait 100
+tap REC
+wait 200
+key w3 down 90
+wait 300
+key w3 up
+wait 4
+key w3 down 90
+wait 300
+key w3 up
+wait 400
+tap REC
+wait 200
+tap PLAY
+wait 200
+expect events 4
+# a real second press (well after): two notes
+tap REC
+wait 200
+key w5 down 90
+wait 200
+key w5 up
+wait 60
+key w5 down 90
+wait 200
+key w5 up
+wait 400
+tap REC
+wait 200
+tap PLAY
+wait 200
+expect events 12

@@ -197,7 +197,7 @@ expect inv 0
 press REC
 tap SEQ
 wait 120
-tap EDIT
+tap LFO
 wait 300
 wait 100
 release REC
@@ -602,11 +602,11 @@ wait 30
 tap REC
 wait 300
 expect inv 0
-tap EDIT
+tap LFO
 wait 20
-press EDIT
+press LFO
 wait 100
-release EDIT
+release LFO
 wait 5
 tap SEQ
 wait 5
@@ -616,7 +616,7 @@ key w13 up
 wait 60
 tapkey w8
 wait 20
-tap LFO
+tap EDIT
 wait 20
 tap REC
 wait 200
@@ -759,19 +759,19 @@ tapkey w1
 wait 300
 tapkey w3
 wait 30
-tap EDIT
+tap LFO
 wait 30
 wait 2700
 release REC
 wait 20
-press EDIT
+press LFO
 wait 50
 wait 300
 wait 2700
-release EDIT
+release LFO
 wait 20
 press REC
-tap EDIT
+tap LFO
 wait 300
 tapkey w2
 wait 300
@@ -1147,7 +1147,7 @@ wait 30
 tap REC
 wait 300
 expect inv 0
-tap LFO
+tap EDIT
 wait 5
 tap OCT-
 wait 60
@@ -1252,11 +1252,11 @@ wait 30
 tap REC
 wait 300
 expect inv 0
-press LFO
+press EDIT
 tapkey w4
 wait 30
 wait 100
-release LFO
+release EDIT
 wait 60
 tapkey w3
 wait 20

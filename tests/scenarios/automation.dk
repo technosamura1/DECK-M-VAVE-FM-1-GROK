@@ -48,9 +48,9 @@ shot auto_rec.png
 wait 1500
 expect alive2 >=0
 # one undo step for the whole gesture
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect autos 0
 expect same 1
@@ -76,7 +76,7 @@ expect alive2 >=0
 # EDIT list, ERASE AUTO (white 13, press twice): the curves erased, the notes stay
 expect events >0
 page 11
-tap EDIT
+tap LFO
 tapkey w12
 wait 50
 expect autos >=2
@@ -86,9 +86,9 @@ expect autos 0
 expect events >0
 expect page 11
 expect alive2 -1
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect autos >=2
 # the notes' erase (white 12, twice) leaves the curves

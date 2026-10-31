@@ -1,0 +1,177 @@
+# the knobs they set belong to that preset: the effect, and the engine's (PIANO here, the cutoff of a lead).
+# another preset brings its own. this one, turned back on, has every knob where they left it.
+# an instrument, a part, a mood and ERASE ALL do not put a different effect on.
+wait 300
+listen
+tap HOME
+wait 100
+tapkey w0
+wait 100
+tap HOME
+wait 100
+expect track 0
+page 11
+turn K2 1
+wait 80
+turn K2 -1
+wait 80
+expect part 0
+page 2
+row 0
+press HOME
+tapkey w0
+release HOME
+wait 80
+expect preset 0
+turn K1 15
+wait 40
+expect p1 55
+row 3
+turn K1 4
+wait 40
+expect fx 6
+row 2
+turn K2 5
+wait 40
+expect fxamt 20
+turn K4 5
+wait 40
+expect echo 17
+row 1
+turn K4 7
+wait 40
+expect rel 57
+row 4
+turn K2 10
+wait 40
+expect modd 40
+press HOME
+tapkey w3
+release HOME
+wait 80
+expect preset 3
+expect fx 0
+expect p1 25
+expect fxamt 0
+expect echo 10
+expect rel 50
+expect modd 30
+press HOME
+tapkey w0
+release HOME
+wait 80
+expect preset 0
+expect fx 6
+expect p1 55
+expect fxamt 20
+expect echo 17
+expect rel 57
+expect modd 40
+page 12
+tap OCT+
+wait 80
+expect eng >0
+expect fx 6
+tap OCT-
+wait 80
+expect eng 0
+expect fx 6
+expect p1 55
+turn PRESET 1
+wait 80
+expect preset 1
+expect fx 2
+expect p1 50
+turn PRESET -1
+wait 80
+expect preset 0
+expect fx 6
+expect p1 55
+expect fxamt 20
+expect echo 17
+expect rel 57
+expect modd 40
+page 2
+row 0
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+turn PRESET 1
+turn K1 1
+wait 40
+expect preset 10
+turn PRESET -10
+wait 80
+expect preset 0
+expect fx 6
+expect p1 55
+expect fxamt 20
+expect echo 17
+expect rel 57
+expect modd 40
+roundtrip
+wait 80
+expect preset 0
+expect p1 55
+press HOME
+tapkey w3
+release HOME
+wait 80
+expect preset 3
+expect fx 0
+expect p1 26
+expect modd 30
+press HOME
+tapkey w0
+release HOME
+wait 80
+expect preset 0
+expect fx 6
+expect p1 55
+expect fxamt 20
+expect echo 17
+expect rel 57
+expect modd 40
+page 11
+wait 50
+tap LFO
+wait 100
+expect layview 1
+tapkey w13
+wait 100
+said AGAIN = ERASE
+tapkey w13
+wait 100
+said TRACK CLEARED
+expect preset 0
+expect fx 6
+turn K2 1
+wait 80
+expect fx 6
+mood 1
+wait 40
+expect fx 6

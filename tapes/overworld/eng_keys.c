@@ -34,7 +34,7 @@ typedef struct {
 CHECK_SIZE(felt_v);
 
 static const dk_param_t FELT_P[] = {
-    {"TONE", 0, 100, 45, VZ_SUN, 0},  {"FELT", 0, 100, 45, VZ_DUST, 0},  {"DECAY", 0, 100, 50, VZ_ENV, 0},
+    {"TONE", 0, 100, 45, VZ_SUN, 0},  {"PIANO", 0, 100, 45, VZ_DUST, 0},  {"DECAY", 0, 100, 50, VZ_ENV, 0},
     {"KNOCK", 0, 100, 50, VZ_BAR, 0}, {"WIDTH", 0, 100, 55, VZ_BAR, 0},
 };
 static void felt_on(float *st, int note, float vel, const float *p, int retrig)
@@ -144,7 +144,7 @@ static float felt_level(const float *st)
     const felt_v *v = (const felt_v *)st;
     return (v->ef + v->es) * v->vel;
 }
-const dk_engine_t ENG_FELT = {"FELT", EF_POLY, 8, 13, 5, FELT_P, felt_on, felt_off, felt_render, felt_level, 0, 0, 0, 0,
+const dk_engine_t ENG_FELT = {"PIANO", EF_POLY, 8, 13, 5, FELT_P, felt_on, felt_off, felt_render, felt_level, 0, 0, 0, 0,
                               R_KEYS};
 
 /* ------------------------------------------------------------------- TINE --- */
@@ -156,7 +156,7 @@ typedef struct {
 } tine_v;
 CHECK_SIZE(tine_v);
 static const dk_param_t TINE_P[] = {
-    {"TINE", 0, 100, 50, VZ_BELL, 0}, {"TREMOLO", 0, 100, 35, VZ_WAVE, 0}, {"DRIFT", 0, 100, 30, VZ_WOBBLE, 0},
+    {"KEYS", 0, 100, 50, VZ_BELL, 0}, {"TREMOLO", 0, 100, 35, VZ_WAVE, 0}, {"DRIFT", 0, 100, 30, VZ_WOBBLE, 0},
     {"BARK", 0, 100, 45, VZ_SUN, 0},  {"DECAY", 0, 100, 50, VZ_ENV, 0},
 };
 static void tine_on(float *st, int note, float vel, const float *p, int retrig)
@@ -247,7 +247,7 @@ static float tine_level(const float *st)
     const tine_v *v = (const tine_v *)st;
     return (v->es + v->ef) * v->vel;
 }
-const dk_engine_t ENG_TINE = {"TINE", EF_POLY, 5, 13, 5, TINE_P, tine_on, tine_off, tine_render, tine_level, 0, 0, 0, 0,
+const dk_engine_t ENG_TINE = {"KEYS", EF_POLY, 5, 13, 5, TINE_P, tine_on, tine_off, tine_render, tine_level, 0, 0, 0, 0,
                               R_KEYS};
 
 /* ---------------------------------------------------------------- KALIMBA --- */

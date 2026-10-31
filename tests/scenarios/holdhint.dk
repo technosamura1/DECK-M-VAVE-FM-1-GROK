@@ -2,12 +2,12 @@
 wait 300
 tap FX
 wait 3500
-press EDIT
+press LFO
 wait 200
 shot hint_none.png
 wait 400
 shot hint_edit.png
-release EDIT
+release LFO
 press SAVE
 wait 600
 shot hint_save.png

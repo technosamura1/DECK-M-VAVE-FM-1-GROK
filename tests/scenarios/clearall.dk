@@ -99,9 +99,9 @@ expect proj 0
 expect tempo 76
 expect preset 3
 # nothing to undo; still works as a fresh song: a take, then it plays
-press EDIT
+press LFO
 wait 900
-release EDIT
+release LFO
 wait 200
 said UNDO
 expect nev 0

@@ -6,7 +6,7 @@ wait 5
 wait 5
 turn K4 -3 80
 wait 60
-press EDIT
+press LFO
 tapkey w2
 wait 300
 wait 50
@@ -16,7 +16,7 @@ wait 120
 wait 50
 wait 30
 wait 400
-release EDIT
+release LFO
 wait 5
 turn PRESET -3 10
 wait 60
@@ -40,7 +40,7 @@ wait 120
 wait 1200
 release ENV
 wait 60
-press LFO
+press EDIT
 wait 50
 wait 30
 tapkey w1
@@ -50,7 +50,7 @@ wait 300
 wait 50
 wait 30
 wait 100
-release LFO
+release EDIT
 wait 60
 turn PRESET -3 10
 wait 5
@@ -142,7 +142,7 @@ release GLO
 wait 20
 turn PRESET 4 10
 wait 5
-tap LFO
+tap EDIT
 wait 5
 key w12 down 111
 wait 100
@@ -164,7 +164,7 @@ key w15 down 112
 wait 400
 key w13 up
 wait 20
-press EDIT
+press LFO
 wait 50
 wait 120
 wait 50
@@ -172,7 +172,7 @@ wait 300
 tapkey w1
 wait 30
 wait 400
-release EDIT
+release LFO
 wait 20
 press REC
 tapkey w2
@@ -183,7 +183,7 @@ tapkey w6
 wait 300
 tapkey w2
 wait 300
-tap EDIT
+tap LFO
 wait 30
 wait 2700
 release REC
@@ -209,18 +209,18 @@ wait 5
 tapkey b9
 wait 20
 press REC
-tap EDIT
+tap LFO
 wait 300
 tap FX
 wait 300
-tap EDIT
+tap LFO
 wait 30
 wait 2700
 release REC
 wait 60
 turn K4 -6 40
 wait 5
-press LFO
+press EDIT
 wait 50
 wait 120
 turn K1 2 60
@@ -232,13 +232,13 @@ wait 120
 turn K1 5 60
 wait 30
 wait 1200
-release LFO
+release EDIT
 wait 60
 page 11
-tap EDIT
+tap LFO
 tapkey w6
 wait 5
-press EDIT
+press LFO
 wait 50
 wait 300
 tapkey w1
@@ -246,10 +246,10 @@ wait 120
 wait 50
 wait 300
 wait 2700
-release EDIT
+release LFO
 wait 60
 press REC
-tap EDIT
+tap LFO
 wait 30
 turn K4 -5 60
 wait 120
@@ -281,7 +281,7 @@ wait 5
 tapkey w4
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w6
 tapkey b0
 wait 5
@@ -371,7 +371,7 @@ turn ALGO 4 10
 wait 60
 turn K3 1 80
 wait 5
-tap LFO
+tap EDIT
 wait 5
 key w1 down 108
 wait 20
@@ -415,9 +415,9 @@ key w4 down 107
 wait 100
 key w6 up
 wait 60
-press EDIT
+press LFO
 wait 100
-release EDIT
+release LFO
 wait 5
 turn PRESET -6 40
 wait 60
@@ -574,7 +574,7 @@ wait 20
 tap REC
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w0
 wait 20
 tapkey w2
@@ -583,7 +583,7 @@ press HOME
 wait 2700
 release HOME
 wait 20
-tap LFO
+tap EDIT
 wait 20
 press GLO
 wait 1200
@@ -714,7 +714,7 @@ wait 20
 turn SELECT 4 40
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w13
 tapkey b6
 wait 5
@@ -735,12 +735,12 @@ wait 60
 turn SELECT -1 40
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w8
 wait 5
 wait 200
 wait 5
-tap LFO
+tap EDIT
 wait 20
 turn K2 -3 80
 wait 20
@@ -752,11 +752,11 @@ turn K2 -6 80
 wait 20
 expect inv 0
 expect voices <25
-tap LFO
+tap EDIT
 wait 60
 turn K2 -6 40
 wait 60
-tap LFO
+tap EDIT
 wait 5
 tap OCT+
 wait 5
@@ -776,7 +776,7 @@ tapkey w5
 wait 20
 wait 800
 wait 20
-tap EDIT
+tap LFO
 wait 5
 tap FX
 wait 20
@@ -791,7 +791,7 @@ wait 20
 press REC
 tapkey w0
 wait 30
-tap EDIT
+tap LFO
 wait 300
 turn K2 2 60
 wait 30
@@ -824,9 +824,9 @@ tapkey w3
 wait 20
 turn SELECT -3 80
 wait 20
-tap EDIT
+tap LFO
 wait 60
-tap EDIT
+tap LFO
 wait 60
 turn PRESET -6 40
 wait 60
@@ -836,7 +836,7 @@ tapkey b6
 wait 60
 tapkey w8
 wait 5
-tap LFO
+tap EDIT
 wait 60
 tap SEL
 wait 20
@@ -852,7 +852,7 @@ wait 5
 wait 5
 turn PRESET -6 40
 wait 60
-tap LFO
+tap EDIT
 wait 5
 press REC
 wait 100
@@ -866,7 +866,7 @@ key w0 up
 wait 5
 turn K4 -3 10
 wait 5
-press EDIT
+press LFO
 turn K2 2 60
 wait 300
 turn PRESET -2 60
@@ -876,7 +876,7 @@ wait 120
 turn K1 -5 60
 wait 300
 wait 1200
-release EDIT
+release LFO
 wait 60
 turn K3 -1 10
 wait 5
@@ -898,7 +898,7 @@ release ENV
 wait 20
 tap REC
 wait 60
-tap LFO
+tap EDIT
 wait 60
 tapkey w10
 wait 60
@@ -909,13 +909,13 @@ wait 60
 press REC
 tap SEQ
 wait 300
-tap EDIT
+tap LFO
 wait 30
 turn K3 -2 60
 wait 30
 tapkey w2
 wait 120
-tap EDIT
+tap LFO
 wait 30
 wait 100
 release REC
@@ -974,7 +974,7 @@ turn K4 -6 80
 wait 20
 turn PRESET -6 10
 wait 20
-tap EDIT
+tap LFO
 wait 5
 wait 50
 wait 20
@@ -990,7 +990,7 @@ turn K1 1 80
 wait 60
 turn K1 1 40
 wait 60
-press EDIT
+press LFO
 wait 50
 wait 120
 turn K3 -2 60
@@ -998,7 +998,7 @@ wait 30
 tapkey w0
 wait 30
 wait 2700
-release EDIT
+release LFO
 wait 20
 tapkey b6
 wait 60
@@ -1122,7 +1122,7 @@ key w7 down 126
 wait 20
 key w7 up
 wait 20
-tap EDIT
+tap LFO
 wait 5
 tap REC
 wait 5
@@ -1212,7 +1212,7 @@ turn PRESET 9 10
 wait 20
 tapkey w9
 wait 5
-tap LFO
+tap EDIT
 wait 20
 tap OCT-
 wait 20
@@ -1254,7 +1254,7 @@ tapkey w3
 wait 5
 turn K3 1 10
 wait 5
-press LFO
+press EDIT
 wait 50
 wait 120
 wait 50
@@ -1266,7 +1266,7 @@ wait 120
 wait 50
 wait 120
 wait 1200
-release LFO
+release EDIT
 wait 20
 tapkey b0
 wait 20
@@ -1275,7 +1275,7 @@ wait 100
 key w0 up
 wait 5
 page 3
-tap EDIT
+tap LFO
 tapkey w1
 wait 20
 turn K2 9 40
@@ -1366,10 +1366,10 @@ key w15 down 101
 wait 100
 key w11 up
 wait 5
-tap LFO
+tap EDIT
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w6
 wait 60
 press ENV
@@ -1399,7 +1399,7 @@ wait 5
 press REC
 tapkey w4
 wait 300
-tap EDIT
+tap LFO
 wait 120
 wait 400
 release REC
@@ -1426,11 +1426,11 @@ wait 200
 wait 5
 tap FX
 wait 5
-tap LFO
+tap EDIT
 wait 20
 tapkey w2
 wait 20
-tap EDIT
+tap LFO
 wait 5
 tapkey w3
 wait 5
@@ -1465,7 +1465,7 @@ wait 5
 press REC
 tapkey w3
 wait 120
-tap EDIT
+tap LFO
 wait 300
 tapkey w4
 wait 300
@@ -1610,7 +1610,7 @@ turn ALGO -6 10
 wait 60
 turn K2 1 40
 wait 20
-tap LFO
+tap EDIT
 wait 20
 tap OCT+
 wait 60
@@ -1630,9 +1630,9 @@ turn PRESET 1 40
 wait 20
 turn SELECT -3 40
 wait 60
-tap EDIT
+tap LFO
 wait 60
-press LFO
+press EDIT
 turn K3 2 60
 wait 300
 wait 50
@@ -1640,7 +1640,7 @@ wait 30
 tapkey w3
 wait 300
 wait 1200
-release LFO
+release EDIT
 wait 60
 turn K1 -1 40
 wait 5
@@ -1721,11 +1721,11 @@ release SEQ
 wait 60
 turn K3 4 40
 wait 60
-tap EDIT
+tap LFO
 wait 60
 tapkey w1
 wait 5
-tap LFO
+tap EDIT
 wait 60
 key w3 down 44
 wait 20
@@ -1773,7 +1773,7 @@ key w12 down 31
 wait 400
 key w12 up
 wait 5
-tap EDIT
+tap LFO
 wait 5
 turn K3 1 80
 wait 60
@@ -1790,7 +1790,7 @@ wait 800
 wait 60
 tap SEL
 wait 60
-tap EDIT
+tap LFO
 wait 60
 tapkey b9
 wait 20
@@ -1819,7 +1819,7 @@ wait 100
 key w1 up
 wait 5
 page 3
-tap EDIT
+tap LFO
 tapkey w9
 tapkey b5
 wait 60
@@ -1835,11 +1835,11 @@ turn SELECT -6 10
 wait 20
 turn PRESET -6 40
 wait 20
-press LFO
+press EDIT
 turn PRESET -2 60
 wait 30
 wait 1200
-release LFO
+release EDIT
 wait 20
 turn K1 -6 10
 wait 5
@@ -1852,7 +1852,7 @@ wait 20
 turn K3 -6 10
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w11
 wait 20
 press ENV
@@ -1873,11 +1873,11 @@ turn K4 4 80
 wait 5
 tap OCT+
 wait 60
-press EDIT
+press LFO
 tapkey w4
 wait 300
 wait 100
-release EDIT
+release LFO
 wait 60
 press FX
 turn K4 2 60
@@ -1887,12 +1887,12 @@ release FX
 wait 5
 tap SEL
 wait 20
-tap EDIT
+tap LFO
 wait 60
 press REC
 tap FX
 wait 120
-tap EDIT
+tap LFO
 wait 30
 tapkey w2
 wait 30
@@ -1940,7 +1940,7 @@ tap SEQ
 wait 30
 tapkey w6
 wait 300
-tap EDIT
+tap LFO
 wait 300
 wait 100
 release REC
@@ -2021,7 +2021,7 @@ turn PRESET -1 40
 wait 5
 tapkey w3
 wait 60
-tap EDIT
+tap LFO
 wait 60
 turn ALGO -6 40
 wait 60
@@ -2144,7 +2144,7 @@ wait 20
 wait 5
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w4
 wait 60
 turn ALGO 1 10
@@ -2205,7 +2205,7 @@ turn K4 4 10
 wait 20
 tap OCT-
 wait 20
-tap LFO
+tap EDIT
 wait 60
 key w15 down 51
 wait 100
@@ -2219,7 +2219,7 @@ tapkey b3
 wait 60
 tapkey w6
 wait 60
-tap LFO
+tap EDIT
 wait 60
 turn ALGO -6 80
 wait 20
@@ -2234,7 +2234,7 @@ wait 60
 turn K1 2 40
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w13
 tapkey b6
 wait 5
@@ -2283,7 +2283,7 @@ turn K4 1 80
 wait 5
 turn K3 9 40
 wait 60
-tap LFO
+tap EDIT
 wait 20
 key w4 down 71
 wait 100
@@ -2291,7 +2291,7 @@ key w13 up
 wait 5
 tap OCT+
 wait 60
-press LFO
+press EDIT
 turn K3 -5 60
 wait 300
 tapkey w6
@@ -2299,7 +2299,7 @@ wait 30
 tapkey w1
 wait 120
 wait 1200
-release LFO
+release EDIT
 wait 20
 tap FX
 wait 60
@@ -2375,7 +2375,7 @@ wait 120
 wait 2700
 release FX
 wait 20
-tap EDIT
+tap LFO
 wait 20
 turn K3 2 40
 wait 20
@@ -2393,11 +2393,11 @@ turn K3 2 10
 wait 5
 tapkey w8
 wait 5
-press EDIT
+press LFO
 tapkey w0
 wait 120
 wait 2700
-release EDIT
+release LFO
 wait 20
 tapkey w1
 wait 60
@@ -2405,7 +2405,7 @@ tap SEL
 wait 5
 tapkey w5
 wait 60
-tap EDIT
+tap LFO
 wait 20
 turn ALGO 2 10
 wait 5
@@ -2448,7 +2448,7 @@ wait 2700
 release ARP
 wait 5
 page 3
-tap EDIT
+tap LFO
 tapkey w1
 tapkey b5
 wait 20
@@ -2493,13 +2493,13 @@ wait 5
 turn K3 2 10
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w1
 tapkey b0
 wait 60
 tapkey w1
 wait 60
-tap EDIT
+tap LFO
 wait 60
 turn SELECT 2 10
 wait 60
@@ -2508,7 +2508,7 @@ wait 60
 tapkey w3
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w4
 wait 60
 turn K1 -3 80
@@ -2558,9 +2558,9 @@ tapkey w5
 wait 30
 tap SEQ
 wait 120
-tap EDIT
+tap LFO
 wait 300
-tap EDIT
+tap LFO
 wait 300
 tapkey w4
 wait 300
@@ -2614,7 +2614,7 @@ wait 5
 tap ENV
 wait 20
 page 3
-tap EDIT
+tap LFO
 tapkey w11
 tapkey b0
 wait 20
@@ -2622,7 +2622,7 @@ tap OCT+
 wait 5
 wait 5
 wait 5
-tap LFO
+tap EDIT
 wait 5
 turn SELECT -6 40
 wait 20
@@ -2641,7 +2641,7 @@ wait 60
 turn SELECT 9 80
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w12
 wait 20
 key w1 down 103
@@ -2720,7 +2720,7 @@ release ARP
 wait 60
 tapkey w6
 wait 60
-press EDIT
+press LFO
 turn ALGO 2 60
 wait 30
 wait 50
@@ -2728,7 +2728,7 @@ wait 300
 turn PRESET 2 60
 wait 120
 wait 100
-release EDIT
+release LFO
 wait 20
 tap ARP
 wait 5
@@ -2749,11 +2749,11 @@ wait 20
 key w14 up
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w3
 tapkey b7
 wait 20
-tap LFO
+tap EDIT
 wait 60
 press REC
 turn SELECT -5 60
@@ -2839,7 +2839,7 @@ turn K3 9 80
 wait 5
 turn PRESET -6 40
 wait 60
-tap LFO
+tap EDIT
 wait 5
 key w6 down 64
 wait 400
@@ -2897,7 +2897,7 @@ turn K1 4 10
 wait 60
 wait 200
 wait 20
-tap LFO
+tap EDIT
 wait 60
 wait 2000
 wait 60
@@ -2923,15 +2923,15 @@ tap OCT+
 wait 5
 turn K2 -6 80
 wait 5
-tap LFO
+tap EDIT
 wait 20
 tap FX
 wait 5
-press LFO
+press EDIT
 wait 50
 wait 30
 wait 400
-release LFO
+release EDIT
 wait 5
 tapkey b8
 wait 5
@@ -2947,7 +2947,7 @@ key w9 up
 wait 60
 turn PRESET 9 80
 wait 60
-tap LFO
+tap EDIT
 wait 20
 tapkey w5
 wait 5
@@ -3093,7 +3093,7 @@ tap REC
 wait 20
 tapkey w9
 wait 20
-tap EDIT
+tap LFO
 wait 20
 tapkey w4
 wait 5
@@ -3189,7 +3189,7 @@ turn ALGO 4 10
 wait 60
 wait 2000
 wait 60
-tap EDIT
+tap LFO
 wait 60
 key w13 down 79
 wait 20
@@ -3246,7 +3246,7 @@ wait 5
 tap ARP
 wait 20
 press REC
-tap EDIT
+tap LFO
 wait 300
 tap SEQ
 wait 30
@@ -3287,11 +3287,11 @@ expect inv 0
 expect voices <25
 tapkey b4
 wait 20
-press EDIT
+press LFO
 turn ALGO 2 60
 wait 120
 wait 2700
-release EDIT
+release LFO
 wait 20
 tap OCT+
 wait 60
@@ -3388,7 +3388,7 @@ wait 20
 turn ALGO -6 40
 wait 60
 page 11
-tap EDIT
+tap LFO
 tapkey w0
 wait 20
 press FX
@@ -3401,7 +3401,7 @@ wait 300
 wait 1200
 release FX
 wait 60
-tap EDIT
+tap LFO
 wait 20
 turn K3 -1 10
 wait 20
@@ -3472,7 +3472,7 @@ wait 20
 press REC
 tapkey w5
 wait 120
-tap EDIT
+tap LFO
 wait 120
 tapkey w2
 wait 120
@@ -3495,12 +3495,12 @@ release SEQ
 wait 20
 wait 200
 wait 5
-tap EDIT
+tap LFO
 wait 60
 tap HOME
 wait 20
 page 3
-tap EDIT
+tap LFO
 tapkey w0
 wait 20
 tap REC
@@ -3537,7 +3537,7 @@ wait 300
 wait 400
 release SEQ
 wait 60
-tap EDIT
+tap LFO
 wait 60
 turn ALGO -6 10
 wait 5
@@ -3573,7 +3573,7 @@ wait 30
 wait 400
 release FX
 wait 60
-press EDIT
+press LFO
 wait 50
 wait 120
 tapkey w3
@@ -3581,7 +3581,7 @@ wait 120
 tapkey w6
 wait 30
 wait 1200
-release EDIT
+release LFO
 wait 5
 turn PRESET 1 80
 wait 60
@@ -3590,7 +3590,7 @@ wait 20
 tapkey w9
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w11
 tapkey b7
 wait 60
@@ -3610,7 +3610,7 @@ turn ALGO -3 40
 wait 5
 turn K1 1 80
 wait 5
-press LFO
+press EDIT
 turn ALGO 2 60
 wait 120
 tapkey w0
@@ -3622,7 +3622,7 @@ wait 30
 tapkey w1
 wait 300
 wait 1200
-release LFO
+release EDIT
 wait 5
 tap REC
 wait 60
@@ -3719,7 +3719,7 @@ wait 100
 key w4 up
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w4
 tapkey b6
 wait 5
@@ -3759,9 +3759,9 @@ turn PRESET 2 40
 wait 5
 tapkey w3
 wait 20
-press LFO
+press EDIT
 wait 2700
-release LFO
+release EDIT
 wait 5
 turn K1 -3 80
 wait 20
@@ -3769,7 +3769,7 @@ turn PRESET -3 40
 wait 20
 tap GLO
 wait 20
-press EDIT
+press LFO
 wait 50
 wait 300
 turn K4 2 60
@@ -3781,7 +3781,7 @@ wait 300
 turn K2 2 60
 wait 300
 wait 400
-release EDIT
+release LFO
 wait 60
 key w15 down 98
 wait 400
@@ -3806,7 +3806,7 @@ tapkey b5
 wait 20
 turn SELECT -3 10
 wait 20
-tap EDIT
+tap LFO
 wait 20
 key w15 down 55
 wait 400
@@ -3902,7 +3902,7 @@ release FX
 wait 60
 tap HOME
 wait 5
-tap LFO
+tap EDIT
 wait 60
 key w15 down 126
 wait 400
@@ -3932,7 +3932,7 @@ key w11 up
 wait 20
 wait 800
 wait 60
-tap EDIT
+tap LFO
 wait 5
 key w6 down 35
 wait 400
@@ -3948,7 +3948,7 @@ tap PLAY
 wait 20
 tapkey w1
 wait 60
-tap EDIT
+tap LFO
 wait 5
 tap OCT+
 wait 5
@@ -3964,7 +3964,7 @@ tapkey b0
 wait 20
 tapkey b0
 wait 20
-press LFO
+press EDIT
 tapkey w2
 wait 30
 turn K3 -2 60
@@ -3976,7 +3976,7 @@ wait 30
 wait 50
 wait 30
 wait 2700
-release LFO
+release EDIT
 wait 60
 turn PRESET 4 40
 wait 20
@@ -3986,7 +3986,7 @@ key w11 down 51
 wait 100
 key w15 up
 wait 5
-press LFO
+press EDIT
 tapkey w0
 wait 120
 tapkey w4
@@ -3994,7 +3994,7 @@ wait 300
 turn SELECT -5 60
 wait 30
 wait 400
-release LFO
+release EDIT
 wait 5
 tapkey w9
 wait 20
@@ -4112,7 +4112,7 @@ tap REC
 wait 5
 turn ALGO 4 40
 wait 20
-tap EDIT
+tap LFO
 wait 5
 tapkey b3
 wait 5
@@ -4196,11 +4196,11 @@ key w1 down 114
 wait 20
 key w0 up
 wait 20
-press LFO
+press EDIT
 tapkey w6
 wait 120
 wait 400
-release LFO
+release EDIT
 wait 5
 key w3 down 27
 wait 400
@@ -4216,7 +4216,7 @@ wait 800
 wait 20
 wait 50
 wait 60
-press LFO
+press EDIT
 tapkey w1
 wait 120
 tapkey w2
@@ -4228,14 +4228,14 @@ wait 30
 tapkey w3
 wait 30
 wait 400
-release LFO
+release EDIT
 wait 20
 turn ALGO 9 40
 wait 60
 turn SELECT -1 40
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w12
 wait 5
 press GLO
@@ -4344,9 +4344,9 @@ key w5 down 62
 wait 20
 key w12 up
 wait 5
-tap LFO
-wait 20
 tap EDIT
+wait 20
+tap LFO
 wait 20
 turn K2 9 40
 wait 20
@@ -4412,7 +4412,7 @@ tapkey w9
 wait 60
 tap REC
 wait 60
-tap LFO
+tap EDIT
 wait 20
 turn K4 1 10
 wait 20
@@ -4485,7 +4485,7 @@ tapkey w1
 wait 120
 turn SELECT 5 60
 wait 120
-tap EDIT
+tap LFO
 wait 30
 wait 2700
 release REC
@@ -4499,7 +4499,7 @@ wait 400
 key w15 up
 wait 5
 page 3
-tap EDIT
+tap LFO
 tapkey w11
 tapkey b3
 wait 20
@@ -4509,19 +4509,19 @@ key w15 down 46
 wait 400
 key w4 up
 wait 5
-press EDIT
+press LFO
 turn ALGO -5 60
 wait 30
 tapkey w4
 wait 120
 wait 400
-release EDIT
+release LFO
 wait 20
-press LFO
+press EDIT
 wait 50
 wait 30
 wait 1200
-release LFO
+release EDIT
 wait 60
 key w11 down 32
 wait 100
@@ -4551,7 +4551,7 @@ wait 300
 wait 100
 release FX
 wait 5
-tap EDIT
+tap LFO
 wait 20
 turn SELECT -3 10
 wait 60
@@ -4585,7 +4585,7 @@ turn SELECT 1 80
 wait 20
 tapkey w7
 wait 20
-tap LFO
+tap EDIT
 wait 20
 tap SEQ
 wait 5
@@ -4654,7 +4654,7 @@ release ENV
 wait 60
 tapkey w0
 wait 5
-tap EDIT
+tap LFO
 wait 60
 tapkey w5
 wait 60
@@ -4672,7 +4672,7 @@ wait 120
 wait 100
 release ARP
 wait 20
-tap EDIT
+tap LFO
 wait 5
 press FX
 wait 400
@@ -4760,7 +4760,7 @@ tap ENV
 wait 60
 turn K4 -1 10
 wait 5
-tap EDIT
+tap LFO
 wait 20
 tap SEL
 wait 20
@@ -4770,11 +4770,11 @@ key w12 up
 wait 60
 turn K1 1 40
 wait 60
-tap LFO
+tap EDIT
 wait 20
 tapkey b0
 wait 20
-press EDIT
+press LFO
 wait 50
 wait 120
 turn K4 5 60
@@ -4786,7 +4786,7 @@ wait 120
 tapkey w0
 wait 120
 wait 1200
-release EDIT
+release LFO
 wait 20
 turn ALGO 2 80
 wait 5
@@ -4814,7 +4814,7 @@ key w5 up
 wait 60
 wait 2000
 wait 60
-tap EDIT
+tap LFO
 wait 5
 tapkey w10
 wait 20
@@ -4836,11 +4836,11 @@ key w11 up
 wait 60
 wait 50
 wait 5
-press LFO
+press EDIT
 turn K2 -5 60
 wait 30
 wait 1200
-release LFO
+release EDIT
 wait 5
 press GLO
 turn K4 2 60
@@ -4882,7 +4882,7 @@ key w1 up
 wait 5
 tap OCT+
 wait 20
-tap EDIT
+tap LFO
 wait 20
 tapkey w6
 wait 60
@@ -4918,11 +4918,11 @@ turn K4 2 10
 wait 20
 tap GLO
 wait 20
-press EDIT
+press LFO
 wait 50
 wait 300
 wait 2700
-release EDIT
+release LFO
 wait 5
 turn K3 1 80
 wait 5
@@ -4967,7 +4967,7 @@ wait 5
 press REC
 tap FX
 wait 120
-tap EDIT
+tap LFO
 wait 30
 wait 100
 release REC
@@ -5001,7 +5001,7 @@ wait 400
 release HOME
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w0
 tapkey b5
 wait 60
@@ -5010,7 +5010,7 @@ wait 20
 turn ALGO 2 10
 wait 5
 page 3
-tap EDIT
+tap LFO
 tapkey w9
 tapkey b7
 wait 60
@@ -5042,7 +5042,7 @@ turn K1 -3 10
 wait 5
 tap ENV
 wait 60
-tap LFO
+tap EDIT
 wait 20
 turn K2 1 80
 wait 20
@@ -5109,7 +5109,7 @@ wait 20
 tapkey w4
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w5
 wait 60
 wait 5
@@ -5118,14 +5118,14 @@ turn PRESET -6 80
 wait 20
 turn K2 -3 40
 wait 60
-tap LFO
+tap EDIT
 wait 5
 tapkey w5
 wait 60
 wait 2000
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w4
 tapkey b1
 wait 5
@@ -5140,7 +5140,7 @@ wait 60
 turn K4 -6 10
 wait 20
 page 3
-tap EDIT
+tap LFO
 tapkey w3
 wait 60
 tapkey w4
@@ -5199,7 +5199,7 @@ turn PRESET 4 40
 wait 60
 wait 5
 wait 5
-tap EDIT
+tap LFO
 wait 5
 tapkey b9
 wait 20
@@ -5249,7 +5249,7 @@ tapkey w6
 wait 5
 wait 2000
 wait 20
-tap LFO
+tap EDIT
 wait 60
 turn SELECT -1 80
 wait 20
@@ -5321,7 +5321,7 @@ turn K3 1 10
 wait 20
 tapkey w0
 wait 60
-tap LFO
+tap EDIT
 wait 5
 turn K4 -1 80
 wait 5
@@ -5340,9 +5340,9 @@ wait 20
 turn K4 -3 40
 wait 60
 press REC
-tap EDIT
+tap LFO
 wait 300
-tap EDIT
+tap LFO
 wait 300
 tap SEQ
 wait 120
@@ -5456,7 +5456,7 @@ wait 1200
 release ARP
 wait 20
 page 3
-tap EDIT
+tap LFO
 tapkey w5
 wait 60
 wait 800
@@ -5507,7 +5507,7 @@ release FX
 wait 60
 turn K2 -1 40
 wait 5
-press EDIT
+press LFO
 turn K1 -2 60
 wait 120
 turn K4 2 60
@@ -5515,7 +5515,7 @@ wait 30
 wait 50
 wait 30
 wait 1200
-release EDIT
+release LFO
 wait 5
 key w13 down 55
 wait 20
@@ -5535,7 +5535,7 @@ turn K4 -3 10
 wait 20
 tap ENV
 wait 20
-tap EDIT
+tap LFO
 wait 5
 press REC
 wait 100
@@ -5575,14 +5575,14 @@ key w10 up
 wait 5
 tap GLO
 wait 5
-tap EDIT
+tap LFO
 wait 5
 tapkey w2
 wait 5
 tap SEL
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w6
 tapkey b1
 wait 20
@@ -5632,11 +5632,11 @@ tap REC
 wait 60
 turn ALGO 4 40
 wait 20
-press LFO
+press EDIT
 wait 50
 wait 120
 wait 100
-release LFO
+release EDIT
 wait 20
 key w9 down 54
 wait 20
@@ -5682,11 +5682,11 @@ tap HOME
 wait 20
 turn PRESET 1 10
 wait 20
-tap EDIT
+tap LFO
 wait 60
 tapkey b10
 wait 20
-tap LFO
+tap EDIT
 wait 5
 tapkey w2
 wait 5
@@ -5737,7 +5737,7 @@ wait 20
 wait 800
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w3
 wait 20
 tapkey b7
@@ -5760,7 +5760,7 @@ wait 800
 wait 20
 turn K2 -6 40
 wait 60
-press EDIT
+press LFO
 wait 50
 wait 30
 wait 50
@@ -5772,7 +5772,7 @@ wait 300
 wait 50
 wait 120
 wait 2700
-release EDIT
+release LFO
 wait 60
 turn K2 2 10
 wait 5
@@ -5797,7 +5797,7 @@ wait 60
 press REC
 tap FX
 wait 300
-tap EDIT
+tap LFO
 wait 120
 tapkey w7
 wait 120
@@ -5832,7 +5832,7 @@ turn SELECT 9 40
 wait 20
 turn PRESET 9 40
 wait 5
-press LFO
+press EDIT
 tapkey w2
 wait 300
 tapkey w5
@@ -5842,7 +5842,7 @@ wait 120
 tapkey w3
 wait 300
 wait 400
-release LFO
+release EDIT
 wait 5
 expect inv 0
 expect voices <25
@@ -6008,7 +6008,7 @@ wait 20
 tap REC
 wait 60
 page 11
-tap EDIT
+tap LFO
 tapkey w11
 wait 20
 key w9 down 115
@@ -6040,7 +6040,7 @@ wait 5
 press REC
 turn PRESET 5 60
 wait 30
-tap EDIT
+tap LFO
 wait 30
 wait 2700
 release REC
@@ -6095,7 +6095,7 @@ turn PRESET -3 40
 wait 20
 expect inv 0
 expect voices <25
-tap LFO
+tap EDIT
 wait 60
 turn ALGO 1 10
 wait 20
@@ -6121,10 +6121,10 @@ wait 120
 wait 2700
 release HOME
 wait 20
-tap EDIT
+tap LFO
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w13
 wait 60
 turn K3 -1 80
@@ -6137,7 +6137,7 @@ tapkey b2
 wait 20
 turn K1 1 80
 wait 60
-press LFO
+press EDIT
 tapkey w2
 wait 30
 turn K3 5 60
@@ -6149,9 +6149,9 @@ wait 30
 turn K1 2 60
 wait 30
 wait 400
-release LFO
+release EDIT
 wait 5
-tap EDIT
+tap LFO
 wait 60
 tap OCT+
 wait 20
@@ -6215,13 +6215,13 @@ key w13 down 80
 wait 100
 key w6 up
 wait 5
-tap LFO
+tap EDIT
 wait 60
 tap SEL
 wait 60
 turn ALGO 2 10
 wait 20
-tap EDIT
+tap LFO
 wait 5
 press GLO
 wait 50
@@ -6269,7 +6269,7 @@ key w12 up
 wait 5
 tapkey w4
 wait 20
-press LFO
+press EDIT
 tapkey w0
 wait 30
 wait 50
@@ -6279,7 +6279,7 @@ wait 120
 tapkey w3
 wait 30
 wait 400
-release LFO
+release EDIT
 wait 20
 press REC
 tapkey w1
@@ -6294,7 +6294,7 @@ wait 5
 tapkey w3
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w7
 wait 20
 turn SELECT -1 80
@@ -6325,7 +6325,7 @@ wait 300
 wait 2700
 release REC
 wait 60
-tap LFO
+tap EDIT
 wait 60
 tapkey w3
 wait 20
@@ -6371,11 +6371,11 @@ expect inv 0
 expect voices <25
 turn SELECT -6 80
 wait 5
-tap LFO
+tap EDIT
 wait 20
 turn PRESET 4 10
 wait 5
-tap LFO
+tap EDIT
 wait 5
 press HOME
 wait 1200
@@ -6427,7 +6427,7 @@ key w10 up
 wait 60
 wait 5
 wait 60
-press LFO
+press EDIT
 tapkey w5
 wait 30
 tapkey w7
@@ -6435,15 +6435,15 @@ wait 120
 turn SELECT -2 60
 wait 30
 wait 1200
-release LFO
+release EDIT
 wait 60
 turn K2 2 80
 wait 5
-tap EDIT
+tap LFO
 wait 60
 wait 50
 wait 60
-press EDIT
+press LFO
 tapkey w1
 wait 300
 tapkey w0
@@ -6453,7 +6453,7 @@ wait 300
 tapkey w5
 wait 30
 wait 1200
-release EDIT
+release LFO
 wait 60
 tap REC
 wait 60
@@ -6505,13 +6505,13 @@ key w7 down 121
 wait 400
 key w0 up
 wait 60
-press EDIT
+press LFO
 tapkey w7
 wait 300
 turn K2 -5 60
 wait 30
 wait 400
-release EDIT
+release LFO
 wait 5
 turn K4 -1 10
 wait 20
@@ -6583,7 +6583,7 @@ tap FX
 wait 30
 turn K2 2 60
 wait 30
-tap EDIT
+tap LFO
 wait 300
 wait 100
 release REC
@@ -6596,7 +6596,7 @@ tapkey w2
 wait 20
 tap GLO
 wait 20
-tap LFO
+tap EDIT
 wait 5
 turn K3 4 80
 wait 20
@@ -6662,7 +6662,7 @@ key w15 down 117
 wait 100
 key w3 up
 wait 5
-press LFO
+press EDIT
 wait 50
 wait 30
 wait 50
@@ -6670,7 +6670,7 @@ wait 120
 wait 50
 wait 120
 wait 100
-release LFO
+release EDIT
 wait 5
 tapkey w0
 wait 60
@@ -6726,7 +6726,7 @@ key w1 down 31
 wait 100
 key w1 up
 wait 20
-tap EDIT
+tap LFO
 wait 5
 turn PRESET -3 40
 wait 5
@@ -6744,7 +6744,7 @@ wait 120
 wait 100
 release REC
 wait 60
-tap EDIT
+tap LFO
 wait 60
 tapkey w3
 wait 5
@@ -6781,7 +6781,7 @@ wait 5
 turn K1 4 10
 wait 60
 page 11
-tap EDIT
+tap LFO
 tapkey w3
 tapkey b3
 wait 60
@@ -6863,7 +6863,7 @@ key w2 down 40
 wait 20
 key w6 up
 wait 20
-tap EDIT
+tap LFO
 wait 5
 tapkey w6
 wait 60
@@ -6945,7 +6945,7 @@ turn ALGO 4 40
 wait 60
 turn SELECT -3 10
 wait 60
-tap EDIT
+tap LFO
 wait 20
 tapkey b8
 wait 60
@@ -7061,11 +7061,11 @@ turn K4 2 40
 wait 60
 tapkey b5
 wait 60
-press EDIT
+press LFO
 wait 50
 wait 300
 wait 1200
-release EDIT
+release LFO
 wait 20
 tap SEQ
 wait 20
@@ -7114,7 +7114,7 @@ expect voices <25
 turn K1 -1 40
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w1
 wait 5
 press REC
@@ -7170,7 +7170,7 @@ release REC
 wait 60
 wait 50
 wait 20
-press EDIT
+press LFO
 wait 50
 wait 30
 turn PRESET 2 60
@@ -7180,7 +7180,7 @@ wait 30
 tapkey w4
 wait 30
 wait 2700
-release EDIT
+release LFO
 wait 60
 turn K2 -3 80
 wait 20
@@ -7192,11 +7192,11 @@ key w9 down 25
 wait 20
 key w5 up
 wait 5
-press EDIT
+press LFO
 wait 50
 wait 120
 wait 1200
-release EDIT
+release LFO
 wait 20
 turn K4 1 80
 wait 20
@@ -7241,10 +7241,10 @@ wait 20
 turn K3 -1 40
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w9
 wait 5
-tap EDIT
+tap LFO
 wait 60
 tapkey b9
 wait 20
@@ -7294,13 +7294,13 @@ tapkey w0
 wait 20
 turn K3 1 40
 wait 60
-press EDIT
+press LFO
 turn ALGO -5 60
 wait 120
 tapkey w0
 wait 120
 wait 400
-release EDIT
+release LFO
 wait 60
 turn K1 2 40
 wait 5
@@ -7324,7 +7324,7 @@ wait 300
 wait 2700
 release GLO
 wait 5
-tap LFO
+tap EDIT
 wait 20
 key w9 down 74
 wait 100
@@ -7482,7 +7482,7 @@ tapkey w7
 wait 5
 tap ENV
 wait 5
-tap LFO
+tap EDIT
 wait 60
 turn K1 1 10
 wait 20
@@ -7519,7 +7519,7 @@ wait 100
 release HOME
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w10
 wait 5
 wait 2000
@@ -7540,17 +7540,17 @@ tapkey w6
 wait 20
 tapkey w10
 wait 20
-press EDIT
+press LFO
 turn ALGO -2 60
 wait 120
 wait 2700
-release EDIT
+release LFO
 wait 20
 turn K1 -3 10
 wait 5
 tap SEL
 wait 5
-tap LFO
+tap EDIT
 wait 5
 tap FX
 wait 60
@@ -7582,7 +7582,7 @@ wait 120
 wait 2700
 release FX
 wait 60
-press LFO
+press EDIT
 turn K2 2 60
 wait 30
 turn K2 -2 60
@@ -7590,7 +7590,7 @@ wait 120
 tapkey w0
 wait 30
 wait 100
-release LFO
+release EDIT
 wait 60
 turn K1 -1 40
 wait 20
@@ -7605,7 +7605,7 @@ wait 100
 key w0 up
 wait 60
 page 11
-tap EDIT
+tap LFO
 tapkey w4
 wait 5
 turn ALGO 4 80
@@ -7618,15 +7618,15 @@ turn PRESET 4 80
 wait 60
 turn SELECT 2 10
 wait 60
-press LFO
+press EDIT
 turn PRESET -5 60
 wait 30
 turn ALGO 2 60
 wait 30
 wait 400
-release LFO
+release EDIT
 wait 5
-press EDIT
+press LFO
 turn PRESET -5 60
 wait 30
 turn ALGO 2 60
@@ -7636,9 +7636,9 @@ wait 120
 turn K3 2 60
 wait 30
 wait 1200
-release EDIT
+release LFO
 wait 20
-tap EDIT
+tap LFO
 wait 60
 press FX
 wait 100
@@ -7649,7 +7649,7 @@ wait 60
 turn K3 -1 40
 wait 60
 page 11
-tap EDIT
+tap LFO
 tapkey w2
 tapkey b4
 wait 5
@@ -7723,9 +7723,9 @@ page 3
 wait 20
 tapkey w0
 wait 5
-press LFO
+press EDIT
 wait 1200
-release LFO
+release EDIT
 wait 60
 turn SELECT 9 80
 wait 60
@@ -7753,7 +7753,7 @@ key w1 up
 wait 20
 turn ALGO -3 10
 wait 60
-press EDIT
+press LFO
 tapkey w7
 wait 120
 wait 50
@@ -7761,7 +7761,7 @@ wait 300
 tapkey w3
 wait 30
 wait 400
-release EDIT
+release LFO
 wait 5
 turn K4 4 40
 wait 5
@@ -7853,7 +7853,7 @@ expect inv 0
 expect voices <25
 tapkey b2
 wait 20
-tap LFO
+tap EDIT
 wait 20
 tapkey b4
 wait 60
@@ -7908,13 +7908,13 @@ tapkey w4
 wait 5
 turn K3 -3 80
 wait 5
-tap EDIT
+tap LFO
 wait 60
 turn K4 2 40
 wait 20
 tapkey w3
 wait 60
-tap LFO
+tap EDIT
 wait 20
 tap ARP
 wait 60
@@ -7936,7 +7936,7 @@ tapkey b4
 wait 60
 tapkey w3
 wait 5
-tap LFO
+tap EDIT
 wait 20
 wait 800
 wait 60
@@ -7944,7 +7944,7 @@ tap REC
 wait 20
 turn K4 -3 40
 wait 5
-tap LFO
+tap EDIT
 wait 5
 tapkey b9
 wait 5
@@ -7965,7 +7965,7 @@ wait 100
 key w13 up
 wait 5
 page 3
-tap EDIT
+tap LFO
 tapkey w0
 tapkey b5
 wait 20
@@ -7993,7 +7993,7 @@ turn ALGO 4 80
 wait 20
 tapkey b4
 wait 60
-tap EDIT
+tap LFO
 wait 5
 press HOME
 tapkey w1
@@ -8051,7 +8051,7 @@ key w4 up
 wait 5
 turn SELECT -6 40
 wait 60
-press LFO
+press EDIT
 tapkey w1
 wait 30
 tapkey w4
@@ -8063,7 +8063,7 @@ wait 300
 wait 50
 wait 120
 wait 400
-release LFO
+release EDIT
 wait 5
 tapkey w2
 wait 20
@@ -8096,7 +8096,7 @@ expect voices <25
 wait 2000
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w9
 tapkey b0
 wait 20
@@ -8153,10 +8153,10 @@ wait 60
 tapkey w6
 wait 20
 page 3
-tap EDIT
+tap LFO
 tapkey w5
 wait 5
-press LFO
+press EDIT
 tapkey w4
 wait 30
 turn K1 5 60
@@ -8164,7 +8164,7 @@ wait 120
 tapkey w6
 wait 300
 wait 100
-release LFO
+release EDIT
 wait 20
 turn K2 -1 80
 wait 20
@@ -8192,7 +8192,7 @@ tapkey w8
 wait 5
 tap OCT+
 wait 60
-tap EDIT
+tap LFO
 wait 20
 tap HOME
 wait 20
@@ -8215,7 +8215,7 @@ wait 5
 tap ARP
 wait 60
 page 11
-tap EDIT
+tap LFO
 tapkey w7
 wait 20
 tapkey b3
@@ -8285,7 +8285,7 @@ turn K3 5 60
 wait 300
 tapkey w2
 wait 300
-tap EDIT
+tap LFO
 wait 120
 wait 1200
 release REC
@@ -8330,7 +8330,7 @@ expect inv 0
 expect voices <25
 tap OCT-
 wait 5
-press EDIT
+press LFO
 turn ALGO 5 60
 wait 30
 tapkey w1
@@ -8342,7 +8342,7 @@ wait 300
 tapkey w2
 wait 300
 wait 100
-release EDIT
+release LFO
 wait 20
 turn K3 1 40
 wait 60
@@ -8422,7 +8422,7 @@ turn K3 4 40
 wait 60
 tapkey w2
 wait 20
-press EDIT
+press LFO
 wait 50
 wait 120
 turn ALGO -2 60
@@ -8430,7 +8430,7 @@ wait 120
 wait 50
 wait 300
 wait 400
-release EDIT
+release LFO
 wait 5
 tapkey w7
 wait 5
@@ -8441,7 +8441,7 @@ wait 20
 turn ALGO 9 40
 wait 20
 page 3
-tap EDIT
+tap LFO
 tapkey w7
 wait 60
 tapkey w3
@@ -8499,7 +8499,7 @@ wait 20
 tapkey w9
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w4
 wait 5
 turn SELECT 1 10
@@ -8593,14 +8593,14 @@ wait 20
 key w13 up
 wait 60
 press REC
-tap EDIT
+tap LFO
 wait 30
 turn K2 -2 60
 wait 120
 wait 2700
 release REC
 wait 5
-tap EDIT
+tap LFO
 wait 60
 press FX
 turn K4 -5 60
@@ -8693,7 +8693,7 @@ wait 60
 turn PRESET 4 80
 wait 60
 page 3
-tap EDIT
+tap LFO
 tapkey w12
 tapkey b1
 wait 20
@@ -8717,7 +8717,7 @@ release REC
 wait 20
 tap PLAY
 wait 5
-tap EDIT
+tap LFO
 wait 60
 turn K4 1 10
 wait 20
@@ -8740,7 +8740,7 @@ wait 20
 tap OCT-
 wait 20
 press REC
-tap EDIT
+tap LFO
 wait 300
 tapkey w4
 wait 30
@@ -8753,7 +8753,7 @@ release REC
 wait 5
 tap HOME
 wait 5
-tap EDIT
+tap LFO
 wait 20
 key w6 down 87
 wait 400
@@ -8778,7 +8778,7 @@ wait 20
 turn PRESET 9 80
 wait 20
 page 11
-tap EDIT
+tap LFO
 tapkey w5
 tapkey b1
 wait 5
@@ -8819,7 +8819,7 @@ tapkey w4
 wait 120
 tapkey w0
 wait 300
-tap EDIT
+tap LFO
 wait 120
 wait 1200
 release REC
@@ -8828,12 +8828,12 @@ expect inv 0
 expect voices <25
 turn K3 9 80
 wait 5
-tap LFO
+tap EDIT
 wait 60
 tap SEL
 wait 5
 page 11
-tap EDIT
+tap LFO
 tapkey w0
 wait 5
 wait 2000
@@ -8916,7 +8916,7 @@ turn ALGO 1 10
 wait 20
 turn K1 -6 10
 wait 60
-press EDIT
+press LFO
 tapkey w1
 wait 30
 turn K4 5 60
@@ -8924,7 +8924,7 @@ wait 30
 turn ALGO -2 60
 wait 30
 wait 100
-release EDIT
+release LFO
 wait 5
 tap PLAY
 wait 60
@@ -8992,7 +8992,7 @@ release REC
 wait 20
 tapkey b9
 wait 5
-tap LFO
+tap EDIT
 wait 60
 turn K3 1 10
 wait 5
@@ -9016,7 +9016,7 @@ turn K2 -3 10
 wait 60
 tap HOME
 wait 60
-press LFO
+press EDIT
 tapkey w6
 wait 120
 wait 50
@@ -9026,7 +9026,7 @@ wait 300
 wait 50
 wait 30
 wait 100
-release LFO
+release EDIT
 wait 60
 turn K4 9 10
 wait 60
@@ -9034,9 +9034,9 @@ press GLO
 wait 1200
 release GLO
 wait 60
-press EDIT
+press LFO
 wait 100
-release EDIT
+release LFO
 wait 60
 tap HOME
 wait 5
@@ -9158,9 +9158,9 @@ wait 30
 wait 1200
 release ENV
 wait 20
-tap EDIT
+tap LFO
 wait 5
-press EDIT
+press LFO
 wait 50
 wait 120
 tapkey w1
@@ -9168,7 +9168,7 @@ wait 300
 turn K3 2 60
 wait 120
 wait 100
-release EDIT
+release LFO
 wait 20
 tapkey w4
 wait 20
@@ -9180,7 +9180,7 @@ tap SEL
 wait 20
 tapkey w6
 wait 60
-tap EDIT
+tap LFO
 wait 60
 turn K2 -1 80
 wait 5
@@ -9329,7 +9329,7 @@ release GLO
 wait 20
 turn ALGO -1 80
 wait 20
-tap LFO
+tap EDIT
 wait 60
 key w2 down 89
 wait 20
@@ -9357,7 +9357,7 @@ wait 800
 wait 5
 expect inv 0
 expect voices <25
-tap LFO
+tap EDIT
 wait 60
 key w11 down 73
 wait 20
@@ -9425,16 +9425,16 @@ tapkey w0
 wait 5
 tap SEL
 wait 60
-press EDIT
+press LFO
 turn SELECT 2 60
 wait 300
 wait 2700
-release EDIT
+release LFO
 wait 5
 turn PRESET 2 80
 wait 20
 page 3
-tap EDIT
+tap LFO
 tapkey w11
 wait 60
 tap HOME

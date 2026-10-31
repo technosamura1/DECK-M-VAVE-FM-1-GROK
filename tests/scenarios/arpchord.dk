@@ -1,0 +1,48 @@
+# WHITE = CHORDS (the tape's default) and the ARP. Changing chord while the last key is still down
+# keeps the whole new chord (a shared pitch used to leave with the old key: only a low note and a high one).
+# LATCH: the same key again stops it. A different key replaces the chord.
+wait 300
+tap FX
+tap ARP
+wait 100
+turn K4 1
+wait 50
+expect arp 1
+key w0 down
+wait 40
+expect heldn >2
+key w4 down
+wait 20
+key w0 up
+wait 40
+held
+expect heldn >2
+key w4 up
+wait 40
+expect heldn <1
+# LATCH (ARP page, row 2, K2)
+tap ARP
+wait 50
+turn K2 1
+wait 40
+key w0 down
+wait 40
+expect heldn >2
+key w0 up
+wait 200
+expect heldn >2
+key w0 down
+wait 50
+expect heldn <1
+key w0 up
+wait 40
+key w3 down
+wait 40
+expect heldn >2
+key w3 up
+wait 150
+expect heldn >2
+key w5 down
+wait 40
+expect heldn >2
+key w5 up

@@ -40,9 +40,9 @@ expect nev 16
 expect barsA 2
 expect dirty 1
 # one undo step takes the recall back
-press EDIT
+press LFO
 wait 800
-release EDIT
+release LFO
 wait 100
 expect eventsA1 17
 expect eventsA3 5

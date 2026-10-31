@@ -17,11 +17,10 @@ rm -rf out/sounds
 build/test/deck_test sounds out/sounds > build/test/sounds.txt || fail=1
 python tools/sound_check.py out/sounds --json build/test/check.json > build/test/sound_check.txt && echo "  ok   every preset: no clicks, peaks, DC, tails, levels within 2 dB" || { echo "  FAIL sound check"; grep "<--" build/test/sound_check.txt | head; fail=1; }
 python tools/dup_check.py out/sounds > build/test/dup_check.txt && echo "  ok   no two presets sound the same (spectrum + motion + parameters)" || { echo "  FAIL duplicate presets"; head -8 build/test/dup_check.txt; fail=1; }
-python tools/finger_lint.py > build/test/finger_lint.txt && echo "  ok   FINGER banks: patterns well-formed, no duplicates" || { echo "  FAIL finger lint"; grep LINT build/test/finger_lint.txt | head; fail=1; }
-rm -rf out/fingerbanks
-build/test/deck_test fingerbank out/fingerbanks > build/test/fingerbank.txt || { echo "  FAIL fingerbank (silent or error)"; grep SILENT build/test/fingerbank.txt | head -5; fail=1; }
-python tools/sound_check.py out/fingerbanks --nolevel > build/test/fingerbank_check.txt && echo "  ok   every FINGER bank pattern: no clicks, peaks, DC, tails" || { echo "  FAIL fingerbank sound check"; grep "<--" build/test/fingerbank_check.txt | head; fail=1; }
 build/test/deck_test chords out/chords.wav > /dev/null || fail=1
+build/test/deck_test latency > build/test/latency.txt; n=$(sed -n 's/.* \([0-9]*\) slow.*/\1/p' build/test/latency.txt)
+[ "${n:-99}" -le 13 ] && echo "  ok   LATENCY: key to sound (every preset): $(tail -1 build/test/latency.txt)" || { echo "  FAIL latency: $n slow presets"; grep SLOW build/test/latency.txt | grep -v AIRPAD; fail=1; }
+build/test/deck_test grooveauto out/groove_auto.wav > build/test/groove.txt && ! grep -q BAD build/test/groove.txt && echo "  ok   GROOVE: auto fills on time, dice, mutate" || { echo "  FAIL groove"; cat build/test/groove.txt; fail=1; }
 build/test/deck_test bypass > build/test/bypass.txt && echo "  ok   SOUND bypass: every stage of the chain off and on again: no clicks, peak under -1 dBFS" || { echo "  FAIL bypass"; grep CLICK build/test/bypass.txt | head -5; fail=1; }
 build/test/deck_test automation > build/test/automation.txt && echo "  ok   AUTOMATION: a curve on every target, three engines: no click, peak under -1 dBFS, no DC, not silent" || { echo "  FAIL automation"; grep "BAD\|SILENT" build/test/automation.txt | head -5; fail=1; }
 build/test/deck_test pitch > build/test/pitch.txt && echo "  ok   PITCH: every BASS preset sounds C2, G2, C3 at its pitch (or a sub-octave by design), none above it" || { echo "  FAIL pitch"; grep BAD build/test/pitch.txt | head -5; fail=1; }

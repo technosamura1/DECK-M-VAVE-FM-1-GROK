@@ -15,7 +15,7 @@ release HOME
 wait 50
 expect events >4
 page 11
-tap EDIT
+tap LFO
 wait 100
 expect layview 1
 wait 2500
@@ -51,11 +51,11 @@ wait 100
 said NO AUTOMATION
 expect same 1
 # while recording the list refuses
-tap EDIT
+tap LFO
 tap REC
 wait 200
 expect counting >0
-tap EDIT
+tap LFO
 tapkey w3
 wait 100
 said STOP REC
@@ -63,7 +63,7 @@ tap REC
 wait 200
 expect recording 0
 expect counting 0
-tap EDIT
+tap LFO
 # the same keys on MIX and on TRACKS: white picks the track, black mutes, black 7 solos, black 8 arms
 page 3
 wait 100
