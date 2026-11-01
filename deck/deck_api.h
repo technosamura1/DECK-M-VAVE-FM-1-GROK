@@ -421,3 +421,21 @@ static inline float dk_blep(float t, float dt)
     }
     return y;
 }
+
+/* Saturation curve shared by core and engines: linear interpolation, 1/128 spacing. */
+extern float dk_tanht[513];
+static inline float dk_tanh(float x)
+{
+    float a = x < 0.0f ? -x : x, y, f;
+    int i;
+    if (a >= 4.0f) { /* asymptotic continuation, continuous and monotonic */
+        float z = a - 4.0f;
+        if (z > 16.0f) z = 16.0f;
+        y = 1.0f - (1.0f - dk_tanht[512]) / (1.0f + 2.0f*z + 2.0f*z*z);
+    } else {
+        f = a * 128.0f;
+        i = (int)f;
+        y = dk_tanht[i] + (dk_tanht[i+1] - dk_tanht[i]) * (f - (float)i);
+    }
+    return x < 0.0f ? -y : y;
+}

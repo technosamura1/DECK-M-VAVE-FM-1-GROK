@@ -1,3 +1,4 @@
+# Voice bound follows DK_NVOICE=32; released tails now use the free pool.
 # FUZZ seed 1, 3000 events (tools/gen_fuzz.py): random buttons, holds, keys and knobs on every page; the song's invariants hold
 wait 300
 demo
@@ -259,7 +260,7 @@ wait 20
 turn K4 9 10
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn PRESET 9 80
 wait 20
 turn K3 4 40
@@ -520,7 +521,7 @@ wait 60
 turn ALGO -1 80
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 key w3 down 43
 wait 100
 key w1 up
@@ -770,7 +771,7 @@ wait 5
 tapkey w5
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 tap OCT+
 wait 60
 tapkey w10
@@ -1051,7 +1052,7 @@ wait 20
 tapkey w0
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 tapkey b7
 wait 20
 wait 5
@@ -1325,7 +1326,7 @@ wait 5
 tapkey w1
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 turn PRESET -1 40
 wait 60
 key w10 down 112
@@ -1560,7 +1561,7 @@ wait 20
 turn PRESET 1 80
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 tap EDIT
 wait 60
 turn K2 1 40
@@ -1829,7 +1830,7 @@ tap LFO
 tapkey w1
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn K2 -6 80
 wait 60
 page 11
@@ -2098,7 +2099,7 @@ wait 20
 tap GLO
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 turn PRESET 9 40
 wait 20
 key w11 down 38
@@ -2369,7 +2370,7 @@ wait 60
 tapkey w0
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 wait 2000
 wait 5
 tap SEQ
@@ -2609,7 +2610,7 @@ wait 5
 tapkey w8
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 wait 50
 wait 20
 press EDIT
@@ -2884,7 +2885,7 @@ wait 5
 turn K1 4 10
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tap OCT+
 wait 20
 press HOME
@@ -3110,7 +3111,7 @@ wait 20
 tap EDIT
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 key w0 down 70
 wait 20
 key w2 up
@@ -3366,7 +3367,7 @@ wait 20
 wait 50
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tap SEQ
 wait 60
 turn K2 2 80
@@ -3600,7 +3601,7 @@ wait 20
 turn K2 -1 40
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tapkey b10
 wait 60
 tap HOME
@@ -3846,7 +3847,7 @@ wait 60
 turn K2 9 80
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 tap FX
 wait 60
 tapkey w8
@@ -4141,7 +4142,7 @@ wait 20
 wait 50
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn ALGO -3 10
 wait 5
 turn K3 9 40
@@ -4377,7 +4378,7 @@ wait 400
 key w3 up
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn K4 4 40
 wait 60
 tapkey w0
@@ -4599,7 +4600,7 @@ wait 20
 tap LFO
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 press SEQ
 wait 100
 release SEQ
@@ -4827,7 +4828,7 @@ wait 400
 release GLO
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tapkey b2
 wait 60
 turn K3 -3 80
@@ -5097,7 +5098,7 @@ wait 20
 turn K3 4 80
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn ALGO -3 10
 wait 5
 press REC
@@ -5374,7 +5375,7 @@ wait 60
 turn PRESET -3 80
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tap ENV
 wait 20
 turn SELECT -6 10
@@ -5666,7 +5667,7 @@ wait 20
 wait 200
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tap HOME
 wait 60
 key w8 down 91
@@ -5938,7 +5939,7 @@ wait 100
 key w6 up
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 wait 50
 wait 5
 turn SELECT 9 40
@@ -6162,7 +6163,7 @@ wait 5
 tap EDIT
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn K3 -3 10
 wait 20
 press EDIT
@@ -6409,7 +6410,7 @@ wait 20
 tap HOME
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 turn K1 -6 40
 wait 60
 press GLO
@@ -6673,7 +6674,7 @@ wait 60
 tap EDIT
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 wait 800
 wait 60
 key w14 down 26
@@ -6939,7 +6940,7 @@ wait 5
 tapkey w5
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 press GLO
 wait 50
 wait 120
@@ -7179,7 +7180,7 @@ wait 20
 turn K3 9 10
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 tap ENV
 wait 5
 key w7 down 40
@@ -7451,7 +7452,7 @@ wait 60
 turn K2 -1 10
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 key w14 down 95
 wait 400
 key w3 up
@@ -7688,7 +7689,7 @@ wait 60
 tapkey w3
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 tap ENV
 wait 20
 press LFO
@@ -7914,7 +7915,7 @@ wait 5
 tapkey w3
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 key w2 down 123
 wait 400
 key w15 up
@@ -8163,7 +8164,7 @@ wait 20
 wait 800
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 turn K2 -6 80
 wait 20
 turn SELECT 4 40
@@ -8400,7 +8401,7 @@ wait 100
 release ENV
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn K3 -6 10
 wait 20
 key w0 down 101
@@ -8684,7 +8685,7 @@ wait 60
 turn PRESET 2 40
 wait 20
 expect inv 0
-expect voices <25
+expect voices <33
 turn K2 9 40
 wait 60
 key w7 down 86
@@ -8932,7 +8933,7 @@ wait 20
 wait 800
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tapkey b1
 wait 20
 key w9 down 106
@@ -9194,7 +9195,7 @@ wait 5
 tap OCT+
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 tapkey w0
 wait 20
 turn SELECT -1 40
@@ -9440,7 +9441,7 @@ wait 60
 tap SEL
 wait 5
 expect inv 0
-expect voices <25
+expect voices <33
 tapkey w5
 wait 5
 wait 5

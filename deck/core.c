@@ -45,6 +45,7 @@ static int irand(int n) { return n > 0 ? (int)((dk_rnd() >> 8) % (uint32_t)n) : 
 
 #define SN 1024
 float dk_sint[SN + 1] DK_POOL;
+float dk_tanht[513];                    /* small lookup in ordinary RAM: leave pool headroom for recording */
 float dk_sine(float ph) { return dk_sinx(ph); }
 float dk_mtof(float n) { return 440.0f * dk_ctx.tune * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
 float dk_decay(float tau) { return fm_expf(-1.0f / (fm_maxf(tau, 0.0001f) * DK_SR)); }
@@ -309,6 +310,7 @@ typedef struct {
                                                          * live sound, 1..7 a frozen one (dk_song.snd[trk][snd - 1]: layers) */
     int32_t gate, delay;
     uint32_t age;
+    float last_l, last_r;                       /* last emitted sample: cheap emergency de-click */
     float ch_l, ch_r, ch_c;                            /* a drum sound's CRUSH: the sample held, its count */
     float st[DK_VSTATE];
 } voice_t;
@@ -321,6 +323,17 @@ static uint8_t shed;
 #define NFADE 4
 static voice_t fv[NFADE] DK_POOL;
 static float fv_g[NFADE];
+static float retire_l[DK_NTRACK], retire_r[DK_NTRACK];
+/* A load emergency must not jump from an arbitrary waveform sample straight to zero.
+ * Keep a short output correction; unlike a copied voice this costs no oscillator/filter work. */
+static void voice_retire(voice_t *v)
+{
+    if (v->on && v->delay <= 0 && v->trk < DK_NTRACK) {
+        retire_l[v->trk] += v->last_l;
+        retire_r[v->trk] += v->last_r;
+    }
+    v->on = 0;
+}
 static void voice_fade(const voice_t *v)
 {
     int i, k = 0;
@@ -335,11 +348,20 @@ static void voice_fade(const voice_t *v)
     /* a copy still renders for the whole fade. under 0.01 it is not heard and
      * only spends the CPU the budget is trying to get back. the caller turns
      * the voice off either way. */
-    if (level < 0.01f)
+    if (level < 0.01f) {
+        if (v->trk < DK_NTRACK) {
+            retire_l[v->trk] += v->last_l;
+            retire_r[v->trk] += v->last_r;
+        }
         return;
+    }
     for (i = 1; i < NFADE; i++)
         if (fv_g[i] < fv_g[k])
             k = i;
+    if (fv_g[k] > 0.0f && fv[k].trk < DK_NTRACK) {
+        retire_l[fv[k].trk] += fv[k].last_l * fv_g[k];
+        retire_r[fv[k].trk] += fv[k].last_r * fv_g[k];
+    }
     fv[k] = *v;
     fv_g[k] = 1.0f;
 }
@@ -404,6 +426,7 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
                                                 * goes on (the world) whenever it still sounds */
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t && vc[i].eng == eng && vc[i].snd == snd &&
+                ((!src && !vc[i].src) || (src && vc[i].src && vc_take[i] == note_take)) &&
                 (vc[i].held || (e->flags & EF_CONT) || ((e->flags & EF_LEGATO) && vc[i].delay <= 0))) {
                 if (vc[i].held)
                     midi(0x80u | ch_of(t), vc[i].note, 0);
@@ -417,11 +440,16 @@ static voice_t *voice_get(int t, const dk_engine_t *e, int eng, int snd, int *re
                 float pb[PX_N];
                 TAPE.eng[vc[i].eng]->off(vc[i].st, voice_params(&vc[i], pb));
             }
+    /* The engine's chord limit belongs to ONE line/take. Released tails and
+     * other overdubs share the global pool, but do not consume this line's held-note limit. */
     for (i = 0; i < DK_NVOICE; i++)
-        cnt += vc[i].on && vc[i].trk == t;
-    if (cnt >= e->max_voices) {                /* the track's own: its quietest let go, else its oldest */
+        cnt += vc[i].on && vc[i].trk == t &&
+               (vc[i].held || (e->flags & EF_MONO)) &&
+               ((!src && !vc[i].src) || (src && vc[i].src && vc_take[i] == note_take));
+    if (cnt >= e->max_voices) {
         for (i = 0; i < DK_NVOICE; i++)
-            if (vc[i].on && vc[i].trk == t) {
+            if (vc[i].on && vc[i].trk == t &&
+                ((!src && !vc[i].src) || (src && vc[i].src && vc_take[i] == note_take))) {
                 const dk_engine_t *se = TAPE.eng[vc[i].eng];
                 float l = se->level(vc[i].st) + (vc[i].held ? 10.0f : 0.0f) + (src && !vc[i].src && vc[i].held ? 100.0f : 0.0f);
                 if (se->flags & (EF_MONO | EF_LEGATO))
@@ -565,6 +593,8 @@ static void budget_make_room(int want, int live)
     int overhead = mix_overhead();
     int cap = DK_NVOICE;
     int guard = DK_NVOICE;
+    if (dk_load_pct < 80 && !shed)
+        return;
     if (sf >= 0.8f)
         cap = 12;
     else if (sf > 0.4f)
@@ -632,7 +662,7 @@ static void budget_make_room(int want, int live)
         if (vc[best].held)
             midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
         if (melt)
-            vc[best].on = 0;
+            voice_retire(&vc[best]);
         else {
             voice_fade(&vc[best]);
             vc[best].on = 0;
@@ -654,6 +684,8 @@ static void tails_trim(void)
     int margin = 14 + (int)(sf * (14.0f / 0.4f));
     int cap = 18 - (int)(sf * (6.0f / 0.4f));
     int guard = 4 + (int)(sf * 5.0f);        /* 4 at rest, 6 at 72 %, 8 at 84 % */
+    if (dk_load_pct < 80 && !shed)
+        return;                          /* keep audible releases unless the device actually needs relief */
     if (margin > 28)
         margin = 28;
     if (cap < 12)
@@ -693,8 +725,8 @@ static void tails_trim(void)
             }
         if (best < 0)
             break;
-        if (melt || lo < 0.12f)              /* a tail, and the render is already late: do not keep a copy that still renders */
-            vc[best].on = 0;
+        if (melt || lo < 0.12f)
+            voice_retire(&vc[best]);
         else {
             voice_fade(&vc[best]);
             vc[best].on = 0;
@@ -731,7 +763,7 @@ static void tails_trim(void)
         if (best < 0)
             return;
         midi(0x80u | ch_of(vc[best].trk), vc[best].note, 0);
-        vc[best].on = 0;
+        voice_retire(&vc[best]);
     }
 }
 
@@ -761,28 +793,18 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
         for (i = 0; i < DK_NVOICE; i++)
             if (vc[i].on && vc[i].trk == t && (vc[i].note == 42 || vc[i].note == 44 || vc[i].note == 46))
                 TAPE.eng[vc[i].eng]->off(vc[i].st, tp[t]);   /* (drums are never frozen) */
-    /* an older overdub, or the song under a key still down, does not take a mono voice that is
-     * still the note (its sustain, or its release). the line's own next note, and a newer take, do. */
-    if (src && (e->flags & (EF_MONO | EF_LEGATO))) {
-        for (i = 0; i < DK_NVOICE; i++) {
-            voice_t *u = &vc[i];
-            float lv;
-            if (!u->on || u->trk != (uint8_t)t || u->eng != (uint8_t)eng || u->snd != (uint8_t)snd)
-                continue;
-            lv = e->level(u->st);
-            if (u->src == 0 && (u->held || lv > 0.02f))
-                return 0;
-            if (note_take && vc_take[i] && note_take < vc_take[i] && (u->held || lv > 0.02f))
-                return 0;
-        }
-    }
-    budget_make_room(e->cost, !src);
+    /* Mono means one line per take, not one line for the whole track. Independent
+     * overdubs and the hand must not suppress one another. */
+    if (!(e->flags & EF_MONO))
+        budget_make_room(e->cost, !src);
     v = voice_get(t, e, eng, snd, &retrig, note, src);
     if (!v)
         return 0;
     if (!retrig)
         for (i = 0; i < DK_VSTATE; i++)
             v->st[i] = 0.0f;
+    if (!retrig)
+        v->last_l = v->last_r = 0.0f;
     v->on = 1;
     v->held = 1;
     v->note = (uint8_t)note;
@@ -822,8 +844,13 @@ static voice_t *voice_start(int t, int note, float vel, int32_t gate, int32_t de
 started:
     if ((e->flags & EF_DRUM) && (note == 35 || note == 36))
         sc_env = 1.0f;
-    seen(note, t, (int)(vel * 127.0f), src);
-    midi(0x90u | ch_of(t), (uint32_t)note, (uint32_t)(vel * 127.0f) < 1u ? 1u : (uint32_t)(vel * 127.0f));
+    {   /* Round-trip MIDI velocity must not lose another unit through float truncation. */
+        int iv = (int)(vel * 127.0f + 0.5f);
+        if (iv < 1) iv = 1;
+        if (iv > 127) iv = 127;
+        seen(note, t, iv, src);
+        midi(0x90u | ch_of(t), (uint32_t)note, (uint32_t)iv);
+    }
     return v;
 }
 
@@ -994,7 +1021,7 @@ static inline float echo_step(float in)
         x = a + (b - a) * fr;
         echo_lp += 0.28f * (x - echo_lp);
         echo_out = echo_lp;
-        x = (in + echo_half) * 0.5f + fm_tanhf(echo_lp * echo_fb * 1.2f) * 0.833f;
+        x = (in + echo_half) * 0.5f + dk_tanh(echo_lp * echo_fb * 1.2f) * 0.833f;
         echo_buf[echo_w] = (int16_t)(fm_clampf(x, -0.999f, 0.999f) * 32767.0f);
         if (++echo_w >= ECHO_N)
             echo_w = 0;
@@ -1142,6 +1169,7 @@ static void render_tracks(uint32_t n)
             }
         for (i = 0; i < NFADE; i++)
             any |= fv_g[i] > 0.0f && fv[i].trk == t;
+        any |= fm_fabsf(retire_l[t]) + fm_fabsf(retire_r[t]) > 1e-7f;
         if (any)                               /* an effect (or the kit's grain) rings on a while; else nothing to do */
             tail[t] = fx > 0 ? (int32_t)(1.5f * DK_SR) : e->bus ? (int32_t)(0.3f * DK_SR) : 0;
         if (any)
@@ -1163,7 +1191,8 @@ static void render_tracks(uint32_t n)
             voice_t *v = &vc[i];
             uint32_t j0 = 0;
             const dk_engine_t *ve;
-            float vpb[PX_N];
+            int i_alive;
+            float vpb[PX_N], before_l, before_r;
             if (!v->on || v->trk != t)
                 continue;
             if (!v->snd && v->eng != k->eng) { /* its track took another engine: let it go (a frozen sound's voice stays) */
@@ -1202,6 +1231,8 @@ static void render_tracks(uint32_t n)
                     xrev[j] += (vl[j] + vr[j]) * rs * lg;
                     xecho[j] += (vl[j] + vr[j]) * es * lg;
                 }
+                v->last_l = vl[n-1] * pl;
+                v->last_r = vr[n-1] * pr;
                 any_x = 1;
                 if (!alive) {
                     if (v->held)
@@ -1209,16 +1240,21 @@ static void render_tracks(uint32_t n)
                     v->on = 0;
                 } else if (shed && !v->held && ve->level(v->st) < 0.05f &&
                            !(ve->flags & (EF_MONO | EF_LEGATO)))
-                    v->on = 0;
+                    voice_retire(v);
                 continue;
             }
-            if (!ve->render(v->st, tl + j0, tr + j0, (int)(n - j0), voice_params(v, vpb))) {
+            before_l = tl[n-1];
+            before_r = tr[n-1];
+            i_alive = ve->render(v->st, tl + j0, tr + j0, (int)(n - j0), voice_params(v, vpb));
+            v->last_l = tl[n-1] - before_l;
+            v->last_r = tr[n-1] - before_r;
+            if (!i_alive) {
                 if (v->held)
                     midi(0x80u | ch_of(t), v->note, 0);
                 v->on = 0;
             } else if (shed && !v->held && ve->level(v->st) < 0.05f &&
                        !(ve->flags & (EF_MONO | EF_LEGATO)))
-                v->on = 0;
+                voice_retire(v);
         }
         for (i = 0; i < NFADE; i++) {          /* the voices fading out */
             static float fl_[DK_BLK], fr_[DK_BLK];
@@ -1240,6 +1276,15 @@ static void render_tracks(uint32_t n)
                 tr[j] += fr_[j] * g;
             }
             fv_g[i] = g;
+        }
+        if (retire_l[t] != 0.0f || retire_r[t] != 0.0f) {
+            float l = retire_l[t], r = retire_r[t];
+            for (j = 0; j < n; j++) {
+                l *= 0.97f; r *= 0.97f;
+                tl[j] += l; tr[j] += r;
+            }
+            retire_l[t] = fm_flush(l);
+            retire_r[t] = fm_flush(r);
         }
         PROF_T(1);
         if (e->bus)
@@ -1437,7 +1482,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         TAPE.master(mixl, mixr, (int)n, dust, slp);
     PROF_T(6);
     for (j = 0; j < n; j++) {
-        float m = metro_step() * gain * 1.6f, l = fm_tanhf(mixl[j] + m), r = fm_tanhf(mixr[j] + m);
+        float m = metro_step() * gain * 1.6f, l = dk_tanh(mixl[j] + m), r = dk_tanh(mixr[j] + m);
         if (dk_hush)                           /* a save coming: down to nothing in ~6 ms, back the same */
             hush_g = fm_maxf(0.0f, hush_g - (1.0f / 256.0f));
         else if (hush_g < 1.0f)
@@ -1462,7 +1507,8 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     const float gain = (float)gain_q12 * (1.0f / 4096.0f);
     float drift = 0.0012f;
     int vo = 0, i;
-    drain();
+    if (!locked)
+        drain();                         /* UI snapshot and queue watermark must see one recording state. */
     params_update_some(0);                     /* the knobs: half the tracks a render (all when the clip moves one) */
     /* the tape's slow wow and its flutter (DUST deepens them); a tape stop's fall */
     wow_ph += (float)n * (0.37f / DK_SR);
@@ -1502,8 +1548,6 @@ void dk_render(int32_t *out, uint32_t n, uint32_t gain_q12)
             k = (uint32_t)tick_left + 1u;
         if (k > n)
             k = n;
-        if (locked && k > 32u)
-            k = 32u;
         tick_left -= (float)k;
         render_chunk(out, k, gain);
         out += 2 * k;
@@ -1539,6 +1583,8 @@ void dk_init(void)
     int i, t;
     for (i = 0; i <= SN; i++)
         dk_sint[i] = fm_sinf(6.2831853f * (float)i / (float)SN);
+    for (i = 0; i <= 512; i++)
+        dk_tanht[i] = fm_tanhf((float)i * (1.0f / 128.0f));
     dk_ctx.tune = 1.0f;
     dk_ctx.wow = 1.0f;
     plate_init();

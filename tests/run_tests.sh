@@ -12,6 +12,16 @@ FLAGS="-O2 -std=c99 -ffp-contract=off -Wall -Wextra -Wno-unused-function -Wno-un
 case "$($CC -dumpmachine)" in i686*|i386*) FLAGS="$FLAGS -msse2 -mfpmath=sse" ;; esac
 $CC $FLAGS -DDK_HOST -Ibase/include -Ideck -Itapes/$TAPE -o build/test/deck_test tests/host/deck_test.c deck/core.c \
     deck/song.c deck/dsp_unit.c -lm || exit 1
+echo "-- overdub regressions"
+for regression in record freeze release; do
+  case "$regression" in
+    freeze) units="deck/core.c deck/dsp_unit.c" ;;
+    *) units="deck/song.c deck/dsp_unit.c" ;;
+  esac
+  $CC $FLAGS -DDK_HOST -Ibase/include -Ideck -Itapes/$TAPE -o build/test/${regression}_regression \
+      tests/host/${regression}_regression.c $units -lm || exit 1
+  build/test/${regression}_regression || fail=1
+done
 echo "-- the sound"
 rm -rf out/sounds
 build/test/deck_test sounds out/sounds > build/test/sounds.txt || fail=1

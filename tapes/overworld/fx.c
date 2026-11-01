@@ -80,8 +80,8 @@ static void fx_tape(dk_fxst_t *s, float *l, float *r, int n, float amt, float a,
         x = fxbuf_get(s, d);
         f[0] += k * ((x + (l[j] - m)) - f[0]);
         f[1] += k * ((x + (r[j] - m)) - f[1]);
-        l[j] = fm_tanhf(f[0] * drive) * mk;
-        r[j] = fm_tanhf(f[1] * drive) * mk;
+        l[j] = dk_tanh(f[0] * drive) * mk;
+        r[j] = dk_tanh(f[1] * drive) * mk;
     }
 }
 
@@ -230,19 +230,21 @@ static void tape_sim(float *l, float *r, int n, float a)
 {
     float kb = dk_lpk(105.0f), kh = dk_lpk(17000.0f * fm_exp2f(-1.5f * a)), drive = 1.0f + 2.2f * a,
           back = 1.0f / (1.0f + 1.1f * a) / (1.0f + 0.4f * a), bump = 0.55f * a, wow = 26.0f * a, flut = 3.2f * a;
+    float d0, dd, wp = tp_wph, fp = tp_fph;
     int j;
+    d0 = 150.0f + wow * (dk_sinx(wp) + 0.3f * dk_sinx(wp * 2.7f + 0.15915494f)) + flut * dk_sinx(fp);
+    tp_wph = lfo_step(wp, 0.53f / DK_SR, n);
+    tp_fph = lfo_step(fp, 6.7f / DK_SR, n);
+    /* Evaluate the endpoint unwrapped: the inharmonic wow partial must not interpolate across its reset. */
+    wp += (float)n * (0.53f / DK_SR);
+    fp += (float)n * (6.7f / DK_SR);
+    dd = (150.0f + wow * (dk_sinx(wp) + 0.3f * dk_sinx(wp * 2.7f + 0.15915494f)) + flut * dk_sinx(fp) - d0) / (float)n;
     for (j = 0; j < n; j++) {
         float d, fr, xl, xr, s, yl, yr;
         uint32_t i0;
-        tp_wph += 0.53f / DK_SR;
-        if (tp_wph >= 1.0f)
-            tp_wph -= 1.0f;
-        tp_fph += 6.7f / DK_SR;
-        if (tp_fph >= 1.0f)
-            tp_fph -= 1.0f;
-        tp_scr += 0.002f * (wnoise() - tp_scr);   /* the scrape: slow noise in the flutter */
-        d = 150.0f + wow * (fm_sinf(6.2831853f * tp_wph) + 0.3f * fm_sinf(6.2831853f * tp_wph * 2.7f + 1.0f)) +
-            flut * fm_sinf(6.2831853f * tp_fph) + 90.0f * a * tp_scr;
+        d0 += dd;
+        tp_scr += 0.002f * (wnoise() - tp_scr);
+        d = d0 + 90.0f * a * tp_scr;
         tp_bl[tp_w & (TP_N - 1u)] = l[j];
         tp_br[tp_w & (TP_N - 1u)] = r[j];
         i0 = (uint32_t)d;
@@ -260,8 +262,8 @@ static void tape_sim(float *l, float *r, int n, float a)
         s = 1.0f / (1.0f + 0.6f * a * fm_maxf(0.0f, tp_env - 0.4f));
         xl *= s;
         xr *= s;
-        yl = fm_tanhf(drive * xl + 0.18f * a * xl * xl) * back;
-        yr = fm_tanhf(drive * xr + 0.18f * a * xr * xr) * back;
+        yl = dk_tanh(drive * xl + 0.18f * a * xl * xl) * back;
+        yr = dk_tanh(drive * xr + 0.18f * a * xr * xr) * back;
         tp_hl1 += kh * (yl - tp_hl1);             /* the highs it loses */
         tp_hl2 += kh * (tp_hl1 - tp_hl2);
         tp_hr1 += kh * (yr - tp_hr1);
@@ -323,8 +325,8 @@ static void tape_master_dust(float *l, float *r, int n, float dust, float sleep)
         ms_r1 += k * (r[j] - ms_r1);
         ms_r2 += k * (ms_r1 - ms_r2);
         hiss *= wnoise();                                  /* one hiss for both sides: half the dice */
-        l[j] = fm_tanhf(ms_l2 * drive) * mk + hiss + ms_cf * 0.05f;
-        r[j] = fm_tanhf(ms_r2 * drive) * mk - hiss * 0.8f + ms_cf * 0.045f;
+        l[j] = dk_tanh(ms_l2 * drive) * mk + hiss + ms_cf * 0.05f;
+        r[j] = dk_tanh(ms_r2 * drive) * mk - hiss * 0.8f + ms_cf * 0.045f;
     }
     ms_lvl = fm_maxf(pk, ms_lvl * 0.97f);
 }

@@ -362,7 +362,7 @@ static int bass_render(float *st, float *l, float *r, int n, const float *p)
             v->lp += v->lpk * v->lp2;
             hp = s - v->lp - (k == 4 ? 0.42f : 0.55f) * v->lp2;
             v->lp2 = fm_flush(v->lp2 + v->lpk * hp);
-            s = fm_tanhf(v->lp * 1.4f) * 0.9f;
+            s = dk_tanh(v->lp * 1.4f) * 0.9f;
             v->dc += 0.0006f * (s - v->dc);            /* no offset left by the filter */
             s -= v->dc;
         } else if (k == 3) {                               /* SQUARE: the pulse of a chip, its width by TONE */

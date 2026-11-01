@@ -481,7 +481,7 @@ int song_redo(int *what)
  * the track's preset, engine or knobs become. The next take is recorded with the new sound */
 /* ERASE THE LAST TAKE (hold REC): per clip, the lowest take number the latest REC press put notes in (last_sess = that press's number) */
 static uint8_t last_sess[DK_NCLIP], last_from[DK_NCLIP], rec_sess;
-static uint8_t take_pend[DK_NCLIP];      /* a clip: the take (pass + 1) with notes in it not frozen yet; 0 none */
+static uint32_t take_pend[DK_NCLIP];     /* bits: takes with notes not frozen yet */
 uint8_t song_layers_full;                /* the sounds' table was full: the UI says it, once */
 
 void takes_forget(void)                  /* a new song: no take waits to be frozen (and no snapshot) */
@@ -612,30 +612,23 @@ static int takes_settle(int rec_on, int pass, int only_t)
 {
     int c, n = 0;
     for (c = 0; c < DK_NCLIP; c++) {
-        int take = take_pend[c] - 1;
-        if (!take_pend[c] || (only_t >= 0 && c % DK_NTRACK != only_t))
+        int take, live = dk_rec_take[c % DK_NTRACK];
+        if (only_t >= 0 && c % DK_NTRACK != only_t)
             continue;
-        {
-            int live = dk_rec_take[c % DK_NTRACK];
-            if (live < 1 || live > 31)
-                live = pass > 31 ? 31 : pass;
-            if (only_t < 0 && rec_on && take == live)   /* (still being played) */
+        if (live < 1 || live > 31)
+            live = pass > 31 ? 31 : pass;
+        for (take = 0; take < 32; take++) {
+            uint32_t bit = (uint32_t)1 << take;
+            if (!(take_pend[c] & bit))
                 continue;
+            if (only_t < 0 && rec_on && take == live)
+                continue;
+            take_pend[c] &= ~bit;
+            n += take_freeze(c, take);
         }
-        take_pend[c] = 0;
-        n += take_freeze(c, take);
     }
     return n;
 }
-static int takes_waiting(void)
-{
-    int c;
-    for (c = 0; c < DK_NCLIP; c++)
-        if (take_pend[c])
-            return 1;
-    return 0;
-}
-
 /* --------------------------------------------------------- the recording --- */
 static uint8_t snp_pass[DK_NCLIP];       /* per clip: the pass whose undo snapshot is taken (0xFF none) */
 static uint8_t rep_pass[DK_NCLIP];       /* REPLACE, per clip: the pass the erase is in (0xFF none) */
@@ -761,31 +754,23 @@ static int mem_make_room(int pass)
  * freeze that track's take at once (its sound is about to change) */
 static int rec_flush_do(int only_t)
 {
-    /* (the pass and the recording as they are before the ring is read: the render pushes a take's last notes before it goes
-     * on to the next pass, so a take that is over by now is all in the ring) */
-    int pass = dk_pass, rec_on = dk_recording;
+    int pass, rec_on;
     uint32_t w;
     int n = 0;
-    __asm__ volatile("" ::: "memory");
-    if (rec_on && only_t < 0) {
-        dk_lock();
-        rep_run();
-        dk_unlock();
-    }
+    dk_lock();
+    pass = dk_pass;
+    rec_on = dk_recording;
     w = dk_recq_w;
+    if (rec_on && only_t < 0)
+        rep_run();
     if (w - dk_rec_r > DK_RECQ)
         dk_rec_r = w - DK_RECQ;
-    if (dk_rec_r == w) {
-        if (!takes_waiting())
-            return 0;
-        dk_lock();
-        n = takes_settle(rec_on, pass, only_t);
-        dk_unlock();
-        return n;
-    }
-    dk_lock();
+    dk_unlock();
     while (dk_rec_r != w) {
         dk_recev_t r;
+        dk_lock();
+        pass = dk_pass;
+        rec_on = dk_recording;
         r.clip = dk_recq[dk_rec_r % DK_RECQ].clip;
         r.kind = dk_recq[dk_rec_r % DK_RECQ].kind;
         r.pass = dk_recq[dk_rec_r % DK_RECQ].pass;
@@ -796,11 +781,14 @@ static int rec_flush_do(int only_t)
         r.ev.fl = dk_recq[dk_rec_r % DK_RECQ].ev.fl;
         r.ev.layer = dk_recq[dk_rec_r % DK_RECQ].ev.layer;
         dk_rec_r++;
-        if (r.clip >= DK_NCLIP)
+        if (r.clip >= DK_NCLIP) {
+            dk_unlock();
             continue;
+        }
         rec_snap(r.clip, r.pass);
         if (r.kind == 1) {                 /* ENDLESS: the clip's length */
             dk_song.clip[r.clip].len = r.ev.pos;
+            dk_unlock();
             continue;
         }
         {
@@ -822,8 +810,10 @@ static int rec_flush_do(int only_t)
                 const dk_ev_t *e = &dk_ev[cc->at + i];
                 dup = !(e->fl & EV_MOTION) && e->pos == r.ev.pos && e->note == r.ev.note && DK_L_TAKE(e->layer) == DK_L_TAKE(r.ev.layer);
             }
-            if (dup)
+            if (dup) {
+                dk_unlock();
                 continue;
+            }
         }
         {
             int tries = DK_NCLIP;
@@ -833,20 +823,25 @@ static int rec_flush_do(int only_t)
                 song_notes_lost++;
                 song_notes_lost_at = dk_ticks;
                 song_mem_full = 1;
+                dk_unlock();
                 continue;
             }
         }
         if (!(r.ev.fl & EV_MOTION))              /* a take is never born muted (a layer mute left on that number from before) */
             dk_song.lmute[r.clip] &= ~(1u << DK_L_TAKE(r.ev.layer));
         if (dk_song_insert(r.clip, &r.ev) >= 0 && !(r.ev.fl & EV_MOTION) && !DK_L_SND(r.ev.layer)) {
-            take_pend[r.clip] = (uint8_t)(DK_L_TAKE(r.ev.layer) + 1u);
+            take_pend[r.clip] |= (uint32_t)1 << DK_L_TAKE(r.ev.layer);
             if (last_sess[r.clip] != rec_sess) {     /* the first note of this REC press in the clip: its take is where it starts */
                 last_sess[r.clip] = rec_sess;
                 last_from[r.clip] = (uint8_t)DK_L_TAKE(r.ev.layer);
             }
         }
         n++;
+        dk_unlock();
     }
+    dk_lock();
+    pass = dk_pass;
+    rec_on = dk_recording;
     n += takes_settle(rec_on, pass, only_t);
     dk_unlock();
     return n;

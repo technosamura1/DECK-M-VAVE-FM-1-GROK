@@ -1,5 +1,5 @@
 # four AIRPAD chords, let go. one pad keeps its release (under the line). four together sit over the
-# budget, so the quiet tails are cut and a fifth instrument has room. a chord still held is not cut.
+# budget is only an estimate: at low measured CPU all four releases must survive.
 budget 100
 listen
 wait 300
@@ -29,5 +29,5 @@ tap PLAY
 wait 400
 expect voices >14
 wait 1400
-expect voices <14
-expect voices >4
+expect voices >15
+expect voices <33

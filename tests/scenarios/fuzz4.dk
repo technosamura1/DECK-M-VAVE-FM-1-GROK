@@ -1,3 +1,4 @@
+# Voice bound follows DK_NVOICE=32; released tails now use the free pool.
 # FUZZ seed 4, 700 events (tools/gen_fuzz.py): random buttons, holds, keys and knobs on every page; the song's invariants hold
 wait 300
 demo
@@ -1574,7 +1575,7 @@ wait 60
 tap HOME
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 press REC
 turn K3 -3 20
 wait 20
@@ -2318,7 +2319,7 @@ wait 20
 tap SEL
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 key w11 down 73
 wait 100
 key w5 up
@@ -3942,7 +3943,7 @@ wait 2700
 release REC
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 wait 5
 wait 20
 press REC
@@ -5689,7 +5690,7 @@ wait 20
 tap ENV
 wait 60
 expect inv 0
-expect voices <25
+expect voices <33
 press ENV
 wait 1200
 release ENV

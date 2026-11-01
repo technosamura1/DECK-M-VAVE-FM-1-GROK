@@ -1,0 +1,19 @@
+{
+  "base_tag": "op1-core-2026-10-31-9",
+  "base_commit": "380ef41221dfca0a66f77d99014dcc805d15123c",
+  "scenarios_passed": 88,
+  "scenarios_failed": 0,
+  "preset_wavs": 380,
+  "sound_check": "ALL CLEAN",
+  "new_regressions": [
+    "record",
+    "freeze",
+    "release"
+  ],
+  "known_baseline_warnings": [
+    "automation WORLD/TONE",
+    "fxlong relative high-frequency metric"
+  ],
+  "hardware_tested": false,
+  "firmware_sha256": "09c34f6ca1cdbd8d52cdcdb1474ceca3c62b0c53674097c1a330cc826e6945d1"
+}
