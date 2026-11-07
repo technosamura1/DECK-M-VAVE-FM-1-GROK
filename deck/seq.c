@@ -710,7 +710,7 @@ static void fill_tick(int t)
  * The track's drv[]: 0 AUTO FILL (0 off, 1 4 bars, 2 8, 3 16), 1 MUTATE 0..100, 2 FOLLOW 0..100. */
 #define GP_ROWS 8
 typedef struct {
-    uint8_t n, note[GP_ROWS], len[GP_ROWS], v[GP_ROWS][32], mod;   /* v: 0 none, else 1..9 */
+    uint8_t n, note[GP_ROWS], len[GP_ROWS], v[GP_ROWS][32], mod;   /* v: 0 none, else a code (gp_code) */
 } gpat_t;
 static gpat_t gp[DK_NTRACK] DK_POOL;
 volatile uint8_t dk_gr_cur[DK_NTRACK], dk_gr_next[DK_NTRACK] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, dk_gr_fill[DK_NTRACK];
@@ -741,14 +741,24 @@ static int groove_note(char c)
     }
 }
 static int grand(int n) { return n > 0 ? (int)(dk_frand() * (float)n) % n : 0; }
+/* a step's character: '1'..'9' a hit that hard; 'a'..'i' two in the 1/16 (a 1/32 roll) that hard; '#' four (1/64) */
+static int gp_code(char c)
+{
+    return c >= '1' && c <= '9' ? c - '0' : c >= 'a' && c <= 'i' ? 10 + c - 'a' + 1 : c == '#' ? 37 : 0;
+}
+/* d: a step's code (gp_code); a roll's hits are spread over its 1/16, a little softer after the first */
 static void groove_hit(int t, int note, int d, int step)
 {
-    int vel = 30 + 10 * d + grand(9) - 4;
-    vel = vel < 1 ? 1 : vel > 127 ? 127 : vel;
-    dk_gr_hits++;
-    note_play(t, note, (float)vel * (1.0f / 127.0f), (int32_t)((float)DK_T16 * tick_len), jitter() / 3 + swing_delay(t, step * DK_T16), 2);
-    if (rec_track_of(t))
-        rec_done(t, note, vel, DK_T16);
+    int hits = d >= 30 ? 4 : d >= 10 ? 2 : 1, f = d % 10 ? d % 10 : 9, vel, k;
+    int32_t at = jitter() / 3 + swing_delay(t, step * DK_T16), sub = (int32_t)((float)DK_T16 * tick_len) / hits;
+    for (k = 0; k < hits; k++) {
+        vel = 30 + 10 * f - (k ? 6 : 0) + grand(9) - 4;
+        vel = vel < 1 ? 1 : vel > 127 ? 127 : vel;
+        dk_gr_hits++;
+        note_play(t, note, (float)vel * (1.0f / 127.0f), sub, at + k * sub, 2);
+        if (k == 0 && rec_track_of(t))
+            rec_done(t, note, vel, DK_T16);
+    }
 }
 /* the written groove into the copy (its full rows; the short ones are a fill's / the ending's) */
 static void gp_load(int t, const dk_groove_t *g)
@@ -769,7 +779,7 @@ static void gp_load(int t, const dk_groove_t *g)
             p->note[p->n] = (uint8_t)note;
             p->len[p->n] = (uint8_t)n;
             for (i = 0; i < 32; i++)
-                p->v[p->n][i] = (uint8_t)(i < n && r[1 + i] >= '1' && r[1 + i] <= '9' ? r[1 + i] - '0' : 0);
+                p->v[p->n][i] = (uint8_t)(i < n ? gp_code(r[1 + i]) : 0);
             p->n++;
         }
         r = *e ? e + 1 : e;
@@ -868,9 +878,9 @@ static void groove_rows(int t, const dk_groove_t *g, uint32_t q, int step, int o
                 if (n < 16 && r[1] >= '1' && r[1] <= '9')
                     groove_hit(t, note, r[1] - '0', 0);
             } else if (n >= 16) {
-                char c = r[1 + (int)(q % (uint32_t)(n >= 32 ? 32 : 16))];
-                if (c >= '1' && c <= '9')
-                    groove_hit(t, note, c - '0', step);
+                int c = gp_code(r[1 + (int)(q % (uint32_t)(n >= 32 ? 32 : 16))]);
+                if (c)
+                    groove_hit(t, note, c, step);
             }
         }
         r = *e ? e + 1 : e;

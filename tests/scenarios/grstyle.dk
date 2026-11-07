@@ -1,4 +1,4 @@
-# GROOVE's STYLE (ALGO): BREAKS, AMEN on white 7
+# GROOVE's STYLE (ALGO): BREAKS (AMEN, white 7), BREAKCORE (MACHINE GUN, white 5)
 # GROOVE (the drums as EZdrummer): white 1-15 grooves (INTRO VERSE CHORUS BRIDGE OUTRO x3), white 16 the end, black fills.
 # Stopped it plays on its own clock; playing, a new groove waits for the bar; a fill runs to the bar's end, then the groove.
 wait 300
@@ -28,6 +28,14 @@ wait 1500
 shot groove_breaks.png
 tapkey w6
 wait 100
-turn ALGO -1
+turn ALGO 1
+wait 200
+expect grstyle 2
+tapkey w4
+wait 1500
+shot groove_breakcore.png
+tapkey w4
 wait 100
+turn ALGO -2
+wait 200
 expect grstyle 0

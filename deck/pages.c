@@ -1149,8 +1149,9 @@ static void draw_endless(const dk_clip_t *c)
  * the one coming blinking; under it the fills as the black keys, the one playing lit, and where the bar is */
 static void draw_groove(void)
 {
-    static const char *const SECS[2][5] = {{"INTRO", "VERSE", "CHORUS", "BRIDGE", "OUTRO"},
-                                           {"CHILL", "FUNK", "AMEN", "HEAVY", "MODERN"}};   /* BREAKS: its columns */
+    static const char *const SECS[3][5] = {{"INTRO", "VERSE", "CHORUS", "BRIDGE", "OUTRO"},
+                                           {"CHILL", "FUNK", "AMEN", "HEAVY", "MODERN"},   /* BREAKS, BREAKCORE: their columns */
+                                           {"AMEN", "RUSH", "HARD", "HALF", "CHAOS"}};
     const dk_track_t *k = cur();
     const char *const *SEC = SECS[DK_GR_STYLE(dk_song.cur_track)];
     int t = dk_song.cur_track, cur = dk_gr_cur[t], nx = dk_gr_next[t], fl = dk_gr_fill[t], i, j;

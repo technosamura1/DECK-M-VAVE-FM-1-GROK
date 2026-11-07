@@ -416,19 +416,19 @@ static void groove_demo(const char *out, int preset)
     report("groove: 5 sections x 3, fills, the end");
 }
 
-/* GROOVE's BREAKS style: the fifteen breaks one after another, two bars each, no fills (92 BPM) */
-static void groove_breaks(const char *out, int preset)
+/* a GROOVE style (1 BREAKS, 2 BREAKCORE): its fifteen one after another, two bars each, no fills */
+static void groove_breaks(const char *out, int preset, int style, int bpm)
 {
-    double bar = 4.0 * 60.0 / 92.0;
+    double bar = 4.0 * 60.0 / (double)bpm;
     int g;
     fresh();
     dk_lock();
-    dk_song.tempo = 92;
+    dk_song.tempo = (uint8_t)bpm;
     dk_song.dust = 0;
     dk_track_setup(4, 5, preset, SQ_GROOVE, R_DRUM);
     dk_song.trk[4].vol = 80;
     dk_song.trk[4].drv[0] = 0;                       /* (no AUTO FILL) */
-    dk_song.rsv[4] |= (uint8_t)DK_GR_STYLE_BIT;
+    dk_song.rsv[4] = (uint8_t)((dk_song.rsv[4] & ~DK_GR_STYLE_MASK) | ((unsigned)style << DK_GR_STYLE_SH));
     dk_unlock();
     reset_out();
     dk_cmd(C_PLAY, 1, 0, 0);
@@ -444,7 +444,7 @@ static void groove_breaks(const char *out, int preset)
     dk_cmd(C_PLAY, 0, 0, 0);
     tail(3.0);
     wav(out);
-    report("groove: BREAKS, 15 x 2 bars");
+    report(style == 2 ? "groove: BREAKCORE, 15 x 2 bars" : "groove: BREAKS, 15 x 2 bars");
 }
 
 /* GROOVE by itself: VERSE 2 with AUTO FILL every 4 bars and MUTATE, a DICE, then a new section (a long fill into it) */
@@ -1286,7 +1286,9 @@ int main(int argc, char **argv)
     } else if (!strcmp(m, "groove"))
         groove_demo(argc > 2 ? argv[2] : "out/groove.wav", argc > 3 ? atoi(argv[3]) : 0);
     else if (!strcmp(m, "breaks"))
-        groove_breaks(argc > 2 ? argv[2] : "out/breaks.wav", argc > 3 ? atoi(argv[3]) : 0);
+        groove_breaks(argc > 2 ? argv[2] : "out/breaks.wav", argc > 3 ? atoi(argv[3]) : 0, 1, 92);
+    else if (!strcmp(m, "breakcore"))
+        groove_breaks(argc > 2 ? argv[2] : "out/breakcore.wav", argc > 3 ? atoi(argv[3]) : 0, 2, argc > 4 ? atoi(argv[4]) : 180);
     else if (!strcmp(m, "grooveauto"))
         groove_auto(argc > 2 ? argv[2] : "out/groove_auto.wav");
     else if (!strcmp(m, "leadlines"))

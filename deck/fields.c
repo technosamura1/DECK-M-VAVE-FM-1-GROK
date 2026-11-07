@@ -880,10 +880,7 @@ static void field_set(int f, int v)
     case F_GRFOL: k->drv[f - F_GRFILL] = (uint8_t)v; break;
     case F_GRSTYLE: {                    /* another style: the groove playing comes back from it on the next bar */
         int t = dk_song.cur_track;
-        if (v)
-            dk_song.rsv[t] |= (uint8_t)DK_GR_STYLE_BIT;
-        else
-            dk_song.rsv[t] &= (uint8_t)~DK_GR_STYLE_BIT;
+        dk_song.rsv[t] = (uint8_t)((dk_song.rsv[t] & ~DK_GR_STYLE_MASK) | ((unsigned)v << DK_GR_STYLE_SH));
         if (dk_gr_cur[t])
             dk_cmd(C_GROOVE, t, 0, dk_gr_cur[t]);
         break;

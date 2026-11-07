@@ -925,3 +925,10 @@ Raw PCOUNT/preset_id/preset_of оставлены неизменными для 
   смена стиля во время игры — тот же грув из нового стиля со следующего такта.
 - Тест `grstyle.dk` (expect grstyle); `deck_test breaks OUT.wav [пресет]` — все 15 по 2 такта, 92 BPM.
 - Падающие тесты (sound check, duplicate presets, automation, fxlong, blocks, fxkeep и др.) падали и до этого — без изменений.
+
+## GROOVE: стиль BREAKCORE и дроби (2026-11-07)
+- Третий стиль BREAKCORE (`GROOVES[45]`, 170–200 BPM): AMEN RUSH, AMEN CHOP, AMEN STUTTER · SNARE RUSH, MACHINE GUN, FULL ROLL ·
+  GABBER, HARD AMEN, TERROR · HALF CHOP, HALF RUSH, DUB BREAK · CHAOS, TOM CHAOS, GLITCH (колонки AMEN RUSH HARD HALF CHAOS).
+- Дроби в рисунках грува (`gp_code`/`groove_hit` в seq.c): 'a'..'i' — два удара в 1/16 (1/32) с силой 1..9, '#' — четыре (1/64);
+  работает и в сбивках. Стиль дорожки теперь биты 5–6 `dk_song.rsv[трек]` (`DK_GR_STYLE_MASK`).
+- `deck_test breakcore OUT.wav [пресет] [bpm]` (по умолчанию 180); лучше всего звучат киты 909 (6) и WAR (10).

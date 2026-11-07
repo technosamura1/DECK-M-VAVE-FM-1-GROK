@@ -237,9 +237,10 @@ typedef struct {
 #define DK_BYP_REV 4u
 #define DK_BYP(t) ((unsigned)dk_song.rsv[(t)] & 7u)
 #define DK_BYP_TAPE() (dk_song.rsv[DK_NTRACK] & 1u)
-/* GROOVE's style of a drum track: bit 6 of the same byte (older projects: 0, the first) */
-#define DK_GR_STYLE_BIT 0x40u
-#define DK_GR_STYLE(t) (TAPE.ngroove_style > 1 && (dk_song.rsv[(t)] & DK_GR_STYLE_BIT) ? 1 : 0)
+/* GROOVE's style of a drum track: bits 5-6 of the same byte (older projects: 0, the first) */
+#define DK_GR_STYLE_SH 5
+#define DK_GR_STYLE_MASK (3u << DK_GR_STYLE_SH)
+#define DK_GR_STYLE(t) (TAPE.ngroove_style > 1 ? (int)((dk_song.rsv[(t)] & DK_GR_STYLE_MASK) >> DK_GR_STYLE_SH) % TAPE.ngroove_style : 0)
 #define DK_GROOVE(t, i) (&TAPE.groove[DK_GR_STYLE(t) * TAPE.ngroove + (i)])
 
 extern dk_song_t dk_song;
