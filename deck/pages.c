@@ -284,7 +284,7 @@ static int page_field(int i, int home)
         }
         switch (k->seq) {
         case SQ_GROOVE: {                    /* the drummer: a fill by itself, its hits changing, following the others; how loud */
-            static const uint8_t F[5] = {F_GRFILL, F_GRMUT, F_GRFOL, F_VOL, F_TSWING};
+            static const uint8_t F[5] = {F_GRFILL, F_GRMUT, F_GRFOL, F_VOL, F_GRSTYLE};   /* ALGO: the style (SWING: row 2) */
             return F[i];
         }
         case SQ_STEP:
@@ -1149,8 +1149,10 @@ static void draw_endless(const dk_clip_t *c)
  * the one coming blinking; under it the fills as the black keys, the one playing lit, and where the bar is */
 static void draw_groove(void)
 {
-    static const char *const SEC[5] = {"INTRO", "VERSE", "CHORUS", "BRIDGE", "OUTRO"};
+    static const char *const SECS[2][5] = {{"INTRO", "VERSE", "CHORUS", "BRIDGE", "OUTRO"},
+                                           {"CHILL", "FUNK", "AMEN", "HEAVY", "MODERN"}};   /* BREAKS: its columns */
     const dk_track_t *k = cur();
+    const char *const *SEC = SECS[DK_GR_STYLE(dk_song.cur_track)];
     int t = dk_song.cur_track, cur = dk_gr_cur[t], nx = dk_gr_next[t], fl = dk_gr_fill[t], i, j;
     int blink = (plat_ms() / 200u) & 1u, step = (int)(dk_part_tick / DK_T16) % 16;
     for (i = 0; i < 5; i++) {
@@ -1187,7 +1189,7 @@ static void draw_groove(void)
         }
         {
             char nm[24];
-            const char *base = fl && fl <= TAPE.nfill ? TAPE.fill[fl - 1].name : nx == 0 ? "END NEXT BAR" : cur ? TAPE.groove[cur - 1].name : "PLAY A WHITE KEY";
+            const char *base = fl && fl <= TAPE.nfill ? TAPE.fill[fl - 1].name : nx == 0 ? "END NEXT BAR" : cur ? DK_GROOVE(t, cur - 1)->name : "PLAY A WHITE KEY";
             char *p = cpy(nm, base);
             if (cur && !fl && dk_gr_mod[t])  /* changed by DICE / MUTATE: its white key brings it back */
                 cpy(p, " *");

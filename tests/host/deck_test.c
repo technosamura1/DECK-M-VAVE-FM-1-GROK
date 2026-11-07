@@ -416,6 +416,37 @@ static void groove_demo(const char *out, int preset)
     report("groove: 5 sections x 3, fills, the end");
 }
 
+/* GROOVE's BREAKS style: the fifteen breaks one after another, two bars each, no fills (92 BPM) */
+static void groove_breaks(const char *out, int preset)
+{
+    double bar = 4.0 * 60.0 / 92.0;
+    int g;
+    fresh();
+    dk_lock();
+    dk_song.tempo = 92;
+    dk_song.dust = 0;
+    dk_track_setup(4, 5, preset, SQ_GROOVE, R_DRUM);
+    dk_song.trk[4].vol = 80;
+    dk_song.trk[4].drv[0] = 0;                       /* (no AUTO FILL) */
+    dk_song.rsv[4] |= (uint8_t)DK_GR_STYLE_BIT;
+    dk_unlock();
+    reset_out();
+    dk_cmd(C_PLAY, 1, 0, 0);
+    dk_cmd(C_GROOVE, 4, 0, 1);
+    run(0.02);
+    for (g = 1; g <= TAPE.ngroove; g++) {
+        if (g > 1)
+            dk_cmd(C_GROOVE, 4, 0, g);              /* (on the next bar) */
+        run(bar * 2.0);
+    }
+    dk_cmd(C_GROOVE, 4, 0, 0);
+    run(bar * 1.2);
+    dk_cmd(C_PLAY, 0, 0, 0);
+    tail(3.0);
+    wav(out);
+    report("groove: BREAKS, 15 x 2 bars");
+}
+
 /* GROOVE by itself: VERSE 2 with AUTO FILL every 4 bars and MUTATE, a DICE, then a new section (a long fill into it) */
 static void groove_auto(const char *out)
 {
@@ -1254,6 +1285,8 @@ int main(int argc, char **argv)
         printf("\n");
     } else if (!strcmp(m, "groove"))
         groove_demo(argc > 2 ? argv[2] : "out/groove.wav", argc > 3 ? atoi(argv[3]) : 0);
+    else if (!strcmp(m, "breaks"))
+        groove_breaks(argc > 2 ? argv[2] : "out/breaks.wav", argc > 3 ? atoi(argv[3]) : 0);
     else if (!strcmp(m, "grooveauto"))
         groove_auto(argc > 2 ? argv[2] : "out/groove_auto.wav");
     else if (!strcmp(m, "leadlines"))

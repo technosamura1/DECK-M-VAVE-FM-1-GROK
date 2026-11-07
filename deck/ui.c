@@ -1573,10 +1573,10 @@ static void key_down(int k, int vel)
             int g = w + 1;
             if (g == dk_gr_cur[t] || g == (int)dk_gr_next[t]) {   /* the same key again: the groove ends */
                 dk_cmd(C_GROOVE, t, 2, 0);
-                say(TAPE.groove[w].name, "STOP");
+                say(DK_GROOVE(t, w)->name, "STOP");
             } else {
                 dk_cmd(C_GROOVE, t, 0, g);
-                say(TAPE.groove[w].name, dk_gr_cur[t] || dk_playing ? "NEXT BAR" : "");
+                say(DK_GROOVE(t, w)->name, dk_gr_cur[t] || dk_playing ? "NEXT BAR" : "");
             }
         } else if (w >= 0) {
             dk_cmd(C_GROOVE, t, 0, 0);

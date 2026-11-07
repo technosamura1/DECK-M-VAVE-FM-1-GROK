@@ -197,6 +197,7 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "grcur")) g = dk_gr_cur[dk_song.cur_track];     /* GROOVE: playing (0 none) */
     else if (!strcmp(what, "grnext")) g = dk_gr_next[dk_song.cur_track];   /* queued (255 none, 0 the end) */
     else if (!strcmp(what, "grfill")) g = dk_gr_fill[dk_song.cur_track];
+    else if (!strcmp(what, "grstyle")) g = DK_GR_STYLE(dk_song.cur_track);
     else if (!strcmp(what, "grhits")) g = (int)dk_gr_hits;
     else if (!strcmp(what, "dupes")) {                                 /* the clip's notes doubled: the same note at the same place */
         const dk_clip_t *cl = &dk_song.clip[cur_clip()];

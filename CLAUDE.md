@@ -915,3 +915,13 @@ Raw PCOUNT/preset_id/preset_of оставлены неизменными для 
 Тесты curation_regression и curated.dk проходят, сценарии record/recmulti/layers проходят, FX hash e9c9154f неизменен.
 Основная сборка out/deck-curated.fwsc / out/deck-curated.zip; страница также в out/curated-listen.zip.
 Образ 349544, RAM 83356, pool 333372. Параметры тембров, DSP и REC не менялись. На устройстве не проверена.
+
+## GROOVE: стиль BREAKS (2026-11-07)
+- У GROOVE два стиля (`TAPE.groove_style`/`ngroove_style`; `GROOVES[30]` в grooves.c: 15 обычных, потом 15 брейков).
+  BREAKS: TRIP HOP, SKULL SNAP, IMPEACH · THINK, FUNKY, HOT PANTS · AMEN, AMEN 4 BAR, JUNGLE · LEVEE, APACHE, BIG BEAT ·
+  TWO STEP, GHOSTS, CHOP (колонки на экране CHILL FUNK AMEN HEAVY MODERN). Сбивки и END общие.
+- Стиль дорожки — бит 6 (`DK_GR_STYLE_BIT`) в `dk_song.rsv[трек]` (биты 0–2 — байпасы цепочки); старые проекты = 0.
+  `DK_GR_STYLE(t)`, `DK_GROOVE(t, i)` в deck_api.h. Ручка ALGO на странице GROOVE (`F_GRSTYLE`; свинг — в ряду 2);
+  смена стиля во время игры — тот же грув из нового стиля со следующего такта.
+- Тест `grstyle.dk` (expect grstyle); `deck_test breaks OUT.wav [пресет]` — все 15 по 2 такта, 92 BPM.
+- Падающие тесты (sound check, duplicate presets, automation, fxlong, blocks, fxkeep и др.) падали и до этого — без изменений.

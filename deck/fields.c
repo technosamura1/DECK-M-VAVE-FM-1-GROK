@@ -25,7 +25,7 @@ enum {
     /* the tape: how many bars a take (AUTO: the first take sets it) */ F_RECBARS,
     /* the clip a scale step up or down (LIVE) */ F_MOVE,
     /* SOUNDS (HOME + PRESET): the instrument, the block, the preset in it */ F_PBENG, F_PBBLK, F_PBPRE,
-    /* GROOVE: AUTO FILL, MUTATE, FOLLOW (the track's drv[0..2]) */ F_GRFILL, F_GRMUT, F_GRFOL,
+    /* GROOVE: AUTO FILL, MUTATE, FOLLOW (the track's drv[0..2]) */ F_GRFILL, F_GRMUT, F_GRFOL, F_GRSTYLE,
     /* the tape: the part the take goes into */ F_RECPART,
     /* TRACKS K2: the part being edited (no copy) */ F_TRPART,
     F_N
@@ -543,6 +543,7 @@ static void field_range(int f, int *lo, int *hi)
     case F_PBBLK:
     case F_PBPRE: *hi = pb_hi(f); break;
     case F_GRFILL: *hi = 3; break;
+    case F_GRSTYLE: *hi = TAPE.ngroove_style > 1 ? TAPE.ngroove_style - 1 : 0; break;
     case F_MOOD: *hi = TAPE.nmood - 1; break;
     case F_P0:
     case F_P1:
@@ -694,6 +695,7 @@ static int field_get_raw(int f)
     case F_GRFILL: return k->drv[0] & 3;
     case F_GRMUT: return k->drv[1] > 100 ? 100 : k->drv[1];
     case F_GRFOL: return k->drv[2] > 100 ? 100 : k->drv[2];
+    case F_GRSTYLE: return DK_GR_STYLE(dk_song.cur_track);
     case F_TEMPO: return dk_song.tempo;
     case F_MACRO: return k->macro;
     case F_MOOD: return dk_song.mood;
@@ -876,6 +878,16 @@ static void field_set(int f, int v)
     case F_GRFILL:
     case F_GRMUT:
     case F_GRFOL: k->drv[f - F_GRFILL] = (uint8_t)v; break;
+    case F_GRSTYLE: {                    /* another style: the groove playing comes back from it on the next bar */
+        int t = dk_song.cur_track;
+        if (v)
+            dk_song.rsv[t] |= (uint8_t)DK_GR_STYLE_BIT;
+        else
+            dk_song.rsv[t] &= (uint8_t)~DK_GR_STYLE_BIT;
+        if (dk_gr_cur[t])
+            dk_cmd(C_GROOVE, t, 0, dk_gr_cur[t]);
+        break;
+    }
     case F_TEMPO: dk_song.tempo = (uint8_t)v; dk_cmd(C_RETUNE, 0, 0, 0); break;
     case F_MACRO: k->macro = (int8_t)v; break;
     case F_MOOD:
@@ -1109,6 +1121,7 @@ static const char *field_label(int f)
     case F_GRFILL: return "AUTO FILL";
     case F_GRMUT: return "MUTATE";
     case F_GRFOL: return "FOLLOW";
+    case F_GRSTYLE: return "STYLE";
     case F_PBBLK: return "BLOCK";
     case F_PBPRE: return "PRESET";
     case F_TEMPO: return "TEMPO";
@@ -1289,6 +1302,7 @@ static void field_text(int f, char *b)
     case F_PBENG:
     case F_PBBLK:
     case F_PBPRE: pb_text(f, b); break;
+    case F_GRSTYLE: cpy(b, TAPE.groove_style ? TAPE.groove_style[v % TAPE.ngroove_style] : "-"); break;
     case F_GRFILL: {
         static const char *const AF[4] = {"OFF", "4 BARS", "8 BARS", "16 BARS"};
         cpy(b, AF[v & 3]);

@@ -946,7 +946,7 @@ static void groove_tick(int t)
                 dk_gr_fill[t] = 0;
             } else if (dk_gr_next[t] <= TAPE.ngroove) {
                 dk_gr_cur[t] = dk_gr_next[t];
-                gp_load(t, &TAPE.groove[dk_gr_cur[t] - 1]);
+                gp_load(t, DK_GROOVE(t, dk_gr_cur[t] - 1));
                 gr_bars[t] = 0;
             }
             dk_gr_next[t] = 0xFF;
@@ -1017,7 +1017,7 @@ static void groove_cmd(int t, int kind, int b)
             rec_on_now();
             dk_gr_cur[t] = (uint8_t)b;
             dk_gr_next[t] = 0xFF;
-            gp_load(t, &TAPE.groove[b - 1]);
+            gp_load(t, DK_GROOVE(t, b - 1));
             gr_bars[t] = 0;
             return;
         }
@@ -1026,7 +1026,7 @@ static void groove_cmd(int t, int kind, int b)
                 gr_bar0[t] = gt + (DK_T16 - gt % DK_T16) % DK_T16;
             dk_gr_cur[t] = (uint8_t)b;
             dk_gr_next[t] = 0xFF;
-            gp_load(t, &TAPE.groove[b - 1]);
+            gp_load(t, DK_GROOVE(t, b - 1));
             gr_bars[t] = 0;
             return;
         }

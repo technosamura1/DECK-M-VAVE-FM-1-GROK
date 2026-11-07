@@ -2,13 +2,14 @@
  * Copyright (C) 2026 OVERWORLD / DECK contributors */
 /* GROOVE (the drums played as EZdrummer's): white 1-15 a groove, five song sections of three (light, more, full),
  * white 16 the ending; black 1-10 fills, short to long; black 11 DICE (the shell's). Part of tape_dsp.c.
+ * Two styles (STYLE on the GROOVE page): GROOVES (the song's sections) and BREAKS, 15 each, one after the other.
  * A groove: rows "L" + 16 or 32 steps (one or two bars, a 1/16 each), separated by '|'. L is the drum (GM):
  *   K kick 36, S snare 38, R rim 37, P clap 39, H closed hat 42, O open hat 46, L low tom 45, M mid tom 47, T high tom 50,
  *   X crash 49, Y ride 51, Z shaker 70, W wood 76
  * A step: '.' nothing, '1'..'9' how hard (30 + 10 x). A fill is the bar's last steps: it plays from the next beat (or
  * where its notes start, if later); the groove under it stops there. */
 
-static const dk_groove_t GROOVES[15] = {
+static const dk_groove_t GROOVES[30] = {
     /* INTRO: the hat, the toms, nothing heavy */
     {"INTRO 1", "H6.4.6.4.6.4.6.4.|Z..3...3...3...3."},
     {"INTRO 2", "H6.4.6.4.6.4.6.4.|L7.......5.......7.......5...5...|Z..3...3...3...3."},
@@ -29,6 +30,22 @@ static const dk_groove_t GROOVES[15] = {
     {"OUTRO 1", "K6.......5.......|R....5.......5...|Y4...3...4...3..."},
     {"OUTRO 2", "R....5.......5...|H4...4...4...4...|L5...............3..............."},
     {"OUTRO 3", "K6...............|H3.......3.......|Z2...2...2...2..."},
+    /* BREAKS (the second style): the old records' drum breaks, the ghost notes in, light to busy */
+    {"TRIP HOP", "K8......7..6.....|S........9.......|H4...4...4...4.3."},
+    {"SKULL SNAP", "K8.......7.7.....|S....8..3....8...|H5.5.5.5.5.5.5.5."},
+    {"IMPEACH", "K8......7..7.....|S....8.......8...|H5.5.5.5.5.5.5...|O..............6."},
+    {"THINK", "K8......6.7......8......6.7..6...|S....8.......8..3....8.......8...|H5.3.5.3.5.3.5.3."},
+    {"FUNKY", "K8.6.......7..6..|S....8..3.3.38..3|H5.5.5.5.5.5..5.5|O...........5...."},
+    {"HOT PANTS", "K8..6..7...7..6..|S....8..3.3..8...|H5.5.5.5.5.5.5.5."},
+    {"AMEN", "K8.7.......87....|S....8..3.3..8..3|Y5.4.5.4.5.4.5.4."},
+    {"AMEN 4 BAR", "K8.7.......7.......87......7.....|S....8..3.3....8..8..8..3.3....8.|Y5.4.5.4.5.4.5.4.|X..........................7....."},
+    {"JUNGLE", "K8.7.......7.....8.7.......7.....|S....8.4..48.8.4.....8.4..4..8.48|H4343434343434343"},
+    {"LEVEE", "K87.....7..87....|S....9.......9...|H4.4.4.4.4.4.4.4."},
+    {"APACHE", "K8.....7...7.....|S....8.......8...|H4.4.4.4.4.4.4.4.|W..5..4..5..4.5.4"},
+    {"BIG BEAT", "X8...............................|K8...8...8...8.6.|S....8.......8...|P....7.......7...|O..5...5...5...5."},
+    {"TWO STEP", "K8.........7.....|S....8.......8...|H..4.4.4...4.4.4.|Z3.3.3.3.3.3.3.3."},
+    {"GHOSTS", "K8.....6...7.....|S..3.8.3..3.38.3.|H4.4.4.4.4.4.4.4."},
+    {"CHOP", "K8.8...7.8.......|S...8..8...8.8...|H........4.4.4.4."},
 };
 
 /* black 1-10: short to long; 5..10 end in a crash on the next one (black 11: DICE) */
@@ -47,3 +64,5 @@ static const dk_groove_t FILLS[10] = {
 
 /* white 16: the last hit (the crash, the kick, on the next one), then quiet */
 static const dk_groove_t GROOVE_END = {"END", "X9|K9"};
+
+static const char *const GROOVE_STYLE[2] = {"GROOVES", "BREAKS"};

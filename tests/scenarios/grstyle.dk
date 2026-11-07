@@ -1,0 +1,33 @@
+# GROOVE's STYLE (ALGO): BREAKS, AMEN on white 7
+# GROOVE (the drums as EZdrummer): white 1-15 grooves (INTRO VERSE CHORUS BRIDGE OUTRO x3), white 16 the end, black fills.
+# Stopped it plays on its own clock; playing, a new groove waits for the bar; a fill runs to the bar's end, then the groove.
+wait 300
+tap HOME
+wait 100
+tapkey w5
+wait 100
+tap HOME
+wait 100
+expect track 5
+tap SEQ
+wait 100
+tap SEQ
+wait 100
+tap SEQ
+wait 100
+seqtype 2
+wait 100
+expect seq 7
+tap SEQ
+wait 100
+turn ALGO 1
+wait 200
+expect grstyle 1
+tapkey w6
+wait 1500
+shot groove_breaks.png
+tapkey w6
+wait 100
+turn ALGO -1
+wait 100
+expect grstyle 0
