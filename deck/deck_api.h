@@ -348,6 +348,7 @@ typedef struct {
     const uint16_t *browse_mask;       /* optional engine*DK_NBLK masks; raw IDs remain loadable */
     const char *const *groove_style;    /* GROOVE's styles' names: groove holds ngroove of each, one after another */
     uint8_t ngroove_style;
+    const char *const *groove_col;      /* each style's five column names on the GROOVE page (5 a style), or 0 */
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 

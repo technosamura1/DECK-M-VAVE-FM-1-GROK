@@ -932,3 +932,19 @@ Raw PCOUNT/preset_id/preset_of оставлены неизменными для 
 - Дроби в рисунках грува (`gp_code`/`groove_hit` в seq.c): 'a'..'i' — два удара в 1/16 (1/32) с силой 1..9, '#' — четыре (1/64);
   работает и в сбивках. Стиль дорожки теперь биты 5–6 `dk_song.rsv[трек]` (`DK_GR_STYLE_MASK`).
 - `deck_test breakcore OUT.wav [пресет] [bpm]` (по умолчанию 180); лучше всего звучат киты 909 (6) и WAR (10).
+
+## Кассета DREAMWALL — эмбиент-подложка под шугейз-гитару (2026-11-07)
+- `tapes/dreamwall/` — копия OVERWORLD (все 420 звуков), отличия: движок **WALL** (`eng_wall.c`) на месте KALIMBA (индекс 7;
+  16 пресетов: SLOW CRUSH NOTHING SOON ALISON E-BOW DRONE TWENTY THREE KID A PANCHIKO SUNBURST FOG FEEDBACK + DAYDREAM
+  WEIGHTLESS REVERB BATH TAPE WALL; маска показа 0xfff/…/0x00f); дорожки по умолчанию PIANO KEYS PAD(=WALL) BASS LEAD DRUMKIT.
+- WALL: 4 расстроенные пилы (или 2 + синус VEIL, BOW — медленная атака, OCTAVE — +октава), лево/право по SPREAD, шум AIR,
+  двухполюсный НЧ TONE, атака-«смычок» SWELL, держится пока нажата (дрон), GLIDE — медленный уход строя до ~27 центов.
+  FUZZ — на шине дорожки (`wall_bus`): весь аккорд через один асимметричный tanh, «динамик» 3,6–6,2 кГц, ФВЧ ~25 Гц.
+  Стоимость ~11–16 мкс/блок с ревером на хосте. Уровни выставлены тримами по sound_check (цель −22).
+- GROOVE: 4 стиля, первый SHOEGAZE (SLOW DRIFT WALL HALF KID A; RECKONER, WEIRD FISH, IDIOTEQUE), затем GROOVES BREAKS
+  BREAKCORE (`GROOVES[60]`). Названия колонок теперь у кассеты: `TAPE.groove_col` (5 на стиль), в pages.c — запасной вариант.
+- Демо FIRST FOG (`tapes/dreamwall/demo.c`): E мажор, 80, SHIMMER; INTRO(дрон) VERSE(I iii IV iv) CHORUS(I V vi IV, фуз) BRIDGE
+  (Kid A) OUTRO; дорога из 8 блоков; фуз/ревер WALL меняются по частям (движение в начале части).
+- Сборка `./build.sh dreamwall` → `out/deck-dreamwall.fwsc`. `run_tests.sh dreamwall`: падают ещё ~12 сценариев, которые
+  завязаны на демо/тональность/пресеты OVERWORLD (на пустой памяти грузится демо кассеты) — это не баги оболочки;
+  OVERWORLD после правок оболочки даёт ровно прежний список. Картинка PLAY пока девушка из OVERWORLD.

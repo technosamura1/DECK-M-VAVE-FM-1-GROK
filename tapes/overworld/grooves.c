@@ -83,3 +83,6 @@ static const dk_groove_t FILLS[10] = {
 static const dk_groove_t GROOVE_END = {"END", "X9|K9"};
 
 static const char *const GROOVE_STYLE[3] = {"GROOVES", "BREAKS", "BREAKCORE"};
+/* each style's five columns on the GROOVE page */
+static const char *const GROOVE_COL[3 * 5] = {"INTRO", "VERSE", "CHORUS", "BRIDGE", "OUTRO", "CHILL", "FUNK", "AMEN", "HEAVY", "MODERN",
+                                              "AMEN", "RUSH", "HARD", "HALF", "CHAOS"};
