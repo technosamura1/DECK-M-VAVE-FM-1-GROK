@@ -173,14 +173,14 @@ int app_expect(const char *what, int *got)
     else if (!strcmp(what, "snds")) {                                   /* the track's frozen sounds */
         int i;
         for (i = 0; i < DK_NSND; i++)
-            g += dk_song.snd[dk_song.cur_track][i].used;
+            g += !!dk_song.snd[dk_song.cur_track][i].used;
     }
     else if (!strcmp(what, "sndeng")) g = dk_song.snd[dk_song.cur_track][0].used ? dk_song.snd[dk_song.cur_track][0].eng : -1;
     else if (!strcmp(what, "allsnds")) {                                /* the frozen sounds of all tracks */
         int i, t;
         for (t = 0; t < DK_NTRACK; t++)
             for (i = 0; i < DK_NSND; i++)
-                g += dk_song.snd[t][i].used;
+                g += !!dk_song.snd[t][i].used;
     }
     else if (!strcmp(what, "clrask")) g = ui.clr_t ? 1 : 0;           /* CLEAR ALL asked once */
     else if (!strcmp(what, "vfrozen")) g = dk_voices_frozen;

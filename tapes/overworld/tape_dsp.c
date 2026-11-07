@@ -87,7 +87,7 @@ static const char *const FM_SRC[16][6] = {
 #define LD_M {T_P1, T_P3, T_REV}, {50, 40, 40}
 static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     /* FELT */
-    {"MEADOW", 0, {45, 40, 55, 50, 55}, E50, FX_N_TAPE, 15, 30, 20, 60, 12, FELT_M, 0},
+    {"MOSS PIANO", 0, {38, 35, 60, 35, 55}, {22, 48, 54}, FX_N_NONE, 0, 0, 0, 62, 16, FELT_M, 0},
     {"SWEDEN", 0, {40, 50, 60, 55, 60}, E50, FX_N_TAPE, 25, 35, 25, 70, 15, FELT_M, 0},
     {"LULLABY", 0, {30, 75, 60, 40, 50}, E50, FX_N_VINYL, 20, 30, 20, 70, 10, FELT_M, -1},
     {"MORNING", 0, {58, 25, 50, 45, 60}, E50, FX_N_NONE, 0, 0, 0, 50, 10, FELT_M, 2},
@@ -115,7 +115,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     /* AIRPAD */
     {"SWEDEN", 2, {45, 50, 30, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 70, 10, PAD_M, -4},
     {"AIR", 2, {50, 50, 45, 1, 50}, E50, FX_N_NONE, 0, 0, 0, 75, 10, PAD_M, -10},
-    {"WARM", 2, {40, 50, 25, 2, 50}, E50, FX_N_TAPE, 15, 20, 20, 65, 8, PAD_M, 1},
+    {"HORIZON PAD", 2, {34, 48, 18, 2, 48}, {60, 48, 54}, FX_N_NONE, 0, 0, 0, 72, 8, PAD_M, 1},
     {"SHIMMER", 2, {55, 55, 40, 3, 50}, E50, FX_N_CHORUS, 30, 30, 40, 85, 15, PAD_M, 9},
     {"STRINGS", 2, {45, 45, 25, 4, 45}, E50, FX_N_NONE, 0, 0, 0, 70, 8, PAD_M, -8},
     {"CAVE", 2, {25, 65, 35, 0, 60}, E50, FX_N_NONE, 0, 0, 0, 95, 15, PAD_M, -3},
@@ -126,7 +126,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"DEEP", 2, {30, 50, 20, 4, 55}, E50, FX_N_NONE, 0, 0, 0, 60, 5, PAD_M, -7},
     {"SLOW", 2, {40, 72, 40, 0, 50}, E50, FX_N_TAPE, 20, 25, 20, 85, 12, PAD_M, 1},
     /* GLASS: a mallet, a box, a bell, not the same shine twelve times */
-    {"GLASS", 3, {0, 32, 78, 0}, {6, 36, 48}, FX_N_NONE, 0, 0, 0, 68, 18, GLASS_M, -3},
+    {"DEW BELL", 3, {0, 28, 68, 0}, {10, 40, 52}, FX_N_NONE, 0, 0, 0, 68, 23, GLASS_M, -3},
     {"CELESTA", 3, {1, 24, 48, 1}, SNAP, FX_N_SPRING, 22, 42, 35, 48, 16, GLASS_M, 4},
     {"MARIMBA", 3, {2, 14, 72, 0}, {2, 16, 12}, FX_N_NONE, 0, 0, 0, 18, 4, GLASS_M, 14},
     {"MUSIC BOX", 3, {3, 18, 36, 2}, {2, 20, 28}, FX_N_TREM, 28, 18, 72, 36, 20, GLASS_M, 8},
@@ -139,7 +139,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"GLOCK", 3, {1, 10, 100, 2}, {2, 14, 26}, FX_N_NONE, 0, 0, 0, 30, 16, GLASS_M, 2},
     {"CHIMES", 3, {0, 74, 50, 2}, LONG, FX_N_NONE, 0, 0, 0, 88, 44, GLASS_M, -4},
     /* SOFTBASS: a sub, a thumb, a reese. a slide is the GLIDE effect, not a fifth of every bass */
-    {"SUB", 4, {18, 4, 0, 78}, TONE, FX_N_NONE, 0, 0, 0, 6, 0, BASS_M, -1},
+    {"EARTH SUB", 4, {16, 4, 0, 72}, {18, 38, 34}, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, -1},
     {"ROUND", 4, {32, 18, 1, 58}, TONE, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 6},
     {"UPRIGHT", 4, {34, 48, 2, 42}, TONE, FX_N_NONE, 0, 0, 0, 24, 0, BASS_M, 6},
     {"THUMB", 4, {96, 100, 2, 6}, {2, 8, 8}, FX_N_NONE, 0, 0, 0, 10, 6, BASS_M, 11},
@@ -154,7 +154,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     /* DUSTKIT: a different machine, not the same dust turned a little */
     {"DUSTY", 5, {46, 58, 68, 1}, TONE, FX_N_VINYL, 42, 55, 38, 16, 0, KIT_M, 3},
     {"707", 5, {50, 40, 22, 0}, SNAP, FX_N_NONE, 0, 0, 0, 6, 0, KIT_M, 0},
-    {"BRUSH", 5, {50, 46, 22, 2}, TONE, FX_N_NONE, 0, 0, 0, 34, 0, KIT_M, 0},
+    {"PAPER KIT", 5, {48, 32, 16, 2}, {8, 28, 20}, FX_N_NONE, 0, 0, 0, 24, 0, KIT_M, 4},
     {"BOOM BAP", 5, {40, 66, 74, 1}, {8, 44, 26}, FX_N_TAPE, 48, 42, 55, 12, 0, KIT_M, 4},
     {"808", 5, {34, 92, 4, 6}, {6, 55, 30}, FX_N_NONE, 0, 0, 0, 8, 0, KIT_M, -8},
     {"WOODEN", 5, {60, 32, 16, 2}, SNAP, FX_N_NONE, 0, 0, 0, 26, 0, KIT_M, 6},
@@ -178,7 +178,7 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
     {"STORM", 6, {8, 100, 58}, {10, 40, 55}, FX_N_NONE, 0, 0, 0, 36, 0, WORLD_M, -1},
     {"DRIZZLE", 6, {0, 22, 66}, TONE, FX_N_NONE, 0, 0, 0, 10, 0, WORLD_M, 20},
     /* KALIMBA */
-    {"KALIMBA", 7, {58, 42, 48}, SNAP, FX_N_NONE, 0, 0, 0, 38, 10, KAL_M, -1},
+    {"SEED PLUCK", 7, {44, 32, 58}, {8, 28, 32}, FX_N_NONE, 0, 0, 0, 48, 18, KAL_M, 1},
     {"MBIRA", 7, {28, 72, 92}, TONE, FX_N_TAPE, 18, 22, 22, 34, 6, KAL_M, -1},
     {"THUMB", 7, {10, 24, 100}, {2, 16, 12}, FX_N_NONE, 0, 0, 0, 20, 4, KAL_M, 3},
     {"BRIGHT", 7, {98, 18, 6}, SNAP, FX_N_NONE, 0, 0, 0, 28, 14, KAL_M, -1},
@@ -246,30 +246,38 @@ static const dk_preset_t PRESETS[12 * DK_NFACT] = {
 
 /* the blocks 1..3 (8-16 BIT, SYNTHWAVE, CINEMATIC) of each engine, one after the other, as many as PCOUNT says */
 static const dk_preset_t PRESETS2[] = {
-    /* FELT, block 1 */
+    /* engine 0, bank 1 */
     {"8-BIT PIANO", 0, {60, 10, 35, 60, 40}, E50, FX_N_LOFI, 95, 85, 55, 15, 0, FELT_M, 5},
     {"GAME KEYS", 0, {55, 20, 30, 55, 45}, E50, FX_N_LOFI, 85, 70, 40, 20, 10, FELT_M, 5},
     {"PIXEL", 0, {70, 5, 25, 70, 35}, E50, FX_N_LOFI, 100, 90, 65, 10, 0, FELT_M, 6},
     {"16-BIT KEYS", 0, {50, 25, 45, 50, 50}, E50, FX_N_LOFI, 70, 55, 30, 25, 15, FELT_M, 4},
-    /* FELT, block 2 */
+    /* engine 0, bank 2 */
     {"NEON PIANO", 0, {68, 8, 45, 70, 70}, E50, FX_N_CHORUS, 35, 30, 50, 55, 40, FELT_M, 3},
     {"OUTRUN KEYS", 0, {72, 5, 35, 75, 75}, E50, FX_N_CHORUS, 40, 35, 55, 45, 45, FELT_M, 4},
     {"DRIVE PIANO", 0, {60, 12, 55, 55, 70}, E50, FX_N_TAPE, 30, 30, 35, 60, 35, FELT_M, 1},
     {"RETRO GRAND", 0, {55, 15, 60, 45, 65}, E50, FX_N_CHORUS, 25, 25, 40, 65, 30, FELT_M, 2},
-    /* FELT, block 3 */
+    {"CITY STAB", 0, {78, 4, 22, 12, 56}, {5, 18, 12}, FX_N_NONE, 0, 0, 0, 15, 16, FELT_M, 9},
+    {"VHS CHORD", 0, {36, 72, 62, 8, 72}, {28, 46, 48}, FX_N_NONE, 0, 0, 0, 45, 24, FELT_M, 1},
+    {"DIAMOND KEY", 0, {94, 2, 38, 0, 44}, {8, 28, 26}, FX_N_NONE, 0, 0, 0, 32, 20, FELT_M, 8},
+    {"VELVET DRIVE", 0, {22, 58, 44, 4, 58}, {36, 42, 36}, FX_N_NONE, 0, 0, 0, 28, 12, FELT_M, 4},
+    /* engine 0, bank 3 */
     {"TAVERN", 0, {48, 30, 40, 60, 60}, E50, FX_N_VINYL, 20, 30, 30, 40, 5, FELT_M, 3},
     {"HEARTH", 0, {32, 45, 70, 35, 60}, E50, FX_N_TAPE, 20, 25, 25, 85, 25, FELT_M, -3},
     {"SOLITUDE", 0, {25, 40, 85, 25, 70}, E50, FX_N_NONE, 0, 0, 0, 100, 30, FELT_M, -4},
     {"SNOWHOLD", 0, {38, 25, 75, 30, 75}, E50, FX_N_NONE, 0, 0, 0, 95, 35, FELT_M, -3},
     {"ELDER KEYS", 0, {45, 35, 65, 40, 70}, E50, FX_N_TAPE, 20, 25, 25, 90, 30, FELT_M, -2},
     {"LAMENT", 0, {30, 60, 80, 20, 65}, E50, FX_N_TAPE, 25, 30, 30, 100, 20, FELT_M, -3},
-    /* TINE, block 1 */
+    {"STUDIO WOOD", 0, {64, 8, 48, 22, 28}, {8, 36, 24}, FX_N_NONE, 0, 0, 0, 22, 2, FELT_M, 5},
+    {"PAPER HAMMER", 0, {28, 82, 28, 76, 22}, {5, 20, 14}, FX_N_NONE, 0, 0, 0, 12, 0, FELT_M, 6},
+    {"SOFT PEDAL", 0, {22, 22, 82, 8, 42}, {35, 56, 60}, FX_N_NONE, 0, 0, 0, 58, 12, FELT_M, -1},
+    {"TOY ATTIC", 0, {88, 64, 22, 42, 20}, {4, 18, 16}, FX_N_NONE, 0, 0, 0, 28, 10, FELT_M, 8},
+    /* engine 1, bank 1 */
     {"FM CHIP", 1, {80, 10, 10, 70, 30}, E50, FX_N_LOFI, 90, 80, 50, 15, 0, TINE_M, 2},
     {"COIN", 1, {90, 0, 0, 50, 20}, E50, FX_N_LOFI, 80, 70, 45, 10, 15, TINE_M, 2},
     {"ARCADE EP", 1, {65, 30, 20, 60, 35}, E50, FX_N_LOFI, 85, 60, 40, 20, 10, TINE_M, 2},
     {"SNES EP", 1, {55, 40, 25, 45, 45}, E50, FX_N_LOFI, 65, 45, 30, 30, 15, TINE_M, 1},
-    /* TINE, block 2 */
-    {"DX KEYS", 1, {75, 15, 10, 60, 45}, E50, FX_N_CHORUS, 45, 30, 50, 40, 25, TINE_M, 1},
+    /* engine 1, bank 2 */
+    {"NEON DX", 1, {72, 10, 8, 64, 40}, {10, 34, 28}, FX_N_CHORUS, 24, 20, 38, 28, 14, TINE_M, 1},
     {"NEON EP", 1, {60, 35, 20, 55, 50}, E50, FX_N_CHORUS, 50, 35, 55, 50, 35, TINE_M, 2},
     {"ELECTRIC DREAM", 1, {50, 45, 25, 40, 60}, E50, FX_N_CHORUS, 40, 25, 45, 65, 40, TINE_M, 0},
     {"SUNSET EP", 1, {45, 30, 20, 35, 65}, E50, FX_N_TAPE, 30, 30, 35, 60, 35, TINE_M, -2},
@@ -277,13 +285,22 @@ static const dk_preset_t PRESETS2[] = {
     {"SPARKLE", 1, {90, 20, 15, 65, 45}, E50, FX_N_CHORUS, 40, 30, 50, 55, 40, TINE_M, 1},
     {"RETRO TINE", 1, {65, 50, 30, 50, 50}, E50, FX_N_TREM, 35, 35, 60, 45, 30, TINE_M, 2},
     {"MIAMI", 1, {55, 25, 15, 45, 55}, E50, FX_N_CHORUS, 45, 25, 55, 50, 40, TINE_M, 0},
-    /* TINE, block 3 */
+    /* engine 1, bank 3 */
     {"CRYSTAL", 1, {90, 10, 10, 20, 80}, E50, FX_N_NONE, 0, 0, 0, 100, 40, TINE_M, -6},
     {"DISTANT BELLS", 1, {85, 5, 10, 15, 90}, E50, FX_N_NONE, 0, 0, 0, 100, 45, TINE_M, -6},
     {"MOONLIT", 1, {60, 20, 20, 25, 85}, E50, FX_N_TAPE, 20, 25, 25, 95, 40, TINE_M, -5},
     {"ARCANE", 1, {95, 30, 25, 30, 75}, E50, FX_N_CHORUS, 25, 20, 45, 100, 50, TINE_M, -5},
-    /* AIRPAD, block 2 */
-    {"SUPER PAD", 2, {55, 40, 25, 5, 50}, E50, FX_N_CHORUS, 40, 30, 50, 65, 15, PAD_M, 0},
+    {"EMBER KEYS", 1, {18, 8, 6, 12, 90}, {42, 58, 64}, FX_N_NONE, 0, 0, 0, 64, 12, TINE_M, -3},
+    {"FROZEN TINE", 1, {100, 0, 0, 100, 12}, {4, 20, 36}, FX_N_NONE, 0, 0, 0, 55, 28, TINE_M, 1},
+    {"BRONZE DUST", 1, {68, 88, 6, 78, 22}, {8, 26, 22}, FX_N_NONE, 0, 0, 0, 25, 6, TINE_M, 5},
+    {"SLOW CURRENT", 1, {48, 32, 52, 18, 84}, {65, 58, 70}, FX_N_NONE, 0, 0, 0, 72, 20, TINE_M, -1},
+    /* engine 2, bank 1 */
+    {"POCKET ORGAN", 2, {58, 8, 0, 8, 0}, {8, 24, 16}, FX_N_NONE, 0, 0, 0, 12, 0, PAD_M, -3},
+    {"PIXEL CHOIR", 2, {26, 38, 0, 6, 0}, {30, 36, 32}, FX_N_NONE, 0, 0, 0, 38, 8, PAD_M, -9},
+    {"CART STRINGS", 2, {72, 12, 0, 4, 0}, {12, 28, 20}, FX_N_NONE, 0, 0, 0, 20, 4, PAD_M, -9},
+    {"TINY CLOUD", 2, {38, 30, 0, 1, 0}, {42, 36, 38}, FX_N_NONE, 0, 0, 0, 40, 10, PAD_M, -14},
+    /* engine 2, bank 2 */
+    {"SUNSET PAD", 2, {46, 36, 18, 5, 44}, {44, 42, 38}, FX_N_NONE, 0, 0, 0, 44, 8, PAD_M, 0},
     {"NIGHT DRIVE PAD", 2, {45, 45, 20, 5, 60}, E50, FX_N_CHORUS, 35, 25, 45, 70, 25, PAD_M, -1},
     {"NEON STRINGS", 2, {60, 35, 30, 4, 55}, E50, FX_N_CHORUS, 45, 35, 55, 60, 20, PAD_M, -6},
     {"SUNSET", 2, {70, 55, 30, 5, 40}, E50, FX_N_TAPE, 25, 25, 30, 75, 25, PAD_M, -4},
@@ -291,7 +308,7 @@ static const dk_preset_t PRESETS2[] = {
     {"RETRO WARM", 2, {55, 40, 20, 2, 60}, E50, FX_N_CHORUS, 40, 25, 45, 60, 20, PAD_M, 1},
     {"DARK WAVE", 2, {30, 50, 25, 5, 70}, E50, FX_N_NONE, 0, 0, 0, 85, 40, PAD_M, -2},
     {"ARP BED", 2, {65, 25, 35, 3, 45}, E50, FX_N_CHORUS, 35, 30, 50, 50, 35, PAD_M, 4},
-    /* AIRPAD, block 3 */
+    /* engine 2, bank 3 */
     {"CHOIR AH", 2, {10, 60, 35, 6, 50}, E50, FX_N_NONE, 0, 0, 0, 90, 10, PAD_M, -12},
     {"CHOIR OH", 2, {40, 65, 30, 6, 45}, E50, FX_N_NONE, 0, 0, 0, 90, 10, PAD_M, -10},
     {"CHOIR EE", 2, {85, 60, 30, 6, 55}, E50, FX_N_NONE, 0, 0, 0, 90, 10, PAD_M, -17},
@@ -304,27 +321,31 @@ static const dk_preset_t PRESETS2[] = {
     {"DAWNSTAR", 2, {45, 70, 35, 2, 55}, E50, FX_N_TAPE, 15, 20, 20, 95, 15, PAD_M, 0},
     {"BLACKREACH", 2, {20, 75, 25, 0, 60}, E50, FX_N_NONE, 0, 0, 0, 100, 20, PAD_M, 2},
     {"HIGH HROTHGAR", 2, {55, 70, 40, 6, 60}, E50, FX_N_NONE, 0, 0, 0, 100, 15, PAD_M, -8},
-    /* GLASS, block 1 */
-    {"CHIP BELL", 3, {0, 30, 50, 0}, E50, FX_N_LOFI, 60, 55, 65, 10, 10, GLASS_M, 5},
-    {"8-BIT MALLET", 3, {2, 35, 50, 0}, E50, FX_N_LOFI, 90, 85, 60, 10, 0, GLASS_M, 12},
-    {"GAME BOX", 3, {3, 45, 45, 0}, E50, FX_N_LOFI, 80, 60, 40, 15, 15, GLASS_M, 5},
-    {"PIXEL VIBES", 3, {4, 40, 50, 0}, E50, FX_N_LOFI, 85, 70, 45, 15, 10, GLASS_M, 7},
-    /* GLASS, block 2 */
+    /* engine 3, bank 1 */
+    {"RUIN BELL", 3, {0, 44, 32, 0}, {12, 44, 58}, FX_N_NONE, 0, 0, 0, 55, 18, GLASS_M, -1},
+    {"TINY STEPS", 3, {2, 12, 44, 0}, {4, 15, 12}, FX_N_NONE, 0, 0, 0, 10, 4, GLASS_M, 16},
+    {"LOST TOY", 3, {3, 35, 24, 1}, {7, 30, 40}, FX_N_NONE, 0, 0, 0, 38, 22, GLASS_M, 4},
+    {"MEMORY DUST", 3, {4, 66, 18, 0}, {26, 48, 64}, FX_N_NONE, 0, 0, 0, 62, 12, GLASS_M, 4},
+    /* engine 3, bank 2 */
     {"NEON BELLS", 3, {0, 45, 55, 0}, E50, FX_N_CHORUS, 35, 30, 50, 55, 40, GLASS_M, 1},
     {"SYNTH VIBES", 3, {4, 55, 60, 0}, E50, FX_N_CHORUS, 40, 30, 55, 50, 35, GLASS_M, 5},
     {"NIGHT CELESTA", 3, {1, 50, 70, 1}, E50, FX_N_TAPE, 25, 25, 30, 65, 45, GLASS_M, -2},
     {"DREAM BOX", 3, {3, 60, 55, 1}, E50, FX_N_CHORUS, 30, 25, 45, 70, 45, GLASS_M, -1},
     {"RETRO MALLET", 3, {2, 45, 65, 0}, E50, FX_N_CHORUS, 35, 30, 45, 45, 35, GLASS_M, 10},
     {"CITY LIGHTS", 3, {0, 60, 40, 0}, E50, FX_N_CHORUS, 30, 30, 50, 60, 50, GLASS_M, 0},
-    /* GLASS, block 3 */
+    /* engine 3, bank 3 */
     {"CHAPEL BELL", 3, {0, 85, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 100, 30, GLASS_M, -5},
     {"TEMPLE", 3, {2, 80, 40, 0}, E50, FX_N_NONE, 0, 0, 0, 95, 35, GLASS_M, 1},
     {"FROST BELLS", 3, {1, 75, 70, 2}, E50, FX_N_NONE, 0, 0, 0, 100, 40, GLASS_M, -3},
     {"SHRINE", 3, {3, 85, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 100, 35, GLASS_M, -3},
     {"TOLL", 3, {0, 95, 25, 0}, E50, FX_N_NONE, 0, 0, 0, 100, 20, GLASS_M, -6},
     {"DAWN CHIME", 3, {4, 80, 60, 2}, E50, FX_N_NONE, 0, 0, 0, 100, 40, GLASS_M, 0},
-    /* SOFTBASS, block 1 */
-    {"NES BASS", 4, {50, 0, 5, 50}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 5},
+    {"BAMBOO HIT", 3, {2, 4, 88, 0}, {3, 14, 10}, FX_N_NONE, 0, 0, 0, 15, 0, GLASS_M, 15},
+    {"FELT VIBES", 3, {4, 18, 6, 0}, {18, 40, 36}, FX_N_NONE, 0, 0, 0, 36, 8, GLASS_M, 8},
+    {"TIN LANTERN", 3, {0, 12, 14, 2}, {5, 20, 30}, FX_N_NONE, 0, 0, 0, 28, 14, GLASS_M, 2},
+    {"ICE ORBIT", 3, {1, 58, 90, 2}, {14, 42, 64}, FX_N_NONE, 0, 0, 0, 68, 26, GLASS_M, -3},
+    /* engine 4, bank 1 */
+    {"DUST BASS", 4, {46, 0, 5, 38}, {7, 24, 13}, FX_N_NONE, 0, 0, 0, 0, 0, BASS_M, 5},
     {"SQUARE", 4, {70, 0, 3, 60}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 11},
     {"PULSE 25", 4, {30, 0, 3, 40}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 13},
     {"GB BASS", 4, {0, 0, 3, 30}, E50, FX_N_LOFI, 50, 60, 40, 5, 0, BASS_M, 17},
@@ -332,8 +353,8 @@ static const dk_preset_t PRESETS2[] = {
     {"TRI SLIDE", 4, {40, 70, 5, 4}, SNAP, FX_N_GLIDE, 80, 40, 40, 8, 0, BASS_M, 8},
     {"BOSS SAW", 4, {40, 45, 4, 50}, E50, FX_N_LOFI, 60, 45, 45, 5, 0, BASS_M, 7},
     {"CHIP SUB", 4, {40, 0, 0, 50}, E50, FX_N_LOFI, 70, 65, 45, 5, 0, BASS_M, 0},
-    /* SOFTBASS, block 2 */
-    {"NIGHT DRIVE", 4, {50, 50, 4, 60}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 7},
+    /* engine 4, bank 2 */
+    {"MOTOR BASS", 4, {48, 64, 4, 30}, {6, 24, 18}, FX_N_NONE, 0, 0, 0, 3, 0, BASS_M, 9},
     {"OUTRUN", 4, {60, 60, 4, 50}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 7},
     {"ARP BASS", 4, {45, 70, 4, 25}, E50, FX_N_NONE, 0, 0, 0, 5, 0, BASS_M, 8},
     {"ANALOG", 4, {55, 50, 1, 50}, E50, FX_N_NONE, 0, 0, 0, 8, 0, BASS_M, 6},
@@ -345,7 +366,7 @@ static const dk_preset_t PRESETS2[] = {
     {"ACID", 4, {80, 90, 1, 30}, E50, FX_N_GLIDE, 40, 0, 0, 5, 0, BASS_M, 6},
     {"MIDNIGHT", 4, {35, 40, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 12, 0, BASS_M, 6},
     {"LASER", 4, {75, 80, 1, 35}, E50, FX_N_GLIDE, 70, 0, 0, 5, 0, BASS_M, 6},
-    /* SOFTBASS, block 3 */
+    /* engine 4, bank 3 */
     {"SUB DRONE", 4, {40, 0, 6, 80}, E50, FX_N_NONE, 0, 0, 0, 25, 0, BASS_M, 7},
     {"RUMBLE", 4, {10, 0, 1, 100}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 4},
     {"WAR HORN LOW", 4, {25, 10, 4, 90}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
@@ -354,8 +375,12 @@ static const dk_preset_t PRESETS2[] = {
     {"DRAGON BREATH", 4, {60, 0, 6, 90}, E50, FX_N_NONE, 0, 0, 0, 35, 0, BASS_M, 5},
     {"CELLO LOW", 4, {35, 20, 4, 100}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
     {"BRONZE", 4, {30, 20, 1, 80}, E50, FX_N_NONE, 0, 0, 0, 30, 0, BASS_M, 5},
-    /* DUSTKIT, block 1 */
-    {"NES KIT", 5, {50, 50, 45, 3}, E50, FX_N_NONE, 0, 0, 0, 8, 0, KIT_M, 2},
+    {"CEDAR BASS", 4, {42, 20, 2, 18}, {5, 24, 16}, FX_N_NONE, 0, 0, 0, 10, 0, BASS_M, 6},
+    {"BOWED EARTH", 4, {18, 8, 2, 94}, {66, 52, 50}, FX_N_NONE, 0, 0, 0, 28, 0, BASS_M, 1},
+    {"ROUND HUM", 4, {8, 0, 0, 92}, {32, 46, 40}, FX_N_NONE, 0, 0, 0, 6, 0, BASS_M, -1},
+    {"BRONZE STEP", 4, {88, 84, 1, 12}, {4, 14, 10}, FX_N_NONE, 0, 0, 0, 6, 0, BASS_M, 9},
+    /* engine 5, bank 1 */
+    {"POCKET KIT", 5, {50, 28, 24, 3}, {7, 24, 14}, FX_N_NONE, 0, 0, 0, 0, 0, KIT_M, 6},
     {"GAME BOY", 5, {60, 40, 60, 3}, E50, FX_N_NONE, 0, 0, 0, 6, 0, KIT_M, 2},
     {"ARCADE", 5, {55, 45, 30, 3}, E50, FX_N_NONE, 0, 0, 0, 10, 0, KIT_M, 2},
     {"C64", 5, {40, 60, 55, 3}, E50, FX_N_NONE, 0, 0, 0, 6, 0, KIT_M, 0},
@@ -367,8 +392,8 @@ static const dk_preset_t PRESETS2[] = {
     {"606 FUNK", 5, {58, 40, 30, 8}, E50, FX_N_NONE, 0, 0, 0, 10, 0, KIT_M, 4},
     {"CR-78 SOFT", 5, {50, 55, 20, 9}, E50, FX_N_NONE, 0, 0, 0, 12, 0, KIT_M, 5},
     {"CR-78 DISCO", 5, {55, 50, 35, 9}, E50, FX_N_TAPE, 20, 25, 30, 15, 0, KIT_M, 6},
-    /* DUSTKIT, block 2 */
-    {"LINN", 5, {50, 50, 30, 4}, E50, FX_N_NONE, 0, 0, 0, 20, 0, KIT_M, -2},
+    /* engine 5, bank 2 */
+    {"NIGHT KIT", 5, {50, 38, 18, 4}, {6, 28, 18}, FX_N_NONE, 0, 0, 0, 16, 0, KIT_M, 2},
     {"OUTRUN", 5, {55, 55, 20, 4}, E50, FX_N_NONE, 0, 0, 0, 25, 0, KIT_M, -3},
     {"DRIVE", 5, {45, 60, 15, 4}, E50, FX_N_NONE, 0, 0, 0, 20, 0, KIT_M, -3},
     {"NEON", 5, {60, 45, 25, 4}, E50, FX_N_CHORUS, 25, 30, 40, 25, 0, KIT_M, 0},
@@ -380,7 +405,7 @@ static const dk_preset_t PRESETS2[] = {
     {"808 LONG", 5, {42, 70, 10, 6}, E50, FX_N_NONE, 0, 0, 0, 15, 0, KIT_M, -5},
     {"909 TECHNO", 5, {50, 50, 8, 7}, E50, FX_N_NONE, 0, 0, 0, 10, 0, KIT_M, -3},
     {"909 HOUSE", 5, {52, 55, 15, 7}, E50, FX_N_CHORUS, 15, 25, 40, 20, 0, KIT_M, -2},
-    /* DUSTKIT, block 3 */
+    /* engine 5, bank 3 */
     {"WAR DRUMS", 5, {50, 60, 25, 5}, E50, FX_N_NONE, 0, 0, 0, 50, 0, KIT_M, -3},
     {"TAIKO", 5, {40, 70, 20, 5}, E50, FX_N_NONE, 0, 0, 0, 55, 0, KIT_M, -3},
     {"DEEP SKINS", 5, {35, 80, 30, 5}, E50, FX_N_NONE, 0, 0, 0, 60, 0, KIT_M, -5},
@@ -393,19 +418,29 @@ static const dk_preset_t PRESETS2[] = {
     {"808 DIRTY", 5, {45, 60, 60, 6}, E50, FX_N_TAPE, 35, 35, 45, 15, 0, KIT_M, -2},
     {"909 HARD", 5, {45, 45, 25, 7}, E50, FX_N_NONE, 0, 0, 0, 25, 0, KIT_M, -1},
     {"707 PUNCH", 5, {35, 25, 20, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 0, KIT_M, 3},
-    /* WORLD, block 3 */
+    /* engine 6, bank 3 */
     {"BLIZZARD", 6, {1, 90, 40}, E50, FX_N_NONE, 0, 0, 0, 20, 0, WORLD_M, -10},
     {"TAVERN FIRE", 6, {2, 70, 40}, E50, FX_N_NONE, 0, 0, 0, 15, 0, WORLD_M, 11},
     {"DRAGON STORM", 6, {8, 90, 35}, E50, FX_N_NONE, 0, 0, 0, 25, 0, WORLD_M, 10},
     {"MOUNTAIN", 6, {1, 65, 30}, E50, FX_N_NONE, 0, 0, 0, 20, 0, WORLD_M, -5},
-    /* WINDS, block 2 */
+    /* engine 7, bank 3 */
+    {"DRY THUMB", 7, {22, 8, 94}, {4, 16, 14}, FX_N_NONE, 0, 0, 0, 12, 0, KAL_M, 11},
+    {"AMBER SEED", 7, {74, 76, 46}, {8, 36, 32}, FX_N_NONE, 0, 0, 0, 38, 12, KAL_M, 0},
+    {"WATER TINES", 7, {98, 6, 6}, {12, 44, 56}, FX_N_NONE, 0, 0, 0, 62, 24, KAL_M, -1},
+    {"HOLLOW LOG", 7, {8, 100, 100}, {6, 26, 22}, FX_N_NONE, 0, 0, 0, 24, 4, KAL_M, 4},
+    /* engine 8, bank 1 */
+    {"POCKET PIPE", 8, {54, 0, 0, 0, 8}, {6, 24, 14}, FX_N_NONE, 0, 0, 0, 8, 0, WIND_M, 3},
+    {"ROUND OCARINA", 8, {12, 0, 8, 2, 18}, {12, 32, 22}, FX_N_NONE, 0, 0, 0, 22, 8, WIND_M, 4},
+    {"REED SPRITE", 8, {42, 4, 24, 3, 10}, {8, 26, 16}, FX_N_NONE, 0, 0, 0, 10, 4, WIND_M, 1},
+    {"PIXEL HORN", 8, {48, 0, 8, 8, 8}, {6, 24, 18}, FX_N_NONE, 0, 0, 0, 12, 8, WIND_M, 5},
+    /* engine 8, bank 2 */
     {"SYNTH BRASS", 8, {55, 5, 15, 8, 55}, E50, FX_N_CHORUS, 35, 30, 45, 40, 15, WIND_M, 7},
     {"BRASS STAB", 8, {65, 5, 10, 8, 25}, E50, FX_N_CHORUS, 30, 30, 40, 30, 15, WIND_M, 6},
     {"LEAD HORN", 8, {45, 10, 40, 8, 50}, E50, FX_N_CHORUS, 25, 25, 35, 45, 25, WIND_M, 7},
     {"NEON REED", 8, {45, 15, 40, 3, 40}, E50, FX_N_CHORUS, 30, 25, 35, 40, 25, WIND_M, 2},
     {"OBERHEIM", 8, {70, 0, 20, 8, 60}, E50, FX_N_CHORUS, 40, 30, 50, 40, 20, WIND_M, 7},
     {"NEON FLUTE", 8, {60, 20, 50, 0, 45}, E50, FX_N_CHORUS, 30, 25, 40, 50, 35, WIND_M, 2},
-    /* WINDS, block 3 */
+    /* engine 8, bank 3 */
     {"NORDIC HORN", 8, {30, 10, 20, 6, 70}, E50, FX_N_NONE, 0, 0, 0, 85, 20, WIND_M, 2},
     {"WAR HORN", 8, {25, 5, 15, 6, 85}, E50, FX_N_NONE, 0, 0, 0, 95, 25, WIND_M, 4},
     {"BATTLE BRASS", 8, {50, 10, 20, 7, 50}, E50, FX_N_NONE, 0, 0, 0, 80, 20, WIND_M, -4},
@@ -418,20 +453,20 @@ static const dk_preset_t PRESETS2[] = {
     {"PAN WOODS", 8, {45, 85, 30, 0, 50}, E50, FX_N_NONE, 0, 0, 0, 85, 25, WIND_M, -1},
     {"CARNYX", 8, {35, 10, 20, 8, 60}, E50, FX_N_NONE, 0, 0, 0, 85, 20, WIND_M, 3},
     {"HUNTER", 8, {45, 20, 30, 5, 50}, E50, FX_N_NONE, 0, 0, 0, 80, 20, WIND_M, -2},
-    /* SYNTH, block 1 */
-    {"PULSE LEAD", 9, {1, 80, 10, 0, 10, 25, 100, 25}, E50, FX_N_NONE, 0, 0, 0, 15, 20, SYN_M, 6},
-    {"SQUARE LEAD", 9, {3, 75, 10, 0, 0, 30, 100, 30}, E50, FX_N_NONE, 0, 0, 0, 15, 20, SYN_M, -3},
-    {"TRIANGLE", 9, {4, 90, 0, 0, 0, 20, 100, 15}, E50, FX_N_NONE, 0, 0, 0, 10, 15, SYN_M, 6},
-    {"12.5% PULSE", 9, {2, 85, 10, 0, 0, 24, 100, 20}, E50, FX_N_NONE, 0, 0, 0, 15, 20, SYN_M, 13},
-    {"CHIP ARP", 9, {1, 70, 10, 0, 10, 35, 30, 10}, E50, FX_N_NONE, 0, 0, 0, 10, 30, SYN_M, 16},
-    {"NOISE HAT", 9, {6, 70, 20, 40, 0, 50, 15, 0}, E50, FX_N_NONE, 0, 0, 0, 8, 0, SYN_M, 15},
-    {"C64 SAW", 9, {0, 60, 40, 25, 15, 50, 100, 40}, E50, FX_N_NONE, 0, 0, 0, 10, 20, SYN_M, 6},
-    {"GAME OVER", 9, {3, 50, 20, 45, 10, 45, 70, 60}, E50, FX_N_NONE, 0, 0, 0, 15, 25, SYN_M, 2},
-    {"POWER-UP", 9, {1, 85, 15, 60, 20, 25, 60, 20}, E50, FX_N_NONE, 0, 0, 0, 12, 30, SYN_M, 11},
-    {"BOSS ORGAN", 9, {3, 55, 30, 0, 40, 40, 100, 70}, E50, FX_N_NONE, 0, 0, 0, 15, 20, SYN_M, 0},
-    {"DUTY SWEEP", 9, {1, 65, 20, 20, 30, 35, 100, 80}, E50, FX_N_NONE, 0, 0, 0, 12, 25, SYN_M, 6},
-    {"SNES STRINGS", 9, {5, 40, 10, 10, 50, 35, 100, 30}, E50, FX_N_CHORUS, 25, 25, 35, 40, 20, SYN_M, 13},
-    /* SYNTH, block 2 */
+    /* engine 9, bank 1 */
+    {"SMALL SOUL", 9, {1, 94, 4, 0, 0, 0, 100, 38}, {9, 35, 22}, FX_N_NONE, 0, 0, 0, 8, 8, SYN_M, 7},
+    {"BONE PULSE", 9, {3, 100, 0, 0, 0, 0, 88, 0}, {5, 20, 9}, FX_N_NONE, 0, 0, 0, 0, 0, SYN_M, -2},
+    {"SAVE POINT", 9, {4, 86, 0, 0, 0, 0, 100, 28}, {38, 46, 60}, FX_N_NONE, 0, 0, 0, 42, 14, SYN_M, 4},
+    {"RED HEART", 9, {2, 100, 0, 0, 0, 0, 100, 12}, {7, 30, 18}, FX_N_NONE, 0, 0, 0, 4, 5, SYN_M, 13},
+    {"DUST ROAD", 9, {1, 96, 8, 16, 0, 0, 12, 24}, {4, 18, 9}, FX_N_NONE, 0, 0, 0, 8, 16, SYN_M, 19},
+    {"ODD FRIEND", 9, {6, 48, 18, 12, 0, 16, 8, 35}, {5, 12, 8}, FX_N_NONE, 0, 0, 0, 8, 0, SYN_M, 21},
+    {"GOLD HALL", 9, {0, 66, 16, 18, 4, 0, 78, 12}, {12, 36, 30}, FX_N_NONE, 0, 0, 0, 25, 12, SYN_M, 8},
+    {"BLUE GHOST", 9, {7, 88, 0, 0, 0, 0, 76, 60}, {48, 42, 70}, FX_N_NONE, 0, 0, 0, 62, 20, SYN_M, 2},
+    {"STAR ROOM", 9, {2, 88, 4, 32, 0, 0, 18, 68}, {5, 24, 26}, FX_N_NONE, 0, 0, 0, 32, 28, SYN_M, 23},
+    {"LAST HEART", 9, {3, 58, 16, 12, 0, 0, 62, 34}, {24, 46, 48}, FX_N_NONE, 0, 0, 0, 28, 12, SYN_M, 1},
+    {"SNOW TOWN", 9, {1, 84, 4, 0, 0, 0, 90, 88}, {12, 40, 34}, FX_N_NONE, 0, 0, 0, 22, 10, SYN_M, 6},
+    {"DEEP DREAM", 9, {4, 54, 0, 0, 0, 0, 100, 10}, {65, 50, 64}, FX_N_NONE, 0, 0, 0, 48, 8, SYN_M, 6},
+    /* engine 9, bank 2 */
     {"NIGHT DRIVE", 9, {0, 52, 25, 15, 35, 0, 100, 35}, E50, FX_N_CHORUS, 35, 30, 50, 55, 40, SYN_M, 6},
     {"OUTRUN LEAD", 9, {5, 70, 15, 10, 45, 0, 100, 40}, E50, FX_N_CHORUS, 40, 35, 55, 45, 40, SYN_M, 9},
     {"SUNSET SAW", 9, {0, 45, 20, 25, 30, 0, 100, 30}, E50, FX_N_CHORUS, 35, 25, 45, 60, 35, SYN_M, 6},
@@ -439,12 +474,12 @@ static const dk_preset_t PRESETS2[] = {
     {"MIAMI BRASS", 9, {5, 55, 20, 35, 50, 0, 70, 25}, E50, FX_N_CHORUS, 40, 30, 50, 40, 30, SYN_M, 13},
     {"RETRO SQUARE", 9, {3, 50, 25, 15, 10, 0, 80, 40}, E50, FX_N_CHORUS, 30, 25, 40, 40, 35, SYN_M, 0},
     {"LASER LEAD", 9, {0, 75, 35, 40, 25, 0, 100, 25}, E50, FX_N_NONE, 0, 0, 0, 35, 45, SYN_M, 5},
-    {"ARP SYNTH", 9, {0, 50, 40, 30, 20, 0, 20, 10}, E50, FX_N_CHORUS, 25, 30, 40, 35, 50, SYN_M, 13},
+    {"MOTOR ARP", 9, {0, 48, 24, 42, 8, 0, 16, 6}, {6, 24, 14}, FX_N_NONE, 0, 0, 0, 20, 24, SYN_M, 20},
     {"DREAM PAD", 9, {5, 35, 15, 10, 60, 0, 100, 35}, E50, FX_N_CHORUS, 45, 30, 55, 80, 30, SYN_M, 11},
     {"DARK DRIVE", 9, {0, 32, 45, 30, 35, 0, 100, 45}, E50, FX_N_NONE, 0, 0, 0, 50, 35, SYN_M, 5},
     {"VAPOR", 9, {4, 45, 10, 0, 30, 15, 100, 60}, E50, FX_N_CHORUS, 50, 40, 60, 70, 40, SYN_M, 6},
     {"MIDNIGHT", 9, {5, 42, 25, 20, 55, 0, 100, 50}, E50, FX_N_TAPE, 25, 25, 30, 75, 40, SYN_M, 6},
-    /* SYNTH, block 3 */
+    /* engine 9, bank 3 */
     {"DRONE SAW", 9, {0, 22, 30, 10, 50, 0, 100, 35}, E50, FX_N_NONE, 0, 0, 0, 90, 20, SYN_M, 14},
     {"DEEP SUPER", 9, {5, 25, 20, 0, 60, 0, 100, 30}, E50, FX_N_NONE, 0, 0, 0, 95, 20, SYN_M, 17},
     {"RUMBLE", 9, {0, 15, 45, 20, 40, 0, 100, 60}, E50, FX_N_NONE, 0, 0, 0, 90, 10, SYN_M, 19},
@@ -457,21 +492,25 @@ static const dk_preset_t PRESETS2[] = {
     {"TENSION", 9, {0, 28, 50, 30, 70, 0, 100, 80}, E50, FX_N_NONE, 0, 0, 0, 85, 25, SYN_M, 5},
     {"VOID", 9, {4, 20, 35, 0, 40, 0, 100, 55}, E50, FX_N_NONE, 0, 0, 0, 100, 35, SYN_M, 13},
     {"SOLEMN", 9, {5, 33, 15, 5, 50, 0, 100, 25}, E50, FX_N_NONE, 0, 0, 0, 100, 25, SYN_M, 10},
-    /* PLUCK, block 1 */
+    /* engine 10, bank 1 */
     {"CHIP HARP", 10, {1, 70, 30, 35, 30, 70}, E50, FX_N_NONE, 0, 0, 0, 15, 20, PLK_M, -5},
     {"8-BIT LUTE", 10, {0, 65, 25, 40, 30, 75}, E50, FX_N_NONE, 0, 0, 0, 10, 15, PLK_M, 0},
     {"PIXEL KOTO", 10, {4, 70, 30, 40, 25, 80}, E50, FX_N_NONE, 0, 0, 0, 10, 20, PLK_M, -1},
     {"GB NYLON", 10, {2, 60, 30, 45, 25, 65}, E50, FX_N_NONE, 0, 0, 0, 10, 15, PLK_M, -3},
     {"PLUCK BIT", 10, {3, 80, 20, 50, 20, 85}, E50, FX_N_NONE, 0, 0, 0, 8, 25, PLK_M, -2},
     {"ARCADE HARP", 10, {5, 75, 30, 45, 25, 60}, E50, FX_N_NONE, 0, 0, 0, 12, 20, PLK_M, -5},
-    /* PLUCK, block 2 */
+    /* engine 10, bank 2 */
     {"NEON HARP", 10, {1, 70, 50, 35, 30, 0}, E50, FX_N_CHORUS, 35, 30, 50, 55, 40, PLK_M, -10},
     {"SYNTH LUTE", 10, {0, 75, 40, 45, 30, 0}, E50, FX_N_CHORUS, 30, 30, 45, 45, 40, PLK_M, -5},
     {"DX PLUCK", 10, {3, 85, 35, 40, 25, 0}, E50, FX_N_CHORUS, 35, 30, 45, 40, 35, PLK_M, -5},
     {"KOTO WAVE", 10, {4, 65, 55, 35, 30, 0}, E50, FX_N_CHORUS, 30, 25, 40, 60, 45, PLK_M, -7},
     {"GLASS HARP", 10, {5, 75, 60, 45, 30, 0}, E50, FX_N_CHORUS, 35, 30, 50, 65, 45, PLK_M, -10},
     {"MIAMI NYLON", 10, {2, 70, 45, 40, 35, 0}, E50, FX_N_CHORUS, 35, 30, 45, 50, 40, PLK_M, -7},
-    /* PLUCK, block 3 */
+    {"NEON NYLON", 10, {2, 82, 26, 22, 72, 0}, {6, 24, 20}, FX_N_NONE, 0, 0, 0, 24, 14, PLK_M, -5},
+    {"STEEL MOTOR", 10, {3, 94, 18, 58, 18, 0}, {4, 18, 12}, FX_N_NONE, 0, 0, 0, 15, 18, PLK_M, 2},
+    {"KOTO SPARK", 10, {4, 88, 32, 12, 58, 0}, {5, 22, 22}, FX_N_NONE, 0, 0, 0, 28, 20, PLK_M, 0},
+    {"HARP AURA", 10, {1, 26, 86, 72, 12, 0}, {32, 52, 60}, FX_N_NONE, 0, 0, 0, 66, 16, PLK_M, -11},
+    /* engine 10, bank 3 */
     {"LUTE", 10, {0, 45, 55, 40, 55, 0}, E50, FX_N_NONE, 0, 0, 0, 65, 15, PLK_M, -12},
     {"BARD'S LUTE", 10, {0, 55, 45, 45, 50, 0}, E50, FX_N_NONE, 0, 0, 0, 55, 10, PLK_M, -9},
     {"HARP", 10, {1, 40, 70, 35, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 85, 25, PLK_M, -16},
@@ -484,17 +523,17 @@ static const dk_preset_t PRESETS2[] = {
     {"FOLK NYLON", 10, {2, 45, 55, 45, 50, 0}, E50, FX_N_NONE, 0, 0, 0, 60, 10, PLK_M, -13},
     {"DARK LUTE", 10, {0, 30, 60, 40, 60, 0}, E50, FX_N_NONE, 0, 0, 0, 80, 20, PLK_M, -15},
     {"MOURNING", 10, {1, 55, 90, 70, 45, 0}, E50, FX_N_NONE, 0, 0, 0, 100, 40, PLK_M, -20},
-    /* LEAD, block 1 */
-    {"NES LEAD", 11, {1, 100, 0, 0, 0, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 2},
-    {"PULSE 25 LEAD", 11, {2, 100, 0, 0, 0, 20, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 8},
-    {"CHIP VIBRATO", 11, {1, 100, 0, 0, 0, 60, 40}, E50, FX_N_NONE, 0, 0, 0, 12, 15, LD_M, 2},
-    {"TRI LEAD", 11, {4, 100, 0, 0, 0, 25, 0}, E50, FX_N_NONE, 0, 0, 0, 10, 15, LD_M, 12},
-    {"GB LEAD", 11, {1, 92, 0, 0, 35, 0, 0}, E50, FX_N_NONE, 0, 0, 0, 12, 20, LD_M, 4},
-    {"SNES LEAD", 11, {0, 80, 10, 20, 20, 30, 0}, E50, FX_N_NONE, 0, 0, 0, 15, 20, LD_M, 13},
-    {"ARCADE SLIDE", 11, {1, 100, 0, 0, 0, 20, 0}, E50, FX_N_GLIDE, 45, 0, 0, 12, 20, LD_M, 2},
-    {"BOSS THEME", 11, {2, 90, 10, 30, 30, 35, 40}, E50, FX_N_NONE, 0, 0, 0, 15, 20, LD_M, 9},
-    /* LEAD, block 2 */
-    {"OUTRUN SAW", 11, {0, 62, 25, 30, 35, 35, 25}, E50, FX_N_CHORUS, 35, 30, 45, 45, 35, LD_M, 13},
+    /* engine 11, bank 1 */
+    {"BONE SOLO", 11, {1, 100, 0, 0, 0, 28, 0}, {7, 35, 16}, FX_N_NONE, 0, 0, 0, 4, 6, LD_M, 3},
+    {"SOUL SOLO", 11, {2, 100, 0, 0, 0, 22, 0}, {9, 35, 20}, FX_N_NONE, 0, 0, 0, 8, 10, LD_M, 9},
+    {"GHOST CALL", 11, {4, 94, 0, 0, 0, 46, 0}, {32, 50, 54}, FX_N_NONE, 0, 0, 0, 40, 16, LD_M, 12},
+    {"TINY HERO", 11, {4, 100, 0, 0, 0, 8, 0}, {6, 28, 12}, FX_N_NONE, 0, 0, 0, 0, 0, LD_M, 12},
+    {"ODD VOICE", 11, {5, 56, 5, 18, 12, 18, 0}, {14, 34, 28}, FX_N_NONE, 0, 0, 0, 16, 10, LD_M, 12},
+    {"RED ALERT", 11, {0, 82, 12, 28, 0, 16, 12}, {6, 26, 14}, FX_N_NONE, 0, 0, 0, 8, 12, LD_M, 11},
+    {"MOON SLIDE", 11, {1, 90, 4, 0, 0, 32, 0}, {10, 38, 25}, FX_N_NONE, 0, 0, 0, 18, 16, LD_M, 3},
+    {"LAST BOSS", 11, {2, 82, 18, 32, 0, 28, 28}, {8, 40, 20}, FX_N_NONE, 0, 0, 0, 12, 12, LD_M, 8},
+    /* engine 11, bank 2 */
+    {"NEON SOLO", 11, {0, 60, 18, 26, 18, 28, 12}, {12, 40, 32}, FX_N_NONE, 0, 0, 0, 30, 22, LD_M, 13},
     {"NEON SUPERLEAD", 11, {3, 70, 15, 25, 60, 30, 0}, E50, FX_N_CHORUS, 35, 30, 45, 45, 35, LD_M, 14},
     {"SUNSET LEAD", 11, {0, 50, 20, 35, 25, 40, 0}, E50, FX_N_CHORUS, 35, 30, 45, 55, 35, LD_M, 14},
     {"SYNTH MONO", 11, {0, 55, 35, 45, 0, 25, 40}, E50, FX_N_NONE, 0, 0, 0, 35, 30, LD_M, 9},
@@ -502,7 +541,11 @@ static const dk_preset_t PRESETS2[] = {
     {"DX LEAD", 11, {5, 80, 0, 60, 50, 25, 0}, E50, FX_N_CHORUS, 35, 30, 45, 40, 35, LD_M, 9},
     {"VAPOR SOLO", 11, {3, 40, 10, 20, 50, 45, 20}, E50, FX_N_CHORUS, 35, 30, 45, 60, 35, LD_M, 16},
     {"CHROME", 11, {2, 68, 30, 35, 40, 30, 20}, E50, FX_N_CHORUS, 35, 30, 45, 40, 35, LD_M, 9},
-    /* LEAD, block 3 */
+    {"CHROME REED", 11, {2, 52, 16, 22, 0, 16, 0}, {12, 36, 26}, FX_N_NONE, 0, 0, 0, 22, 20, LD_M, 9},
+    {"SOFT COMET", 11, {4, 86, 0, 0, 0, 22, 0}, {22, 44, 36}, FX_N_NONE, 0, 0, 0, 38, 24, LD_M, 12},
+    {"FM CRYSTAL", 11, {5, 72, 0, 16, 8, 8, 0}, {6, 30, 28}, FX_N_NONE, 0, 0, 0, 30, 26, LD_M, 12},
+    {"STREET SUPER", 11, {3, 62, 10, 28, 32, 16, 8}, {8, 32, 22}, FX_N_NONE, 0, 0, 0, 18, 18, LD_M, 16},
+    /* engine 11, bank 3 */
     {"HORN LEAD", 11, {0, 40, 10, 50, 20, 35, 30}, {65, 50, 60}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 13},
     {"EPIC SUPERLEAD", 11, {3, 55, 15, 40, 70, 30, 25}, {60, 50, 60}, FX_N_NONE, 0, 0, 0, 85, 25, LD_M, 11},
     {"LONELY TRUMPET", 11, {0, 52, 20, 45, 10, 55, 0}, {55, 50, 60}, FX_N_NONE, 0, 0, 0, 80, 30, LD_M, 12},
@@ -514,18 +557,18 @@ static const dk_preset_t PRESETS2[] = {
 };
 /* presets an engine has in each block (AMBIENT LOFI is the first twelve: PRESETS) */
 static const uint8_t PCOUNT[12 * DK_NBLK] = {
-    12, 4, 4, 6,
-    12, 4, 8, 4,
-    12, 0, 8, 12,
-    12, 4, 6, 6,
-    12, 8, 12, 8,
+    12, 4, 8, 10,
+    12, 4, 8, 8,
+    12, 4, 8, 12,
+    12, 4, 6, 10,
+    12, 8, 12, 12,
     12, 12, 12, 12,
     12, 0, 0, 4,
-    12, 0, 0, 0,
-    12, 0, 6, 12,
+    12, 0, 0, 4,
+    12, 4, 6, 12,
     12, 12, 12, 12,
-    12, 6, 6, 12,
-    12, 8, 8, 8,
+    12, 6, 10, 12,
+    12, 8, 12, 8,
 };
 static const char *const BLOCK_NAME[DK_NBLK] = {"AMBIENT LOFI", "8-16 BIT", "SYNTHWAVE", "CINEMATIC"};
 
@@ -568,7 +611,7 @@ static const dk_mood_t MOODS[8] = {
 
 /* the tracks by default: PIANO KEYS PAD BASS DRUMS NATURE (the piano first: it is played the most) */
 static const uint8_t DEF_ENG[DK_NTRACK] = {0, 1, 2, 4, 11, 5}, DEF_PRESET[DK_NTRACK] = {0, 0, 0, 0, 0, 0},
-                     DEF_SEQ[DK_NTRACK] = {SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP},
+                     DEF_SEQ[DK_NTRACK] = {SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_STEP, SQ_GROOVE},
                      DEF_ROLE[DK_NTRACK] = {R_KEYS, R_ARP, R_PAD, R_BASS, R_LEAD, R_DRUM};
 /* the KEYS track's twelve: electric pianos, bells, kalimbas (HOME + white 1-12, the PRESET knob) */
 static const uint8_t KEYS_SET[DK_NFACT][2] = {{1, 0}, {1, 1}, {1, 3}, {1, 9},  {3, 0}, {3, 1},
@@ -590,9 +633,10 @@ static void tape_init(void)
     pad_tables();
 }
 
+#include "browse_mask.h"
 const dk_tape_t TAPE = {
     "OVERWORLD", tape_init, ENGINES, 12, PRESETS, TAPE_FX, 9, STYLE_NAME, NSTYLE, 0, PROGS, 5, STYLE_CHORD,
     STYLE_BARS, STYLE_BREATH, BORROW_MAJ, BORROW_MIN, 0, PERFORM, PERFORM_ACT, MOODS, 8,
     BIOME_NAME, tape_master, tape_demo, METRO_WOOD, 25, DEF_ENG, DEF_PRESET, DEF_SEQ, DEF_ROLE, KEYS_SET, R_ARP,
-    ATMO, 6, PRESETS2, PCOUNT, BLOCK_NAME, GROOVES, 15, 10, FILLS, &GROOVE_END,
+    ATMO, 6, PRESETS2, PCOUNT, BLOCK_NAME, GROOVES, 15, 10, FILLS, &GROOVE_END, BROWSE_MASK,
 };

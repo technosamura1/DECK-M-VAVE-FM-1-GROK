@@ -867,3 +867,51 @@ LATCH: та же клавиша ещё раз останавливает (шап
 Все аварийные прекращения должны оставлять краткую выходную коррекцию (voice_retire), без повторного рендера тяжёлого голоса.
 Общая dk_tanht[513] находится в обычной RAM: перенос в pool нарушает минимум запаса памяти.
 Полный старый звуковой набор имеет воспроизводимые предупреждения automation WORLD и fxlong: не объявлять ALL OK без оговорки.
+
+## 2026-11-01 — Three Worlds, предпрослушивание
+18 заводских слотов переработаны под ambient / synthwave / 8bit; индексы и формат проекта сохранены.
+См. docs/THREE_WORLDS.md и out/style-presets.json. out/listen.html теперь коллекция из 18 звуков,
+трёх шестидорожечных демо и сравнений с прежними настройками; генератор tools/make_style_listen.py.
+Рендер: deck_test styles out/styles (tests/host/style_preview.h). Проверка: tools/check_styles.py.
+18 выбранных пресетов и 21 новых WAV проходят проверки; все три overdub-регрессии проходят.
+Полный набор 380 WAV оставляет предупреждение у неизменённого SYNTH MONO; воспроизведено на прежних пресетах.
+Прошивка out/deck-three-worlds-preview.fwsc, отдельна от опубликованной overdub-fix. Не прошивалась и не публиковалась.
+Пакет прослушивания out/deck-three-worlds-listen.zip содержит страницу и 24 WAV (включая 3 прежних демо).
+
+## 2026-11-01 — REC FX в полной прошивке
+См. docs/REC_FX_2026-11-01.md. Кассету не переделывали. DEF_SEQ барабанов — GROOVE.
+dk_snd_t остаётся 20 байт: used bit7 означает снимок FX, low6 хранит trim+32; rsv — FX ID,
+rsv2 — amount/A/B/rev/echo. Legacy used=1 остаётся старым режимом. Считать used через !!, не суммой байта.
+Рендер группирует живые/зафиксированные тембры; независимые FX имеют максимум DK_FROZEN_FX_MAX=16 буферов в обычной RAM.
+LOCK TAKE включается при загрузке настроек, его можно отключить вручную на сессию.
+Новый тест tests/host/layer_fx_regression.c; режимы a/b сравнивают хеш записанного звука при смене живого тембра.
+Сборка out/deck-rec-fx.fwsc и out/deck-rec-fx.zip. На железе не проверена. Память RAM 83356, pool 333372.
+
+## SMALL WORLDS
+26 игровых тембров в банке 8BIT заменены на новые настройки и названия в духе Undertale.
+См. docs/SMALL_WORLDS.md, out/underground-presets.json. Страница out/listen.html включает новые 26 WAV и два собственных демо.
+Рендер демо: deck_test underground (tests/host/underground_preview.h). Все 26 проходят sound_check и dup_check (0 пар).
+Финальная полная прошивка out/deck-small-worlds.fwsc / out/deck-small-worlds.zip; образ 347560, RAM 83356, pool 333372.
+Старые артефакты rec-fx и Three Worlds сохранены как предыдущие сборки. Новая подборка на железе не проверялась.
+
+## EXPANDED PALETTE — 04.11.2026
+Пользователь выбрал смешанное расширение ambient/synthwave/игровые/акустические. Добавлено 40 слотов, теперь 420.
+Старые пресеты/ID сохранены; расширены PCOUNT и соответствующие группы PRESETS2. Новые тембры не добавляют RAM.
+См. docs/EXPANDED_PALETTE.md и out/palette-presets.json. REC и его UI этой работой не изменялись.
+40 проходят sound_check, dup_check даёт 0 пар; четыре шестидорожечных демо проходят проверки пиков/DC/щелчков/хвостов.
+Полный прогон 420 оставляет прежние предупреждения BROKEN (уровень) и SYNTH MONO (щелчок), не объявлять весь набор ALL CLEAN.
+Тест layer_fx проходит, хеш старого дубля одинаков e9c9154f при смене текущего звука.
+Команда deck_test palette рендерит четыре новых сочетания (style_preview.h, preview_expanded_palette).
+Основная новая сборка out/deck-expanded-palette.fwsc / .zip; страница out/listen.html и out/expanded-palette-listen.zip.
+Образ 349256, RAM 83356, pool 333372. На физическом FM-1 не проверена, GitHub-релиз не публиковался.
+
+## Сокращение похожих пресетов — 04.11.2026
+В выборе 354 тембра: 66 близких вариантов исключены, 60 из старых наборов и 6 из Expanded Palette.
+См. docs/CURATED_PRESETS.md, out/preset-curation.json; маска tapes/overworld/browse_mask.h.
+Raw PCOUNT/preset_id/preset_of оставлены неизменными для 420 ID и старых проектов.
+Для UI использовать preset_visible_count/id/index; не заменять raw lookup в загрузке или звуковом стенде!
+Меню SOUNDS, PRESET, HOME+white, смена банка/инструмента используют компактные индексы. Архивный ID может иметь visible_index=-1.
+Номера карточек listen.html пересчитываются по маскам, карточки скрытых пресетов не показываются.
+Тесты curation_regression и curated.dk проходят, сценарии record/recmulti/layers проходят, FX hash e9c9154f неизменен.
+Основная сборка out/deck-curated.fwsc / out/deck-curated.zip; страница также в out/curated-listen.zip.
+Образ 349544, RAM 83356, pool 333372. Параметры тембров, DSP и REC не менялись. На устройстве не проверена.

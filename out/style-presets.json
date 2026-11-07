@@ -1,0 +1,146 @@
+[
+  {
+    "style": "ambient",
+    "engine": 0,
+    "bank": 0,
+    "slot": 0,
+    "name": "MOSS PIANO",
+    "role": "мягкое пиано"
+  },
+  {
+    "style": "ambient",
+    "engine": 3,
+    "bank": 0,
+    "slot": 0,
+    "name": "DEW BELL",
+    "role": "стеклянные капли"
+  },
+  {
+    "style": "ambient",
+    "engine": 2,
+    "bank": 0,
+    "slot": 2,
+    "name": "HORIZON PAD",
+    "role": "тёплый фон"
+  },
+  {
+    "style": "ambient",
+    "engine": 4,
+    "bank": 0,
+    "slot": 0,
+    "name": "EARTH SUB",
+    "role": "мягкий фундамент"
+  },
+  {
+    "style": "ambient",
+    "engine": 5,
+    "bank": 0,
+    "slot": 2,
+    "name": "PAPER KIT",
+    "role": "тихая перкуссия"
+  },
+  {
+    "style": "ambient",
+    "engine": 7,
+    "bank": 0,
+    "slot": 0,
+    "name": "SEED PLUCK",
+    "role": "деревянный щипок"
+  },
+  {
+    "style": "synthwave",
+    "engine": 1,
+    "bank": 2,
+    "slot": 0,
+    "name": "NEON DX",
+    "role": "короткие FM-аккорды"
+  },
+  {
+    "style": "synthwave",
+    "engine": 9,
+    "bank": 2,
+    "slot": 7,
+    "name": "MOTOR ARP",
+    "role": "чёткое арпеджио"
+  },
+  {
+    "style": "synthwave",
+    "engine": 2,
+    "bank": 2,
+    "slot": 0,
+    "name": "SUNSET PAD",
+    "role": "широкие аккорды"
+  },
+  {
+    "style": "synthwave",
+    "engine": 4,
+    "bank": 2,
+    "slot": 0,
+    "name": "MOTOR BASS",
+    "role": "упругие восьмые"
+  },
+  {
+    "style": "synthwave",
+    "engine": 5,
+    "bank": 2,
+    "slot": 0,
+    "name": "NIGHT KIT",
+    "role": "электронные ударные"
+  },
+  {
+    "style": "synthwave",
+    "engine": 11,
+    "bank": 2,
+    "slot": 0,
+    "name": "NEON SOLO",
+    "role": "лид над миксом"
+  },
+  {
+    "style": "8bit",
+    "engine": 9,
+    "bank": 1,
+    "slot": 1,
+    "name": "BONE PULSE",
+    "role": "меандр для аккордов"
+  },
+  {
+    "style": "8bit",
+    "engine": 9,
+    "bank": 1,
+    "slot": 4,
+    "name": "DUST ROAD",
+    "role": "быстрое пульсовое арпеджио"
+  },
+  {
+    "style": "8bit",
+    "engine": 9,
+    "bank": 1,
+    "slot": 2,
+    "name": "SAVE POINT",
+    "role": "мягкий треугольник"
+  },
+  {
+    "style": "8bit",
+    "engine": 4,
+    "bank": 1,
+    "slot": 0,
+    "name": "DUST BASS",
+    "role": "сухой треугольный бас"
+  },
+  {
+    "style": "8bit",
+    "engine": 5,
+    "bank": 1,
+    "slot": 0,
+    "name": "POCKET KIT",
+    "role": "короткие шумовые ударные"
+  },
+  {
+    "style": "8bit",
+    "engine": 11,
+    "bank": 1,
+    "slot": 1,
+    "name": "SOUL SOLO",
+    "role": "узкий пульсовый лид"
+  }
+]

@@ -525,7 +525,7 @@ static int snd_in_use(int t, int id)
 static int snd_same(const dk_snd_t *a, const dk_snd_t *b)
 {
     int i;
-    if (a->eng != b->eng || a->drift != b->drift)
+    if (a->eng != b->eng || a->drift != b->drift || a->used != b->used || a->rsv != b->rsv)
         return 0;
     for (i = 0; i < DK_NP; i++)
         if (a->p[i] != b->p[i])
@@ -533,6 +533,8 @@ static int snd_same(const dk_snd_t *a, const dk_snd_t *b)
     for (i = 0; i < 3; i++)
         if (a->env[i] != b->env[i])
             return 0;
+    for (i = 0; i < 5; i++)
+        if (a->rsv2[i] != b->rsv2[i]) return 0;
     return 1;
 }
 static void snd_capture(int t, dk_snd_t *s)   /* the track's sound now */
@@ -542,7 +544,16 @@ static void snd_capture(int t, dk_snd_t *s)   /* the track's sound now */
     int i;
     for (i = 0; i < (int)sizeof *s; i++)
         ((uint8_t *)s)[i] = 0;
-    s->used = 1;
+    s->used = (uint8_t)(0x80 | (k->trim + 32));
+    s->rsv = k->fx;
+    s->rsv2[0] = (uint8_t)dk_param_static(t, T_FXAMT);
+    s->rsv2[1] = (uint8_t)dk_param_static(t, T_FXA);
+    s->rsv2[2] = (uint8_t)dk_param_static(t, T_FXB);
+    s->rsv2[3] = (uint8_t)dk_param_static(t, T_REV);
+    s->rsv2[4] = (uint8_t)dk_param_static(t, T_ECHO);
+    if(DK_BYP(t)&DK_BYP_FX)s->rsv=0;
+    if(DK_BYP(t)&DK_BYP_REV)s->rsv2[3]=0;
+    if(DK_BYP(t)&DK_BYP_ECHO)s->rsv2[4]=0;
     s->eng = (uint8_t)(k->eng % TAPE.neng);
     s->drift = k->drift;
     for (i = 0; i < DK_NP; i++)
@@ -556,6 +567,15 @@ static void snd_capture(int t, dk_snd_t *s)   /* the track's sound now */
 static int snd_make(int t, const dk_snd_t *s)
 {
     int i;
+    if((s->used&0x80) && s->rsv) {
+        int tr,id,total=0;
+        for(tr=0;tr<DK_NTRACK;tr++)for(id=0;id<DK_NSND;id++) {
+            const dk_snd_t *old=&dk_song.snd[tr][id];
+            if(tr==t && old->used && snd_same(old,s))return id+1;
+            if((old->used&0x80) && old->rsv && snd_in_use(tr,id+1))total++;
+        }
+        if(total>=DK_FROZEN_FX_MAX){song_layers_full=2;return 0;}
+    }
     for (i = 0; i < DK_NSND; i++)
         if (dk_song.snd[t][i].used && snd_same(&dk_song.snd[t][i], s))
             return i + 1;
@@ -596,7 +616,7 @@ static int take_freeze(int clip, int pass)
     snd_capture(t, &s);
     id = snd_make(t, &s);
     if (!id) {
-        song_layers_full = 1;
+        if(!song_layers_full)song_layers_full = 1;
         return 0;
     }
     for (i = 0; i < c->n; i++) {
@@ -604,6 +624,7 @@ static int take_freeze(int clip, int pass)
         if (!(e->fl & EV_MOTION) && DK_L_TAKE(e->layer) == (unsigned)take && !DK_L_SND(e->layer))
             e->layer = DK_L_MAKE(take, id);
     }
+    dk_freeze_voices(t,take,id);
     song_edits++;
     return n;
 }
@@ -1378,6 +1399,25 @@ int preset_count(int eng, int blk)       /* the presets of an engine in a block 
     if (blk < 0 || blk >= DK_NBLK || eng < 0 || eng >= TAPE.neng)
         return 0;
     return TAPE.pcount ? TAPE.pcount[eng * DK_NBLK + blk] : (blk ? 0 : DK_NFACT);
+}
+int preset_visible_count(int eng,int blk)
+{
+    int i,n=0,count=preset_count(eng,blk);
+    for(i=0;i<count;i++)if(!TAPE.browse_mask || (TAPE.browse_mask[eng*DK_NBLK+blk]&(1u<<i)))n++;
+    return n;
+}
+int preset_visible_id(int eng,int blk,int index)
+{
+    int i,count=preset_count(eng,blk);
+    for(i=0;i<count;i++)if(!TAPE.browse_mask || (TAPE.browse_mask[eng*DK_NBLK+blk]&(1u<<i)))
+        if(index--==0)return preset_id(blk,i);
+    return -1;
+}
+int preset_visible_index(int eng,int id)
+{
+    int b=preset_block(id),i,n=preset_visible_count(eng,b);
+    for(i=0;i<n;i++)if(preset_visible_id(eng,b,i)==id)return i;
+    return -1; /* an old project can still select a retired raw ID */
 }
 const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp)
 {

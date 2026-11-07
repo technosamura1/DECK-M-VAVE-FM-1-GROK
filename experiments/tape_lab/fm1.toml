@@ -1,0 +1,13 @@
+name = "tape-lab"
+id_prefix = "FM-1_65"
+usb_manufacturer = "DECK"
+usb_product = "DECK TAPE LAB"
+ble = false
+usb_audio_in = false
+usb_audio_out = false
+o2 = ["loop.c"]
+words = "words.tsv"
+tagline = "RAM audio loop experiment"
+repo = ""
+licence = "MPL-2.0"
+credits = "DECK / fm1-base / felucca-bsp"

@@ -400,10 +400,17 @@ static const float *voice_params(const voice_t *v, float *b)
     b[PX_DEC] = (float)s->env[1];
     b[PX_REL] = (float)s->env[2];
     b[PX_DRIFT] = (float)s->drift;
-    b[PX_GLIDE] = glide_of(v->trk);          /* the effect is the track's, not the frozen sound's */
+    b[PX_GLIDE] = (s->used&0x80) ? (fx_is_glide(s->rsv) ? (float)s->rsv2[0] : 0.0f) : glide_of(v->trk);          /* the effect is the track's, not the frozen sound's */
     return b;
 }
 
+void dk_freeze_voices(int track,int take,int sound) {
+    int i;
+    for(i=0;i<DK_NVOICE;i++)
+        if(vc[i].on && vc[i].trk==track && !vc[i].snd &&
+           ((vc[i].src && vc_take[i]==take) || (!vc[i].src && !vc[i].held)))
+            vc[i].snd=(uint8_t)sound;
+}
 static void voice_release(voice_t *v)
 {
     float pb[PX_N];
@@ -1071,13 +1078,42 @@ static inline float metro_step(void)
 }
 
 /* -------------------------------------------------------------- the tracks --- */
-static dk_fxst_t fxs[DK_NTRACK] DK_POOL;
-static uint8_t fx_prev[DK_NTRACK];
-static float fx_byp[DK_NTRACK];            /* the insert's bypass, faded: 0 in, 1 out */
+#define FX_GROUPS (DK_NTRACK * (DK_NSND + 1))
+#define FROZEN_FX_SLOTS DK_FROZEN_FX_MAX
+static dk_fxst_t fxs[FX_GROUPS];
+static uint8_t fx_prev[FX_GROUPS];
+static float fx_byp[FX_GROUPS];
 static int16_t fxbuf[DK_NTRACK][DK_FXBUF] DK_POOL;
-static float bus_st[DK_NTRACK][16];
-static float g_cur[DK_NTRACK][2];             /* the gain now (left, right): glides to the knob */
-static int32_t tail[DK_NTRACK];               /* samples the effect still rings after the last voice */
+static int16_t frozen_fxbuf[FROZEN_FX_SLOTS][DK_FXBUF];
+static int frozen_owner[FROZEN_FX_SLOTS];
+static float bus_st[FX_GROUPS][16];
+static float g_cur[FX_GROUPS][2];
+static int32_t tail[FX_GROUPS];
+static int voice_group(const voice_t *v) {
+    const dk_snd_t *s = v->snd ? snd_get(v->trk,v->snd) : 0;
+    return s && (s->used & 0x80) ? v->snd : 0;
+}
+static int frozen_buffer(int group) {
+    int i,j;
+    for(i=0;i<FROZEN_FX_SLOTS;i++) if(frozen_owner[i]==group) return i;
+    for(i=0;i<FROZEN_FX_SLOTS;i++) {
+        int owner=frozen_owner[i],busy=0;
+        if(owner>=0) {
+            if(tail[owner]>0) continue;
+            for(j=0;j<DK_NVOICE;j++) if(vc[j].on && vc[j].trk*(DK_NSND+1)+voice_group(&vc[j])==owner) busy=1;
+            for(j=0;j<NFADE;j++) if(fv_g[j]>0 && fv[j].trk*(DK_NSND+1)+voice_group(&fv[j])==owner) busy=1;
+        }
+        if(busy)continue;
+        if(owner>=0)fxs[owner].buf=0;
+        frozen_owner[i]=group;
+        for(j=0;j<DK_FXBUF;j++)frozen_fxbuf[i][j]=0;
+        for(j=0;j<28;j++)fxs[group].f[j]=0;
+        fxs[group].w=0;
+        fxs[group].buf=frozen_fxbuf[i];
+        return i;
+    }
+    return -1;
+}
 static uint8_t t_soloed, drop_mask, stems_solo = 0xFF, perf_mute_drums, perf_echo;
 static float master_lp_k = 1.0f, master_lp_l, master_lp_r, master_lp_l2, master_lp_r2;
 static float mixl[DK_BLK], mixr[DK_BLK], rsend[DK_BLK], esend[DK_BLK], tl[DK_BLK], tr[DK_BLK];
@@ -1150,35 +1186,53 @@ static void lane_crush(voice_t *v, float *l, float *r, int n, int amt)
 
 static void render_tracks(uint32_t n)
 {
-    int t, i;
+    int t, i, sg, gi;
+    uint8_t active[DK_NTRACK]={0};
     uint32_t j;
+    for(i=0;i<DK_NVOICE;i++)if(vc[i].on)active[vc[i].trk]|=(uint8_t)(1u<<voice_group(&vc[i]));
+    for(i=0;i<NFADE;i++)if(fv_g[i]>0)active[fv[i].trk]|=(uint8_t)(1u<<voice_group(&fv[i]));
+    for(t=0;t<DK_NTRACK;t++)if(fm_fabsf(retire_l[t])+fm_fabsf(retire_r[t])>1e-7f)active[t]|=1;
     t_soloed = 0;
     for (t = 0; t < DK_NTRACK; t++)
         t_soloed |= dk_song.trk[t].solo;
     for (t = 0; t < DK_NTRACK; t++) {
-        const dk_engine_t *e = dk_engine(t);
-        const dk_track_t *k = &dk_song.trk[t];
+      float track_peak=0;
+      for(sg=0;sg<=DK_NSND;sg++) {
+        dk_track_t saved;
+        const dk_snd_t *sound=sg?snd_get(t,sg):0;
+        const dk_track_t *k=&dk_song.trk[t];
+        const dk_engine_t *e;
+        float group_params[PX_N];
+        const float *bus_params=tp[t];
+        gi=t*(DK_NSND+1)+sg;
+        if(!(active[t]&(1u<<sg)) && tail[gi]<=0)continue;
+        if(sg && (!sound || !(sound->used&0x80)))continue;
+        if(sound) {
+            voice_t temp={0};temp.trk=(uint8_t)t;temp.snd=(uint8_t)sg;
+            saved=*k;saved.eng=sound->eng;saved.fx=sound->rsv;
+            saved.trim=(int8_t)((sound->used&63)-32);k=&saved;
+            bus_params=voice_params(&temp,group_params);
+        }
+        e=TAPE.eng[k->eng % TAPE.neng];
         int any = 0, fx = k->fx;
-        unsigned byp = DK_BYP(t);              /* SOUND's chain: the stages switched off (FX held + WHITE 1-4) */
-        float gt, gl, gr, dl_, dr_, pk = 0.0f, rv = (byp & DK_BYP_REV) ? 0.0f : t_rev[t],
-              ec = ((byp & DK_BYP_ECHO) ? 0.0f : t_echo[t]) + (perf_echo ? 0.9f : 0.0f);
+        unsigned byp = sound ? 0 : DK_BYP(t);              /* SOUND's chain: the stages switched off (FX held + WHITE 1-4) */
+        float gt, gl, gr, dl_, dr_, pk = 0.0f, rv = (byp & DK_BYP_REV) ? 0.0f : (sound ? sound->rsv2[3]*0.01f : t_rev[t]),
+              ec = ((byp & DK_BYP_ECHO) ? 0.0f : (sound ? sound->rsv2[4]*0.01f : t_echo[t])) + (perf_echo ? 0.9f : 0.0f);
         for (i = 0; i < DK_NVOICE; i++)
-            if (vc[i].on && vc[i].trk == t) {
+            if (vc[i].on && vc[i].trk == t && voice_group(&vc[i]) == sg) {
                 any = 1;
                 break;
             }
         for (i = 0; i < NFADE; i++)
-            any |= fv_g[i] > 0.0f && fv[i].trk == t;
-        any |= fm_fabsf(retire_l[t]) + fm_fabsf(retire_r[t]) > 1e-7f;
+            any |= fv_g[i] > 0.0f && fv[i].trk == t && voice_group(&fv[i]) == sg;
+        any |= sg==0 && fm_fabsf(retire_l[t]) + fm_fabsf(retire_r[t]) > 1e-7f;
         if (any)                               /* an effect (or the kit's grain) rings on a while; else nothing to do */
-            tail[t] = fx > 0 ? (int32_t)(1.5f * DK_SR) : e->bus ? (int32_t)(0.3f * DK_SR) : 0;
+            tail[gi] = fx > 0 ? (int32_t)(1.5f * DK_SR) : e->bus ? (int32_t)(0.3f * DK_SR) : 0;
         if (any)
             ;
-        else if (tail[t] > 0)
-            tail[t] -= (int32_t)n;
+        else if (tail[gi] > 0)
+            tail[gi] -= (int32_t)n;
         else {
-            lvl_acc[t] *= 0.9f;
-            dk_level[t] = lvl_acc[t];
             continue;
         }
         for (j = 0; j < n; j++)
@@ -1193,7 +1247,7 @@ static void render_tracks(uint32_t n)
             const dk_engine_t *ve;
             int i_alive;
             float vpb[PX_N], before_l, before_r;
-            if (!v->on || v->trk != t)
+            if (!v->on || v->trk != t || voice_group(v) != sg)
                 continue;
             if (!v->snd && v->eng != k->eng) { /* its track took another engine: let it go (a frozen sound's voice stays) */
                 if (v->held)
@@ -1261,7 +1315,7 @@ static void render_tracks(uint32_t n)
             float fpb[PX_N];
             float g = fv_g[i], fade_time, dg;
             const dk_engine_t *fe;
-            if (g <= 0.0f || fv[i].trk != t)
+            if (g <= 0.0f || fv[i].trk != t || voice_group(&fv[i]) != sg)
                 continue;
             fe = TAPE.eng[fv[i].eng];
             /* a stolen lead or bass is still the note: 20 ms, not the 6 ms click-fade.
@@ -1277,7 +1331,7 @@ static void render_tracks(uint32_t n)
             }
             fv_g[i] = g;
         }
-        if (retire_l[t] != 0.0f || retire_r[t] != 0.0f) {
+        if (sg==0 && (retire_l[t] != 0.0f || retire_r[t] != 0.0f)) {
             float l = retire_l[t], r = retire_r[t];
             for (j = 0; j < n; j++) {
                 l *= 0.97f; r *= 0.97f;
@@ -1288,35 +1342,39 @@ static void render_tracks(uint32_t n)
         }
         PROF_T(1);
         if (e->bus)
-            e->bus(bus_st[t], tl, tr, (int)n, tp[t]);
+            e->bus(bus_st[gi], tl, tr, (int)n, bus_params);
         PROF_T(2);
         if (fx > 0 && fx < TAPE.nfx && TAPE.fx[fx]->process) {
             /* the insert, with its bypass: a fade between the dry and the wet over the block (no click), nothing
              * processed once fully bypassed */
             float bt = (byp & DK_BYP_FX) ? 1.0f : 0.0f;
-            if (bt < 1.0f || fx_byp[t] < 1.0f) {
+            if (bt < 1.0f || fx_byp[gi] < 1.0f) {
                 static float dl2[DK_BLK], dr2[DK_BLK];
-                int fade = fx_byp[t] != bt;
+                int fade = fx_byp[gi] != bt;
                 if (fade)
                     for (j = 0; j < n; j++) {
                         dl2[j] = tl[j];
                         dr2[j] = tr[j];
                     }
-                if (fx_prev[t] != (uint8_t)fx) {          /* another effect than last time: its state is not this one's (the
+                if(sound && !fxs[gi].buf && frozen_buffer(gi)<0) {
+                    /* Admission control in snd_make prevents this for new recordings. */
+                    dk_shed();continue;
+                }
+                if (fx_prev[gi] != (uint8_t)fx) {          /* another effect than last time: its state is not this one's (the
                                                           * LOFI's held samples are not the TAPE's wow phases: they made the
                                                           * delay jump about) */
                     for (j = 0; j < 28; j++)
-                        fxs[t].f[j] = 0.0f;
-                    fx_prev[t] = (uint8_t)fx;
+                        fxs[gi].f[j] = 0.0f;
+                    fx_prev[gi] = (uint8_t)fx;
                 }
-                TAPE.fx[fx]->process(&fxs[t], tl, tr, (int)n, t_fxamt[t], t_fxa[t], t_fxb[t]);
+                TAPE.fx[fx]->process(&fxs[gi], tl, tr, (int)n, sound ? sound->rsv2[0]*0.01f : t_fxamt[t], sound ? sound->rsv2[1]*0.01f : t_fxa[t], sound ? sound->rsv2[2]*0.01f : t_fxb[t]);
                 if (fade) {
-                    float g = fx_byp[t], dg = (bt - g) / (float)n;
+                    float g = fx_byp[gi], dg = (bt - g) / (float)n;
                     for (j = 0; j < n; j++, g += dg) {
                         tl[j] += (dl2[j] - tl[j]) * g;
                         tr[j] += (dr2[j] - tr[j]) * g;
                     }
-                    fx_byp[t] = bt;
+                    fx_byp[gi] = bt;
                 }
             }
         }
@@ -1330,27 +1388,28 @@ static void render_tracks(uint32_t n)
             gt *= 1.0f - (float)dk_song.sidechain * 0.01f * sc_env * 0.8f;
         gl = gt * fm_minf(1.0f, 1.0f - t_pan[t]);
         gr = gt * fm_minf(1.0f, 1.0f + t_pan[t]);
-        dl_ = (gl - g_cur[t][0]) / (float)n;
-        dr_ = (gr - g_cur[t][1]) / (float)n;
+        dl_ = (gl - g_cur[gi][0]) / (float)n;
+        dr_ = (gr - g_cur[gi][1]) / (float)n;
         for (j = 0; j < n; j++) {
             float l, r;
-            g_cur[t][0] += dl_;
-            g_cur[t][1] += dr_;
-            l = tl[j] * g_cur[t][0];
-            r = tr[j] * g_cur[t][1];
+            g_cur[gi][0] += dl_;
+            g_cur[gi][1] += dr_;
+            l = tl[j] * g_cur[gi][0];
+            r = tr[j] * g_cur[gi][1];
             mixl[j] += l;
             mixr[j] += r;
             rsend[j] += (l + r) * rv;
             esend[j] += (l + r) * ec;
             if (any_x) {                       /* the drum sounds' own sends, at the track's level */
-                float g = (g_cur[t][0] + g_cur[t][1]) * 0.5f;
+                float g = (g_cur[gi][0] + g_cur[gi][1]) * 0.5f;
                 rsend[j] += (byp & DK_BYP_REV) ? 0.0f : xrev[j] * g;
                 esend[j] += (byp & DK_BYP_ECHO) ? 0.0f : xecho[j] * g;
             }
             pk = fm_maxf(pk, fm_fabsf(l) + fm_fabsf(r));
         }
-        lvl_acc[t] = fm_maxf(pk * 0.5f, lvl_acc[t] * 0.94f);
-        dk_level[t] = lvl_acc[t];
+        track_peak += pk*0.5f;
+      }
+      lvl_acc[t]=fm_maxf(track_peak,lvl_acc[t]*0.94f);dk_level[t]=lvl_acc[t];
     }
 }
 
@@ -1587,14 +1646,20 @@ void dk_init(void)
         dk_tanht[i] = fm_tanhf((float)i * (1.0f / 128.0f));
     dk_ctx.tune = 1.0f;
     dk_ctx.wow = 1.0f;
+    for(i=0;i<FX_GROUPS;i++) {
+        int z;fxs[i]=(dk_fxst_t){0};fx_prev[i]=0;fx_byp[i]=0;tail[i]=0;
+        g_cur[i][0]=g_cur[i][1]=0;
+        for(z=0;z<16;z++)bus_st[i][z]=0;
+    }
+    for(i=0;i<FROZEN_FX_SLOTS;i++)frozen_owner[i]=-1;
     plate_init();
     for (i = 0; i < ECHO_N; i++)
         echo_buf[i] = 0;
     for (t = 0; t < DK_NTRACK; t++) {
-        fxs[t].buf = fxbuf[t];
-        fxs[t].w = 0;
+        fxs[t*(DK_NSND+1)].buf = fxbuf[t];
+        fxs[t*(DK_NSND+1)].w = 0;
         for (i = 0; i < 28; i++)
-            fxs[t].f[i] = 0.0f;
+            fxs[t*(DK_NSND+1)].f[i] = 0.0f;
         fx_prev[t] = 0;
         for (i = 0; i < T_N; i++)
             mot[t][i] = -1;

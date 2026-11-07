@@ -2135,7 +2135,7 @@ static void draw_sounds(void)
             hline(x, y + 16, w, W_LINE);
             continue;
         }
-        id = sh >= DK_NBLK ? pb_user_id(e, i) : preset_id(sh, i);
+        id = sh >= DK_NBLK ? pb_user_id(e, i) : preset_visible_id(e,sh,i);
         num[0] = (char)(i < 9 ? '1' + i : '1');
         num[1] = (char)(i < 9 ? 0 : '0' + i - 9);
         num[2] = 0;

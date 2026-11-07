@@ -13,8 +13,9 @@ case "$($CC -dumpmachine)" in i686*|i386*) FLAGS="$FLAGS -msse2 -mfpmath=sse" ;;
 $CC $FLAGS -DDK_HOST -Ibase/include -Ideck -Itapes/$TAPE -o build/test/deck_test tests/host/deck_test.c deck/core.c \
     deck/song.c deck/dsp_unit.c -lm || exit 1
 echo "-- overdub regressions"
-for regression in record freeze release; do
+for regression in record freeze release layer_fx curation; do
   case "$regression" in
+    curation) units="deck/core.c deck/song.c deck/dsp_unit.c" ;;
     freeze) units="deck/core.c deck/dsp_unit.c" ;;
     *) units="deck/song.c deck/dsp_unit.c" ;;
   esac

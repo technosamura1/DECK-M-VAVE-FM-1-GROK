@@ -88,6 +88,9 @@ const dk_preset_t *preset_of(int eng, int slot, dk_preset_t *tmp);
 int preset_block(int id);                   /* 0..DK_NBLK-1; the user's: -1 */
 int preset_id(int blk, int i);
 int preset_count(int eng, int blk);
+int preset_visible_count(int eng,int blk);
+int preset_visible_id(int eng,int blk,int index);
+int preset_visible_index(int eng,int id);
 void track_preset(int t, int slot);
 void track_preset_sound(int t, int slot);   /* a preset or an instrument by hand: the FX is not touched */
 void fxmem_store(int t);                    /* every knob sounding now belongs to this track's preset */

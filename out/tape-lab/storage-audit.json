@@ -1,0 +1,64 @@
+{
+  "kind": "source audit, not a device measurement",
+  "data_bytes": 299008,
+  "reserved": [
+    {
+      "start": "0xa0000",
+      "end": "0xa9000",
+      "name": "project 1"
+    },
+    {
+      "start": "0xa9000",
+      "end": "0xb2000",
+      "name": "project 2"
+    },
+    {
+      "start": "0xb2000",
+      "end": "0xbb000",
+      "name": "project 3"
+    },
+    {
+      "start": "0xbb000",
+      "end": "0xc4000",
+      "name": "project 4"
+    },
+    {
+      "start": "0xd0000",
+      "end": "0xd2000",
+      "name": "store pair 1"
+    },
+    {
+      "start": "0xdc000",
+      "end": "0xde000",
+      "name": "store pair 2"
+    }
+  ],
+  "unassigned": [
+    {
+      "start": "0x97000",
+      "end": "0xa0000",
+      "bytes": 36864
+    },
+    {
+      "start": "0xc4000",
+      "end": "0xd0000",
+      "bytes": 49152
+    },
+    {
+      "start": "0xd2000",
+      "end": "0xdc000",
+      "bytes": 40960
+    },
+    {
+      "start": "0xde000",
+      "end": "0xe0000",
+      "bytes": 8192
+    }
+  ],
+  "unassigned_bytes": 135168,
+  "pcm16_mono_44100_seconds": 1.5325170068027212,
+  "pcm16_stereo_44100_seconds": 0.7662585034013606,
+  "write_during_audio_supported": false,
+  "reason": "plat.h documents blocking writes; device/unity.c st_erase calls audio_silence",
+  "writes_performed": 0
+}

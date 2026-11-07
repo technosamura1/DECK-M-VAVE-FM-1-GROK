@@ -25,22 +25,22 @@ wait 80
 expect preset 0
 turn K1 15
 wait 40
-expect p1 55
+expect p1 50
 row 3
 turn K1 4
 wait 40
-expect fx 6
+expect fx 4
 row 2
 turn K2 5
 wait 40
-expect fxamt 20
+expect fxamt 5
 turn K4 5
 wait 40
-expect echo 17
+expect echo 21
 row 1
 turn K4 7
 wait 40
-expect rel 57
+expect rel 61
 row 4
 turn K2 10
 wait 40
@@ -61,22 +61,22 @@ tapkey w0
 release HOME
 wait 80
 expect preset 0
-expect fx 6
-expect p1 55
-expect fxamt 20
-expect echo 17
-expect rel 57
+expect fx 4
+expect p1 50
+expect fxamt 5
+expect echo 21
+expect rel 61
 expect modd 40
 page 12
 tap OCT+
 wait 80
 expect eng >0
-expect fx 6
+expect fx 4
 tap OCT-
 wait 80
 expect eng 0
-expect fx 6
-expect p1 55
+expect fx 4
+expect p1 50
 turn PRESET 1
 wait 80
 expect preset 1
@@ -85,11 +85,11 @@ expect p1 50
 turn PRESET -1
 wait 80
 expect preset 0
-expect fx 6
-expect p1 55
-expect fxamt 20
-expect echo 17
-expect rel 57
+expect fx 4
+expect p1 50
+expect fxamt 5
+expect echo 21
+expect rel 61
 expect modd 40
 page 2
 row 0
@@ -127,16 +127,16 @@ expect preset 10
 turn PRESET -10
 wait 80
 expect preset 0
-expect fx 6
-expect p1 55
-expect fxamt 20
-expect echo 17
-expect rel 57
+expect fx 4
+expect p1 50
+expect fxamt 5
+expect echo 21
+expect rel 61
 expect modd 40
 roundtrip
 wait 80
 expect preset 0
-expect p1 55
+expect p1 50
 press HOME
 tapkey w3
 release HOME
@@ -150,11 +150,11 @@ tapkey w0
 release HOME
 wait 80
 expect preset 0
-expect fx 6
-expect p1 55
-expect fxamt 20
-expect echo 17
-expect rel 57
+expect fx 4
+expect p1 50
+expect fxamt 5
+expect echo 21
+expect rel 61
 expect modd 40
 page 11
 wait 50
@@ -168,10 +168,10 @@ tapkey w13
 wait 100
 said TRACK CLEARED
 expect preset 0
-expect fx 6
+expect fx 4
 turn K2 1
 wait 80
-expect fx 6
+expect fx 4
 mood 1
 wait 40
-expect fx 6
+expect fx 4

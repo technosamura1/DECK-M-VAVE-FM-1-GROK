@@ -1,0 +1,10 @@
+{
+  "scenarios_passed": 88,
+  "scenarios_total": 88,
+  "hardware_tested": false,
+  "regressions": 4,
+  "frozen_audio_hash": "e9c9154f",
+  "preset_count": 380,
+  "known_sound_warning": "SYNTH MONO click; also pre-existing automation/fxlong warnings",
+  "sha256": "c2795bf4385f0f8fd2dd3aaba8c154418f7cef01e8524ee5912d7d2435d7567e"
+}

@@ -278,6 +278,9 @@ static void sounds(const char *dir, const char *only)
 }
 
 /* each drum machine's voices, one at a time (out/kits/MACHINE/NN_VOICE.wav): to look at a kit's sounds one by one */
+#include "style_preview.h"
+#include "underground_preview.h"
+
 static void kitvoices(const char *dir)
 {
     static const struct { const char *n; int blk, i; } M[5] = {{"808", 2, 8}, {"909", 2, 10}, {"606", 1, 8}, {"CR-78", 1, 10}, {"707", 0, 1}};
@@ -1215,6 +1218,16 @@ int main(int argc, char **argv)
     dk_init();
     if (!strcmp(m, "sounds"))
         sounds(argc > 2 ? argv[2] : "out/sounds", argc > 3 ? argv[3] : 0);
+    else if (!strcmp(m, "styles"))
+        style_previews(argc > 2 ? argv[2] : "out/styles");
+    else if (!strcmp(m, "palette")) {
+        preview_expanded_palette=1;
+        style_previews("out/palette");
+    }
+    else if (!strcmp(m, "underground")) {
+        underground_demo(0, "out/underground/snow_walk.wav");
+        underground_demo(1, "out/underground/last_corridor.wav");
+    }
     else if (!strcmp(m, "kitvoices"))
         kitvoices(argc > 2 ? argv[2] : "out/kits");
     else if (!strcmp(m, "demo"))

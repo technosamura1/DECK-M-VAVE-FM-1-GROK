@@ -5,3 +5,4 @@ deck/fm1.toml
 *.exe
 __pycache__/
 out/sounds/
+out/*-listen.zip

@@ -1,0 +1,10 @@
+{
+  "visible": 354,
+  "retired": 66,
+  "retired_previous": 60,
+  "legacy_loadable": 420,
+  "hardware_tested": false,
+  "regression": "PASS",
+  "frozen_audio_hash": "e9c9154f",
+  "firmware_sha256": "96012c6232e3a8881894b1713a1ca59186eb5887f25a85c76e0da631136c3e71"
+}

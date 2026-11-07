@@ -120,3 +120,5 @@ uint32_t dk_cpu_cost(void);
 void dk_set_load(int pct);
 void dk_load_force(int pct);                 /* -1 follows the device again; else a held CPU % (tests) */
 int dk_get_budget(void);                             /* the render's cost, microseconds a block (host) */
+
+void dk_freeze_voices(int track,int take,int sound);

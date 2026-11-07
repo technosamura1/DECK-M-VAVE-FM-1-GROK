@@ -303,31 +303,32 @@ static void preset_select(int slot)      /* a white key 0..15: 0..11 the block's
         return;
     } else if (slot < DK_NFACT) {
         int b = cur_blk();
-        if (slot >= preset_count(cur()->eng, b)) {
+        if (slot >= preset_visible_count(cur()->eng, b)) {
             say(blk_name(b), "NO PRESET HERE");
             return;
         }
-        slot = preset_id(b, slot);
+        slot = preset_visible_id(cur()->eng,b,slot);
     }
     preset_select_id(slot);
 }
 static void block_step(int d)            /* HOME + FX / SEL: the next / previous block, the same place in it */
 {
     int e = cur()->eng, b = cur_blk(), p = cur()->preset, i, n, nb = b;
-    i = preset_block(p) >= 0 ? (p < DK_NFACT ? p : (p - DK_PBASE) % DK_NFACT) : 0;
+    i = preset_visible_index(e,p);
+    if(i<0)i=0;
     for (n = 0; n < DK_NBLK; n++) {
         nb = (nb + d + DK_NBLK) % DK_NBLK;
-        if (preset_count(e, nb) > 0)
+        if (preset_visible_count(e, nb) > 0)
             break;
     }
-    if (nb == b || preset_count(e, nb) <= 0) {
+    if (nb == b || preset_visible_count(e, nb) <= 0) {
         say(cur_eng()->name, "ONE BLOCK ONLY");
         return;
     }
     keys_all_up();
-    if (i >= preset_count(e, nb))
-        i = preset_count(e, nb) - 1;
-    preset_select_id(preset_id(nb, i));
+    if (i >= preset_visible_count(e, nb))
+        i = preset_visible_count(e, nb) - 1;
+    preset_select_id(preset_visible_id(e,nb,i));
 }
 
 /* ARP -> SEQ: the arpeggio of the notes held (or latched, or the song's chord) as notes in the clip, the length of
@@ -426,16 +427,16 @@ static int pseq_len(int e)
 {
     int b, n = 0;
     for (b = 0; b < DK_NBLK; b++)
-        n += preset_count(e, b);
+        n += preset_visible_count(e, b);
     return n;
 }
 static int pseq_id(int e, int k)         /* the k'th of the presets */
 {
     int b, c;
     for (b = 0; b < DK_NBLK; b++) {
-        c = preset_count(e, b);
+        c = preset_visible_count(e, b);
         if (k < c)
-            return preset_id(b, k);
+            return preset_visible_id(e,b,k);
         k -= c;
     }
     return DK_NFACT + k;                 /* past them: a user slot */
@@ -464,11 +465,12 @@ static void preset_step(int d)
         pb_audition();
         return;
     }
-    n = preset_count(e, b);
+    n = preset_visible_count(e, b);
     if (n <= 0)
         return;
-    k = s < DK_NFACT ? s : (s - DK_PBASE) % DK_NFACT;
-    preset_select_id(preset_id(b, (k + d + n * 4) % n));
+    k = preset_visible_index(e,s);
+    if(k<0)k=d>0?-1:0;
+    preset_select_id(preset_visible_id(e,b,(k+d+n*4)%n));
     pb_audition();
 }
 
@@ -495,7 +497,7 @@ static int pb_blocks(int e, uint8_t *bl)  /* the blocks with presets (DK_NBLK: t
 {
     int b, n = 0;
     for (b = 0; b < DK_NBLK; b++)
-        if (preset_count(e, b) > 0)
+        if (preset_visible_count(e, b) > 0)
             bl[n++] = (uint8_t)b;
     if (pb_user_n(e))
         bl[n++] = DK_NBLK;
@@ -526,12 +528,13 @@ static int pb_place(void)                 /* the preset's place in its block */
                 return i;
         return 0;
     }
-    return s < DK_NFACT ? s : (s - DK_PBASE) % DK_NFACT;
+    return preset_visible_index(e,s);
 }
-static int pb_count(int e, int b) { return b >= DK_NBLK ? pb_user_n(e) : preset_count(e, b); }
+static int pb_count(int e, int b) { return b >= DK_NBLK ? pb_user_n(e) : preset_visible_count(e, b); }
 static void pb_pick(int b, int i)         /* block b's preset i, heard */
 {
     int e = cur()->eng, n = pb_count(e, b);
+    if(i<0)i=0;
     if (n <= 0) {
         say(b >= DK_NBLK ? "USER" : blk_name(b), "NO PRESETS");
         return;
@@ -540,7 +543,7 @@ static void pb_pick(int b, int i)         /* block b's preset i, heard */
         i = n - 1;
     if (keys_group())
         keys_all_up();
-    preset_select_id(b >= DK_NBLK ? pb_user_id(e, i) : preset_id(b, i));
+    preset_select_id(b >= DK_NBLK ? pb_user_id(e, i) : preset_visible_id(e,b,i));
     pb_audition();
 }
 static void pb_engine(int e)              /* the instrument: the same block if it has one, else its first; the first preset */
@@ -557,7 +560,7 @@ static void pb_engine(int e)              /* the instrument: the same block if i
         ok |= bl[i] == b;
     if (!ok)
         b = n ? bl[0] : 0;
-    track_preset_sound(dk_song.cur_track, b >= DK_NBLK ? pb_user_id(e, 0) : preset_id(b, 0));
+    track_preset_sound(dk_song.cur_track, b >= DK_NBLK ? pb_user_id(e, 0) : preset_visible_id(e,b,0));
     if (b < DK_NBLK)
         blk_seen[dk_song.cur_track] = (uint8_t)b;
     mark_dirty();
@@ -2604,8 +2607,9 @@ void ui_frame(void)
     why_tick(now);
     housekeeping(now);
     if (song_layers_full) {              /* the sounds' table of a track is full: the takes after it stay live */
+        int fx_full=song_layers_full==2;
         song_layers_full = 0;
-        say("LAYERS FULL", "7 SOUNDS ON THIS TRACK");
+        say(fx_full?"FX LAYERS FULL":"LAYERS FULL", fx_full?"16 FX SOUNDS IN PROJECT":"7 SOUNDS ON THIS TRACK");
     }
     if (song_mem_dropped || song_mem_full || dk_rec_dropped != ui.rec_drop) {   /* the pool or the record ring filled */
         static uint32_t mem_t;

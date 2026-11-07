@@ -1,0 +1,58 @@
+[
+  {
+    "file": "out\\palette\\ambient\\demo.wav",
+    "peak_db": -7.873863529416547,
+    "dc_db": -94.17143692766628,
+    "loud_db": -23.65998787916128,
+    "clicks": 0,
+    "click_at": [],
+    "top_db": -49.80830745526242,
+    "centroid_hz": 237.52495935551494,
+    "tail_db": -67.38643796529965,
+    "attack_ms": 12.517006802721088,
+    "problems": []
+  },
+  {
+    "file": "out\\palette\\synthwave\\demo.wav",
+    "peak_db": -3.6849082136641536,
+    "dc_db": -65.21150324079106,
+    "loud_db": -20.601518381811168,
+    "clicks": 0,
+    "click_at": [],
+    "top_db": -26.736474522189347,
+    "centroid_hz": 366.55909876793424,
+    "tail_db": -74.74597364408494,
+    "attack_ms": 4.126984126984127,
+    "problems": [
+      "harsh top / aliasing"
+    ]
+  },
+  {
+    "file": "out\\palette\\8bit\\demo.wav",
+    "peak_db": -5.146793592741029,
+    "dc_db": -67.51859169750405,
+    "loud_db": -23.590014066609676,
+    "clicks": 0,
+    "click_at": [],
+    "top_db": -24.08873725567656,
+    "centroid_hz": 592.9816222159754,
+    "tail_db": -73.40703785824934,
+    "attack_ms": 0.022675736961451247,
+    "problems": [
+      "harsh top / aliasing"
+    ]
+  },
+  {
+    "file": "out\\palette\\acoustic\\demo.wav",
+    "peak_db": -4.805997736704544,
+    "dc_db": -54.05383194005221,
+    "loud_db": -21.22204364707034,
+    "clicks": 0,
+    "click_at": [],
+    "top_db": -30.129401275313676,
+    "centroid_hz": 332.84893541796487,
+    "tail_db": -69.48114497015538,
+    "attack_ms": 0.4308390022675737,
+    "problems": []
+  }
+]

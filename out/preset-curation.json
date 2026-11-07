@@ -1,0 +1,6048 @@
+{
+  "total": 420,
+  "visible": 354,
+  "hidden": 66,
+  "hidden_previous": 60,
+  "masks": [
+    1007,
+    15,
+    241,
+    725,
+    2047,
+    11,
+    29,
+    161,
+    3071,
+    15,
+    247,
+    3711,
+    4095,
+    15,
+    31,
+    1019,
+    3583,
+    221,
+    433,
+    2927,
+    4095,
+    4095,
+    1935,
+    4013,
+    4095,
+    0,
+    0,
+    15,
+    2027,
+    0,
+    0,
+    3,
+    4095,
+    15,
+    41,
+    3839,
+    4087,
+    4095,
+    3839,
+    1919,
+    4087,
+    47,
+    991,
+    3311,
+    4095,
+    255,
+    4095,
+    255
+  ],
+  "kept": [
+    {
+      "key": [
+        2,
+        1,
+        0
+      ],
+      "engine": 2,
+      "bank": 1,
+      "slot": 0,
+      "name": "POCKET ORGAN",
+      "path": "build\\test\\palette-final\\PAD\\b1_01_POCKET_ORGAN.wav",
+      "index": 224
+    },
+    {
+      "key": [
+        8,
+        1,
+        0
+      ],
+      "engine": 8,
+      "bank": 1,
+      "slot": 0,
+      "name": "POCKET PIPE",
+      "path": "build\\test\\palette-final\\WINDS\\b1_01_POCKET_PIPE.wav",
+      "index": 382
+    },
+    {
+      "key": [
+        7,
+        3,
+        0
+      ],
+      "engine": 7,
+      "bank": 3,
+      "slot": 0,
+      "name": "DRY THUMB",
+      "path": "build\\test\\palette-final\\KALIMBA\\b3_01_DRY_THUMB.wav",
+      "index": 136
+    },
+    {
+      "key": [
+        4,
+        1,
+        0
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 0,
+      "name": "DUST BASS",
+      "path": "build\\test\\palette-final\\BASS\\b1_01_DUST_BASS.wav",
+      "index": 12
+    },
+    {
+      "key": [
+        5,
+        1,
+        0
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 0,
+      "name": "POCKET KIT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_01_POCKET_KIT.wav",
+      "index": 56
+    },
+    {
+      "key": [
+        3,
+        1,
+        0
+      ],
+      "engine": 3,
+      "bank": 1,
+      "slot": 0,
+      "name": "RUIN BELL",
+      "path": "build\\test\\palette-final\\GLASS\\b1_01_RUIN_BELL.wav",
+      "index": 104
+    },
+    {
+      "key": [
+        11,
+        1,
+        0
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 0,
+      "name": "BONE SOLO",
+      "path": "build\\test\\palette-final\\LEAD\\b1_01_BONE_SOLO.wav",
+      "index": 184
+    },
+    {
+      "key": [
+        9,
+        1,
+        0
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 0,
+      "name": "SMALL SOUL",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_01_SMALL_SOUL.wav",
+      "index": 334
+    },
+    {
+      "key": [
+        4,
+        0,
+        0
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 0,
+      "name": "EARTH SUB",
+      "path": "build\\test\\palette-final\\BASS\\b0_01_EARTH_SUB.wav",
+      "index": 0
+    },
+    {
+      "key": [
+        5,
+        0,
+        0
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 0,
+      "name": "DUSTY",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_01_DUSTY.wav",
+      "index": 44
+    },
+    {
+      "key": [
+        3,
+        0,
+        0
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 0,
+      "name": "DEW BELL",
+      "path": "build\\test\\palette-final\\GLASS\\b0_01_DEW_BELL.wav",
+      "index": 92
+    },
+    {
+      "key": [
+        7,
+        0,
+        0
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 0,
+      "name": "SEED PLUCK",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_01_SEED_PLUCK.wav",
+      "index": 124
+    },
+    {
+      "key": [
+        1,
+        0,
+        0
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 0,
+      "name": "RAINY DAY",
+      "path": "build\\test\\palette-final\\KEYS\\b0_01_RAINY_DAY.wav",
+      "index": 140
+    },
+    {
+      "key": [
+        11,
+        0,
+        0
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 0,
+      "name": "SOFT LEAD",
+      "path": "build\\test\\palette-final\\LEAD\\b0_01_SOFT_LEAD.wav",
+      "index": 172
+    },
+    {
+      "key": [
+        2,
+        0,
+        0
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 0,
+      "name": "SWEDEN",
+      "path": "build\\test\\palette-final\\PAD\\b0_01_SWEDEN.wav",
+      "index": 212
+    },
+    {
+      "key": [
+        0,
+        0,
+        0
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 0,
+      "name": "MOSS PIANO",
+      "path": "build\\test\\palette-final\\PIANO\\b0_01_MOSS_PIANO.wav",
+      "index": 248
+    },
+    {
+      "key": [
+        10,
+        0,
+        0
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 0,
+      "name": "NYLON",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_01_NYLON.wav",
+      "index": 282
+    },
+    {
+      "key": [
+        9,
+        0,
+        0
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 0,
+      "name": "SOFT SAW",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_01_SOFT_SAW.wav",
+      "index": 322
+    },
+    {
+      "key": [
+        8,
+        0,
+        0
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 0,
+      "name": "FLUTE",
+      "path": "build\\test\\palette-final\\WINDS\\b0_01_FLUTE.wav",
+      "index": 370
+    },
+    {
+      "key": [
+        6,
+        0,
+        0
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 0,
+      "name": "RAIN",
+      "path": "build\\test\\palette-final\\WORLD\\b0_01_RAIN.wav",
+      "index": 404
+    },
+    {
+      "key": [
+        3,
+        0,
+        1
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 1,
+      "name": "CELESTA",
+      "path": "build\\test\\palette-final\\GLASS\\b0_02_CELESTA.wav",
+      "index": 93
+    },
+    {
+      "key": [
+        7,
+        0,
+        1
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 1,
+      "name": "MBIRA",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_02_MBIRA.wav",
+      "index": 125
+    },
+    {
+      "key": [
+        1,
+        0,
+        1
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 1,
+      "name": "SUITCASE",
+      "path": "build\\test\\palette-final\\KEYS\\b0_02_SUITCASE.wav",
+      "index": 141
+    },
+    {
+      "key": [
+        3,
+        0,
+        3
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 3,
+      "name": "MUSIC BOX",
+      "path": "build\\test\\palette-final\\GLASS\\b0_04_MUSIC_BOX.wav",
+      "index": 95
+    },
+    {
+      "key": [
+        1,
+        0,
+        3
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 3,
+      "name": "VELVET",
+      "path": "build\\test\\palette-final\\KEYS\\b0_04_VELVET.wav",
+      "index": 143
+    },
+    {
+      "key": [
+        3,
+        0,
+        4
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 4,
+      "name": "VIBES",
+      "path": "build\\test\\palette-final\\GLASS\\b0_05_VIBES.wav",
+      "index": 96
+    },
+    {
+      "key": [
+        7,
+        0,
+        7
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 7,
+      "name": "DREAM",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_08_DREAM.wav",
+      "index": 131
+    },
+    {
+      "key": [
+        7,
+        0,
+        9
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 9,
+      "name": "STARLIGHT",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_10_STARLIGHT.wav",
+      "index": 133
+    },
+    {
+      "key": [
+        1,
+        0,
+        9
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 9,
+      "name": "MELLOW",
+      "path": "build\\test\\palette-final\\KEYS\\b0_10_MELLOW.wav",
+      "index": 149
+    },
+    {
+      "key": [
+        1,
+        1,
+        0
+      ],
+      "engine": 1,
+      "bank": 1,
+      "slot": 0,
+      "name": "FM CHIP",
+      "path": "build\\test\\palette-final\\KEYS\\b1_01_FM_CHIP.wav",
+      "index": 152
+    },
+    {
+      "key": [
+        0,
+        1,
+        0
+      ],
+      "engine": 0,
+      "bank": 1,
+      "slot": 0,
+      "name": "8-BIT PIANO",
+      "path": "build\\test\\palette-final\\PIANO\\b1_01_8-BIT_PIANO.wav",
+      "index": 260
+    },
+    {
+      "key": [
+        10,
+        1,
+        0
+      ],
+      "engine": 10,
+      "bank": 1,
+      "slot": 0,
+      "name": "CHIP HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b1_01_CHIP_HARP.wav",
+      "index": 294
+    },
+    {
+      "key": [
+        4,
+        2,
+        0
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 0,
+      "name": "MOTOR BASS",
+      "path": "build\\test\\palette-final\\BASS\\b2_01_MOTOR_BASS.wav",
+      "index": 20
+    },
+    {
+      "key": [
+        5,
+        2,
+        0
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 0,
+      "name": "NIGHT KIT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_01_NIGHT_KIT.wav",
+      "index": 68
+    },
+    {
+      "key": [
+        3,
+        2,
+        0
+      ],
+      "engine": 3,
+      "bank": 2,
+      "slot": 0,
+      "name": "NEON BELLS",
+      "path": "build\\test\\palette-final\\GLASS\\b2_01_NEON_BELLS.wav",
+      "index": 108
+    },
+    {
+      "key": [
+        1,
+        2,
+        0
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 0,
+      "name": "NEON DX",
+      "path": "build\\test\\palette-final\\KEYS\\b2_01_NEON_DX.wav",
+      "index": 156
+    },
+    {
+      "key": [
+        11,
+        2,
+        0
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 0,
+      "name": "NEON SOLO",
+      "path": "build\\test\\palette-final\\LEAD\\b2_01_NEON_SOLO.wav",
+      "index": 192
+    },
+    {
+      "key": [
+        2,
+        2,
+        0
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 0,
+      "name": "SUNSET PAD",
+      "path": "build\\test\\palette-final\\PAD\\b2_01_SUNSET_PAD.wav",
+      "index": 228
+    },
+    {
+      "key": [
+        0,
+        2,
+        0
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 0,
+      "name": "NEON PIANO",
+      "path": "build\\test\\palette-final\\PIANO\\b2_01_NEON_PIANO.wav",
+      "index": 264
+    },
+    {
+      "key": [
+        10,
+        2,
+        0
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 0,
+      "name": "NEON HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_01_NEON_HARP.wav",
+      "index": 300
+    },
+    {
+      "key": [
+        9,
+        2,
+        0
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 0,
+      "name": "NIGHT DRIVE",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_01_NIGHT_DRIVE.wav",
+      "index": 346
+    },
+    {
+      "key": [
+        8,
+        2,
+        0
+      ],
+      "engine": 8,
+      "bank": 2,
+      "slot": 0,
+      "name": "SYNTH BRASS",
+      "path": "build\\test\\palette-final\\WINDS\\b2_01_SYNTH_BRASS.wav",
+      "index": 386
+    },
+    {
+      "key": [
+        4,
+        3,
+        0
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 0,
+      "name": "SUB DRONE",
+      "path": "build\\test\\palette-final\\BASS\\b3_01_SUB_DRONE.wav",
+      "index": 32
+    },
+    {
+      "key": [
+        5,
+        3,
+        0
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 0,
+      "name": "WAR DRUMS",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_01_WAR_DRUMS.wav",
+      "index": 80
+    },
+    {
+      "key": [
+        3,
+        3,
+        0
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 0,
+      "name": "CHAPEL BELL",
+      "path": "build\\test\\palette-final\\GLASS\\b3_01_CHAPEL_BELL.wav",
+      "index": 114
+    },
+    {
+      "key": [
+        1,
+        3,
+        0
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 0,
+      "name": "CRYSTAL",
+      "path": "build\\test\\palette-final\\KEYS\\b3_01_CRYSTAL.wav",
+      "index": 164
+    },
+    {
+      "key": [
+        11,
+        3,
+        0
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 0,
+      "name": "HORN LEAD",
+      "path": "build\\test\\palette-final\\LEAD\\b3_01_HORN_LEAD.wav",
+      "index": 204
+    },
+    {
+      "key": [
+        2,
+        3,
+        0
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 0,
+      "name": "CHOIR AH",
+      "path": "build\\test\\palette-final\\PAD\\b3_01_CHOIR_AH.wav",
+      "index": 236
+    },
+    {
+      "key": [
+        0,
+        3,
+        0
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 0,
+      "name": "TAVERN",
+      "path": "build\\test\\palette-final\\PIANO\\b3_01_TAVERN.wav",
+      "index": 272
+    },
+    {
+      "key": [
+        10,
+        3,
+        0
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 0,
+      "name": "LUTE",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_01_LUTE.wav",
+      "index": 310
+    },
+    {
+      "key": [
+        9,
+        3,
+        0
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 0,
+      "name": "DRONE SAW",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_01_DRONE_SAW.wav",
+      "index": 358
+    },
+    {
+      "key": [
+        8,
+        3,
+        0
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 0,
+      "name": "NORDIC HORN",
+      "path": "build\\test\\palette-final\\WINDS\\b3_01_NORDIC_HORN.wav",
+      "index": 392
+    },
+    {
+      "key": [
+        6,
+        3,
+        0
+      ],
+      "engine": 6,
+      "bank": 3,
+      "slot": 0,
+      "name": "BLIZZARD",
+      "path": "build\\test\\palette-final\\WORLD\\b3_01_BLIZZARD.wav",
+      "index": 416
+    },
+    {
+      "key": [
+        2,
+        1,
+        1
+      ],
+      "engine": 2,
+      "bank": 1,
+      "slot": 1,
+      "name": "PIXEL CHOIR",
+      "path": "build\\test\\palette-final\\PAD\\b1_02_PIXEL_CHOIR.wav",
+      "index": 225
+    },
+    {
+      "key": [
+        8,
+        1,
+        1
+      ],
+      "engine": 8,
+      "bank": 1,
+      "slot": 1,
+      "name": "ROUND OCARINA",
+      "path": "build\\test\\palette-final\\WINDS\\b1_02_ROUND_OCARINA.wav",
+      "index": 383
+    },
+    {
+      "key": [
+        2,
+        1,
+        2
+      ],
+      "engine": 2,
+      "bank": 1,
+      "slot": 2,
+      "name": "CART STRINGS",
+      "path": "build\\test\\palette-final\\PAD\\b1_03_CART_STRINGS.wav",
+      "index": 226
+    },
+    {
+      "key": [
+        8,
+        1,
+        2
+      ],
+      "engine": 8,
+      "bank": 1,
+      "slot": 2,
+      "name": "REED SPRITE",
+      "path": "build\\test\\palette-final\\WINDS\\b1_03_REED_SPRITE.wav",
+      "index": 384
+    },
+    {
+      "key": [
+        2,
+        1,
+        3
+      ],
+      "engine": 2,
+      "bank": 1,
+      "slot": 3,
+      "name": "TINY CLOUD",
+      "path": "build\\test\\palette-final\\PAD\\b1_04_TINY_CLOUD.wav",
+      "index": 227
+    },
+    {
+      "key": [
+        8,
+        1,
+        3
+      ],
+      "engine": 8,
+      "bank": 1,
+      "slot": 3,
+      "name": "PIXEL HORN",
+      "path": "build\\test\\palette-final\\WINDS\\b1_04_PIXEL_HORN.wav",
+      "index": 385
+    },
+    {
+      "key": [
+        0,
+        2,
+        4
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 4,
+      "name": "CITY STAB",
+      "path": "build\\test\\palette-final\\PIANO\\b2_05_CITY_STAB.wav",
+      "index": 268
+    },
+    {
+      "key": [
+        0,
+        2,
+        5
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 5,
+      "name": "VHS CHORD",
+      "path": "build\\test\\palette-final\\PIANO\\b2_06_VHS_CHORD.wav",
+      "index": 269
+    },
+    {
+      "key": [
+        0,
+        2,
+        6
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 6,
+      "name": "DIAMOND KEY",
+      "path": "build\\test\\palette-final\\PIANO\\b2_07_DIAMOND_KEY.wav",
+      "index": 270
+    },
+    {
+      "key": [
+        10,
+        2,
+        6
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 6,
+      "name": "NEON NYLON",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_07_NEON_NYLON.wav",
+      "index": 306
+    },
+    {
+      "key": [
+        0,
+        2,
+        7
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 7,
+      "name": "VELVET DRIVE",
+      "path": "build\\test\\palette-final\\PIANO\\b2_08_VELVET_DRIVE.wav",
+      "index": 271
+    },
+    {
+      "key": [
+        10,
+        2,
+        7
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 7,
+      "name": "STEEL MOTOR",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_08_STEEL_MOTOR.wav",
+      "index": 307
+    },
+    {
+      "key": [
+        11,
+        2,
+        8
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 8,
+      "name": "CHROME REED",
+      "path": "build\\test\\palette-final\\LEAD\\b2_09_CHROME_REED.wav",
+      "index": 200
+    },
+    {
+      "key": [
+        10,
+        2,
+        8
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 8,
+      "name": "KOTO SPARK",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_09_KOTO_SPARK.wav",
+      "index": 308
+    },
+    {
+      "key": [
+        11,
+        2,
+        9
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 9,
+      "name": "SOFT COMET",
+      "path": "build\\test\\palette-final\\LEAD\\b2_10_SOFT_COMET.wav",
+      "index": 201
+    },
+    {
+      "key": [
+        10,
+        2,
+        9
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 9,
+      "name": "HARP AURA",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_10_HARP_AURA.wav",
+      "index": 309
+    },
+    {
+      "key": [
+        11,
+        2,
+        10
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 10,
+      "name": "FM CRYSTAL",
+      "path": "build\\test\\palette-final\\LEAD\\b2_11_FM_CRYSTAL.wav",
+      "index": 202
+    },
+    {
+      "key": [
+        11,
+        2,
+        11
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 11,
+      "name": "STREET SUPER",
+      "path": "build\\test\\palette-final\\LEAD\\b2_12_STREET_SUPER.wav",
+      "index": 203
+    },
+    {
+      "key": [
+        7,
+        3,
+        1
+      ],
+      "engine": 7,
+      "bank": 3,
+      "slot": 1,
+      "name": "AMBER SEED",
+      "path": "build\\test\\palette-final\\KALIMBA\\b3_02_AMBER_SEED.wav",
+      "index": 137
+    },
+    {
+      "key": [
+        1,
+        3,
+        5
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 5,
+      "name": "FROZEN TINE",
+      "path": "build\\test\\palette-final\\KEYS\\b3_06_FROZEN_TINE.wav",
+      "index": 169
+    },
+    {
+      "key": [
+        3,
+        3,
+        6
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 6,
+      "name": "BAMBOO HIT",
+      "path": "build\\test\\palette-final\\GLASS\\b3_07_BAMBOO_HIT.wav",
+      "index": 120
+    },
+    {
+      "key": [
+        0,
+        3,
+        6
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 6,
+      "name": "STUDIO WOOD",
+      "path": "build\\test\\palette-final\\PIANO\\b3_07_STUDIO_WOOD.wav",
+      "index": 278
+    },
+    {
+      "key": [
+        3,
+        3,
+        7
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 7,
+      "name": "FELT VIBES",
+      "path": "build\\test\\palette-final\\GLASS\\b3_08_FELT_VIBES.wav",
+      "index": 121
+    },
+    {
+      "key": [
+        1,
+        3,
+        7
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 7,
+      "name": "SLOW CURRENT",
+      "path": "build\\test\\palette-final\\KEYS\\b3_08_SLOW_CURRENT.wav",
+      "index": 171
+    },
+    {
+      "key": [
+        0,
+        3,
+        7
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 7,
+      "name": "PAPER HAMMER",
+      "path": "build\\test\\palette-final\\PIANO\\b3_08_PAPER_HAMMER.wav",
+      "index": 279
+    },
+    {
+      "key": [
+        4,
+        3,
+        8
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 8,
+      "name": "CEDAR BASS",
+      "path": "build\\test\\palette-final\\BASS\\b3_09_CEDAR_BASS.wav",
+      "index": 40
+    },
+    {
+      "key": [
+        3,
+        3,
+        8
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 8,
+      "name": "TIN LANTERN",
+      "path": "build\\test\\palette-final\\GLASS\\b3_09_TIN_LANTERN.wav",
+      "index": 122
+    },
+    {
+      "key": [
+        4,
+        3,
+        9
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 9,
+      "name": "BOWED EARTH",
+      "path": "build\\test\\palette-final\\BASS\\b3_10_BOWED_EARTH.wav",
+      "index": 41
+    },
+    {
+      "key": [
+        3,
+        3,
+        9
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 9,
+      "name": "ICE ORBIT",
+      "path": "build\\test\\palette-final\\GLASS\\b3_10_ICE_ORBIT.wav",
+      "index": 123
+    },
+    {
+      "key": [
+        0,
+        3,
+        9
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 9,
+      "name": "TOY ATTIC",
+      "path": "build\\test\\palette-final\\PIANO\\b3_10_TOY_ATTIC.wav",
+      "index": 281
+    },
+    {
+      "key": [
+        4,
+        3,
+        11
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 11,
+      "name": "BRONZE STEP",
+      "path": "build\\test\\palette-final\\BASS\\b3_12_BRONZE_STEP.wav",
+      "index": 43
+    },
+    {
+      "key": [
+        3,
+        1,
+        1
+      ],
+      "engine": 3,
+      "bank": 1,
+      "slot": 1,
+      "name": "TINY STEPS",
+      "path": "build\\test\\palette-final\\GLASS\\b1_02_TINY_STEPS.wav",
+      "index": 105
+    },
+    {
+      "key": [
+        11,
+        1,
+        1
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 1,
+      "name": "SOUL SOLO",
+      "path": "build\\test\\palette-final\\LEAD\\b1_02_SOUL_SOLO.wav",
+      "index": 185
+    },
+    {
+      "key": [
+        9,
+        1,
+        1
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 1,
+      "name": "BONE PULSE",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_02_BONE_PULSE.wav",
+      "index": 335
+    },
+    {
+      "key": [
+        3,
+        1,
+        2
+      ],
+      "engine": 3,
+      "bank": 1,
+      "slot": 2,
+      "name": "LOST TOY",
+      "path": "build\\test\\palette-final\\GLASS\\b1_03_LOST_TOY.wav",
+      "index": 106
+    },
+    {
+      "key": [
+        11,
+        1,
+        2
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 2,
+      "name": "GHOST CALL",
+      "path": "build\\test\\palette-final\\LEAD\\b1_03_GHOST_CALL.wav",
+      "index": 186
+    },
+    {
+      "key": [
+        9,
+        1,
+        2
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 2,
+      "name": "SAVE POINT",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_03_SAVE_POINT.wav",
+      "index": 336
+    },
+    {
+      "key": [
+        3,
+        1,
+        3
+      ],
+      "engine": 3,
+      "bank": 1,
+      "slot": 3,
+      "name": "MEMORY DUST",
+      "path": "build\\test\\palette-final\\GLASS\\b1_04_MEMORY_DUST.wav",
+      "index": 107
+    },
+    {
+      "key": [
+        11,
+        1,
+        3
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 3,
+      "name": "TINY HERO",
+      "path": "build\\test\\palette-final\\LEAD\\b1_04_TINY_HERO.wav",
+      "index": 187
+    },
+    {
+      "key": [
+        9,
+        1,
+        3
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 3,
+      "name": "RED HEART",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_04_RED_HEART.wav",
+      "index": 337
+    },
+    {
+      "key": [
+        11,
+        1,
+        4
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 4,
+      "name": "ODD VOICE",
+      "path": "build\\test\\palette-final\\LEAD\\b1_05_ODD_VOICE.wav",
+      "index": 188
+    },
+    {
+      "key": [
+        9,
+        1,
+        4
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 4,
+      "name": "DUST ROAD",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_05_DUST_ROAD.wav",
+      "index": 338
+    },
+    {
+      "key": [
+        11,
+        1,
+        5
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 5,
+      "name": "RED ALERT",
+      "path": "build\\test\\palette-final\\LEAD\\b1_06_RED_ALERT.wav",
+      "index": 189
+    },
+    {
+      "key": [
+        9,
+        1,
+        5
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 5,
+      "name": "ODD FRIEND",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_06_ODD_FRIEND.wav",
+      "index": 339
+    },
+    {
+      "key": [
+        11,
+        1,
+        6
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 6,
+      "name": "MOON SLIDE",
+      "path": "build\\test\\palette-final\\LEAD\\b1_07_MOON_SLIDE.wav",
+      "index": 190
+    },
+    {
+      "key": [
+        9,
+        1,
+        6
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 6,
+      "name": "GOLD HALL",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_07_GOLD_HALL.wav",
+      "index": 340
+    },
+    {
+      "key": [
+        11,
+        1,
+        7
+      ],
+      "engine": 11,
+      "bank": 1,
+      "slot": 7,
+      "name": "LAST BOSS",
+      "path": "build\\test\\palette-final\\LEAD\\b1_08_LAST_BOSS.wav",
+      "index": 191
+    },
+    {
+      "key": [
+        9,
+        1,
+        7
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 7,
+      "name": "BLUE GHOST",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_08_BLUE_GHOST.wav",
+      "index": 341
+    },
+    {
+      "key": [
+        9,
+        1,
+        8
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 8,
+      "name": "STAR ROOM",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_09_STAR_ROOM.wav",
+      "index": 342
+    },
+    {
+      "key": [
+        9,
+        1,
+        9
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 9,
+      "name": "LAST HEART",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_10_LAST_HEART.wav",
+      "index": 343
+    },
+    {
+      "key": [
+        9,
+        1,
+        10
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 10,
+      "name": "SNOW TOWN",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_11_SNOW_TOWN.wav",
+      "index": 344
+    },
+    {
+      "key": [
+        9,
+        1,
+        11
+      ],
+      "engine": 9,
+      "bank": 1,
+      "slot": 11,
+      "name": "DEEP DREAM",
+      "path": "build\\test\\palette-final\\SYNTH\\b1_12_DEEP_DREAM.wav",
+      "index": 345
+    },
+    {
+      "key": [
+        4,
+        0,
+        1
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 1,
+      "name": "ROUND",
+      "path": "build\\test\\palette-final\\BASS\\b0_02_ROUND.wav",
+      "index": 1
+    },
+    {
+      "key": [
+        5,
+        0,
+        1
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 1,
+      "name": "707",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_02_707.wav",
+      "index": 45
+    },
+    {
+      "key": [
+        11,
+        0,
+        1
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 1,
+      "name": "SQUARE",
+      "path": "build\\test\\palette-final\\LEAD\\b0_02_SQUARE.wav",
+      "index": 173
+    },
+    {
+      "key": [
+        2,
+        0,
+        1
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 1,
+      "name": "AIR",
+      "path": "build\\test\\palette-final\\PAD\\b0_02_AIR.wav",
+      "index": 213
+    },
+    {
+      "key": [
+        0,
+        0,
+        1
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 1,
+      "name": "SWEDEN",
+      "path": "build\\test\\palette-final\\PIANO\\b0_02_SWEDEN.wav",
+      "index": 249
+    },
+    {
+      "key": [
+        10,
+        0,
+        1
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 1,
+      "name": "HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_02_HARP.wav",
+      "index": 283
+    },
+    {
+      "key": [
+        9,
+        0,
+        1
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 1,
+      "name": "DUST LEAD",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_02_DUST_LEAD.wav",
+      "index": 323
+    },
+    {
+      "key": [
+        8,
+        0,
+        1
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 1,
+      "name": "PAN FLUTE",
+      "path": "build\\test\\palette-final\\WINDS\\b0_02_PAN_FLUTE.wav",
+      "index": 371
+    },
+    {
+      "key": [
+        6,
+        0,
+        1
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 1,
+      "name": "WIND",
+      "path": "build\\test\\palette-final\\WORLD\\b0_02_WIND.wav",
+      "index": 405
+    },
+    {
+      "key": [
+        4,
+        0,
+        2
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 2,
+      "name": "UPRIGHT",
+      "path": "build\\test\\palette-final\\BASS\\b0_03_UPRIGHT.wav",
+      "index": 2
+    },
+    {
+      "key": [
+        5,
+        0,
+        2
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 2,
+      "name": "PAPER KIT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_03_PAPER_KIT.wav",
+      "index": 46
+    },
+    {
+      "key": [
+        3,
+        0,
+        2
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 2,
+      "name": "MARIMBA",
+      "path": "build\\test\\palette-final\\GLASS\\b0_03_MARIMBA.wav",
+      "index": 94
+    },
+    {
+      "key": [
+        1,
+        0,
+        2
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 2,
+      "name": "DUSTY",
+      "path": "build\\test\\palette-final\\KEYS\\b0_03_DUSTY.wav",
+      "index": 142
+    },
+    {
+      "key": [
+        11,
+        0,
+        2
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 2,
+      "name": "DUSTY",
+      "path": "build\\test\\palette-final\\LEAD\\b0_03_DUSTY.wav",
+      "index": 174
+    },
+    {
+      "key": [
+        2,
+        0,
+        2
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 2,
+      "name": "HORIZON PAD",
+      "path": "build\\test\\palette-final\\PAD\\b0_03_HORIZON_PAD.wav",
+      "index": 214
+    },
+    {
+      "key": [
+        0,
+        0,
+        2
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 2,
+      "name": "LULLABY",
+      "path": "build\\test\\palette-final\\PIANO\\b0_03_LULLABY.wav",
+      "index": 250
+    },
+    {
+      "key": [
+        10,
+        0,
+        2
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 2,
+      "name": "LUTE",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_03_LUTE.wav",
+      "index": 284
+    },
+    {
+      "key": [
+        9,
+        0,
+        2
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 2,
+      "name": "WARM SUPER",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_03_WARM_SUPER.wav",
+      "index": 324
+    },
+    {
+      "key": [
+        8,
+        0,
+        2
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 2,
+      "name": "OCARINA",
+      "path": "build\\test\\palette-final\\WINDS\\b0_03_OCARINA.wav",
+      "index": 372
+    },
+    {
+      "key": [
+        6,
+        0,
+        2
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 2,
+      "name": "FIRE",
+      "path": "build\\test\\palette-final\\WORLD\\b0_03_FIRE.wav",
+      "index": 406
+    },
+    {
+      "key": [
+        4,
+        0,
+        3
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 3,
+      "name": "THUMB",
+      "path": "build\\test\\palette-final\\BASS\\b0_04_THUMB.wav",
+      "index": 3
+    },
+    {
+      "key": [
+        5,
+        0,
+        3
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 3,
+      "name": "BOOM BAP",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_04_BOOM_BAP.wav",
+      "index": 47
+    },
+    {
+      "key": [
+        7,
+        0,
+        3
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 3,
+      "name": "BRIGHT",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_04_BRIGHT.wav",
+      "index": 127
+    },
+    {
+      "key": [
+        11,
+        0,
+        3
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 3,
+      "name": "SUPER",
+      "path": "build\\test\\palette-final\\LEAD\\b0_04_SUPER.wav",
+      "index": 175
+    },
+    {
+      "key": [
+        2,
+        0,
+        3
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 3,
+      "name": "SHIMMER",
+      "path": "build\\test\\palette-final\\PAD\\b0_04_SHIMMER.wav",
+      "index": 215
+    },
+    {
+      "key": [
+        0,
+        0,
+        3
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 3,
+      "name": "MORNING",
+      "path": "build\\test\\palette-final\\PIANO\\b0_04_MORNING.wav",
+      "index": 251
+    },
+    {
+      "key": [
+        8,
+        0,
+        3
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 3,
+      "name": "SHAKUHACHI",
+      "path": "build\\test\\palette-final\\WINDS\\b0_04_SHAKUHACHI.wav",
+      "index": 373
+    },
+    {
+      "key": [
+        6,
+        0,
+        3
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 3,
+      "name": "STREAM",
+      "path": "build\\test\\palette-final\\WORLD\\b0_04_STREAM.wav",
+      "index": 407
+    },
+    {
+      "key": [
+        4,
+        0,
+        4
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 4,
+      "name": "MOOG",
+      "path": "build\\test\\palette-final\\BASS\\b0_05_MOOG.wav",
+      "index": 4
+    },
+    {
+      "key": [
+        5,
+        0,
+        4
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 4,
+      "name": "808",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_05_808.wav",
+      "index": 48
+    },
+    {
+      "key": [
+        1,
+        0,
+        4
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 4,
+      "name": "BELLTONE",
+      "path": "build\\test\\palette-final\\KEYS\\b0_05_BELLTONE.wav",
+      "index": 144
+    },
+    {
+      "key": [
+        11,
+        0,
+        4
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 4,
+      "name": "FM BELL",
+      "path": "build\\test\\palette-final\\LEAD\\b0_05_FM_BELL.wav",
+      "index": 176
+    },
+    {
+      "key": [
+        2,
+        0,
+        4
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 4,
+      "name": "STRINGS",
+      "path": "build\\test\\palette-final\\PAD\\b0_05_STRINGS.wav",
+      "index": 216
+    },
+    {
+      "key": [
+        10,
+        0,
+        4
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 4,
+      "name": "DULCIMER",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_05_DULCIMER.wav",
+      "index": 286
+    },
+    {
+      "key": [
+        9,
+        0,
+        4
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 4,
+      "name": "BED",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_05_BED.wav",
+      "index": 326
+    },
+    {
+      "key": [
+        8,
+        0,
+        4
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 4,
+      "name": "CLARINET",
+      "path": "build\\test\\palette-final\\WINDS\\b0_05_CLARINET.wav",
+      "index": 374
+    },
+    {
+      "key": [
+        6,
+        0,
+        4
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 4,
+      "name": "CAVE DROPS",
+      "path": "build\\test\\palette-final\\WORLD\\b0_05_CAVE_DROPS.wav",
+      "index": 408
+    },
+    {
+      "key": [
+        4,
+        0,
+        5
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 5,
+      "name": "GLIDE",
+      "path": "build\\test\\palette-final\\BASS\\b0_06_GLIDE.wav",
+      "index": 5
+    },
+    {
+      "key": [
+        5,
+        0,
+        5
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 5,
+      "name": "WOODEN",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_06_WOODEN.wav",
+      "index": 49
+    },
+    {
+      "key": [
+        3,
+        0,
+        5
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 5,
+      "name": "SNOW",
+      "path": "build\\test\\palette-final\\GLASS\\b0_06_SNOW.wav",
+      "index": 97
+    },
+    {
+      "key": [
+        7,
+        0,
+        5
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 5,
+      "name": "BOX",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_06_BOX.wav",
+      "index": 129
+    },
+    {
+      "key": [
+        1,
+        0,
+        5
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 5,
+      "name": "STUDY",
+      "path": "build\\test\\palette-final\\KEYS\\b0_06_STUDY.wav",
+      "index": 145
+    },
+    {
+      "key": [
+        11,
+        0,
+        5
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 5,
+      "name": "FLUTE",
+      "path": "build\\test\\palette-final\\LEAD\\b0_06_FLUTE.wav",
+      "index": 177
+    },
+    {
+      "key": [
+        2,
+        0,
+        5
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 5,
+      "name": "CAVE",
+      "path": "build\\test\\palette-final\\PAD\\b0_06_CAVE.wav",
+      "index": 217
+    },
+    {
+      "key": [
+        0,
+        0,
+        5
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 5,
+      "name": "ATTIC",
+      "path": "build\\test\\palette-final\\PIANO\\b0_06_ATTIC.wav",
+      "index": 253
+    },
+    {
+      "key": [
+        10,
+        0,
+        5
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 5,
+      "name": "STEEL",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_06_STEEL.wav",
+      "index": 287
+    },
+    {
+      "key": [
+        9,
+        0,
+        5
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 5,
+      "name": "SQUARE",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_06_SQUARE.wav",
+      "index": 327
+    },
+    {
+      "key": [
+        8,
+        0,
+        5
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 5,
+      "name": "TRUMPET",
+      "path": "build\\test\\palette-final\\WINDS\\b0_06_TRUMPET.wav",
+      "index": 375
+    },
+    {
+      "key": [
+        6,
+        0,
+        5
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 5,
+      "name": "CRICKETS",
+      "path": "build\\test\\palette-final\\WORLD\\b0_06_CRICKETS.wav",
+      "index": 409
+    },
+    {
+      "key": [
+        4,
+        0,
+        6
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 6,
+      "name": "DEEP",
+      "path": "build\\test\\palette-final\\BASS\\b0_07_DEEP.wav",
+      "index": 6
+    },
+    {
+      "key": [
+        5,
+        0,
+        6
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 6,
+      "name": "909",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_07_909.wav",
+      "index": 50
+    },
+    {
+      "key": [
+        3,
+        0,
+        6
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 6,
+      "name": "STARS",
+      "path": "build\\test\\palette-final\\GLASS\\b0_07_STARS.wav",
+      "index": 98
+    },
+    {
+      "key": [
+        7,
+        0,
+        6
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 6,
+      "name": "WOODEN",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_07_WOODEN.wav",
+      "index": 130
+    },
+    {
+      "key": [
+        1,
+        0,
+        6
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 6,
+      "name": "WURLI",
+      "path": "build\\test\\palette-final\\KEYS\\b0_07_WURLI.wav",
+      "index": 146
+    },
+    {
+      "key": [
+        11,
+        0,
+        6
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 6,
+      "name": "RAIN",
+      "path": "build\\test\\palette-final\\LEAD\\b0_07_RAIN.wav",
+      "index": 178
+    },
+    {
+      "key": [
+        2,
+        0,
+        6
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 6,
+      "name": "DAWN",
+      "path": "build\\test\\palette-final\\PAD\\b0_07_DAWN.wav",
+      "index": 218
+    },
+    {
+      "key": [
+        0,
+        0,
+        6
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 6,
+      "name": "HALL",
+      "path": "build\\test\\palette-final\\PIANO\\b0_07_HALL.wav",
+      "index": 254
+    },
+    {
+      "key": [
+        10,
+        0,
+        6
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 6,
+      "name": "NIGHT HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_07_NIGHT_HARP.wav",
+      "index": 288
+    },
+    {
+      "key": [
+        9,
+        0,
+        6
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 6,
+      "name": "HAZE",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_07_HAZE.wav",
+      "index": 328
+    },
+    {
+      "key": [
+        8,
+        0,
+        6
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 6,
+      "name": "MUTED",
+      "path": "build\\test\\palette-final\\WINDS\\b0_07_MUTED.wav",
+      "index": 376
+    },
+    {
+      "key": [
+        6,
+        0,
+        6
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 6,
+      "name": "BIRDS",
+      "path": "build\\test\\palette-final\\WORLD\\b0_07_BIRDS.wav",
+      "index": 410
+    },
+    {
+      "key": [
+        4,
+        0,
+        7
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 7,
+      "name": "REESE",
+      "path": "build\\test\\palette-final\\BASS\\b0_08_REESE.wav",
+      "index": 7
+    },
+    {
+      "key": [
+        5,
+        0,
+        7
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 7,
+      "name": "CHIP",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_08_CHIP.wav",
+      "index": 51
+    },
+    {
+      "key": [
+        3,
+        0,
+        7
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 7,
+      "name": "CHAPEL",
+      "path": "build\\test\\palette-final\\GLASS\\b0_08_CHAPEL.wav",
+      "index": 99
+    },
+    {
+      "key": [
+        1,
+        0,
+        7
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 7,
+      "name": "SHIMMER",
+      "path": "build\\test\\palette-final\\KEYS\\b0_08_SHIMMER.wav",
+      "index": 147
+    },
+    {
+      "key": [
+        11,
+        0,
+        7
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 7,
+      "name": "GLIDE",
+      "path": "build\\test\\palette-final\\LEAD\\b0_08_GLIDE.wav",
+      "index": 179
+    },
+    {
+      "key": [
+        2,
+        0,
+        7
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 7,
+      "name": "FOG",
+      "path": "build\\test\\palette-final\\PAD\\b0_08_FOG.wav",
+      "index": 219
+    },
+    {
+      "key": [
+        0,
+        0,
+        7
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 7,
+      "name": "DISTANT",
+      "path": "build\\test\\palette-final\\PIANO\\b0_08_DISTANT.wav",
+      "index": 255
+    },
+    {
+      "key": [
+        10,
+        0,
+        7
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 7,
+      "name": "WORN",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_08_WORN.wav",
+      "index": 289
+    },
+    {
+      "key": [
+        9,
+        0,
+        7
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 7,
+      "name": "BELL",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_08_BELL.wav",
+      "index": 329
+    },
+    {
+      "key": [
+        8,
+        0,
+        7
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 7,
+      "name": "HORN",
+      "path": "build\\test\\palette-final\\WINDS\\b0_08_HORN.wav",
+      "index": 377
+    },
+    {
+      "key": [
+        6,
+        0,
+        7
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 7,
+      "name": "OCEAN",
+      "path": "build\\test\\palette-final\\WORLD\\b0_08_OCEAN.wav",
+      "index": 411
+    },
+    {
+      "key": [
+        4,
+        0,
+        8
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 8,
+      "name": "JAZZ",
+      "path": "build\\test\\palette-final\\BASS\\b0_09_JAZZ.wav",
+      "index": 8
+    },
+    {
+      "key": [
+        5,
+        0,
+        8
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 8,
+      "name": "606",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_09_606.wav",
+      "index": 52
+    },
+    {
+      "key": [
+        3,
+        0,
+        8
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 8,
+      "name": "WOOD",
+      "path": "build\\test\\palette-final\\GLASS\\b0_09_WOOD.wav",
+      "index": 100
+    },
+    {
+      "key": [
+        7,
+        0,
+        8
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 8,
+      "name": "LOFI",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_09_LOFI.wav",
+      "index": 132
+    },
+    {
+      "key": [
+        1,
+        0,
+        8
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 8,
+      "name": "BROKEN",
+      "path": "build\\test\\palette-final\\KEYS\\b0_09_BROKEN.wav",
+      "index": 148
+    },
+    {
+      "key": [
+        11,
+        0,
+        8
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 8,
+      "name": "REED",
+      "path": "build\\test\\palette-final\\LEAD\\b0_09_REED.wav",
+      "index": 180
+    },
+    {
+      "key": [
+        2,
+        0,
+        8
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 8,
+      "name": "GLOW",
+      "path": "build\\test\\palette-final\\PAD\\b0_09_GLOW.wav",
+      "index": 220
+    },
+    {
+      "key": [
+        0,
+        0,
+        8
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 8,
+      "name": "GRAND",
+      "path": "build\\test\\palette-final\\PIANO\\b0_09_GRAND.wav",
+      "index": 256
+    },
+    {
+      "key": [
+        10,
+        0,
+        8
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 8,
+      "name": "ECHO KOTO",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_09_ECHO_KOTO.wav",
+      "index": 290
+    },
+    {
+      "key": [
+        9,
+        0,
+        8
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 8,
+      "name": "PLUCK",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_09_PLUCK.wav",
+      "index": 330
+    },
+    {
+      "key": [
+        8,
+        0,
+        8
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 8,
+      "name": "BRASS",
+      "path": "build\\test\\palette-final\\WINDS\\b0_09_BRASS.wav",
+      "index": 378
+    },
+    {
+      "key": [
+        6,
+        0,
+        8
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 8,
+      "name": "THUNDER",
+      "path": "build\\test\\palette-final\\WORLD\\b0_09_THUNDER.wav",
+      "index": 412
+    },
+    {
+      "key": [
+        5,
+        0,
+        9
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 9,
+      "name": "CAMPFIRE",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_10_CAMPFIRE.wav",
+      "index": 53
+    },
+    {
+      "key": [
+        3,
+        0,
+        9
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 9,
+      "name": "DROPS",
+      "path": "build\\test\\palette-final\\GLASS\\b0_10_DROPS.wav",
+      "index": 101
+    },
+    {
+      "key": [
+        11,
+        0,
+        9
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 9,
+      "name": "ACID",
+      "path": "build\\test\\palette-final\\LEAD\\b0_10_ACID.wav",
+      "index": 181
+    },
+    {
+      "key": [
+        2,
+        0,
+        9
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 9,
+      "name": "SKY",
+      "path": "build\\test\\palette-final\\PAD\\b0_10_SKY.wav",
+      "index": 221
+    },
+    {
+      "key": [
+        0,
+        0,
+        9
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 9,
+      "name": "LOFI KEYS",
+      "path": "build\\test\\palette-final\\PIANO\\b0_10_LOFI_KEYS.wav",
+      "index": 257
+    },
+    {
+      "key": [
+        10,
+        0,
+        9
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 9,
+      "name": "CAMPFIRE",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_10_CAMPFIRE.wav",
+      "index": 291
+    },
+    {
+      "key": [
+        9,
+        0,
+        9
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 9,
+      "name": "BREATH",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_10_BREATH.wav",
+      "index": 331
+    },
+    {
+      "key": [
+        8,
+        0,
+        9
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 9,
+      "name": "FLUGEL",
+      "path": "build\\test\\palette-final\\WINDS\\b0_10_FLUGEL.wav",
+      "index": 379
+    },
+    {
+      "key": [
+        6,
+        0,
+        9
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 9,
+      "name": "SNOW STEPS",
+      "path": "build\\test\\palette-final\\WORLD\\b0_10_SNOW_STEPS.wav",
+      "index": 413
+    },
+    {
+      "key": [
+        4,
+        0,
+        10
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 10,
+      "name": "NIGHT",
+      "path": "build\\test\\palette-final\\BASS\\b0_11_NIGHT.wav",
+      "index": 10
+    },
+    {
+      "key": [
+        5,
+        0,
+        10
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 10,
+      "name": "WAR",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_11_WAR.wav",
+      "index": 54
+    },
+    {
+      "key": [
+        3,
+        0,
+        10
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 10,
+      "name": "GLOCK",
+      "path": "build\\test\\palette-final\\GLASS\\b0_11_GLOCK.wav",
+      "index": 102
+    },
+    {
+      "key": [
+        7,
+        0,
+        10
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 10,
+      "name": "TINY",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_11_TINY.wav",
+      "index": 134
+    },
+    {
+      "key": [
+        1,
+        0,
+        10
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 10,
+      "name": "NIGHT",
+      "path": "build\\test\\palette-final\\KEYS\\b0_11_NIGHT.wav",
+      "index": 150
+    },
+    {
+      "key": [
+        11,
+        0,
+        10
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 10,
+      "name": "WIDE",
+      "path": "build\\test\\palette-final\\LEAD\\b0_11_WIDE.wav",
+      "index": 182
+    },
+    {
+      "key": [
+        10,
+        0,
+        10
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 10,
+      "name": "ANGEL",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_11_ANGEL.wav",
+      "index": 292
+    },
+    {
+      "key": [
+        9,
+        0,
+        10
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 10,
+      "name": "CRUSH",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_11_CRUSH.wav",
+      "index": 332
+    },
+    {
+      "key": [
+        8,
+        0,
+        10
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 10,
+      "name": "DUDUK",
+      "path": "build\\test\\palette-final\\WINDS\\b0_11_DUDUK.wav",
+      "index": 380
+    },
+    {
+      "key": [
+        6,
+        0,
+        10
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 10,
+      "name": "STORM",
+      "path": "build\\test\\palette-final\\WORLD\\b0_11_STORM.wav",
+      "index": 414
+    },
+    {
+      "key": [
+        4,
+        0,
+        11
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 11,
+      "name": "PLUCK",
+      "path": "build\\test\\palette-final\\BASS\\b0_12_PLUCK.wav",
+      "index": 11
+    },
+    {
+      "key": [
+        5,
+        0,
+        11
+      ],
+      "engine": 5,
+      "bank": 0,
+      "slot": 11,
+      "name": "SYNTH",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b0_12_SYNTH.wav",
+      "index": 55
+    },
+    {
+      "key": [
+        3,
+        0,
+        11
+      ],
+      "engine": 3,
+      "bank": 0,
+      "slot": 11,
+      "name": "CHIMES",
+      "path": "build\\test\\palette-final\\GLASS\\b0_12_CHIMES.wav",
+      "index": 103
+    },
+    {
+      "key": [
+        11,
+        0,
+        11
+      ],
+      "engine": 11,
+      "bank": 0,
+      "slot": 11,
+      "name": "SNOW",
+      "path": "build\\test\\palette-final\\LEAD\\b0_12_SNOW.wav",
+      "index": 183
+    },
+    {
+      "key": [
+        2,
+        0,
+        11
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 11,
+      "name": "SLOW",
+      "path": "build\\test\\palette-final\\PAD\\b0_12_SLOW.wav",
+      "index": 223
+    },
+    {
+      "key": [
+        10,
+        0,
+        11
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 11,
+      "name": "MUTE",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_12_MUTE.wav",
+      "index": 293
+    },
+    {
+      "key": [
+        9,
+        0,
+        11
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 11,
+      "name": "ACID",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_12_ACID.wav",
+      "index": 333
+    },
+    {
+      "key": [
+        8,
+        0,
+        11
+      ],
+      "engine": 8,
+      "bank": 0,
+      "slot": 11,
+      "name": "SYNBRASS",
+      "path": "build\\test\\palette-final\\WINDS\\b0_12_SYNBRASS.wav",
+      "index": 381
+    },
+    {
+      "key": [
+        6,
+        0,
+        11
+      ],
+      "engine": 6,
+      "bank": 0,
+      "slot": 11,
+      "name": "DRIZZLE",
+      "path": "build\\test\\palette-final\\WORLD\\b0_12_DRIZZLE.wav",
+      "index": 415
+    },
+    {
+      "key": [
+        5,
+        1,
+        1
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 1,
+      "name": "GAME BOY",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_02_GAME_BOY.wav",
+      "index": 57
+    },
+    {
+      "key": [
+        1,
+        1,
+        1
+      ],
+      "engine": 1,
+      "bank": 1,
+      "slot": 1,
+      "name": "COIN",
+      "path": "build\\test\\palette-final\\KEYS\\b1_02_COIN.wav",
+      "index": 153
+    },
+    {
+      "key": [
+        0,
+        1,
+        1
+      ],
+      "engine": 0,
+      "bank": 1,
+      "slot": 1,
+      "name": "GAME KEYS",
+      "path": "build\\test\\palette-final\\PIANO\\b1_02_GAME_KEYS.wav",
+      "index": 261
+    },
+    {
+      "key": [
+        10,
+        1,
+        1
+      ],
+      "engine": 10,
+      "bank": 1,
+      "slot": 1,
+      "name": "8-BIT LUTE",
+      "path": "build\\test\\palette-final\\PLUCK\\b1_02_8-BIT_LUTE.wav",
+      "index": 295
+    },
+    {
+      "key": [
+        4,
+        1,
+        2
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 2,
+      "name": "PULSE 25",
+      "path": "build\\test\\palette-final\\BASS\\b1_03_PULSE_25.wav",
+      "index": 14
+    },
+    {
+      "key": [
+        5,
+        1,
+        2
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 2,
+      "name": "ARCADE",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_03_ARCADE.wav",
+      "index": 58
+    },
+    {
+      "key": [
+        0,
+        1,
+        2
+      ],
+      "engine": 0,
+      "bank": 1,
+      "slot": 2,
+      "name": "PIXEL",
+      "path": "build\\test\\palette-final\\PIANO\\b1_03_PIXEL.wav",
+      "index": 262
+    },
+    {
+      "key": [
+        10,
+        1,
+        2
+      ],
+      "engine": 10,
+      "bank": 1,
+      "slot": 2,
+      "name": "PIXEL KOTO",
+      "path": "build\\test\\palette-final\\PLUCK\\b1_03_PIXEL_KOTO.wav",
+      "index": 296
+    },
+    {
+      "key": [
+        4,
+        1,
+        3
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 3,
+      "name": "GB BASS",
+      "path": "build\\test\\palette-final\\BASS\\b1_04_GB_BASS.wav",
+      "index": 15
+    },
+    {
+      "key": [
+        5,
+        1,
+        3
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 3,
+      "name": "C64",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_04_C64.wav",
+      "index": 59
+    },
+    {
+      "key": [
+        1,
+        1,
+        3
+      ],
+      "engine": 1,
+      "bank": 1,
+      "slot": 3,
+      "name": "SNES EP",
+      "path": "build\\test\\palette-final\\KEYS\\b1_04_SNES_EP.wav",
+      "index": 155
+    },
+    {
+      "key": [
+        0,
+        1,
+        3
+      ],
+      "engine": 0,
+      "bank": 1,
+      "slot": 3,
+      "name": "16-BIT KEYS",
+      "path": "build\\test\\palette-final\\PIANO\\b1_04_16-BIT_KEYS.wav",
+      "index": 263
+    },
+    {
+      "key": [
+        10,
+        1,
+        3
+      ],
+      "engine": 10,
+      "bank": 1,
+      "slot": 3,
+      "name": "GB NYLON",
+      "path": "build\\test\\palette-final\\PLUCK\\b1_04_GB_NYLON.wav",
+      "index": 297
+    },
+    {
+      "key": [
+        4,
+        1,
+        4
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 4,
+      "name": "ARCADE",
+      "path": "build\\test\\palette-final\\BASS\\b1_05_ARCADE.wav",
+      "index": 16
+    },
+    {
+      "key": [
+        5,
+        1,
+        4
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 4,
+      "name": "16-BIT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_05_16-BIT.wav",
+      "index": 60
+    },
+    {
+      "key": [
+        5,
+        1,
+        5
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 5,
+      "name": "CRUNCH",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_06_CRUNCH.wav",
+      "index": 61
+    },
+    {
+      "key": [
+        10,
+        1,
+        5
+      ],
+      "engine": 10,
+      "bank": 1,
+      "slot": 5,
+      "name": "ARCADE HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b1_06_ARCADE_HARP.wav",
+      "index": 299
+    },
+    {
+      "key": [
+        4,
+        1,
+        6
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 6,
+      "name": "BOSS SAW",
+      "path": "build\\test\\palette-final\\BASS\\b1_07_BOSS_SAW.wav",
+      "index": 18
+    },
+    {
+      "key": [
+        5,
+        1,
+        6
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 6,
+      "name": "SNES KIT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_07_SNES_KIT.wav",
+      "index": 62
+    },
+    {
+      "key": [
+        4,
+        1,
+        7
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 7,
+      "name": "CHIP SUB",
+      "path": "build\\test\\palette-final\\BASS\\b1_08_CHIP_SUB.wav",
+      "index": 19
+    },
+    {
+      "key": [
+        5,
+        1,
+        7
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 7,
+      "name": "PIXEL",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_08_PIXEL.wav",
+      "index": 63
+    },
+    {
+      "key": [
+        5,
+        1,
+        8
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 8,
+      "name": "606 TIGHT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_09_606_TIGHT.wav",
+      "index": 64
+    },
+    {
+      "key": [
+        5,
+        1,
+        9
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 9,
+      "name": "606 FUNK",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_10_606_FUNK.wav",
+      "index": 65
+    },
+    {
+      "key": [
+        5,
+        1,
+        10
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 10,
+      "name": "CR-78 SOFT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_11_CR-78_SOFT.wav",
+      "index": 66
+    },
+    {
+      "key": [
+        5,
+        1,
+        11
+      ],
+      "engine": 5,
+      "bank": 1,
+      "slot": 11,
+      "name": "CR-78 DISCO",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b1_12_CR-78_DISCO.wav",
+      "index": 67
+    },
+    {
+      "key": [
+        5,
+        2,
+        1
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 1,
+      "name": "OUTRUN",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_02_OUTRUN.wav",
+      "index": 69
+    },
+    {
+      "key": [
+        3,
+        2,
+        1
+      ],
+      "engine": 3,
+      "bank": 2,
+      "slot": 1,
+      "name": "SYNTH VIBES",
+      "path": "build\\test\\palette-final\\GLASS\\b2_02_SYNTH_VIBES.wav",
+      "index": 109
+    },
+    {
+      "key": [
+        11,
+        2,
+        1
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 1,
+      "name": "NEON SUPERLEAD",
+      "path": "build\\test\\palette-final\\LEAD\\b2_02_NEON_SUPERLEAD.wav",
+      "index": 193
+    },
+    {
+      "key": [
+        2,
+        2,
+        1
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 1,
+      "name": "NIGHT DRIVE PAD",
+      "path": "build\\test\\palette-final\\PAD\\b2_02_NIGHT_DRIVE_PAD.wav",
+      "index": 229
+    },
+    {
+      "key": [
+        10,
+        2,
+        1
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 1,
+      "name": "SYNTH LUTE",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_02_SYNTH_LUTE.wav",
+      "index": 301
+    },
+    {
+      "key": [
+        9,
+        2,
+        1
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 1,
+      "name": "OUTRUN LEAD",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_02_OUTRUN_LEAD.wav",
+      "index": 347
+    },
+    {
+      "key": [
+        5,
+        2,
+        2
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 2,
+      "name": "DRIVE",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_03_DRIVE.wav",
+      "index": 70
+    },
+    {
+      "key": [
+        3,
+        2,
+        2
+      ],
+      "engine": 3,
+      "bank": 2,
+      "slot": 2,
+      "name": "NIGHT CELESTA",
+      "path": "build\\test\\palette-final\\GLASS\\b2_03_NIGHT_CELESTA.wav",
+      "index": 110
+    },
+    {
+      "key": [
+        1,
+        2,
+        2
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 2,
+      "name": "ELECTRIC DREAM",
+      "path": "build\\test\\palette-final\\KEYS\\b2_03_ELECTRIC_DREAM.wav",
+      "index": 158
+    },
+    {
+      "key": [
+        11,
+        2,
+        2
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 2,
+      "name": "SUNSET LEAD",
+      "path": "build\\test\\palette-final\\LEAD\\b2_03_SUNSET_LEAD.wav",
+      "index": 194
+    },
+    {
+      "key": [
+        2,
+        2,
+        2
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 2,
+      "name": "NEON STRINGS",
+      "path": "build\\test\\palette-final\\PAD\\b2_03_NEON_STRINGS.wav",
+      "index": 230
+    },
+    {
+      "key": [
+        10,
+        2,
+        2
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 2,
+      "name": "DX PLUCK",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_03_DX_PLUCK.wav",
+      "index": 302
+    },
+    {
+      "key": [
+        9,
+        2,
+        2
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 2,
+      "name": "SUNSET SAW",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_03_SUNSET_SAW.wav",
+      "index": 348
+    },
+    {
+      "key": [
+        5,
+        2,
+        3
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 3,
+      "name": "NEON",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_04_NEON.wav",
+      "index": 71
+    },
+    {
+      "key": [
+        3,
+        2,
+        3
+      ],
+      "engine": 3,
+      "bank": 2,
+      "slot": 3,
+      "name": "DREAM BOX",
+      "path": "build\\test\\palette-final\\GLASS\\b2_04_DREAM_BOX.wav",
+      "index": 111
+    },
+    {
+      "key": [
+        1,
+        2,
+        3
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 3,
+      "name": "SUNSET EP",
+      "path": "build\\test\\palette-final\\KEYS\\b2_04_SUNSET_EP.wav",
+      "index": 159
+    },
+    {
+      "key": [
+        11,
+        2,
+        3
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 3,
+      "name": "SYNTH MONO",
+      "path": "build\\test\\palette-final\\LEAD\\b2_04_SYNTH_MONO.wav",
+      "index": 195
+    },
+    {
+      "key": [
+        10,
+        2,
+        3
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 3,
+      "name": "KOTO WAVE",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_04_KOTO_WAVE.wav",
+      "index": 303
+    },
+    {
+      "key": [
+        9,
+        2,
+        3
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 3,
+      "name": "NEON PLUCK",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_04_NEON_PLUCK.wav",
+      "index": 349
+    },
+    {
+      "key": [
+        8,
+        2,
+        3
+      ],
+      "engine": 8,
+      "bank": 2,
+      "slot": 3,
+      "name": "NEON REED",
+      "path": "build\\test\\palette-final\\WINDS\\b2_04_NEON_REED.wav",
+      "index": 389
+    },
+    {
+      "key": [
+        4,
+        2,
+        4
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 4,
+      "name": "RESO BASS",
+      "path": "build\\test\\palette-final\\BASS\\b2_05_RESO_BASS.wav",
+      "index": 24
+    },
+    {
+      "key": [
+        3,
+        2,
+        4
+      ],
+      "engine": 3,
+      "bank": 2,
+      "slot": 4,
+      "name": "RETRO MALLET",
+      "path": "build\\test\\palette-final\\GLASS\\b2_05_RETRO_MALLET.wav",
+      "index": 112
+    },
+    {
+      "key": [
+        1,
+        2,
+        4
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 4,
+      "name": "TURBO",
+      "path": "build\\test\\palette-final\\KEYS\\b2_05_TURBO.wav",
+      "index": 160
+    },
+    {
+      "key": [
+        11,
+        2,
+        4
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 4,
+      "name": "LASER SOLO",
+      "path": "build\\test\\palette-final\\LEAD\\b2_05_LASER_SOLO.wav",
+      "index": 196
+    },
+    {
+      "key": [
+        2,
+        2,
+        4
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 4,
+      "name": "ORGAN GLOW",
+      "path": "build\\test\\palette-final\\PAD\\b2_05_ORGAN_GLOW.wav",
+      "index": 232
+    },
+    {
+      "key": [
+        10,
+        2,
+        4
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 4,
+      "name": "GLASS HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_05_GLASS_HARP.wav",
+      "index": 304
+    },
+    {
+      "key": [
+        9,
+        2,
+        4
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 4,
+      "name": "MIAMI BRASS",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_05_MIAMI_BRASS.wav",
+      "index": 350
+    },
+    {
+      "key": [
+        4,
+        2,
+        5
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 5,
+      "name": "DETUNED",
+      "path": "build\\test\\palette-final\\BASS\\b2_06_DETUNED.wav",
+      "index": 25
+    },
+    {
+      "key": [
+        11,
+        2,
+        5
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 5,
+      "name": "DX LEAD",
+      "path": "build\\test\\palette-final\\LEAD\\b2_06_DX_LEAD.wav",
+      "index": 197
+    },
+    {
+      "key": [
+        2,
+        2,
+        5
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 5,
+      "name": "RETRO WARM",
+      "path": "build\\test\\palette-final\\PAD\\b2_06_RETRO_WARM.wav",
+      "index": 233
+    },
+    {
+      "key": [
+        9,
+        2,
+        5
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 5,
+      "name": "RETRO SQUARE",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_06_RETRO_SQUARE.wav",
+      "index": 351
+    },
+    {
+      "key": [
+        8,
+        2,
+        5
+      ],
+      "engine": 8,
+      "bank": 2,
+      "slot": 5,
+      "name": "NEON FLUTE",
+      "path": "build\\test\\palette-final\\WINDS\\b2_06_NEON_FLUTE.wav",
+      "index": 391
+    },
+    {
+      "key": [
+        11,
+        2,
+        6
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 6,
+      "name": "VAPOR SOLO",
+      "path": "build\\test\\palette-final\\LEAD\\b2_07_VAPOR_SOLO.wav",
+      "index": 198
+    },
+    {
+      "key": [
+        2,
+        2,
+        6
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 6,
+      "name": "DARK WAVE",
+      "path": "build\\test\\palette-final\\PAD\\b2_07_DARK_WAVE.wav",
+      "index": 234
+    },
+    {
+      "key": [
+        9,
+        2,
+        6
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 6,
+      "name": "LASER LEAD",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_07_LASER_LEAD.wav",
+      "index": 352
+    },
+    {
+      "key": [
+        4,
+        2,
+        7
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 7,
+      "name": "PULSE DRIVE",
+      "path": "build\\test\\palette-final\\BASS\\b2_08_PULSE_DRIVE.wav",
+      "index": 27
+    },
+    {
+      "key": [
+        5,
+        2,
+        7
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 7,
+      "name": "SUNSET",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_08_SUNSET.wav",
+      "index": 75
+    },
+    {
+      "key": [
+        11,
+        2,
+        7
+      ],
+      "engine": 11,
+      "bank": 2,
+      "slot": 7,
+      "name": "CHROME",
+      "path": "build\\test\\palette-final\\LEAD\\b2_08_CHROME.wav",
+      "index": 199
+    },
+    {
+      "key": [
+        2,
+        2,
+        7
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 7,
+      "name": "ARP BED",
+      "path": "build\\test\\palette-final\\PAD\\b2_08_ARP_BED.wav",
+      "index": 235
+    },
+    {
+      "key": [
+        9,
+        2,
+        7
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 7,
+      "name": "MOTOR ARP",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_08_MOTOR_ARP.wav",
+      "index": 353
+    },
+    {
+      "key": [
+        4,
+        2,
+        8
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 8,
+      "name": "SUB WAVE",
+      "path": "build\\test\\palette-final\\BASS\\b2_09_SUB_WAVE.wav",
+      "index": 28
+    },
+    {
+      "key": [
+        5,
+        2,
+        8
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 8,
+      "name": "808 CLASSIC",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_09_808_CLASSIC.wav",
+      "index": 76
+    },
+    {
+      "key": [
+        5,
+        2,
+        9
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 9,
+      "name": "808 LONG",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_10_808_LONG.wav",
+      "index": 77
+    },
+    {
+      "key": [
+        9,
+        2,
+        9
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 9,
+      "name": "DARK DRIVE",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_10_DARK_DRIVE.wav",
+      "index": 355
+    },
+    {
+      "key": [
+        5,
+        2,
+        10
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 10,
+      "name": "909 TECHNO",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_11_909_TECHNO.wav",
+      "index": 78
+    },
+    {
+      "key": [
+        9,
+        2,
+        10
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 10,
+      "name": "VAPOR",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_11_VAPOR.wav",
+      "index": 356
+    },
+    {
+      "key": [
+        9,
+        2,
+        11
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 11,
+      "name": "MIDNIGHT",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_12_MIDNIGHT.wav",
+      "index": 357
+    },
+    {
+      "key": [
+        4,
+        3,
+        1
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 1,
+      "name": "RUMBLE",
+      "path": "build\\test\\palette-final\\BASS\\b3_02_RUMBLE.wav",
+      "index": 33
+    },
+    {
+      "key": [
+        3,
+        3,
+        1
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 1,
+      "name": "TEMPLE",
+      "path": "build\\test\\palette-final\\GLASS\\b3_02_TEMPLE.wav",
+      "index": 115
+    },
+    {
+      "key": [
+        11,
+        3,
+        1
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 1,
+      "name": "EPIC SUPERLEAD",
+      "path": "build\\test\\palette-final\\LEAD\\b3_02_EPIC_SUPERLEAD.wav",
+      "index": 205
+    },
+    {
+      "key": [
+        2,
+        3,
+        1
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 1,
+      "name": "CHOIR OH",
+      "path": "build\\test\\palette-final\\PAD\\b3_02_CHOIR_OH.wav",
+      "index": 237
+    },
+    {
+      "key": [
+        10,
+        3,
+        1
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 1,
+      "name": "BARD'S LUTE",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_02_BARD'S_LUTE.wav",
+      "index": 311
+    },
+    {
+      "key": [
+        9,
+        3,
+        1
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 1,
+      "name": "DEEP SUPER",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_02_DEEP_SUPER.wav",
+      "index": 359
+    },
+    {
+      "key": [
+        8,
+        3,
+        1
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 1,
+      "name": "WAR HORN",
+      "path": "build\\test\\palette-final\\WINDS\\b3_02_WAR_HORN.wav",
+      "index": 393
+    },
+    {
+      "key": [
+        6,
+        3,
+        1
+      ],
+      "engine": 6,
+      "bank": 3,
+      "slot": 1,
+      "name": "TAVERN FIRE",
+      "path": "build\\test\\palette-final\\WORLD\\b3_02_TAVERN_FIRE.wav",
+      "index": 417
+    },
+    {
+      "key": [
+        4,
+        3,
+        2
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 2,
+      "name": "WAR HORN LOW",
+      "path": "build\\test\\palette-final\\BASS\\b3_03_WAR_HORN_LOW.wav",
+      "index": 34
+    },
+    {
+      "key": [
+        5,
+        3,
+        2
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 2,
+      "name": "DEEP SKINS",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_03_DEEP_SKINS.wav",
+      "index": 82
+    },
+    {
+      "key": [
+        11,
+        3,
+        2
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 2,
+      "name": "LONELY TRUMPET",
+      "path": "build\\test\\palette-final\\LEAD\\b3_03_LONELY_TRUMPET.wav",
+      "index": 206
+    },
+    {
+      "key": [
+        2,
+        3,
+        2
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 2,
+      "name": "CHOIR EE",
+      "path": "build\\test\\palette-final\\PAD\\b3_03_CHOIR_EE.wav",
+      "index": 238
+    },
+    {
+      "key": [
+        0,
+        3,
+        2
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 2,
+      "name": "SOLITUDE",
+      "path": "build\\test\\palette-final\\PIANO\\b3_03_SOLITUDE.wav",
+      "index": 274
+    },
+    {
+      "key": [
+        10,
+        3,
+        2
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 2,
+      "name": "HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_03_HARP.wav",
+      "index": 312
+    },
+    {
+      "key": [
+        9,
+        3,
+        2
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 2,
+      "name": "RUMBLE",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_03_RUMBLE.wav",
+      "index": 360
+    },
+    {
+      "key": [
+        8,
+        3,
+        2
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 2,
+      "name": "BATTLE BRASS",
+      "path": "build\\test\\palette-final\\WINDS\\b3_03_BATTLE_BRASS.wav",
+      "index": 394
+    },
+    {
+      "key": [
+        6,
+        3,
+        2
+      ],
+      "engine": 6,
+      "bank": 3,
+      "slot": 2,
+      "name": "DRAGON STORM",
+      "path": "build\\test\\palette-final\\WORLD\\b3_03_DRAGON_STORM.wav",
+      "index": 418
+    },
+    {
+      "key": [
+        4,
+        3,
+        3
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 3,
+      "name": "BOWED BASS",
+      "path": "build\\test\\palette-final\\BASS\\b3_04_BOWED_BASS.wav",
+      "index": 35
+    },
+    {
+      "key": [
+        5,
+        3,
+        3
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 3,
+      "name": "TRIBAL",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_04_TRIBAL.wav",
+      "index": 83
+    },
+    {
+      "key": [
+        3,
+        3,
+        3
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 3,
+      "name": "SHRINE",
+      "path": "build\\test\\palette-final\\GLASS\\b3_04_SHRINE.wav",
+      "index": 117
+    },
+    {
+      "key": [
+        11,
+        3,
+        3
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 3,
+      "name": "DUDUK",
+      "path": "build\\test\\palette-final\\LEAD\\b3_04_DUDUK.wav",
+      "index": 207
+    },
+    {
+      "key": [
+        2,
+        3,
+        3
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 3,
+      "name": "SOVNGARDE",
+      "path": "build\\test\\palette-final\\PAD\\b3_04_SOVNGARDE.wav",
+      "index": 239
+    },
+    {
+      "key": [
+        10,
+        3,
+        3
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 3,
+      "name": "ANGEL HARP",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_04_ANGEL_HARP.wav",
+      "index": 313
+    },
+    {
+      "key": [
+        9,
+        3,
+        3
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 3,
+      "name": "ANCIENT",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_04_ANCIENT.wav",
+      "index": 361
+    },
+    {
+      "key": [
+        8,
+        3,
+        3
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 3,
+      "name": "CALL",
+      "path": "build\\test\\palette-final\\WINDS\\b3_04_CALL.wav",
+      "index": 395
+    },
+    {
+      "key": [
+        6,
+        3,
+        3
+      ],
+      "engine": 6,
+      "bank": 3,
+      "slot": 3,
+      "name": "MOUNTAIN",
+      "path": "build\\test\\palette-final\\WORLD\\b3_04_MOUNTAIN.wav",
+      "index": 419
+    },
+    {
+      "key": [
+        3,
+        3,
+        4
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 4,
+      "name": "TOLL",
+      "path": "build\\test\\palette-final\\GLASS\\b3_05_TOLL.wav",
+      "index": 118
+    },
+    {
+      "key": [
+        11,
+        3,
+        4
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 4,
+      "name": "ELEGY",
+      "path": "build\\test\\palette-final\\LEAD\\b3_05_ELEGY.wav",
+      "index": 208
+    },
+    {
+      "key": [
+        2,
+        3,
+        4
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 4,
+      "name": "DRAGON",
+      "path": "build\\test\\palette-final\\PAD\\b3_05_DRAGON.wav",
+      "index": 240
+    },
+    {
+      "key": [
+        0,
+        3,
+        4
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 4,
+      "name": "ELDER KEYS",
+      "path": "build\\test\\palette-final\\PIANO\\b3_05_ELDER_KEYS.wav",
+      "index": 276
+    },
+    {
+      "key": [
+        9,
+        3,
+        4
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 4,
+      "name": "HORN SWELL",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_05_HORN_SWELL.wav",
+      "index": 362
+    },
+    {
+      "key": [
+        8,
+        3,
+        4
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 4,
+      "name": "DUDUK",
+      "path": "build\\test\\palette-final\\WINDS\\b3_05_DUDUK.wav",
+      "index": 396
+    },
+    {
+      "key": [
+        4,
+        3,
+        5
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 5,
+      "name": "DRAGON BREATH",
+      "path": "build\\test\\palette-final\\BASS\\b3_06_DRAGON_BREATH.wav",
+      "index": 37
+    },
+    {
+      "key": [
+        5,
+        3,
+        5
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 5,
+      "name": "HEARTBEAT",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_06_HEARTBEAT.wav",
+      "index": 85
+    },
+    {
+      "key": [
+        3,
+        3,
+        5
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 5,
+      "name": "DAWN CHIME",
+      "path": "build\\test\\palette-final\\GLASS\\b3_06_DAWN_CHIME.wav",
+      "index": 119
+    },
+    {
+      "key": [
+        11,
+        3,
+        5
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 5,
+      "name": "TENSE FM",
+      "path": "build\\test\\palette-final\\LEAD\\b3_06_TENSE_FM.wav",
+      "index": 209
+    },
+    {
+      "key": [
+        2,
+        3,
+        5
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 5,
+      "name": "DEEP DRONE",
+      "path": "build\\test\\palette-final\\PAD\\b3_06_DEEP_DRONE.wav",
+      "index": 241
+    },
+    {
+      "key": [
+        10,
+        3,
+        5
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 5,
+      "name": "DULCIMER",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_06_DULCIMER.wav",
+      "index": 315
+    },
+    {
+      "key": [
+        9,
+        3,
+        5
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 5,
+      "name": "SINE SUB",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_06_SINE_SUB.wav",
+      "index": 363
+    },
+    {
+      "key": [
+        8,
+        3,
+        5
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 5,
+      "name": "BARD FLUTE",
+      "path": "build\\test\\palette-final\\WINDS\\b3_06_BARD_FLUTE.wav",
+      "index": 397
+    },
+    {
+      "key": [
+        4,
+        3,
+        6
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 6,
+      "name": "CELLO LOW",
+      "path": "build\\test\\palette-final\\BASS\\b3_07_CELLO_LOW.wav",
+      "index": 38
+    },
+    {
+      "key": [
+        11,
+        3,
+        6
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 6,
+      "name": "ARCTIC BELL LEAD",
+      "path": "build\\test\\palette-final\\LEAD\\b3_07_ARCTIC_BELL_LEAD.wav",
+      "index": 210
+    },
+    {
+      "key": [
+        2,
+        3,
+        6
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 6,
+      "name": "WINTERHOLD",
+      "path": "build\\test\\palette-final\\PAD\\b3_07_WINTERHOLD.wav",
+      "index": 242
+    },
+    {
+      "key": [
+        10,
+        3,
+        6
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 6,
+      "name": "TAVERN STEEL",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_07_TAVERN_STEEL.wav",
+      "index": 316
+    },
+    {
+      "key": [
+        9,
+        3,
+        6
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 6,
+      "name": "DARK PAD",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_07_DARK_PAD.wav",
+      "index": 364
+    },
+    {
+      "key": [
+        8,
+        3,
+        6
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 6,
+      "name": "PIPES",
+      "path": "build\\test\\palette-final\\WINDS\\b3_07_PIPES.wav",
+      "index": 398
+    },
+    {
+      "key": [
+        5,
+        3,
+        7
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 7,
+      "name": "THUNDER",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_08_THUNDER.wav",
+      "index": 87
+    },
+    {
+      "key": [
+        11,
+        3,
+        7
+      ],
+      "engine": 11,
+      "bank": 3,
+      "slot": 7,
+      "name": "WAR HORN",
+      "path": "build\\test\\palette-final\\LEAD\\b3_08_WAR_HORN.wav",
+      "index": 211
+    },
+    {
+      "key": [
+        10,
+        3,
+        7
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 7,
+      "name": "KOTO",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_08_KOTO.wav",
+      "index": 317
+    },
+    {
+      "key": [
+        8,
+        3,
+        7
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 7,
+      "name": "DISTANT HORN",
+      "path": "build\\test\\palette-final\\WINDS\\b3_08_DISTANT_HORN.wav",
+      "index": 399
+    },
+    {
+      "key": [
+        5,
+        3,
+        8
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 8,
+      "name": "808 SUB BOOM",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_09_808_SUB_BOOM.wav",
+      "index": 88
+    },
+    {
+      "key": [
+        9,
+        3,
+        8
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 8,
+      "name": "ELDER",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_09_ELDER.wav",
+      "index": 366
+    },
+    {
+      "key": [
+        5,
+        3,
+        9
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 9,
+      "name": "808 DIRTY",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_10_808_DIRTY.wav",
+      "index": 89
+    },
+    {
+      "key": [
+        2,
+        3,
+        9
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 9,
+      "name": "DAWNSTAR",
+      "path": "build\\test\\palette-final\\PAD\\b3_10_DAWNSTAR.wav",
+      "index": 245
+    },
+    {
+      "key": [
+        9,
+        3,
+        9
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 9,
+      "name": "TENSION",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_10_TENSION.wav",
+      "index": 367
+    },
+    {
+      "key": [
+        8,
+        3,
+        9
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 9,
+      "name": "PAN WOODS",
+      "path": "build\\test\\palette-final\\WINDS\\b3_10_PAN_WOODS.wav",
+      "index": 401
+    },
+    {
+      "key": [
+        5,
+        3,
+        10
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 10,
+      "name": "909 HARD",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_11_909_HARD.wav",
+      "index": 90
+    },
+    {
+      "key": [
+        2,
+        3,
+        10
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 10,
+      "name": "BLACKREACH",
+      "path": "build\\test\\palette-final\\PAD\\b3_11_BLACKREACH.wav",
+      "index": 246
+    },
+    {
+      "key": [
+        10,
+        3,
+        10
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 10,
+      "name": "DARK LUTE",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_11_DARK_LUTE.wav",
+      "index": 320
+    },
+    {
+      "key": [
+        9,
+        3,
+        10
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 10,
+      "name": "VOID",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_11_VOID.wav",
+      "index": 368
+    },
+    {
+      "key": [
+        8,
+        3,
+        10
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 10,
+      "name": "CARNYX",
+      "path": "build\\test\\palette-final\\WINDS\\b3_11_CARNYX.wav",
+      "index": 402
+    },
+    {
+      "key": [
+        5,
+        3,
+        11
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 11,
+      "name": "707 PUNCH",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_12_707_PUNCH.wav",
+      "index": 91
+    },
+    {
+      "key": [
+        2,
+        3,
+        11
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 11,
+      "name": "HIGH HROTHGAR",
+      "path": "build\\test\\palette-final\\PAD\\b3_12_HIGH_HROTHGAR.wav",
+      "index": 247
+    },
+    {
+      "key": [
+        10,
+        3,
+        11
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 11,
+      "name": "MOURNING",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_12_MOURNING.wav",
+      "index": 321
+    },
+    {
+      "key": [
+        8,
+        3,
+        11
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 11,
+      "name": "HUNTER",
+      "path": "build\\test\\palette-final\\WINDS\\b3_12_HUNTER.wav",
+      "index": 403
+    }
+  ],
+  "removed": [
+    {
+      "key": [
+        7,
+        3,
+        2
+      ],
+      "engine": 7,
+      "bank": 3,
+      "slot": 2,
+      "name": "WATER TINES",
+      "path": "build\\test\\palette-final\\KALIMBA\\b3_03_WATER_TINES.wav",
+      "index": 138,
+      "replacement": {
+        "engine": 7,
+        "bank": 0,
+        "slot": 9,
+        "name": "STARLIGHT"
+      },
+      "spectrum_db": 1.164264217394998,
+      "envelope_db": 1.432781073542691
+    },
+    {
+      "key": [
+        7,
+        3,
+        3
+      ],
+      "engine": 7,
+      "bank": 3,
+      "slot": 3,
+      "name": "HOLLOW LOG",
+      "path": "build\\test\\palette-final\\KALIMBA\\b3_04_HOLLOW_LOG.wav",
+      "index": 139,
+      "replacement": {
+        "engine": 7,
+        "bank": 0,
+        "slot": 1,
+        "name": "MBIRA"
+      },
+      "spectrum_db": 0.8419283587472288,
+      "envelope_db": 1.020015020799704
+    },
+    {
+      "key": [
+        1,
+        3,
+        4
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 4,
+      "name": "EMBER KEYS",
+      "path": "build\\test\\palette-final\\KEYS\\b3_05_EMBER_KEYS.wav",
+      "index": 168,
+      "replacement": {
+        "engine": 1,
+        "bank": 0,
+        "slot": 9,
+        "name": "MELLOW"
+      },
+      "spectrum_db": 1.177154699061322,
+      "envelope_db": 1.7247922435388618
+    },
+    {
+      "key": [
+        1,
+        3,
+        6
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 6,
+      "name": "BRONZE DUST",
+      "path": "build\\test\\palette-final\\KEYS\\b3_07_BRONZE_DUST.wav",
+      "index": 170,
+      "replacement": {
+        "engine": 1,
+        "bank": 0,
+        "slot": 1,
+        "name": "SUITCASE"
+      },
+      "spectrum_db": 0.6847868106033269,
+      "envelope_db": 1.9830554672535472
+    },
+    {
+      "key": [
+        0,
+        3,
+        8
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 8,
+      "name": "SOFT PEDAL",
+      "path": "build\\test\\palette-final\\PIANO\\b3_09_SOFT_PEDAL.wav",
+      "index": 280,
+      "replacement": {
+        "engine": 0,
+        "bank": 2,
+        "slot": 5,
+        "name": "VHS CHORD"
+      },
+      "spectrum_db": 0.809896123449587,
+      "envelope_db": 0.7177142174060043
+    },
+    {
+      "key": [
+        4,
+        3,
+        10
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 10,
+      "name": "ROUND HUM",
+      "path": "build\\test\\palette-final\\BASS\\b3_11_ROUND_HUM.wav",
+      "index": 42,
+      "replacement": {
+        "engine": 4,
+        "bank": 0,
+        "slot": 0,
+        "name": "EARTH SUB"
+      },
+      "spectrum_db": 0.9217614419129072,
+      "envelope_db": 0.3260186151684658
+    },
+    {
+      "key": [
+        7,
+        0,
+        2
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 2,
+      "name": "THUMB",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_03_THUMB.wav",
+      "index": 126,
+      "replacement": {
+        "engine": 7,
+        "bank": 3,
+        "slot": 0,
+        "name": "DRY THUMB"
+      },
+      "spectrum_db": 0.7648063565039266,
+      "envelope_db": 1.341549240788905
+    },
+    {
+      "key": [
+        10,
+        0,
+        3
+      ],
+      "engine": 10,
+      "bank": 0,
+      "slot": 3,
+      "name": "KOTO",
+      "path": "build\\test\\palette-final\\PLUCK\\b0_04_KOTO.wav",
+      "index": 285,
+      "replacement": {
+        "engine": 10,
+        "bank": 2,
+        "slot": 8,
+        "name": "KOTO SPARK"
+      },
+      "spectrum_db": 1.2166526043830437,
+      "envelope_db": 1.2024744241329046
+    },
+    {
+      "key": [
+        9,
+        0,
+        3
+      ],
+      "engine": 9,
+      "bank": 0,
+      "slot": 3,
+      "name": "SINE",
+      "path": "build\\test\\palette-final\\SYNTH\\b0_04_SINE.wav",
+      "index": 325,
+      "replacement": {
+        "engine": 9,
+        "bank": 1,
+        "slot": 7,
+        "name": "BLUE GHOST"
+      },
+      "spectrum_db": 1.1668991336969055,
+      "envelope_db": 1.254007063714067
+    },
+    {
+      "key": [
+        7,
+        0,
+        4
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 4,
+      "name": "CAMPFIRE",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_05_CAMPFIRE.wav",
+      "index": 128,
+      "replacement": {
+        "engine": 7,
+        "bank": 0,
+        "slot": 1,
+        "name": "MBIRA"
+      },
+      "spectrum_db": 1.1232949760047128,
+      "envelope_db": 1.5887172756701498
+    },
+    {
+      "key": [
+        0,
+        0,
+        4
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 4,
+      "name": "SNOWFALL",
+      "path": "build\\test\\palette-final\\PIANO\\b0_05_SNOWFALL.wav",
+      "index": 252,
+      "replacement": {
+        "engine": 0,
+        "bank": 0,
+        "slot": 0,
+        "name": "MOSS PIANO"
+      },
+      "spectrum_db": 0.9377630170406391,
+      "envelope_db": 1.4468132071839273
+    },
+    {
+      "key": [
+        4,
+        0,
+        9
+      ],
+      "engine": 4,
+      "bank": 0,
+      "slot": 9,
+      "name": "FELT BASS",
+      "path": "build\\test\\palette-final\\BASS\\b0_10_FELT_BASS.wav",
+      "index": 9,
+      "replacement": {
+        "engine": 4,
+        "bank": 0,
+        "slot": 0,
+        "name": "EARTH SUB"
+      },
+      "spectrum_db": 0.5173910695275437,
+      "envelope_db": 0.7602521614081827
+    },
+    {
+      "key": [
+        2,
+        0,
+        10
+      ],
+      "engine": 2,
+      "bank": 0,
+      "slot": 10,
+      "name": "DEEP",
+      "path": "build\\test\\palette-final\\PAD\\b0_11_DEEP.wav",
+      "index": 222,
+      "replacement": {
+        "engine": 2,
+        "bank": 0,
+        "slot": 4,
+        "name": "STRINGS"
+      },
+      "spectrum_db": 0.6463122699963885,
+      "envelope_db": 1.4698298159869072
+    },
+    {
+      "key": [
+        0,
+        0,
+        10
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 10,
+      "name": "NIGHT",
+      "path": "build\\test\\palette-final\\PIANO\\b0_11_NIGHT.wav",
+      "index": 258,
+      "replacement": {
+        "engine": 0,
+        "bank": 0,
+        "slot": 2,
+        "name": "LULLABY"
+      },
+      "spectrum_db": 1.0725987159615629,
+      "envelope_db": 1.355229869383363
+    },
+    {
+      "key": [
+        7,
+        0,
+        11
+      ],
+      "engine": 7,
+      "bank": 0,
+      "slot": 11,
+      "name": "DEEP",
+      "path": "build\\test\\palette-final\\KALIMBA\\b0_12_DEEP.wav",
+      "index": 135,
+      "replacement": {
+        "engine": 7,
+        "bank": 0,
+        "slot": 1,
+        "name": "MBIRA"
+      },
+      "spectrum_db": 0.7535064014920867,
+      "envelope_db": 1.0489949163082133
+    },
+    {
+      "key": [
+        1,
+        0,
+        11
+      ],
+      "engine": 1,
+      "bank": 0,
+      "slot": 11,
+      "name": "CLAV",
+      "path": "build\\test\\palette-final\\KEYS\\b0_12_CLAV.wav",
+      "index": 151,
+      "replacement": {
+        "engine": 1,
+        "bank": 0,
+        "slot": 1,
+        "name": "SUITCASE"
+      },
+      "spectrum_db": 1.1477059930201117,
+      "envelope_db": 1.9244917282549905
+    },
+    {
+      "key": [
+        0,
+        0,
+        11
+      ],
+      "engine": 0,
+      "bank": 0,
+      "slot": 11,
+      "name": "MEMORY",
+      "path": "build\\test\\palette-final\\PIANO\\b0_12_MEMORY.wav",
+      "index": 259,
+      "replacement": {
+        "engine": 0,
+        "bank": 0,
+        "slot": 1,
+        "name": "SWEDEN"
+      },
+      "spectrum_db": 1.0126734324007403,
+      "envelope_db": 1.4347423758498368
+    },
+    {
+      "key": [
+        4,
+        1,
+        1
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 1,
+      "name": "SQUARE",
+      "path": "build\\test\\palette-final\\BASS\\b1_02_SQUARE.wav",
+      "index": 13,
+      "replacement": {
+        "engine": 4,
+        "bank": 0,
+        "slot": 11,
+        "name": "PLUCK"
+      },
+      "spectrum_db": 0.7966489193747573,
+      "envelope_db": 1.7656334911277607
+    },
+    {
+      "key": [
+        1,
+        1,
+        2
+      ],
+      "engine": 1,
+      "bank": 1,
+      "slot": 2,
+      "name": "ARCADE EP",
+      "path": "build\\test\\palette-final\\KEYS\\b1_03_ARCADE_EP.wav",
+      "index": 154,
+      "replacement": {
+        "engine": 1,
+        "bank": 1,
+        "slot": 1,
+        "name": "COIN"
+      },
+      "spectrum_db": 1.0587114115412104,
+      "envelope_db": 1.6630983423264356
+    },
+    {
+      "key": [
+        10,
+        1,
+        4
+      ],
+      "engine": 10,
+      "bank": 1,
+      "slot": 4,
+      "name": "PLUCK BIT",
+      "path": "build\\test\\palette-final\\PLUCK\\b1_05_PLUCK_BIT.wav",
+      "index": 298,
+      "replacement": {
+        "engine": 10,
+        "bank": 1,
+        "slot": 2,
+        "name": "PIXEL KOTO"
+      },
+      "spectrum_db": 1.2465670224228402,
+      "envelope_db": 1.7994555712034237
+    },
+    {
+      "key": [
+        4,
+        1,
+        5
+      ],
+      "engine": 4,
+      "bank": 1,
+      "slot": 5,
+      "name": "TRI SLIDE",
+      "path": "build\\test\\palette-final\\BASS\\b1_06_TRI_SLIDE.wav",
+      "index": 17,
+      "replacement": {
+        "engine": 4,
+        "bank": 1,
+        "slot": 0,
+        "name": "DUST BASS"
+      },
+      "spectrum_db": 0.18450494387887073,
+      "envelope_db": 0.5605604457432816
+    },
+    {
+      "key": [
+        4,
+        2,
+        1
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 1,
+      "name": "OUTRUN",
+      "path": "build\\test\\palette-final\\BASS\\b2_02_OUTRUN.wav",
+      "index": 21,
+      "replacement": {
+        "engine": 4,
+        "bank": 2,
+        "slot": 0,
+        "name": "MOTOR BASS"
+      },
+      "spectrum_db": 0.5142540797338075,
+      "envelope_db": 1.496933523528567
+    },
+    {
+      "key": [
+        1,
+        2,
+        1
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 1,
+      "name": "NEON EP",
+      "path": "build\\test\\palette-final\\KEYS\\b2_02_NEON_EP.wav",
+      "index": 157,
+      "replacement": {
+        "engine": 1,
+        "bank": 0,
+        "slot": 3,
+        "name": "VELVET"
+      },
+      "spectrum_db": 1.197668818185342,
+      "envelope_db": 2.069914560978974
+    },
+    {
+      "key": [
+        0,
+        2,
+        1
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 1,
+      "name": "OUTRUN KEYS",
+      "path": "build\\test\\palette-final\\PIANO\\b2_02_OUTRUN_KEYS.wav",
+      "index": 265,
+      "replacement": {
+        "engine": 0,
+        "bank": 2,
+        "slot": 0,
+        "name": "NEON PIANO"
+      },
+      "spectrum_db": 0.8531354312045737,
+      "envelope_db": 1.3810442876997715
+    },
+    {
+      "key": [
+        8,
+        2,
+        1
+      ],
+      "engine": 8,
+      "bank": 2,
+      "slot": 1,
+      "name": "BRASS STAB",
+      "path": "build\\test\\palette-final\\WINDS\\b2_02_BRASS_STAB.wav",
+      "index": 387,
+      "replacement": {
+        "engine": 8,
+        "bank": 2,
+        "slot": 0,
+        "name": "SYNTH BRASS"
+      },
+      "spectrum_db": 1.180347371637854,
+      "envelope_db": 1.8403503319463634
+    },
+    {
+      "key": [
+        4,
+        2,
+        2
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 2,
+      "name": "ARP BASS",
+      "path": "build\\test\\palette-final\\BASS\\b2_03_ARP_BASS.wav",
+      "index": 22,
+      "replacement": {
+        "engine": 4,
+        "bank": 2,
+        "slot": 0,
+        "name": "MOTOR BASS"
+      },
+      "spectrum_db": 0.412930310447313,
+      "envelope_db": 1.0307374901352058
+    },
+    {
+      "key": [
+        0,
+        2,
+        2
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 2,
+      "name": "DRIVE PIANO",
+      "path": "build\\test\\palette-final\\PIANO\\b2_03_DRIVE_PIANO.wav",
+      "index": 266,
+      "replacement": {
+        "engine": 0,
+        "bank": 2,
+        "slot": 0,
+        "name": "NEON PIANO"
+      },
+      "spectrum_db": 1.1586072741879427,
+      "envelope_db": 1.580501166839123
+    },
+    {
+      "key": [
+        8,
+        2,
+        2
+      ],
+      "engine": 8,
+      "bank": 2,
+      "slot": 2,
+      "name": "LEAD HORN",
+      "path": "build\\test\\palette-final\\WINDS\\b2_03_LEAD_HORN.wav",
+      "index": 388,
+      "replacement": {
+        "engine": 8,
+        "bank": 2,
+        "slot": 0,
+        "name": "SYNTH BRASS"
+      },
+      "spectrum_db": 1.082890595392831,
+      "envelope_db": 1.9188018790463284
+    },
+    {
+      "key": [
+        4,
+        2,
+        3
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 3,
+      "name": "ANALOG",
+      "path": "build\\test\\palette-final\\BASS\\b2_04_ANALOG.wav",
+      "index": 23,
+      "replacement": {
+        "engine": 4,
+        "bank": 0,
+        "slot": 4,
+        "name": "MOOG"
+      },
+      "spectrum_db": 1.2058359828900345,
+      "envelope_db": 1.0752552973570553
+    },
+    {
+      "key": [
+        2,
+        2,
+        3
+      ],
+      "engine": 2,
+      "bank": 2,
+      "slot": 3,
+      "name": "SUNSET",
+      "path": "build\\test\\palette-final\\PAD\\b2_04_SUNSET.wav",
+      "index": 231,
+      "replacement": {
+        "engine": 2,
+        "bank": 2,
+        "slot": 1,
+        "name": "NIGHT DRIVE PAD"
+      },
+      "spectrum_db": 0.8001731137280839,
+      "envelope_db": 2.0092786799455222
+    },
+    {
+      "key": [
+        0,
+        2,
+        3
+      ],
+      "engine": 0,
+      "bank": 2,
+      "slot": 3,
+      "name": "RETRO GRAND",
+      "path": "build\\test\\palette-final\\PIANO\\b2_04_RETRO_GRAND.wav",
+      "index": 267,
+      "replacement": {
+        "engine": 0,
+        "bank": 0,
+        "slot": 6,
+        "name": "HALL"
+      },
+      "spectrum_db": 0.8639823027995561,
+      "envelope_db": 1.0998738075770538
+    },
+    {
+      "key": [
+        5,
+        2,
+        4
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 4,
+      "name": "SYNTH POP",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_05_SYNTH_POP.wav",
+      "index": 72,
+      "replacement": {
+        "engine": 5,
+        "bank": 1,
+        "slot": 4,
+        "name": "16-BIT"
+      },
+      "spectrum_db": 0.9403772160520442,
+      "envelope_db": 1.7471929875350978
+    },
+    {
+      "key": [
+        8,
+        2,
+        4
+      ],
+      "engine": 8,
+      "bank": 2,
+      "slot": 4,
+      "name": "OBERHEIM",
+      "path": "build\\test\\palette-final\\WINDS\\b2_05_OBERHEIM.wav",
+      "index": 390,
+      "replacement": {
+        "engine": 8,
+        "bank": 2,
+        "slot": 0,
+        "name": "SYNTH BRASS"
+      },
+      "spectrum_db": 1.1064973308444699,
+      "envelope_db": 2.0038514115930743
+    },
+    {
+      "key": [
+        5,
+        2,
+        5
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 5,
+      "name": "GATED",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_06_GATED.wav",
+      "index": 73,
+      "replacement": {
+        "engine": 5,
+        "bank": 2,
+        "slot": 2,
+        "name": "DRIVE"
+      },
+      "spectrum_db": 0.40767712264170897,
+      "envelope_db": 1.809705358068266
+    },
+    {
+      "key": [
+        3,
+        2,
+        5
+      ],
+      "engine": 3,
+      "bank": 2,
+      "slot": 5,
+      "name": "CITY LIGHTS",
+      "path": "build\\test\\palette-final\\GLASS\\b2_06_CITY_LIGHTS.wav",
+      "index": 113,
+      "replacement": {
+        "engine": 3,
+        "bank": 3,
+        "slot": 0,
+        "name": "CHAPEL BELL"
+      },
+      "spectrum_db": 0.7506414852687633,
+      "envelope_db": 1.6943807357654785
+    },
+    {
+      "key": [
+        1,
+        2,
+        5
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 5,
+      "name": "SPARKLE",
+      "path": "build\\test\\palette-final\\KEYS\\b2_06_SPARKLE.wav",
+      "index": 161,
+      "replacement": {
+        "engine": 1,
+        "bank": 2,
+        "slot": 4,
+        "name": "TURBO"
+      },
+      "spectrum_db": 0.711709440459708,
+      "envelope_db": 1.5875913613390376
+    },
+    {
+      "key": [
+        10,
+        2,
+        5
+      ],
+      "engine": 10,
+      "bank": 2,
+      "slot": 5,
+      "name": "MIAMI NYLON",
+      "path": "build\\test\\palette-final\\PLUCK\\b2_06_MIAMI_NYLON.wav",
+      "index": 305,
+      "replacement": {
+        "engine": 10,
+        "bank": 2,
+        "slot": 1,
+        "name": "SYNTH LUTE"
+      },
+      "spectrum_db": 1.1142401421925303,
+      "envelope_db": 1.3375884480089786
+    },
+    {
+      "key": [
+        4,
+        2,
+        6
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 6,
+      "name": "GLIDER",
+      "path": "build\\test\\palette-final\\BASS\\b2_07_GLIDER.wav",
+      "index": 26,
+      "replacement": {
+        "engine": 4,
+        "bank": 0,
+        "slot": 5,
+        "name": "GLIDE"
+      },
+      "spectrum_db": 0.44557071069850046,
+      "envelope_db": 1.2914820681891923
+    },
+    {
+      "key": [
+        5,
+        2,
+        6
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 6,
+      "name": "ELECTRO",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_07_ELECTRO.wav",
+      "index": 74,
+      "replacement": {
+        "engine": 5,
+        "bank": 2,
+        "slot": 1,
+        "name": "OUTRUN"
+      },
+      "spectrum_db": 0.6609923972019365,
+      "envelope_db": 1.8419489877107855
+    },
+    {
+      "key": [
+        1,
+        2,
+        6
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 6,
+      "name": "RETRO TINE",
+      "path": "build\\test\\palette-final\\KEYS\\b2_07_RETRO_TINE.wav",
+      "index": 162,
+      "replacement": {
+        "engine": 1,
+        "bank": 0,
+        "slot": 7,
+        "name": "SHIMMER"
+      },
+      "spectrum_db": 1.0822984748152373,
+      "envelope_db": 2.013493388299189
+    },
+    {
+      "key": [
+        1,
+        2,
+        7
+      ],
+      "engine": 1,
+      "bank": 2,
+      "slot": 7,
+      "name": "MIAMI",
+      "path": "build\\test\\palette-final\\KEYS\\b2_08_MIAMI.wav",
+      "index": 163,
+      "replacement": {
+        "engine": 1,
+        "bank": 2,
+        "slot": 2,
+        "name": "ELECTRIC DREAM"
+      },
+      "spectrum_db": 1.1515511934882723,
+      "envelope_db": 2.009357033652356
+    },
+    {
+      "key": [
+        9,
+        2,
+        8
+      ],
+      "engine": 9,
+      "bank": 2,
+      "slot": 8,
+      "name": "DREAM PAD",
+      "path": "build\\test\\palette-final\\SYNTH\\b2_09_DREAM_PAD.wav",
+      "index": 354,
+      "replacement": {
+        "engine": 9,
+        "bank": 0,
+        "slot": 2,
+        "name": "WARM SUPER"
+      },
+      "spectrum_db": 0.8196601145729527,
+      "envelope_db": 1.5373986009976832
+    },
+    {
+      "key": [
+        4,
+        2,
+        9
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 9,
+      "name": "ACID",
+      "path": "build\\test\\palette-final\\BASS\\b2_10_ACID.wav",
+      "index": 29,
+      "replacement": {
+        "engine": 4,
+        "bank": 3,
+        "slot": 11,
+        "name": "BRONZE STEP"
+      },
+      "spectrum_db": 0.6506816980988811,
+      "envelope_db": 1.3224348531095542
+    },
+    {
+      "key": [
+        4,
+        2,
+        10
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 10,
+      "name": "MIDNIGHT",
+      "path": "build\\test\\palette-final\\BASS\\b2_11_MIDNIGHT.wav",
+      "index": 30,
+      "replacement": {
+        "engine": 4,
+        "bank": 2,
+        "slot": 5,
+        "name": "DETUNED"
+      },
+      "spectrum_db": 0.6123373238593935,
+      "envelope_db": 0.9325050215490371
+    },
+    {
+      "key": [
+        4,
+        2,
+        11
+      ],
+      "engine": 4,
+      "bank": 2,
+      "slot": 11,
+      "name": "LASER",
+      "path": "build\\test\\palette-final\\BASS\\b2_12_LASER.wav",
+      "index": 31,
+      "replacement": {
+        "engine": 4,
+        "bank": 2,
+        "slot": 4,
+        "name": "RESO BASS"
+      },
+      "spectrum_db": 0.8486304777709127,
+      "envelope_db": 0.6640595351291769
+    },
+    {
+      "key": [
+        5,
+        2,
+        11
+      ],
+      "engine": 5,
+      "bank": 2,
+      "slot": 11,
+      "name": "909 HOUSE",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b2_12_909_HOUSE.wav",
+      "index": 79,
+      "replacement": {
+        "engine": 5,
+        "bank": 2,
+        "slot": 10,
+        "name": "909 TECHNO"
+      },
+      "spectrum_db": 0.7274291327855471,
+      "envelope_db": 1.55074031614592
+    },
+    {
+      "key": [
+        5,
+        3,
+        1
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 1,
+      "name": "TAIKO",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_02_TAIKO.wav",
+      "index": 81,
+      "replacement": {
+        "engine": 5,
+        "bank": 0,
+        "slot": 10,
+        "name": "WAR"
+      },
+      "spectrum_db": 1.1448996340824398,
+      "envelope_db": 1.2450833259863532
+    },
+    {
+      "key": [
+        1,
+        3,
+        1
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 1,
+      "name": "DISTANT BELLS",
+      "path": "build\\test\\palette-final\\KEYS\\b3_02_DISTANT_BELLS.wav",
+      "index": 165,
+      "replacement": {
+        "engine": 1,
+        "bank": 3,
+        "slot": 0,
+        "name": "CRYSTAL"
+      },
+      "spectrum_db": 0.6388229814359893,
+      "envelope_db": 2.0906076531179374
+    },
+    {
+      "key": [
+        0,
+        3,
+        1
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 1,
+      "name": "HEARTH",
+      "path": "build\\test\\palette-final\\PIANO\\b3_02_HEARTH.wav",
+      "index": 273,
+      "replacement": {
+        "engine": 0,
+        "bank": 0,
+        "slot": 0,
+        "name": "MOSS PIANO"
+      },
+      "spectrum_db": 1.034410387210987,
+      "envelope_db": 1.473233244032264
+    },
+    {
+      "key": [
+        3,
+        3,
+        2
+      ],
+      "engine": 3,
+      "bank": 3,
+      "slot": 2,
+      "name": "FROST BELLS",
+      "path": "build\\test\\palette-final\\GLASS\\b3_03_FROST_BELLS.wav",
+      "index": 116,
+      "replacement": {
+        "engine": 3,
+        "bank": 3,
+        "slot": 9,
+        "name": "ICE ORBIT"
+      },
+      "spectrum_db": 1.124711713221898,
+      "envelope_db": 1.394188239469892
+    },
+    {
+      "key": [
+        1,
+        3,
+        2
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 2,
+      "name": "MOONLIT",
+      "path": "build\\test\\palette-final\\KEYS\\b3_03_MOONLIT.wav",
+      "index": 166,
+      "replacement": {
+        "engine": 1,
+        "bank": 2,
+        "slot": 3,
+        "name": "SUNSET EP"
+      },
+      "spectrum_db": 0.7910921696399179,
+      "envelope_db": 1.6545359840020808
+    },
+    {
+      "key": [
+        1,
+        3,
+        3
+      ],
+      "engine": 1,
+      "bank": 3,
+      "slot": 3,
+      "name": "ARCANE",
+      "path": "build\\test\\palette-final\\KEYS\\b3_04_ARCANE.wav",
+      "index": 167,
+      "replacement": {
+        "engine": 1,
+        "bank": 3,
+        "slot": 0,
+        "name": "CRYSTAL"
+      },
+      "spectrum_db": 1.1487448257356918,
+      "envelope_db": 1.7297584784860653
+    },
+    {
+      "key": [
+        0,
+        3,
+        3
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 3,
+      "name": "SNOWHOLD",
+      "path": "build\\test\\palette-final\\PIANO\\b3_04_SNOWHOLD.wav",
+      "index": 275,
+      "replacement": {
+        "engine": 0,
+        "bank": 0,
+        "slot": 0,
+        "name": "MOSS PIANO"
+      },
+      "spectrum_db": 1.1908851268267886,
+      "envelope_db": 1.3207688998183258
+    },
+    {
+      "key": [
+        4,
+        3,
+        4
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 4,
+      "name": "ANCIENT",
+      "path": "build\\test\\palette-final\\BASS\\b3_05_ANCIENT.wav",
+      "index": 36,
+      "replacement": {
+        "engine": 4,
+        "bank": 0,
+        "slot": 10,
+        "name": "NIGHT"
+      },
+      "spectrum_db": 0.6521364668608272,
+      "envelope_db": 0.835217726808735
+    },
+    {
+      "key": [
+        5,
+        3,
+        4
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 4,
+      "name": "BATTLE",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_05_BATTLE.wav",
+      "index": 84,
+      "replacement": {
+        "engine": 5,
+        "bank": 3,
+        "slot": 0,
+        "name": "WAR DRUMS"
+      },
+      "spectrum_db": 0.5778889674862122,
+      "envelope_db": 0.9218392172880034
+    },
+    {
+      "key": [
+        10,
+        3,
+        4
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 4,
+      "name": "NORDIC LYRE",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_05_NORDIC_LYRE.wav",
+      "index": 314,
+      "replacement": {
+        "engine": 10,
+        "bank": 3,
+        "slot": 0,
+        "name": "LUTE"
+      },
+      "spectrum_db": 1.1005744791368024,
+      "envelope_db": 2.0757793852296587
+    },
+    {
+      "key": [
+        0,
+        3,
+        5
+      ],
+      "engine": 0,
+      "bank": 3,
+      "slot": 5,
+      "name": "LAMENT",
+      "path": "build\\test\\palette-final\\PIANO\\b3_06_LAMENT.wav",
+      "index": 277,
+      "replacement": {
+        "engine": 0,
+        "bank": 3,
+        "slot": 2,
+        "name": "SOLITUDE"
+      },
+      "spectrum_db": 1.023019462949441,
+      "envelope_db": 2.027010257984532
+    },
+    {
+      "key": [
+        5,
+        3,
+        6
+      ],
+      "engine": 5,
+      "bank": 3,
+      "slot": 6,
+      "name": "MARCH",
+      "path": "build\\test\\palette-final\\DRUMKIT\\b3_07_MARCH.wav",
+      "index": 86,
+      "replacement": {
+        "engine": 5,
+        "bank": 3,
+        "slot": 3,
+        "name": "TRIBAL"
+      },
+      "spectrum_db": 0.7513803138045082,
+      "envelope_db": 1.1611187233778413
+    },
+    {
+      "key": [
+        4,
+        3,
+        7
+      ],
+      "engine": 4,
+      "bank": 3,
+      "slot": 7,
+      "name": "BRONZE",
+      "path": "build\\test\\palette-final\\BASS\\b3_08_BRONZE.wav",
+      "index": 39,
+      "replacement": {
+        "engine": 4,
+        "bank": 0,
+        "slot": 1,
+        "name": "ROUND"
+      },
+      "spectrum_db": 0.5333403957879829,
+      "envelope_db": 1.544411485703496
+    },
+    {
+      "key": [
+        2,
+        3,
+        7
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 7,
+      "name": "FALKREATH",
+      "path": "build\\test\\palette-final\\PAD\\b3_08_FALKREATH.wav",
+      "index": 243,
+      "replacement": {
+        "engine": 2,
+        "bank": 2,
+        "slot": 1,
+        "name": "NIGHT DRIVE PAD"
+      },
+      "spectrum_db": 0.8501768397642807,
+      "envelope_db": 2.0583406677684684
+    },
+    {
+      "key": [
+        9,
+        3,
+        7
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 7,
+      "name": "WIND SYNTH",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_08_WIND_SYNTH.wav",
+      "index": 365,
+      "replacement": {
+        "engine": 9,
+        "bank": 0,
+        "slot": 9,
+        "name": "BREATH"
+      },
+      "spectrum_db": 0.44031952786021744,
+      "envelope_db": 1.741660574785386
+    },
+    {
+      "key": [
+        2,
+        3,
+        8
+      ],
+      "engine": 2,
+      "bank": 3,
+      "slot": 8,
+      "name": "IVORY CHAPEL",
+      "path": "build\\test\\palette-final\\PAD\\b3_09_IVORY_CHAPEL.wav",
+      "index": 244,
+      "replacement": {
+        "engine": 2,
+        "bank": 2,
+        "slot": 4,
+        "name": "ORGAN GLOW"
+      },
+      "spectrum_db": 1.035539425874796,
+      "envelope_db": 1.5452605165169833
+    },
+    {
+      "key": [
+        10,
+        3,
+        8
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 8,
+      "name": "HARP GLISS",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_09_HARP_GLISS.wav",
+      "index": 318,
+      "replacement": {
+        "engine": 10,
+        "bank": 3,
+        "slot": 3,
+        "name": "ANGEL HARP"
+      },
+      "spectrum_db": 1.0936459501193327,
+      "envelope_db": 1.6425361530295906
+    },
+    {
+      "key": [
+        8,
+        3,
+        8
+      ],
+      "engine": 8,
+      "bank": 3,
+      "slot": 8,
+      "name": "LAMENT",
+      "path": "build\\test\\palette-final\\WINDS\\b3_09_LAMENT.wav",
+      "index": 400,
+      "replacement": {
+        "engine": 8,
+        "bank": 0,
+        "slot": 10,
+        "name": "DUDUK"
+      },
+      "spectrum_db": 0.8878665370945822,
+      "envelope_db": 2.1555928078787923
+    },
+    {
+      "key": [
+        10,
+        3,
+        9
+      ],
+      "engine": 10,
+      "bank": 3,
+      "slot": 9,
+      "name": "FOLK NYLON",
+      "path": "build\\test\\palette-final\\PLUCK\\b3_10_FOLK_NYLON.wav",
+      "index": 319,
+      "replacement": {
+        "engine": 10,
+        "bank": 3,
+        "slot": 1,
+        "name": "BARD'S LUTE"
+      },
+      "spectrum_db": 0.7623892684084833,
+      "envelope_db": 1.5471270178770036
+    },
+    {
+      "key": [
+        9,
+        3,
+        11
+      ],
+      "engine": 9,
+      "bank": 3,
+      "slot": 11,
+      "name": "SOLEMN",
+      "path": "build\\test\\palette-final\\SYNTH\\b3_12_SOLEMN.wav",
+      "index": 369,
+      "replacement": {
+        "engine": 9,
+        "bank": 0,
+        "slot": 4,
+        "name": "BED"
+      },
+      "spectrum_db": 0.8590198436046036,
+      "envelope_db": 1.7221077473293338
+    }
+  ]
+}

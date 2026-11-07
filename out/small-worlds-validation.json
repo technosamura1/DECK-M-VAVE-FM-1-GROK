@@ -1,0 +1,41 @@
+{
+  "new_presets": 26,
+  "changed_engine_presets_checked": 200,
+  "near_identical_pairs": 0,
+  "hardware_tested": false,
+  "mixes": [
+    {
+      "file": "out\\underground\\snow_walk.wav",
+      "peak_db": -6.319929117279774,
+      "dc_db": -83.0422707023597,
+      "loud_db": -23.31008112444483,
+      "clicks": 0,
+      "click_at": [],
+      "top_db": -27.23140645057283,
+      "centroid_hz": 601.8770495218247,
+      "tail_db": -68.03013163116384,
+      "attack_ms": 3.287981859410431,
+      "problems": [
+        "harsh top / aliasing"
+      ]
+    },
+    {
+      "file": "out\\underground\\last_corridor.wav",
+      "peak_db": -6.539991575444217,
+      "dc_db": -70.39431285146775,
+      "loud_db": -22.26149457745775,
+      "clicks": 0,
+      "click_at": [],
+      "top_db": -26.73826810338996,
+      "centroid_hz": 549.6405789071348,
+      "tail_db": -78.2677988014803,
+      "attack_ms": 0.27210884353741494,
+      "problems": [
+        "harsh top / aliasing"
+      ]
+    }
+  ],
+  "fx_regression": "PASS",
+  "frozen_hash": "e9c9154f",
+  "sha256": "f604ef439992e6c1a3376fc89afd777e9dbe3d8efcf60b37d8688e0143f3986c"
+}

@@ -1,0 +1,39 @@
+wait 500
+master 4096
+expect state 0
+tap REC
+key 7 down
+wait 600
+key 7 up
+wait 400
+tap REC
+wait 50
+expect state 2
+expect length >22000
+expect length <25000
+wav loop.wav
+wait 1200
+wavstop
+expect peak_db_min -35
+expect wraps >0
+shot tape-lab.png
+tap REC
+key 14 down
+wait 2400
+key 14 up
+wait 100
+expect undo 1
+expect state 2
+tap EDIT
+wait 80
+expect undo 1
+tap PLAY
+wait 100
+expect state 4
+press HOME
+tap SAVE
+release HOME
+wait 100
+expect state 0
+expect length 0
+expect store_writes 0

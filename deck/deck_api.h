@@ -121,6 +121,7 @@ typedef struct {
 #define DK_L_SND(l) ((unsigned)(l) >> 5)
 #define DK_L_MAKE(take, snd) ((uint8_t)(((take) > 31 ? 31 : (take)) | (unsigned)(snd) << 5))
 #define DK_NSND 7                       /* frozen sounds a track can keep */
+#define DK_FROZEN_FX_MAX 16             /* independent recorded insert states across the project */
 
 typedef struct {
     uint16_t at, n;                     /* its events: dk_ev[at .. at + n), sorted by pos */
@@ -129,10 +130,10 @@ typedef struct {
 } dk_clip_t;
 
 typedef struct {                        /* a frozen sound: what a voice hears of its track (the engine, its knobs with MACRO in) */
-    uint8_t used, eng, drift, rsv;
+    uint8_t used, eng, drift, rsv;      /* used bit7: FX snapshot, low6: trim+32; rsv: insert ID */
     int8_t p[DK_NP];
     int8_t env[3];
-    uint8_t rsv2[5];
+    uint8_t rsv2[5];                    /* snapshot: amount, A, B, reverb send, echo send; legacy zero */
 } dk_snd_t;
 
 typedef struct {
@@ -339,6 +340,7 @@ typedef struct {
     const struct dk_groove_s *groove;   /* GROOVE (a drum track): white 1-15 the grooves, black the fills, white 16 the end */
     uint8_t ngroove, nfill;
     const struct dk_groove_s *fill, *groove_end;
+    const uint16_t *browse_mask;       /* optional engine*DK_NBLK masks; raw IDs remain loadable */
 } dk_tape_t;
 extern const dk_tape_t TAPE;
 

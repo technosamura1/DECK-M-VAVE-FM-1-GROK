@@ -1,0 +1,32 @@
+# Compact browser skips retired presets, while raw IDs stay stable.
+wait 300
+tap HOME
+wait 100
+tapkey w0
+wait 100
+tap HOME
+wait 100
+expect track 0
+press HOME
+turn PRESET 1
+release HOME
+wait 100
+expect page 12
+tapkey b0
+tapkey w0
+wait 100
+expect preset 0
+tapkey w4
+wait 100
+expect preset 5
+tapkey b2
+tapkey w1
+wait 100
+expect preset 32
+turn PRESET 1
+wait 100
+expect preset 33
+turn PRESET 3
+wait 100
+expect preset 28
+shot curated.png
